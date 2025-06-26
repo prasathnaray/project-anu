@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body
+{
+  background: 0;
+  font-family: "DM Sans", serif;
+  font-optical-sizing: auto;
+  /* font-weight: 700; */
+  font-style: normal;
+}
+.toastify__toast--error {
+  background-color: #e63946 !important;
+  color: white;
+}
+.Toastify__zoom-enter {
+  animation: Toastify__zoomIn 0.2s ease forwards !important;
+}
+
+.Toastify__zoom-exit {
+  animation: Toastify__zoomOut 0.2s ease forwards !important;
+}
