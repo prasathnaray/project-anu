@@ -4,7 +4,7 @@ const app = express();
 const client = require('./utils/conn');
 //Auth
 const LoginRouter = require('./routes/Auth')
-
+const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
 app.use(cors());

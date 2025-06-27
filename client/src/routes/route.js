@@ -4,6 +4,7 @@ import SideBar from '../components/sideBar';
 import Login from '../Auth/login';
 import PrivateRoute from './ProtectedRoutes';
 import Dashboard from '../pages/dashboard';
+import Profile from '../pages/Profile';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -11,6 +12,7 @@ function RoutesPath() {
                     <Route path="/" element={<Login />}/>
                     <Route element={<PrivateRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/profile" element={<Profile />} />
                     </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

@@ -25,7 +25,7 @@ function NavBar() {
             <div className="text-black">
               {currentPath === "/reports" && <div>Reports</div>}
               {currentPath === "/dashboard" && <div>Dashboard</div>}
-              {currentPath === "/leaks" && <div>Leaks</div>}
+              {currentPath === "/profile" && <div>Profile</div>}
               {currentPath === "/settings" && <div>Settings</div>}
             </div>
           </div>
@@ -55,27 +55,27 @@ function NavBar() {
               <span className="sr-only">Searchh</span>
             </button>
             <div className="relative md:block">
-              <div className="px-2 py-2 ms-3 text-gray-600">
+              <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                 <button>
                   <Search02Icon size={21} />
                 </button>
               </div>
             </div>
             <div className="relative md:block">
-              <div className="px-2 py-2 ms-3 text-gray-600">
-                <button>
+              <div className="px-3 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
+                <button className="">
                   <Notification03Icon size={21} />
                 </button>
               </div>
             </div>
             <div className="relative md:block">
-              <div className="px-2 py-2 ms-3 text-gray-600">
+              <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                 <button>
                   <UserSettings01Icon size={21} />
                 </button>
               </div>
             </div>
-            <div className="px-2 py-2 ms-3 text-gray-600"><button onClick={handleLogout}><Logout01Icon size={21}/></button></div>
+            <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]"><button onClick={handleLogout}><Logout01Icon size={21}/></button></div>
             <button
               data-collapse-toggle="navbar-search"
               type="button"
