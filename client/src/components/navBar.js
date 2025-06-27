@@ -3,9 +3,11 @@ import {
   Notification03Icon,
   UserSharingIcon,
   Megaphone01Icon,
+  Search02Icon,
+  UserSettings01Icon,
+  Logout01Icon
 } from "hugeicons-react";
 import { useNavigate } from "react-router-dom";
-
 function NavBar() {
   const currentPath = window.location.pathname;
   const navigate = useNavigate();
@@ -18,7 +20,7 @@ function NavBar() {
   return (
     <div className="navbar dm-sans">
       <nav className="bg-white shadow-sm border">
-        <div className="flex flex-wrap items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between py-2">
           <div className="flex justify-start items-center ms-3">
             <div className="text-black">
               {currentPath === "/reports" && <div>Reports</div>}
@@ -28,7 +30,6 @@ function NavBar() {
             </div>
           </div>
           <div className="flex md:order-2">
-            <button onClick={handleLogout}>logout</button>
             <button
               type="button"
               data-collapse-toggle="navbar-search"
@@ -55,11 +56,8 @@ function NavBar() {
             </button>
             <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600">
-                <div className="absolute top-0 left-7">
-                  <span className="bg-red-300 text-xs rounded-3xl px-2 animate-pulse"></span>
-                </div>
                 <button>
-                  <Megaphone01Icon size={21} />
+                  <Search02Icon size={21} />
                 </button>
               </div>
             </div>
@@ -73,10 +71,11 @@ function NavBar() {
             <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600">
                 <button>
-                  <UserSharingIcon size={21} />
+                  <UserSettings01Icon size={21} />
                 </button>
               </div>
             </div>
+            <div className="px-2 py-2 ms-3 text-gray-600"><button onClick={handleLogout}><Logout01Icon size={21}/></button></div>
             <button
               data-collapse-toggle="navbar-search"
               type="button"
