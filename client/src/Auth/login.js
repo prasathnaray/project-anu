@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
-import { PuffLoader } from 'react-spinners';
+import { PuffLoader,RingLoader, CircleLoader } from 'react-spinners';
 function Login() {
   //icon change for password input
   const [icon, setIcon] = useState(EyeOff);
@@ -116,11 +116,12 @@ function Login() {
           </div>
           <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-2 font-semibold text-lg transition-all ease-in-out" onClick={handleSubmit} disabled={loading}>
           {loading ? (
-                <PuffLoader color="#ffffff" size={24} />
+                <CircleLoader color="#ffffff" size={24} />
             ) : (
                 "Login"
             )}
-          </button>
+          </button><br></br><br></br>
+          <a href="/" className="font-semibold text-blue-500">Forgot Password</a>
         </div>
       </div>
       <div className="flex justify-center items-center border bg-[#8DC63F]">

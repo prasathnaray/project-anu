@@ -2,7 +2,7 @@ const client = require('../utils/conn.js');
 
 const profilem = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [99].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
         if(!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
@@ -10,7 +10,7 @@ const profilem = (requester) => {
                 message: 'You do not have permission to access this profile.'
             });
         }
-        client.query('SELECT * FROM user_data WHERE user_email=$1', [requester.user_mail], (err, result) => {
+        client.query('SELECT user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender FROM user_data WHERE user_email=$1', [requester.user_mail], (err, result) => {
             if(err) {
                 return reject(err);
             }
