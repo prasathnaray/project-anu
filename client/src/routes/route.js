@@ -5,6 +5,7 @@ import Login from '../Auth/login';
 import PrivateRoute from './ProtectedRoutes';
 import Dashboard from '../pages/dashboard';
 import Profile from '../pages/Profile';
+import Trainee from '../pages/Trainee';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -13,6 +14,7 @@ function RoutesPath() {
                     <Route element={<PrivateRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<Profile />} />
+                            <Route path="/trainee" element={<Trainee /> } />
                     </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

@@ -56,7 +56,7 @@ function SideBar() {
               }
               {tokdata.role == 102 && 
               <>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/home" className="flex gap-5"><  StudentCardIcon size={21}/>Trainee</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/trainee" className="flex gap-5"><  StudentCardIcon size={21}/>Trainee</a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/" className="flex gap-5"><CourseIcon size={21}/>Courses</a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/" className="flex gap-5"><MarketAnalysisIcon size={21}/>Reports</a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/" className="flex gap-5"><Message01Icon size={21}/>Queries</a></li>

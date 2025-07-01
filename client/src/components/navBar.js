@@ -7,6 +7,7 @@ import {
   UserSettings01Icon,
   Logout01Icon
 } from "hugeicons-react";
+import { CircleUser, Bell, Search, MessageCircleMore} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 function NavBar() {
   const currentPath = window.location.pathname;
@@ -20,7 +21,7 @@ function NavBar() {
   return (
     <div className="navbar dm-sans">
       <nav className="bg-white shadow-sm border">
-        <div className="flex flex-wrap items-center justify-between py-2">
+        <div className="flex flex-wrap items-center justify-between py-2 px-1">
           <div className="flex justify-start items-center ms-3">
             <div className="text-black">
               {currentPath === "/reports" && <div>Reports</div>}
@@ -54,28 +55,35 @@ function NavBar() {
               </svg>
               <span className="sr-only">Searchh</span>
             </button>
+             <div className="relative md:block">
+              <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
+                <button>
+                  <MessageCircleMore size={21} />
+                </button>
+              </div>
+            </div>
             <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                 <button>
-                  <Search02Icon size={21} />
+                  <Search size={21} />
                 </button>
               </div>
             </div>
             <div className="relative md:block">
-              <div className="px-3 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
+              <div className="px-3 py-2 ms-3 text-gray-500 hover:text-[#8DC63F]">
                 <button className="">
-                  <Notification03Icon size={21} />
+                  <Bell size={21} />
                 </button>
               </div>
             </div>
-            <div className="relative md:block">
+            {/* <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                 <button>
                   <UserSettings01Icon size={21} />
                 </button>
               </div>
-            </div>
-            <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]"><button onClick={handleLogout}><Logout01Icon size={21}/></button></div>
+            </div> */}
+            <div className="px-2 py-2 ms-3 text-gray-500 hover:bg-gray-100 rounded"><button onClick={handleLogout}><CircleUser size={21}/></button></div>
             <button
               data-collapse-toggle="navbar-search"
               type="button"

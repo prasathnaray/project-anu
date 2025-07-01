@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
-import { PuffLoader,RingLoader, CircleLoader } from 'react-spinners';
+import { PuffLoader,RingLoader, CircleLoader , MoonLoader, ClipLoader} from 'react-spinners';
 import ForgotPassword from '../utils/ForgotPassword';
 function Login() {
   //icon change for password input
@@ -62,7 +62,6 @@ function Login() {
         setLoading(true);
         try {
             const response = await LoginAPI(userData);
-        
             if (response.data.code === 200) {
               const token = response.data.accessToken;
               localStorage.setItem('user_token', token);
@@ -130,9 +129,10 @@ function Login() {
                     })}
                     </button>
           </div>
-          <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-2 font-semibold text-lg transition-all ease-in-out" onClick={handleSubmit} disabled={loading}>
+          <button className={`${loading ? ("bg-gray-300 text-gray-500 font-semibold rounded px-5 py-2 text-lg transition-all ease-in-out") : ("bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-2 font-semibold text-lg transition-all ease-in-out")}`} onClick={handleSubmit} disabled={loading}>
+          {/* <span>Login</span> */}
           {loading ? (
-                <CircleLoader color="#ffffff" size={24} />
+                <div>Logging In <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/></div>
             ) : (
                 "Login"
             )}

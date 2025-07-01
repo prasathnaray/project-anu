@@ -20,3 +20,12 @@ body
 .Toastify__zoom-exit {
   animation: Toastify__zoomOut 0.2s ease forwards !important;
 }
+/* Add this to your global CSS file */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
