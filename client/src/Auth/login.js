@@ -9,6 +9,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import { PuffLoader,RingLoader, CircleLoader } from 'react-spinners';
+import ForgotPassword from '../utils/ForgotPassword';
 function Login() {
   //icon change for password input
   const [icon, setIcon] = useState(EyeOff);
@@ -25,6 +26,7 @@ function Login() {
         setType('password');
     }
   }
+  const[showModal, setShowModal] = useState(false);
   //handle loading
   const [loading, setLoading] = useState(false);
   //const [] = useState([]);
@@ -43,6 +45,7 @@ function Login() {
             [name]: value,
         }))
    }
+   const handleForgotPassword = () => setShowModal(true);
    //handle Login API
    const handleSubmit = async(e) => {
         e.preventDefault();
@@ -78,6 +81,19 @@ function Login() {
             setLoading(false); 
           }
    }
+
+   ///forgot password input handling
+   const [changepassword, setChangePassword] = useState({
+        reset_password_mail: ""
+   })
+   const handleChangePassword = (e) => {
+        const {name, value} = e.target;
+        setChangePassword((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+   }
+  //console.log(changepassword);
   return (
     <div className="h-screen grid grid-cols-2">
       <div className="bg-gray-100 flex justify-center items-center">
@@ -121,12 +137,27 @@ function Login() {
                 "Login"
             )}
           </button><br></br><br></br>
-          <a href="/" className="font-semibold text-blue-500">Forgot Password</a>
+          <button className="font-semibold text-blue-500" onClick={handleForgotPassword}>Forgot Password?</button>
         </div>
       </div>
       <div className="flex justify-center items-center border bg-[#8DC63F]">
             <div className="bg-white flex justify-center items-center py-20 rounded-3xl"><img src={logo} className="w-[50%]"/></div>  
       </div>
+      <ForgotPassword isVisible={showModal} onClose={() => setShowModal(false)}>
+              <div className="text-lg">Reset Password</div>
+              <input
+                  type="text"
+                  placeholder="Enter your email address"
+                  value={changepassword.reset_password_mail}
+                  onChange={handleChangePassword}
+                  name="reset_password_mail"
+                  className="rounded px-2 py-3 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
+              />
+              <div className="flex justify-end items-center gap-3">
+                  <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-5 py-2 font-semibold transition-all ease-in-out">Reset Passowrd</button>
+                  <button className="text-red-500 hover:bg-red-200 px-5 py-2 rounded transition-all ease-in-out" onClick={() => setShowModal(false)}>Cancel</button>
+              </div>
+      </ForgotPassword>
     </div>
   );
 }

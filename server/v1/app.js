@@ -5,6 +5,7 @@ const client = require('./utils/conn');
 //Auth
 const LoginRouter = require('./routes/Auth')
 const ProfileRouter = require('./routes/profileRoute');
+const ForgotPRouter = require('./routes/forgotpRoute');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -24,6 +25,8 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 //Auth route
 app.use('/api/v1', LoginRouter);
+app.use('/api/v1', ForgotPRouter)
+
 app.use('/api/v1', Authenticate, ProfileRouter);
 app.get('/test', Authenticate, (req, res) => {
     const requester = req.user;
