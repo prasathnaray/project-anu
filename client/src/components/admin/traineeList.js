@@ -4,10 +4,13 @@ import NavBar from '../navBar'
 import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical, Menu } from 'lucide-react'
 import TraineeListAPI from '../../API/TraineeListAPI';
 import { ArrowLeft01Icon } from 'hugeicons-react';
+import AddTrainee from './addTrainee';
 function TraineeList() {
   const token = localStorage.getItem("user_token");
   const [traineeList, setTraineeList] = useState([]);
   const [count, setCount] = useState(0);
+  const[showModal, setShowModal] = useState(false);
+  const handleAddTrainee = () => setShowModal(true);
   const dropdownRefs = useRef({});
 
   const handleTraineeList = async () => {
@@ -16,6 +19,7 @@ function TraineeList() {
                 const response = await TraineeListAPI(token);
                 console.log(response.data);
                 setTraineeList(response.data.rows);
+                setCount(response.data.length);
         }
         catch(error)
         {
@@ -30,7 +34,9 @@ function TraineeList() {
   useEffect(() => {
         handleTraineeList();
   }, []);
-
+  useEffect(() => {
+        console.log(count);
+  }, []);
   useEffect(() => {
     const handleClickOutside = (event) => {
       const isClickInside = Object.values(dropdownRefs.current).some(ref =>
@@ -67,7 +73,7 @@ function TraineeList() {
                                                             name="reset_password_mail"
                                                             className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                         /></div>
-                                                        <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Add Trainee</button></div>
+                                                        <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={handleAddTrainee}>Add Trainee</button></div>
                                                 </div>
                                                 <table className="w-full text-left border-collapse">
                                                         <thead>
@@ -88,8 +94,8 @@ function TraineeList() {
                                                                                 </td>
                                                                                 <td className="py-2 px-4">{trainee.user_name}</td>
                                                                                 <td className="py-2 px-4">UFT</td>
-                                                                                <td className="py-2 px-4">SVT</td>
-                                                                                <th className="py-2 px-4">jb</th>
+                                                                                <td className="py-2 px-4">test</td>
+                                                                                <th className="py-2 px-4 font-normal">jb</th>
                                                                                 <th className="py-2 px-4">
                                                                                 <button onClick={() => toggleDropdown(index)} className="text-gray-500"><EllipsisVertical size={23} /></button>
                                                                                 {openDropdownIndex === index && (
@@ -101,11 +107,11 @@ function TraineeList() {
                                                                                                 `} 
                                                                                                 >
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal">Disable</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal">Delete</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Disable</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Delete</button>
 
                                                                                                 </div>
-                                                )}
+                                                                                )}
                                                                                 </th>
                                                                         </tr>
                                                                         ))
@@ -130,6 +136,64 @@ function TraineeList() {
                                 </div>
                         </div>
                 </div>
+                <AddTrainee isVisible={showModal} onClose={() => setShowModal(false)}>
+                        <div className="text-lg">Add Trainee</div>
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                                                                  <input
+                                                                        type="text"
+                                                                        placeholder="Enter Trainee Name"
+                                                                        // value={changepassword.reset_password_mail}
+                                                                        // onChange={handleChangePassword}
+                                                                        name="reset_password_mail"
+                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-2"
+                                                                />
+                                                                 <input
+                                                                        type="text"
+                                                                        placeholder="Email Address"
+                                                                        // value={changepassword.reset_password_mail}
+                                                                        // onChange={handleChangePassword}
+                                                                        name="reset_password_mail"
+                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-2"
+                                                                />
+                                                                 <input
+                                                                        type="text"
+                                                                        placeholder="Contact Number"
+                                                                        // value={changepassword.reset_password_mail}
+                                                                        // onChange={handleChangePassword}
+                                                                        name="reset_password_mail"
+                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
+                                                                />
+                                                                 <input
+                                                                        type="text"
+                                                                        placeholder="Date of Birth"
+                                                                        // value={changepassword.reset_password_mail}
+                                                                        // onChange={handleChangePassword}
+                                                                        name="reset_password_mail"
+                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
+                                                                />
+                                                                 <input
+                                                                        type="text"
+                                                                        placeholder="Gender"
+                                                                        // value={changepassword.reset_password_mail}
+                                                                        // onChange={handleChangePassword}
+                                                                        name="reset_password_mail"
+                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
+                                                                />
+                                                                 <input
+                                                                        type="text"
+                                                                        placeholder="Course"
+                                                                        // value={changepassword.reset_password_mail}
+                                                                        // onChange={handleChangePassword}
+                                                                        name="reset_password_mail"
+                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
+                                                                />
+
+                        </div>
+                        <div className="flex justify-end items-center gap-3 mt-4">
+                                                <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-5 py-2 font-semibold transition-all ease-in-out">Add Trainee</button>
+                                                <button className="text-red-500 hover:bg-red-200 px-5 py-2 rounded transition-all ease-in-out" onClick={() => setShowModal(false)}>Cancel</button>
+                        </div>
+                </AddTrainee>
     </div>
   )
 }
