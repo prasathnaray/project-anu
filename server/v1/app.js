@@ -6,6 +6,7 @@ const client = require('./utils/conn');
 const LoginRouter = require('./routes/Auth')
 const ProfileRouter = require('./routes/profileRoute');
 const ForgotPRouter = require('./routes/forgotpRoute');
+const getTraineeRouter = require('./routes/getTraineesRoute')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -28,6 +29,7 @@ app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter)
 
 app.use('/api/v1', Authenticate, ProfileRouter);
+app.use('/api/v1', Authenticate, getTraineeRouter);
 app.get('/test', Authenticate, (req, res) => {
     const requester = req.user;
     res.status(200).json({
