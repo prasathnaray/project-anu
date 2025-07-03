@@ -1,0 +1,102 @@
+import React from 'react'
+
+function AddTraineeStep1() {
+  return (
+    <div className="mt-7 grid grid-cols-2 gap-5">
+                                                   <div className="relative">
+                                                      <input
+                                                        type="text"
+                                                        id="Name"
+                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        placeholder=" "
+                                                      />
+                                                      <label
+                                                        htmlFor="Name"
+                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
+                                                                  peer-focus:px-2 
+                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
+                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+                                                      >
+                                                        Name
+                                                      </label>
+                                                    </div>
+                                                    <div className="relative">
+                                                      <input
+                                                        type="text"
+                                                        id="Name"
+                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        placeholder=" "
+                                                      />
+                                                      <label
+                                                        htmlFor="Name"
+                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
+                                                                  peer-focus:px-2 
+                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
+                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+                                                      >
+                                                        Email Address
+                                                      </label>
+                                                    </div>
+                                                    <div className="relative mt-4">
+                                                      <input
+                                                        type="text"
+                                                        id="Phone"
+                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        placeholder=" "
+                                                      />
+                                                      <label
+                                                        htmlFor="Phone"
+                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
+                                                                  peer-focus:px-2 
+                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
+                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+                                                      >
+                                                        Contact Number
+                                                      </label>
+                                                    </div>
+                                                    <div className="relative mt-4">
+                                                      <input
+                                                        type="text"
+                                                        id="dob"
+                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        placeholder=" "
+                                                      />
+                                                      <label
+                                                        htmlFor="dob"
+                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
+                                                                  peer-focus:px-2 
+                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
+                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+                                                      >
+                                                         Date of Birth
+                                                      </label>
+                                                    </div>
+                                                    <div className="relative mt-4">
+                                                      <input
+                                                        type="text"
+                                                        id="gender"
+                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        placeholder=" "
+                                                      />
+                                                      <label
+                                                        htmlFor="gender"
+                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
+                                                                  peer-focus:px-2 
+                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
+                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
+                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
+                                                      >
+                                                          Gender
+                                                      </label>
+                                                    </div>
+
+
+                                  </div>
+  )
+}
+
+export default AddTraineeStep1

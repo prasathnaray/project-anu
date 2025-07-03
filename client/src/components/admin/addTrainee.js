@@ -3,6 +3,9 @@ import SideBar from '../sideBar';
 import NavBar from '../navBar';
 import { Lock, MessageCircleWarning, UserPen } from 'lucide-react';
 import Profile from '../../pages/Profile';
+import AddTraineeStep1 from './step/AddTraineeStep1';
+import AddTraineeStep3 from './step/AddTraineeStep3';
+import AddTraineeStep2 from './step/AddTraineeStep2';
 
 function AddTrainee() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -39,11 +42,6 @@ function AddTrainee() {
                                                   "polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%)",
                                               }}
                                             >
-                                              {/* <img
-                                                src={currentStep === 0 ? messagesvg : messagesvgblack}
-                                                className="w-5 mb-1"
-                                                alt="Step 1"
-                                              /> */}
                                               <MessageCircleWarning className={`mb-[2px] text-lg ${currentStep === 0 ? "text-white" : "text-black"}`} size={25}/>
                                               <span
                                                 className={`text-lg ${currentStep === 0 ? "text-white" : "text-black"}`}
@@ -72,11 +70,6 @@ function AddTrainee() {
                                                   "polygon(89% 0%, 100% 50%, 89% 100%, 0% 100%, 9% 50%, 0% 0%)",
                                               }}
                                             >
-                                              {/* <img
-                                                src={currentStep === 0 ? messagesvg : messagesvgblack}
-                                                className="w-5 mb-1"
-                                                alt="Step 1"
-                                              /> */}
                                               <UserPen className={`mb-[2px] text-lg font-normal ${currentStep === 1 ? "text-white" : "text-black"}`} size={25}/>
                                               <span
                                                 className={`text-lg ${currentStep === 2 ? "text-white" : "text-black"}`}
@@ -85,85 +78,12 @@ function AddTrainee() {
                                               </span>
                                             </div>
                                   </div>
-                                  <div className="mt-7 grid grid-cols-2 gap-5">
-                                                  <div className="relative">
-                                                      <input
-                                                        type="text"
-                                                        id="Name"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                                        placeholder=" "
-                                                      />
-                                                      <label
-                                                        htmlFor="Name"
-                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
-                                                                  peer-focus:px-2 
-                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
-                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
-                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
-                                                      >
-                                                        Name
-                                                      </label>
-                                                    </div>
-                                                    <div className="relative">
-                                                      <input
-                                                        type="text"
-                                                        id="Name"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                                        placeholder=" "
-                                                      />
-                                                      <label
-                                                        htmlFor="Name"
-                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
-                                                                  peer-focus:px-2 
-                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
-                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
-                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
-                                                      >
-                                                        Email Address
-                                                      </label>
-                                                    </div>
-                                                    <div className="relative">
-                                                      <input
-                                                        type="text"
-                                                        id="Phone"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                                        placeholder=" "
-                                                      />
-                                                      <label
-                                                        htmlFor="Phone"
-                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
-                                                                  peer-focus:px-2 
-                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
-                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
-                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
-                                                      >
-                                                        Contact Number
-                                                      </label>
-                                                    </div>
-                                                    <div className="relative">
-                                                      <input
-                                                        type="text"
-                                                        id="dob"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-                                                        placeholder=" "
-                                                      />
-                                                      <label
-                                                        htmlFor="dob"
-                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
-                                                                  peer-focus:px-2 
-                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
-                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
-                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
-                                                      >
-                                                         Date of Birth
-                                                      </label>
-                                                    </div>
-
-
-                                  </div>
-                                  <div className="mt-7 flex justify-between items-center gap-5">
-                                                <button className="bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold">Prev</button>
-                                                <button className="bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold">Next</button>
+                                  {currentStep === 0 && <AddTraineeStep1 />}
+                                  {currentStep === 1 && <AddTraineeStep2 />}
+                                  {currentStep === 2 && <AddTraineeStep3 />}
+                                  <div className={`mt-7  ${currentStep === 0 ? ' flex justify-end items-center' : ' flex justify-between items-center'} gap-5`}>
+                                                {currentStep > 0 && <button className="bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold" onClick={() => setCurrentStep(currentStep - 1)}>Prev</button>}
+                                                <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>
                                   </div>
                             </div>
                   </div>
