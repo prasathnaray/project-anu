@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react'
 import SideBar from '../sideBar'
 import NavBar from '../navBar'
-import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical, Menu } from 'lucide-react'
+import { ArrowUpWideNarrow, CalendarRangeIcon, ChevronLeft, ChevronRight, EllipsisVertical, LockIcon, Mail, Menu, PhoneCallIcon, User } from 'lucide-react'
 import TraineeListAPI from '../../API/TraineeListAPI';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import AddTrainee from './addTrainee';
@@ -73,7 +73,7 @@ function TraineeList() {
                                                             name="reset_password_mail"
                                                             className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                         /></div>
-                                                        <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={handleAddTrainee}>Add Trainee</button></div>
+                                                        <div className="flex justify-end items-center"><a href="/trainee/add" className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Add Trainee</a></div>
                                                 </div>
                                                 <table className="w-full text-left border-collapse">
                                                         <thead>
@@ -136,64 +136,70 @@ function TraineeList() {
                                 </div>
                         </div>
                 </div>
-                <AddTrainee isVisible={showModal} onClose={() => setShowModal(false)}>
+                {/* <AddTrainee isVisible={showModal} onClose={() => setShowModal(false)}>
                         <div className="text-lg">Add Trainee</div>
                         <div className="grid grid-cols-2 gap-4 mt-4">
-                                                                  <input
-                                                                        type="text"
-                                                                        placeholder="Enter Trainee Name"
-                                                                        // value={changepassword.reset_password_mail}
-                                                                        // onChange={handleChangePassword}
-                                                                        name="reset_password_mail"
-                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-2"
-                                                                />
-                                                                 <input
-                                                                        type="text"
-                                                                        placeholder="Email Address"
-                                                                        // value={changepassword.reset_password_mail}
-                                                                        // onChange={handleChangePassword}
-                                                                        name="reset_password_mail"
-                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-2"
-                                                                />
-                                                                 <input
-                                                                        type="text"
-                                                                        placeholder="Contact Number"
-                                                                        // value={changepassword.reset_password_mail}
-                                                                        // onChange={handleChangePassword}
-                                                                        name="reset_password_mail"
-                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
-                                                                />
-                                                                 <input
-                                                                        type="text"
-                                                                        placeholder="Date of Birth"
-                                                                        // value={changepassword.reset_password_mail}
-                                                                        // onChange={handleChangePassword}
-                                                                        name="reset_password_mail"
-                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
-                                                                />
-                                                                 <input
-                                                                        type="text"
-                                                                        placeholder="Gender"
-                                                                        // value={changepassword.reset_password_mail}
-                                                                        // onChange={handleChangePassword}
-                                                                        name="reset_password_mail"
-                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
-                                                                />
-                                                                 <input
-                                                                        type="text"
-                                                                        placeholder="Course"
-                                                                        // value={changepassword.reset_password_mail}
-                                                                        // onChange={handleChangePassword}
-                                                                        name="reset_password_mail"
-                                                                        className="rounded px-2 py-3 w-full focus:outline-none focus:ring-0 border mt-1"
-                                                                />
+                                                                  <div className="relative">
+                                                                        <input
+                                                                                type="text"
+                                                                                placeholder="Name"
+                                                                                name="user_password"
+                                                                                className="rounded px-10 py-3 w-full focus:outline-none focus:ring-1 focus:border-0 border"
+                                                                        />  
+                                                                        <div className="absolute top-3 left-2"><User size={24} strokeWidth={2} className="text-gray-400" /></div>
+                                                                   </div>
+                                                                   <div className="relative">
+                                                                        <input
+                                                                                type="text"
+                                                                                placeholder="Email Address"
+                                                                                name="user_password"
+                                                                                className="rounded px-10 py-3 w-full focus:outline-none focus:ring-1 focus:border-0 border"
+                                                                        />  
+                                                                        <div className="absolute top-3 left-2"><Mail size={24} strokeWidth={2} className="text-gray-400" /></div>
+                                                                   </div>
+                                                                   <div className="relative">
+                                                                        <input
+                                                                                type="text"
+                                                                                placeholder="Contact Number"
+                                                                                name="user_password"
+                                                                                className="rounded px-10 py-3 w-full focus:outline-none focus:ring-1 focus:border-0 border"
+                                                                        />  
+                                                                        <div className="absolute top-3 left-2"><PhoneCallIcon size={24} strokeWidth={2} className="text-gray-400" /></div>
+                                                                   </div>
+                                                                   <div className="relative">
+                                                                        <input
+                                                                                type="text"
+                                                                                placeholder="Date of Birth"
+                                                                                name="user_password"
+                                                                                className="rounded px-10 py-3 w-full focus:outline-none focus:ring-1 focus:border-0 border"
+                                                                        />  
+                                                                        <div className="absolute top-3 left-2"><CalendarRangeIcon size={24} strokeWidth={2} className="text-gray-400" /></div>
+                                                                   </div>
+                                                                   <div className="relative">
+                                                                        <input
+                                                                                type="text"
+                                                                                placeholder="Gender"
+                                                                                name="user_password"
+                                                                                className="rounded px-10 py-3 w-full focus:outline-none focus:ring-0 focus:ring-1 focus:border-0 border"
+                                                                        />  
+                                                                        <div className="absolute top-3 left-2"><Mail size={24} strokeWidth={2} className="text-gray-400" /></div>
+                                                                   </div>
+                                                                   <div className="relative">
+                                                                        <input
+                                                                                type="text"
+                                                                                placeholder="Course"
+                                                                                name="user_password"
+                                                                                className="rounded px-10 py-3 w-full focus:outline-none focus:ring-0 focus:ring-1 focus:border-0 border"
+                                                                        />  
+                                                                        <div className="absolute top-3 left-2"><Mail size={24} strokeWidth={2} className="text-gray-400" /></div>
+                                                                   </div>
 
                         </div>
                         <div className="flex justify-end items-center gap-3 mt-4">
                                                 <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-5 py-2 font-semibold transition-all ease-in-out">Add Trainee</button>
                                                 <button className="text-red-500 hover:bg-red-200 px-5 py-2 rounded transition-all ease-in-out" onClick={() => setShowModal(false)}>Cancel</button>
                         </div>
-                </AddTrainee>
+                </AddTrainee> */}
     </div>
   )
 }

@@ -6,6 +6,7 @@ import PrivateRoute from './ProtectedRoutes';
 import Dashboard from '../pages/dashboard';
 import Profile from '../pages/Profile';
 import Trainee from '../pages/Trainee';
+import AddTrainee from '../components/admin/addTrainee';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -15,6 +16,7 @@ function RoutesPath() {
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/trainee" element={<Trainee /> } />
+                            <Route path="/trainee/add" element={<AddTrainee /> } />
                     </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
