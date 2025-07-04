@@ -1,5 +1,5 @@
 const client = require('../utils/conn.js');
-const traineem = (requester) => {
+const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, requester) => {
     return new Promise((resolve, reject) => {
             const isPrivileged = [102].includes(Number(requester.role));
             if(!isPrivileged)
@@ -10,7 +10,7 @@ const traineem = (requester) => {
                     message: 'You do not have permission to create a trainee profile.'
                 });
             }
-            client.query('INSERT INTO user_data (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role' , [], (err, result) => {
+            client.query('INSERT INTO user_data (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)' , [user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description], (err, result) => {
                   if(err){
                     return reject(err);
                   }  

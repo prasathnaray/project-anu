@@ -7,7 +7,7 @@ function AddTraineeStep1() {
                                                       <input
                                                         type="text"
                                                         id="Name"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                       />
                                                       <label
@@ -25,7 +25,7 @@ function AddTraineeStep1() {
                                                       <input
                                                         type="text"
                                                         id="Name"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                       />
                                                       <label
@@ -43,7 +43,7 @@ function AddTraineeStep1() {
                                                       <input
                                                         type="text"
                                                         id="Phone"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                       />
                                                       <label
@@ -61,7 +61,7 @@ function AddTraineeStep1() {
                                                       <input
                                                         type="text"
                                                         id="dob"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                       />
                                                       <label
@@ -79,7 +79,7 @@ function AddTraineeStep1() {
                                                       <input
                                                         type="text"
                                                         id="gender"
-                                                        className="block px-2.5 pb-2.5 pt-2 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                       />
                                                       <label

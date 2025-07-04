@@ -36,7 +36,7 @@ function AddTrainee() {
                             <div className="mt-5 bg-white rounded px-8 py-10">
                                   <div className="grid grid-cols-3 mt-6 gap-2">
                                             <div
-                                              className={`flex items-center gap-2 justify-center p-4 ${currentStep === 0 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
+                                              className={`flex items-center gap-2 justify-center p-6 ${currentStep === 0 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
                                               style={{
                                                 clipPath:
                                                   "polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%)",
@@ -50,7 +50,7 @@ function AddTrainee() {
                                               </span>
                                             </div>
                                             <div
-                                              className={`flex gap-2 items-center justify-center p-4 ${currentStep === 1 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
+                                              className={`flex gap-2 items-center justify-center p-6 ${currentStep === 1 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
                                               style={{
                                                 clipPath:
                                                   "polygon(89% 0%, 100% 50%, 89% 100%, 0% 100%, 9% 50%, 0% 0%)",
@@ -64,13 +64,13 @@ function AddTrainee() {
                                               </span>
                                             </div>
                                             <div
-                                              className={`flex gap-2 items-center justify-center p-4 ${currentStep === 2 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
+                                              className={`flex gap-2 items-center justify-center p-6 ${currentStep === 2 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
                                               style={{
                                                 clipPath:
                                                   "polygon(89% 0%, 100% 50%, 89% 100%, 0% 100%, 9% 50%, 0% 0%)",
                                               }}
                                             >
-                                              <UserPen className={`mb-[2px] text-lg font-normal ${currentStep === 1 ? "text-white" : "text-black"}`} size={25}/>
+                                              <UserPen className={`mb-[2px] text-lg font-normal ${currentStep === 2 ? "text-white" : "text-black"}`} size={25}/>
                                               <span
                                                 className={`text-lg ${currentStep === 2 ? "text-white" : "text-black"}`}
                                               >

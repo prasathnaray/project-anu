@@ -10,6 +10,7 @@ const getTraineeRouter = require('./routes/getTraineesRoute')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
+const createTraineeRouter = require('./routes/createtraineeRoute');
 app.use(cors());
 app.listen('4004', (err) => {
     if(err)
@@ -38,3 +39,4 @@ app.get('/test', Authenticate, (req, res) => {
         user: req.user
     });
 });
+app.use('/api/v1', Authenticate, createTraineeRouter);
