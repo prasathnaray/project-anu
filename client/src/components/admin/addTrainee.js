@@ -6,6 +6,8 @@ import Profile from '../../pages/Profile';
 import AddTraineeStep1 from './step/AddTraineeStep1';
 import AddTraineeStep3 from './step/AddTraineeStep3';
 import AddTraineeStep2 from './step/AddTraineeStep2';
+import { Navigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 
 function AddTrainee() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -13,6 +15,18 @@ function AddTrainee() {
     e.preventDefault();
     setCurrentStep((prev) => prev + 1);
   };
+    const token = localStorage.getItem('user_token');
+  
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
+  const decoded = jwtDecode(token);
+
+  if (decoded.role != 102) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
   return (
     // <div className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-xs flex justify-center items-center border-md" id="wrapper" onClick={handleClose}>
     //         <div className="w-[700px]">

@@ -20,7 +20,7 @@ import {
   ChartRoseIcon
 } from "hugeicons-react";
 import { jwtDecode } from 'jwt-decode';
-function SideBar() {
+function SideBar({ handleButtonOpen, buttonOpen }) {
   const [tokdata, setTokData] = useState({});
    const token = jwtDecode(localStorage.getItem('user_token'));
   //console.log(token.role);
@@ -32,6 +32,22 @@ function SideBar() {
   console.log(tokdata.role);
   return (
     <div className="fixed top-0 left-0 h-screen md:w-[220px] sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white">
+        <div className="relative">
+          <div
+            className={`absolute top-5 left-6 ${
+              buttonOpen === false ? "left-6" : "left-[150px]"
+            } text-md text-[#00A877] shadow-lg rounded-2xl px-2 bg-white border`}
+          >
+            {/* <button onClick={() => handleButtonOpen()}>
+              <FontAwesomeIcon
+                icon={buttonOpen === false ? faChevronRight : faChevronLeft}
+              />
+            
+            </button> */}
+            {'>'}
+  
+          </div>
+        </div>
         <div className="md:px-[50px] pt-4"><img src={logo} /></div>
         <div className="">
             <ul className="py-5 px-8">
@@ -56,7 +72,8 @@ function SideBar() {
               }
               {tokdata.role == 102 && 
               <>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/trainee" className="flex gap-5"><  StudentCardIcon size={21}/>Trainee</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/dashboard" className="flex gap-5"><StudentCardIcon size={21}/>Dashboard</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/trainee" className="flex gap-5"><StudentCardIcon size={21}/>Trainee</a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/" className="flex gap-5"><CourseIcon size={21}/>Courses</a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/" className="flex gap-5"><MarketAnalysisIcon size={21}/>Reports</a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/" className="flex gap-5"><Message01Icon size={21}/>Queries</a></li>

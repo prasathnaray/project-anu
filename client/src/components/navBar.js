@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo,useEffect, useRef, useState } from "react";
 import {
   Notification03Icon,
   UserSharingIcon,
@@ -7,9 +7,12 @@ import {
   UserSettings01Icon,
   Logout01Icon
 } from "hugeicons-react";
-import { CircleUser, Bell, Search, MessageCircleMore} from 'lucide-react';
+import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import MaterialRipple from "material-ripple-effects";
 function NavBar() {
+    const ripple = new MaterialRipple();
+   const dropdownRefs = useRef({});
   const currentPath = window.location.pathname;
   const navigate = useNavigate();
   const handleLogout = () => {
@@ -17,7 +20,24 @@ function NavBar() {
     // sessionStorage.removeItem("role");
     navigate("/");
   };
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+  const toggleDropdown = (index) => {
+    setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+  };
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const isClickInside = Object.values(dropdownRefs.current).some(ref =>
+        ref && ref.contains(event.target)
+      );
 
+      if (!isClickInside) {
+        setOpenDropdownIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   return (
     <div className="navbar dm-sans">
       <nav className="bg-white shadow-sm border">
@@ -83,7 +103,21 @@ function NavBar() {
                 </button>
               </div>
             </div> */}
-            <div className="px-2 py-2 ms-3 text-gray-500 hover:bg-gray-100 rounded"><button onClick={handleLogout}><CircleUser size={21}/></button></div>
+            <div className=" ms-3 relative">
+              <button onClick={() => toggleDropdown('user-options')} className="text-blue-500 hover:bg-gray-200 p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
+                <User2Icon size={23} />
+              </button>
+              {openDropdownIndex === 'user-options' && (
+                <div
+                  ref={(el) => (dropdownRefs.current['user-options'] = el)}
+                  className="absolute right-0 mt-2 w-22 bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
+                >
+                  <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 font-normal" >Profile</button>
+                  <button className="block w-full text-left px-4 py-3 hover:bg-gray-50">Settings</button>
+                  <button className="block w-full text-left px-4 py-3 hover:bg-gray-50" onClick={handleLogout}>Logout</button>
+                </div>
+              )}
+            </div>
             <button
               data-collapse-toggle="navbar-search"
               type="button"
