@@ -1,4 +1,5 @@
 const client = require('../utils/conn.js');
+// const {HashedPassword} = require('../utils/hash.js');
 const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, requester) => {
     return new Promise((resolve, reject) => {
             const isPrivileged = [102].includes(Number(requester.role));
