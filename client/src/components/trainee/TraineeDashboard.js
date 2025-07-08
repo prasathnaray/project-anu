@@ -16,7 +16,7 @@ function TraineeDashboard() {
                 <div className={`${
           buttonOpen === true
             ? "ms-[221px] flex-grow"
-            : "ms-[59.5px] flex-grow"
+            : "ms-[85.5px] flex-grow"
         } `}>
                         <div>
                                 <NavBar />

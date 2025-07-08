@@ -7,6 +7,7 @@ const LoginRouter = require('./routes/Auth')
 const ProfileRouter = require('./routes/profileRoute');
 const ForgotPRouter = require('./routes/forgotpRoute');
 const getTraineeRouter = require('./routes/getTraineesRoute')
+const refreshTokenRouter = require('./routes/refreshTokenRouter');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -28,7 +29,7 @@ app.use(express.urlencoded({extended: true}));
 //Auth route
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter)
-
+app.use('/api/v1', refreshTokenRouter)
 app.use('/api/v1', Authenticate, ProfileRouter);
 app.use('/api/v1', Authenticate, getTraineeRouter);
 app.get('/test', Authenticate, (req, res) => {
