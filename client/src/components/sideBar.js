@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 // import { CourseIcon } from '@hugeicons-pro/core-stroke-rounded';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, ChevronLeft } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import {
   Notification03Icon,
@@ -17,8 +17,9 @@ import {
   UserIcon,
   Message01Icon,
   StudentCardIcon,
-  ChartRoseIcon
+  ChartRoseIcon,
 } from "hugeicons-react";
+import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 function SideBar({ handleButtonOpen, buttonOpen }) {
   const [tokdata, setTokData] = useState({});
@@ -31,20 +32,26 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
   }, []);
   console.log(tokdata.role);
   return (
-    <div className="fixed top-0 left-0 h-screen md:w-[220px] sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white">
+    // <div className="fixed top-0 left-0 h-screen md:w-[220px] sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white">
+  <div className={`fixed top-0 left-0 h-screen ${
+        buttonOpen === false
+          ? "md:w-[60px] transition-all"
+          : "md:w-[220px] transition-all"
+      } sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white `}>
         <div className="relative">
           <div
-            className={`absolute top-5 left-6 ${
-              buttonOpen === false ? "left-6" : "left-[150px]"
-            } text-md text-[#00A877] shadow-lg rounded-2xl px-2 bg-white border`}
+            className={`absolute top-24 left-0 ${
+              buttonOpen === false ? "left-0" : "left-[185px]"
+            } text-md text-[#8DC63F] shadow-lg rounded-2xl px-[5.5px] bg-white border`}
           >
-            {/* <button onClick={() => handleButtonOpen()}>
-              <FontAwesomeIcon
+            <button onClick={() => handleButtonOpen()} className="pt-1">
+              {/* <FontAwesomeIcon
                 icon={buttonOpen === false ? faChevronRight : faChevronLeft}
-              />
+              /> */}
+              {buttonOpen === false ? <ChevronRight size={20}/> : <ChevronLeft size={20}/>}
             
-            </button> */}
-            {'>'}
+            </button>
+            {/* {'>'} */}
   
           </div>
         </div>

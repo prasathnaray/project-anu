@@ -24,8 +24,8 @@ function decrypt(encryptedData, ivHex) {
     const decipher = crypto.createDecipheriv(algorithm, key, Buffer.from(ivHex, 'hex'));
     let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    //return decrypted;
-    console.log(decrypted);
+    return decrypted;
+    //console.log(decrypted);
 }
 
 const HashPassword = async(plainPassword) =>{
