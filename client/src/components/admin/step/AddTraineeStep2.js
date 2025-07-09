@@ -1,6 +1,6 @@
 import React from 'react'
 
-function AddTraineeStep2() {
+function AddTraineeStep2({handleChange, handleInputData}) {
   return (
     <div className="mt-7 grid grid-cols-2 gap-5">
                                                     <div className="relative">
@@ -9,6 +9,9 @@ function AddTraineeStep2() {
                                                         id="password"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        name="trainee_password"
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_password}
                                                       />
                                                       <label
                                                         htmlFor="password"
@@ -27,6 +30,9 @@ function AddTraineeStep2() {
                                                         id="confirmPassword"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_confirm_password}
+                                                        name="trainee_confirm_password"
                                                       />
                                                       <label
                                                         htmlFor="confirmPassword"
@@ -45,6 +51,9 @@ function AddTraineeStep2() {
                                                         id="status"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        name="status"
+                                                        onChange={handleChange}
+                                                        value={handleInputData.status}
                                                       />
                                                       <label
                                                         htmlFor="status"

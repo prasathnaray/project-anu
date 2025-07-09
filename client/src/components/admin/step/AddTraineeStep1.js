@@ -1,6 +1,6 @@
 import React from 'react'
 
-function AddTraineeStep1() {
+function AddTraineeStep1({handleChange, handleInputData}) {
   return (
     <div className="mt-7 grid grid-cols-2 gap-5">
                                                    <div className="relative">
@@ -9,6 +9,9 @@ function AddTraineeStep1() {
                                                         id="Name"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        name="trainee_name"
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_name}
                                                       />
                                                       <label
                                                         htmlFor="Name"
@@ -27,6 +30,9 @@ function AddTraineeStep1() {
                                                         id="Name"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        name="trainee_email_address"
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_email_address}
                                                       />
                                                       <label
                                                         htmlFor="Name"
@@ -45,6 +51,9 @@ function AddTraineeStep1() {
                                                         id="Phone"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_contact_address}
+                                                        name="trainee_contact_address"
                                                       />
                                                       <label
                                                         htmlFor="Phone"
@@ -63,6 +72,9 @@ function AddTraineeStep1() {
                                                         id="dob"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_dob}
+                                                        name="trainee_dob"
                                                       />
                                                       <label
                                                         htmlFor="dob"
@@ -81,6 +93,9 @@ function AddTraineeStep1() {
                                                         id="gender"
                                                         className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-md border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
+                                                        onChange={handleChange}
+                                                        value={handleInputData.trainee_gender}
+                                                        name="trainee_gender"
                                                       />
                                                       <label
                                                         htmlFor="gender"
@@ -93,8 +108,6 @@ function AddTraineeStep1() {
                                                           Gender
                                                       </label>
                                                     </div>
-
-
                                   </div>
   )
 }

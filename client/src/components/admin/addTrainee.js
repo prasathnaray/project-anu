@@ -8,33 +8,56 @@ import AddTraineeStep3 from './step/AddTraineeStep3';
 import AddTraineeStep2 from './step/AddTraineeStep2';
 import { Navigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-
+import APP_URL from '../../API/config';
+import AddTraineeAPI from '../../API/AddTraineeAPI.js';
 function AddTrainee() {
+  const [handleInputData, setHandleInputData] = useState({
+          trainee_name: '',
+          trainee_email_address: '',
+          trainee_contact_address: '',
+          trainee_dob: '',
+          trainee_gender: '',
+          trainee_password: '',
+          trainee_confirm_password: '',
+          status: '',
+          trainee_dp: '',
+          description: ''
+  })
+  console.log(handleInputData);
+  const handleChange = (e) => {
+      const {name, value} = e.target;
+        setHandleInputData((prevData)=>({
+            ...prevData,
+            [name]: value,
+        }))
+  }
+  const tokenData = localStorage.getItem('user_data')
+  const submitHandle = async(e) => {
+      e.preventDefault();
+      try
+      {
+          const result = await AddTraineeAPI(tokenData, handleInputData);
+          console.log(result);
+      } 
+      catch(err)
+      {
+         console.log(err)
+      } 
+  }
   const [currentStep, setCurrentStep] = useState(0);
   const handleNext = (e) => {
     e.preventDefault();
     setCurrentStep((prev) => prev + 1);
   };
-    const token = localStorage.getItem('user_token');
-  
+  const token = localStorage.getItem('user_token');
   if (!token) {
     return <Navigate to="/" replace />;
   }
-
   const decoded = jwtDecode(token);
-
   if (decoded.role != 102) {
     return <Navigate to="/dashboard" replace />;
   }
-  
   return (
-    // <div className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-xs flex justify-center items-center border-md" id="wrapper" onClick={handleClose}>
-    //         <div className="w-[700px]">
-    //                 <div className="bg-white p-4 rounded">
-    //                     {children}
-    //                 </div>
-    //         </div>
-    // </div>
     <div className="flex">
         <div>
             <SideBar />
@@ -47,7 +70,8 @@ function AddTrainee() {
                   <div className="px-10 py-4">
                             <div className="text-gray-500">Trainees / Add new trainee </div>
                             <div className="mt-5 font-semibold text-xl text-gray-600">Add new Trainees</div>
-                            <div className="mt-5 bg-white rounded px-8 py-10">
+                            <div className="flex justify-center items-center">
+                              <div className="mt-5 bg-white rounded px-10 py-10 w-full max-w-[1500px] mx-auto shadow-md">
                                   <div className="grid grid-cols-3 mt-6 gap-2">
                                             <div
                                               className={`flex items-center gap-2 justify-center p-6 ${currentStep === 0 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
@@ -92,13 +116,14 @@ function AddTrainee() {
                                               </span>
                                             </div>
                                   </div>
-                                  {currentStep === 0 && <AddTraineeStep1 />}
-                                  {currentStep === 1 && <AddTraineeStep2 />}
-                                  {currentStep === 2 && <AddTraineeStep3 />}
+                                  {currentStep === 0 && <AddTraineeStep1 handleChange={handleChange} handleInputData={handleInputData}/>}
+                                  {currentStep === 1 && <AddTraineeStep2 handleChange={handleChange} handleInputData={handleInputData}/>}
+                                  {currentStep === 2 && <AddTraineeStep3 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   <div className={`mt-7  ${currentStep === 0 ? ' flex justify-end items-center' : ' flex justify-between items-center'} gap-5`}>
                                                 {currentStep > 0 && <button className="bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold" onClick={() => setCurrentStep(currentStep - 1)}>Prev</button>}
                                                 <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>
                                   </div>
+                            </div>
                             </div>
                   </div>
             </div>
