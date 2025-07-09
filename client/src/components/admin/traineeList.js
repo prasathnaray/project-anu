@@ -51,17 +51,27 @@ function TraineeList() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+
+  const [buttonOpen, setButtonOpen] = useState(true);
+  const handleButtonOpen = () => {
+    setButtonOpen(!buttonOpen);
+  };
   return (
     <div className={`flex`}>
                 <div>
-                    <SideBar /> 
+                    <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> 
                 </div>
-                <div className="ms-[221px] flex-grow">
+                <div className={`${
+                        buttonOpen === true
+                        ? "ms-[221px] flex-grow"
+                        : "ms-[85.5px] flex-grow"
+                        } `}>
                         <div>
                                 <NavBar />
                         </div>
-                        <div className="bg-gray-100">
-                                <div className="px-10 py-8">
+                        <div className="bg-gray-100 ">
+                                <div className="px-10 py-8 w-full max-w-[1800px] mx-auto">
                                             <div className="text-gray-500">Dashboard / Trainees</div>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Trainees</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10 ">

@@ -71,7 +71,7 @@ function AddTrainee() {
                             <div className="text-gray-500">Trainees / Add new trainee </div>
                             <div className="mt-5 font-semibold text-xl text-gray-600">Add new Trainees</div>
                             <div className="flex justify-center items-center">
-                              <div className="mt-5 bg-white rounded px-10 py-10 w-full max-w-[1500px] mx-auto shadow-md">
+                              <div className="mt-5 bg-white rounded px-10 py-10 w-full max-w-[1800px] mx-auto shadow-md">
                                   <div className="grid grid-cols-3 mt-6 gap-2">
                                             <div
                                               className={`flex items-center gap-2 justify-center p-6 ${currentStep === 0 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
