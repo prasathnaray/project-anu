@@ -48,7 +48,7 @@ const [profileData, setProfileData] = useState({})
   }, [profileData])
   //console.log(tokData.role);
   return (
-    <div class={`flex`}>
+    <div className={`flex`}>
         <div> 
             <SideBar /> 
         </div>  

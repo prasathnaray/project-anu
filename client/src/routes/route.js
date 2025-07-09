@@ -7,6 +7,7 @@ import Dashboard from '../pages/dashboard';
 import Profile from '../pages/Profile';
 import Trainee from '../pages/Trainee';
 import AddTrainee from '../components/admin/addTrainee';
+import Queries from '../pages/Queries';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -17,6 +18,7 @@ function RoutesPath() {
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/trainee" element={<Trainee /> } />
                             <Route path="/trainee/add" element={<AddTrainee /> } />
+                            <Route path="/queries" element={<Queries />} />
                     </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
