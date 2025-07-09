@@ -78,21 +78,21 @@ function NavBar() {
              <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                 <button>
-                  <MessageCircleMore size={21} />
+                  <MessageCircleMore size={25} />
                 </button>
               </div>
             </div>
             <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                 <button>
-                  <Search size={21} />
+                  <Search size={25} />
                 </button>
               </div>
             </div>
             <div className="relative md:block">
               <div className="px-3 py-2 ms-3 text-gray-500 hover:text-[#8DC63F]">
                 <button className="">
-                  <Bell size={21} />
+                  <Bell size={25} />
                 </button>
               </div>
             </div>
@@ -105,7 +105,7 @@ function NavBar() {
             </div> */}
             <div className=" ms-3 relative">
               <button onClick={() => toggleDropdown('user-options')} className="text-blue-500 hover:bg-gray-200 p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
-                <User2Icon size={23} />
+                <User2Icon size={25} />
               </button>
               {openDropdownIndex === 'user-options' && (
                 <div

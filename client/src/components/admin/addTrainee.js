@@ -44,7 +44,11 @@ function AddTrainee() {
          console.log(err)
       } 
   }
-  const [currentStep, setCurrentStep] = useState(0);
+    const [buttonOpen, setButtonOpen] = useState(true);
+    const handleButtonOpen = () => {
+        setButtonOpen(!buttonOpen);
+    };
+    const [currentStep, setCurrentStep] = useState(0);
   const handleNext = (e) => {
     e.preventDefault();
     setCurrentStep((prev) => prev + 1);
@@ -60,19 +64,23 @@ function AddTrainee() {
   return (
     <div className="flex">
         <div>
-            <SideBar />
+            <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>
         </div>
-        <div className="ms-[221px] flex-grow">
-            <div>
-                <NavBar />
+          <div className={`${
+                    buttonOpen === true
+                    ? "ms-[221px] flex-grow"
+                    : "ms-[85.5px] flex-grow"
+                    } `}>
+                    <div>                 
+                          <NavBar />
             </div>
-            <div className="bg-gray-100">
-                  <div className="px-10 py-4">
-                            <div className="text-gray-500">Trainees / Add new trainee </div>
+            <div className="bg-gray-100 h-screen overflow-y-auto">
+                  <div className="px-10 py-4 w-full max-w-[1800px] mx-auto">
+                            <div className="text-gray-500 lg:mt-5 mt-1">Trainees / Add new trainee </div>
                             <div className="mt-5 font-semibold text-xl text-gray-600">Add new Trainees</div>
-                            <div className="flex justify-center items-center">
-                              <div className="mt-5 bg-white rounded px-10 py-10 w-full max-w-[1800px] mx-auto shadow-md">
-                                  <div className="grid grid-cols-3 mt-6 gap-2">
+                            {/* <div className="flex justify-center items-center"> */}
+                              <div className="mt-5 bg-white rounded-3xl mx-auto shadow-md px-[50px] py-10">
+                                  <div className="grid grid-cols-3 pt-6 gap-2">
                                             <div
                                               className={`flex items-center gap-2 justify-center p-6 ${currentStep === 0 ? "bg-[#8DC63F]" : "bg-[#D8F3D9]"}`}
                                               style={{
@@ -124,7 +132,7 @@ function AddTrainee() {
                                                 <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>
                                   </div>
                             </div>
-                            </div>
+                            {/* </div> */}
                   </div>
             </div>
         </div>

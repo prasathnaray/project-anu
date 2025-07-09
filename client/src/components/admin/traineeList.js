@@ -62,14 +62,14 @@ function TraineeList() {
                 <div>
                     <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> 
                 </div>
-                <div className={`${
+                        <div className={`${
                         buttonOpen === true
                         ? "ms-[221px] flex-grow"
                         : "ms-[85.5px] flex-grow"
                         } `}>
-                        <div>
+                        <div> 
                                 <NavBar />
-                        </div>
+                       </div>
                         <div className="bg-gray-100 ">
                                 <div className="px-10 py-8 w-full max-w-[1800px] mx-auto">
                                             <div className="text-gray-500">Dashboard / Trainees</div>

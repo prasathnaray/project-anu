@@ -7,7 +7,7 @@ function AddTraineeStep3({handleChange, handleInputData}) {
                                                       <input
                                                         type="password"
                                                         id="confirmPassword"
-                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-5 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                         onChange={handleChange}
                                                         value={handleInputData.trainee_dp}
@@ -28,7 +28,7 @@ function AddTraineeStep3({handleChange, handleInputData}) {
                                                       <textarea
                                                         type="password"
                                                         id="confirmPassword"
-                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                                                        className="block px-2.5 pb-2.5 pt-5 w-full text-sm text-gray-900 bg-transparent rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-blue-600 peer"
                                                         placeholder=" "
                                                         onChange={handleChange}
                                                         value={handleInputData.description}
