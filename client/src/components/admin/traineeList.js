@@ -5,6 +5,7 @@ import { ArrowUpWideNarrow, CalendarRangeIcon, ChevronLeft, ChevronRight, Ellips
 import TraineeListAPI from '../../API/TraineeListAPI';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import AddTrainee from './addTrainee';
+import axios from 'axios';
 function TraineeList() {
   const token = localStorage.getItem("user_token");
   const [traineeList, setTraineeList] = useState([]);
@@ -51,12 +52,23 @@ function TraineeList() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-
   const [buttonOpen, setButtonOpen] = useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
   };
+  const [disableTrainee, setDisableTrainee] = useState('')
+  const handleDisable = async(e) => {
+        e.preventDefault();
+        try
+        {
+                const response = await axios.patch(`http://localhost:4004/api/v1/disable-trainee/${disableTrainee}`)
+                console.log(response)
+        }
+        catch(err)
+        {
+                console.log(err)
+        }
+  }
   return (
     <div className={`flex`}>
                 <div>
@@ -117,7 +129,7 @@ function TraineeList() {
                                                                                                 `} 
                                                                                                 >
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Disable</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => setDisableTrainee(`${trainee.user_email}`)}>Disable</button>
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Delete</button>
 
                                                                                                 </div>

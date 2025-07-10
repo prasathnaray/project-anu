@@ -1,12 +1,11 @@
 // const { default: CreateTrainee } = require('../model/traineem.js');
-const {getTraineesm, traineem} = require('../model/traineem.js');
+const {getTraineesm, traineem, disableTraineem} = require('../model/traineem.js');
 const {HashPassword} = require('../utils/hash.js');
 const TraineeController = async(req, res) => {
         const requester = req.user;
         try {
                 const result = await getTraineesm(requester);
                 res.status(200).send(result);
-                //res.send(requester)
         } catch (err) {
                 res.status(500).send({
                         status: 'Error',
@@ -39,4 +38,28 @@ const CreateTraineeController = async (req, res) => {
                 //console.log(err);
         }
 }
-module.exports = {TraineeController, CreateTraineeController};
+const DisableTrainee = async(req, res) => {
+        const requester = req.user
+        const user_mail = req.params.user_mail
+        try
+        {
+                const result = await disableTraineem(requester, user_mail);
+                if(result.rowCount === 0)
+                {
+                        res.status(400).send("Hello")
+                }
+                else
+                {
+                        res.status(200).send({
+                                result: 'Updated Successfully',
+                                statusCode: 200
+                        })
+                }
+                //res.status(200).send(result);
+        }
+        catch(err)
+        {
+                res.status(500).send(err)
+        }
+}
+module.exports = {TraineeController, CreateTraineeController, DisableTrainee};

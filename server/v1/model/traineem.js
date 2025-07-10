@@ -44,4 +44,27 @@ const getTraineesm = (requester) => {
         })
     })
 }
-module.exports = {traineem, getTraineesm};
+const disableTraineem = (requester , user_mail) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [102, 101].includes(Number(requester.role));
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
+        client.query('UPDATE user_data SET status=$1 WHERE user_email=$2', ['inactive', user_mail], (err, result) => {
+            if(err)
+            {
+                return reject(err.message)
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {traineem, getTraineesm, disableTraineem};
