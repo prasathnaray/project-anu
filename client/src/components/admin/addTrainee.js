@@ -76,7 +76,7 @@ function AddTrainee() {
             </div>
             <div className="bg-gray-100 h-screen overflow-y-auto">
                   <div className="px-10 py-4 w-full max-w-[1800px] mx-auto">
-                            <div className="text-gray-500 lg:mt-5 mt-1">Trainees / Add new trainee </div>
+                            <div className="text-gray-500 lg:mt-5 mt-1">Trainees / Add new trainee</div>
                             <div className="mt-5 font-semibold text-xl text-gray-600">Add new Trainees</div>
                             {/* <div className="flex justify-center items-center"> */}
                               <div className="mt-5 bg-white rounded-3xl mx-auto shadow-md px-[50px] py-10">

@@ -6,6 +6,7 @@ import TraineeListAPI from '../../API/TraineeListAPI';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import AddTrainee from './addTrainee';
 import axios from 'axios';
+import showDisableConfirmToast from '../../utils/showDisableConfirmToast';
 function TraineeList() {
   const token = localStorage.getItem("user_token");
   const [traineeList, setTraineeList] = useState([]);
@@ -69,6 +70,7 @@ function TraineeList() {
                 console.log(err)
         }
   }
+//   let statusUpdate = traineeList.status === "inactive"?"active":"inactive"
   return (
     <div className={`flex`}>
                 <div>
@@ -105,6 +107,7 @@ function TraineeList() {
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Course</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Module</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Batch</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Status</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                 </tr>
                                                         </thead>
                                                         <tbody>
@@ -118,6 +121,9 @@ function TraineeList() {
                                                                                 <td className="py-2 px-4">UFT</td>
                                                                                 <td className="py-2 px-4">test</td>
                                                                                 <th className="py-2 px-4 font-normal">jb</th>
+                                                                                <th className={`py-2 px-4 font-normal`}>
+                                                                                                <div className={`inline-block px-3 py-1 rounded text-sm ${trainee.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>{trainee.status}</div>
+                                                                                </th>                                                                                
                                                                                 <th className="py-2 px-4">
                                                                                 <button onClick={() => toggleDropdown(index)} className="text-gray-500"><EllipsisVertical size={23} /></button>
                                                                                 {openDropdownIndex === index && (
@@ -129,7 +135,8 @@ function TraineeList() {
                                                                                                 `} 
                                                                                                 >
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => setDisableTrainee(`${trainee.user_email}`)}>Disable</button>
+                                                                                                                {trainee.status === "inactive"? <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, 'active')}>Enable</button>: <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, 'inactive')}>Disable</button>}
+                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Delete</button>
 
                                                                                                 </div>

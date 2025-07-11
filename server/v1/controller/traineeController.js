@@ -41,12 +41,16 @@ const CreateTraineeController = async (req, res) => {
 const DisableTrainee = async(req, res) => {
         const requester = req.user
         const user_mail = req.params.user_mail
+        const status = req.params.status
         try
         {
-                const result = await disableTraineem(requester, user_mail);
+                const result = await disableTraineem(requester, user_mail, status);
                 if(result.rowCount === 0)
                 {
-                        res.status(400).send("Hello")
+                        res.status(400).send({
+                                error: 400,
+                                result: 'No user found to update'
+                        })
                 }
                 else
                 {
@@ -55,7 +59,6 @@ const DisableTrainee = async(req, res) => {
                                 statusCode: 200
                         })
                 }
-                //res.status(200).send(result);
         }
         catch(err)
         {
