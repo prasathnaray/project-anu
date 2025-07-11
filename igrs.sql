@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 16.2
--- Dumped by pg_dump version 16.2
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
 
--- Started on 2025-07-07 10:49:24
+-- Started on 2025-07-11 18:06:37
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,7 +19,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 842 (class 1247 OID 156070)
+-- TOC entry 842 (class 1247 OID 16563)
 -- Name: gender_enum; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -33,7 +33,7 @@ CREATE TYPE public.gender_enum AS ENUM (
 ALTER TYPE public.gender_enum OWNER TO postgres;
 
 --
--- TOC entry 845 (class 1247 OID 156078)
+-- TOC entry 845 (class 1247 OID 16570)
 -- Name: user_role; Type: TYPE; Schema: public; Owner: postgres
 --
 
@@ -52,7 +52,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- TOC entry 217 (class 1259 OID 213410)
+-- TOC entry 215 (class 1259 OID 16579)
 -- Name: course_data; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -66,7 +66,7 @@ CREATE TABLE public.course_data (
 ALTER TABLE public.course_data OWNER TO postgres;
 
 --
--- TOC entry 216 (class 1259 OID 172450)
+-- TOC entry 216 (class 1259 OID 16582)
 -- Name: forgot_password_request_activity; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -80,7 +80,7 @@ CREATE TABLE public.forgot_password_request_activity (
 ALTER TABLE public.forgot_password_request_activity OWNER TO postgres;
 
 --
--- TOC entry 215 (class 1259 OID 156087)
+-- TOC entry 217 (class 1259 OID 16586)
 -- Name: user_data; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -97,15 +97,15 @@ CREATE TABLE public.user_data (
     created_at timestamp without time zone DEFAULT now(),
     status character varying(20) DEFAULT 'active'::character varying,
     description character varying(20) DEFAULT ''::character varying,
-    CONSTRAINT status_check CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'inactive'::character varying, 'suspended'::character varying])::text[])))
+    CONSTRAINT status_check CHECK (((status)::text = ANY (ARRAY[('active'::character varying)::text, ('inactive'::character varying)::text, ('suspended'::character varying)::text])))
 );
 
 
 ALTER TABLE public.user_data OWNER TO postgres;
 
 --
--- TOC entry 4859 (class 0 OID 213410)
--- Dependencies: 217
+-- TOC entry 4904 (class 0 OID 16579)
+-- Dependencies: 215
 -- Data for Name: course_data; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -114,7 +114,7 @@ COPY public.course_data (course_id, course_name, created_at) FROM stdin;
 
 
 --
--- TOC entry 4858 (class 0 OID 172450)
+-- TOC entry 4905 (class 0 OID 16582)
 -- Dependencies: 216
 -- Data for Name: forgot_password_request_activity; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -126,21 +126,22 @@ test@example.com	172.16.101.112	2025-07-01 12:25:23.726862
 
 
 --
--- TOC entry 4857 (class 0 OID 156087)
--- Dependencies: 215
+-- TOC entry 4906 (class 0 OID 16586)
+-- Dependencies: 217
 -- Data for Name: user_data; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.user_data (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, created_at, status, description) FROM stdin;
-u_0012asgfhd	https://s3.amazonaws.com/bucket/user1.png	Prasath	prasath@example.com	9876543210	2000-01-01	male	$2b$10$ZNkOMieY2GCvhNXQBFmwves4bVj5z6Wk.2dajDgJSjHmUAaO9OxLe	103	2025-06-25 17:08:07.74383	active	
 U1010001	profile101.jpg	Ravi Kumar	ravi.kumar@example.com	9876543211	1992-03-15	male	$2b$10$aH7WDNUDHOib0IbYbpbs.evz4hSXkH1B.ni8quKVWzDhdTi8xwG7C	101	2025-06-27 12:50:57.750575	active	
 U1011123	profile101.jpg	Ravi Kumar	test@example.com	9876543220	1992-03-15	male	$2b$10$aH7WDNUDHOib0IbYbpbs.evz4hSXkH1B.ni8quKVWzDhdTi8xwG7C	102	2025-06-27 13:07:37.557049	active	
-ANU2232134	f4e2464f-c225-4b8b-a8a0-4ceaaccd24cb	Rokesh Maran	rokesh@htic.iitm.ac.in	89879799721	2002-01-02	male	$2b$10$iWsuYpmNrVaqpgUxFWZ7z.CbINrKM0RWegCnu0WRmP6R6JG88UA8S	103	2025-07-04 13:48:47.593438	active	-
+ANU2232134	f4e2464f-c225-4b8b-a8a0-4ceaaccd24cb	Rokesh Maran	rokesh@htic.iitm.ac.in	89879799721	2002-01-02	male	$2b$10$iWsuYpmNrVaqpgUxFWZ7z.CbINrKM0RWegCnu0WRmP6R6JG88UA8S	103	2025-07-04 13:48:47.593438	inactive	-
+u_0012asgfhd	https://s3.amazonaws.com/bucket/user1.png	Prasath	prasath@example.com	9876543210	2000-01-01	male	$2b$10$ZNkOMieY2GCvhNXQBFmwves4bVj5z6Wk.2dajDgJSjHmUAaO9OxLe	103	2025-06-25 17:08:07.74383	inactive	
+0022a6cb-9ddb	f4e2464f-c225-	28c965cc-c446-499	sa@gmail.com	9987654324	2020-11-11	male	$2b$10$TRfPKQGGPrGv5eumGVhR4O5cQ47h6hN3LDvP6pRQv6rN/RbDqDPiK	103	2025-07-08 17:19:42.024143	active	17dcdeba-bb
 \.
 
 
 --
--- TOC entry 4713 (class 2606 OID 213414)
+-- TOC entry 4754 (class 2606 OID 16596)
 -- Name: course_data course_data_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -149,7 +150,7 @@ ALTER TABLE ONLY public.course_data
 
 
 --
--- TOC entry 4707 (class 2606 OID 156094)
+-- TOC entry 4756 (class 2606 OID 16598)
 -- Name: user_data user_table_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -158,7 +159,7 @@ ALTER TABLE ONLY public.user_data
 
 
 --
--- TOC entry 4709 (class 2606 OID 156098)
+-- TOC entry 4758 (class 2606 OID 16600)
 -- Name: user_data user_table_user_contact_num_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -167,7 +168,7 @@ ALTER TABLE ONLY public.user_data
 
 
 --
--- TOC entry 4711 (class 2606 OID 156096)
+-- TOC entry 4760 (class 2606 OID 16602)
 -- Name: user_data user_table_user_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -175,7 +176,7 @@ ALTER TABLE ONLY public.user_data
     ADD CONSTRAINT user_table_user_email_key UNIQUE (user_email);
 
 
--- Completed on 2025-07-07 10:49:31
+-- Completed on 2025-07-11 18:06:39
 
 --
 -- PostgreSQL database dump complete
