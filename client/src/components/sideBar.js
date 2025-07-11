@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 // import { CourseIcon } from '@hugeicons-pro/core-stroke-rounded';
-import { BookOpen, ChevronLeft } from 'lucide-react';
+import { BookOpen, ChevronLeft, ClipboardPenLine, GraduationCap } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import {
   Notification03Icon,
@@ -72,12 +72,12 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               }
               {tokdata.role == 101 && 
               <>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/home" className="flex gap-5"><Mortarboard02Icon size={21}/><span></span>Intructors</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/startups" className="flex gap-5"><CourseIcon size={21}/>Trainee</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><MarketAnalysisIcon size={21}/>Courses</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><ChartBarLineIcon size={21}/>Curriculum</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><UserIcon size={21}/>Report</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><UserIcon size={21}/>Analysis</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/dashboard" className="flex gap-5 text-gray-500 hover:text-white"><LayoutDashboard size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Dashboard</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/instructors" className="flex gap-5 text-gray-500 hover:text-white"><ClipboardPenLine size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/trainee" className="flex gap-5 text-gray-500 hover:text-white"><GraduationCap size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></a></li>
+                {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><ChartBarLineIcon size={21}/>Curriculum</a></li> */}
+                {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><UserIcon size={21}/>Report</a></li> */}
+                {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><UserIcon size={21}/>Analysis</a></li> */}
               </>
               }
               {tokdata.role == 102 && 

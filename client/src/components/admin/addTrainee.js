@@ -58,7 +58,7 @@ function AddTrainee() {
     return <Navigate to="/" replace />;
   }
   const decoded = jwtDecode(token);
-  if (decoded.role != 102) {
+  if (decoded.role != 101) {
     return <Navigate to="/dashboard" replace />;
   }
   return (

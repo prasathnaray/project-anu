@@ -11,10 +11,9 @@ function Trainee() {
 
   const decoded = jwtDecode(token);
 
-  if (decoded.role != 102) {
+  if (decoded.role != 101 && decoded.role != 102) {
     return <Navigate to="/" replace />;
   }
-  
   return (
     <>
       {/* {token.role == 102 && <TraineeList />} */}
