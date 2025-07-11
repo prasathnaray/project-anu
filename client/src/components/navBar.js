@@ -105,7 +105,7 @@ function NavBar() {
             </div> */}
             <div className=" ms-3 relative">
               <button onClick={() => toggleDropdown('user-options')} className="text-blue-500 hover:bg-gray-200 p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
-                <User2Icon size={25} />
+                <CircleUser size={25} />
               </button>
               {openDropdownIndex === 'user-options' && (
                 <div

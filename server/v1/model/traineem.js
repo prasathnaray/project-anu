@@ -46,7 +46,7 @@ const getTraineesm = (requester) => {
 }
 const disableTraineem = (requester , user_mail, status) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [102, 101].includes(Number(requester.role));
+        const isPrivileged = [101, 102].includes(Number(requester.role));
         if(!isPrivileged)
         {
             return resolve({

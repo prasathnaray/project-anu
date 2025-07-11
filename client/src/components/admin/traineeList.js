@@ -115,14 +115,17 @@ function TraineeList() {
                                                                         traineeList.map((trainee, index) => (
                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                                 <td className="py-2 px-4">
-                                                                                        <img src={trainee.user_profile_photo} alt="" />
+                                                                                        <img src="https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/sign/projectanu/image%20(3).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9hYWVhODNjOC0zMzcyLTRhZTgtYTQzZi03NjA1NzQ3OGE3MGUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9qZWN0YW51L2ltYWdlICgzKS5wbmciLCJpYXQiOjE3NTIyMTU0OTAsImV4cCI6MTc1MjgyMDI5MH0.MHwRCnUEHlXdeKljAzhHa4zLtm-7eQCBZwFHgJzJ1vg" className="w-10 cursor-pointer" alt="sx" />
                                                                                 </td>
                                                                                 <td className="py-2 px-4">{trainee.user_name}</td>
                                                                                 <td className="py-2 px-4">UFT</td>
                                                                                 <td className="py-2 px-4">test</td>
                                                                                 <th className="py-2 px-4 font-normal">jb</th>
                                                                                 <th className={`py-2 px-4 font-normal`}>
-                                                                                                <div className={`inline-block px-3 py-1 rounded text-sm ${trainee.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>{trainee.status}</div>
+                                                                                                <div className={`inline-block px-3 py-1 rounded text-sm ${trainee.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>
+                                                                                                        {trainee.status === "inactive" && <div>Disabled</div>}
+                                                                                                        {trainee.status === "active" && <div>Active</div>}
+                                                                                                </div>
                                                                                 </th>                                                                                
                                                                                 <th className="py-2 px-4">
                                                                                 <button onClick={() => toggleDropdown(index)} className="text-gray-500"><EllipsisVertical size={23} /></button>
