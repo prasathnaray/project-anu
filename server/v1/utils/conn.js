@@ -4,7 +4,7 @@ const client = new Client({
     user:"postgres",
     port:"5432",
     password:"1234",
-    database:"igrs"
+    database:"postgres"
 })
 client.connect(function(err){
     if(err) throw err;
