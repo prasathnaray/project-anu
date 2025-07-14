@@ -1,6 +1,8 @@
-// const { default: CreateTrainee } = require('../model/traineem.js');
 const {getTraineesm, traineem, disableTraineem} = require('../model/traineem.js');
 const {HashPassword} = require('../utils/hash.js');
+const client = require('../utils/supaBaseConfig.js');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const TraineeController = async(req, res) => {
         const requester = req.user;
         try {
@@ -17,25 +19,37 @@ const TraineeController = async(req, res) => {
 }
 const CreateTraineeController = async (req, res) => {
         const requester = req.user;
-        const { user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description } = req.body;
-        try {
+        try{
+                if(!req.file)
+                {
+                        return res.status(200).json({
+                        error: 'No file uploaded'   
+                        })
+                }
+                const file = req.file;
+                const {user_anu_id, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description } = req.body;
+                const filePath = `trainee_images/${file.originalname}`;
+                const { data, error } = await client.storage
+                        .from(process.env.BUCKET_NAME)
+                        .upload(filePath, file.buffer, {
+                        contentType: file.mimetype,
+                        upsert: true,
+                        });
+                if (error) {
+                                return res.status(500).json({ status: 'Error', message: error.message });
+                }
                 let hashedPass = await HashPassword(user_password); ;
-                const result = await traineem(user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, requester);
-                res.status(200).send({
-                        status: 'Success',                  
-                        code: 200,
-                        message: 'Trainee profile created successfully.',       
-                        data: result
-                });
-        }       
+                const result = await traineem(user_anu_id, filePath, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, requester);
+                res.status(200).json({
+                        status: 'Success',
+                        message: 'File uploaded to Supabase Storage.',
+                        filePath: filePath,
+                        result: result,
+                });  
+        }
         catch(err)
         {
-                res.status(500).send({
-                        status: 'Error',
-                        code: 500,
-                        message: err.message
-                });
-                //console.log(err);
+                res.status(500).send(err)
         }
 }
 const DisableTrainee = async(req, res) => {

@@ -13,6 +13,13 @@ const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
 const createTraineeRouter = require('./routes/createtraineeRoute');
+
+
+
+//multer 
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+
 app.use(cors());
 app.listen('4004', (err) => {
     if(err)
