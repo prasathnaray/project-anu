@@ -23,6 +23,8 @@ function AddTrainee() {
           trainee_dp: '',
           description: ''
   })
+
+  const formData = new FormData();  
   console.log(handleInputData);
   const handleChange = (e) => {
       const {name, value} = e.target;

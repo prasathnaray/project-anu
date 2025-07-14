@@ -24,7 +24,7 @@ const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_c
 }
 const getTraineesm = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [101,102].includes(Number(requester.role));
+        const isPrivileged = [101, 102].includes(Number(requester.role));
         if(!isPrivileged)
         {
             return resolve({

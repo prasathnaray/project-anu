@@ -1,10 +1,11 @@
-import React, {useEffect, useRef, useState} from 'react'
+import React, {useEffect, useRef, useState, useParams} from 'react'
 import SideBar from '../sideBar'
 import NavBar from '../navBar'
 import { ArrowUpWideNarrow, CalendarRangeIcon, ChevronLeft, ChevronRight, EllipsisVertical, LockIcon, Mail, Menu, PhoneCallIcon, User } from 'lucide-react'
 import TraineeListAPI from '../../API/TraineeListAPI';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import AddTrainee from './addTrainee';
+import IMAGE_URL from '../../API/imageUrl';
 import axios from 'axios';
 import showDisableConfirmToast from '../../utils/showDisableConfirmToast';
 function TraineeList() {
@@ -13,8 +14,7 @@ function TraineeList() {
   const [count, setCount] = useState(0);
   const[showModal, setShowModal] = useState(false);
   const handleAddTrainee = () => setShowModal(true);
-  const dropdownRefs = useRef({});
-
+  const dropdownRefs = useRef({});  
   const handleTraineeList = async () => {
         try
         {
@@ -115,7 +115,7 @@ function TraineeList() {
                                                                         traineeList.map((trainee, index) => (
                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                                 <td className="py-2 px-4">
-                                                                                        <img src="https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/sign/projectanu/image%20(3).png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9hYWVhODNjOC0zMzcyLTRhZTgtYTQzZi03NjA1NzQ3OGE3MGUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9qZWN0YW51L2ltYWdlICgzKS5wbmciLCJpYXQiOjE3NTIyMTU0OTAsImV4cCI6MTc1MjgyMDI5MH0.MHwRCnUEHlXdeKljAzhHa4zLtm-7eQCBZwFHgJzJ1vg" className="w-10 cursor-pointer" alt="sx" />
+                                                                                        <img src={IMAGE_URL+`${trainee.user_profile_photo}`} className="w-10 cursor-pointer" alt="sx" />
                                                                                 </td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{trainee.user_name}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">UFT</td>
