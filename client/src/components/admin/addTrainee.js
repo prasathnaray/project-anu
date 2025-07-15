@@ -24,21 +24,41 @@ function AddTrainee() {
           description: ''
   })
 
-  const formData = new FormData();  
   console.log(handleInputData);
   const handleChange = (e) => {
-      const {name, value} = e.target;
-        setHandleInputData((prevData)=>({
-            ...prevData,
-            [name]: value,
-        }))
+      const {name, value, files} = e.target;
+     if (files) {
+        // For file input
+        setHandleInputData((prevData) => ({
+          ...prevData,
+          [name]: files[0],
+        }));
+      } else {
+        setHandleInputData((prevData) => ({
+          ...prevData,
+          [name]: value,
+        }));
+      }
   }
-  const tokenData = localStorage.getItem('user_data')
+  const tokenData = localStorage.getItem('user_token')
+  //console.log(tokenData);
   const submitHandle = async(e) => {
       e.preventDefault();
+      const formData = new FormData();
+      formData.append('user_anu_id', 'ANUT0100')
+      formData.append('user_name', handleInputData.trainee_name);
+      formData.append('user_email', handleInputData.trainee_email_address)
+      formData.append('user_contact_num', handleInputData.trainee_contact_address)
+      formData.append('user_dob', handleInputData.trainee_dob);
+      formData.append('user_gender', handleInputData.trainee_gender)
+      formData.append('user_password', handleInputData.trainee_password)
+      formData.append('user_role', '103')
+      formData.append('status', handleInputData.status);
+      formData.append('description', handleInputData.description)
+      formData.append('file', handleInputData.trainee_dp)
       try
       {
-          const result = await AddTraineeAPI(tokenData, handleInputData);
+          const result = await AddTraineeAPI(tokenData, formData);
           console.log(result);
       } 
       catch(err)
@@ -60,7 +80,7 @@ function AddTrainee() {
     return <Navigate to="/" replace />;
   }
   const decoded = jwtDecode(token);
-  if (decoded.role != 101) {
+  if (decoded.role != 101 && decoded.role != 102) {
     return <Navigate to="/dashboard" replace />;
   }
   return (
@@ -131,7 +151,8 @@ function AddTrainee() {
                                   {currentStep === 2 && <AddTraineeStep3 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   <div className={`mt-7  ${currentStep === 0 ? ' flex justify-end items-center' : ' flex justify-between items-center'} gap-5`}>
                                                 {currentStep > 0 && <button className="bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold" onClick={() => setCurrentStep(currentStep - 1)}>Prev</button>}
-                                                <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>
+                                                {currentStep < 2 && <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>}
+                                                {currentStep ==2 && <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={submitHandle}>Submit</button>}
                                   </div>
                             </div>
                             {/* </div> */}

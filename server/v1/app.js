@@ -9,6 +9,7 @@ const ForgotPRouter = require('./routes/forgotpRoute');
 const getTraineeRouter = require('./routes/getTraineesRoute')
 const refreshTokenRouter = require('./routes/refreshTokenRouter');
 const disableTraineeRoute = require('./routes/disableTraineeRoute');
+const batchCreationRouter = require('./routes/createBatchRoute.js')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -38,9 +39,13 @@ app.use(express.urlencoded({extended: true}));
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter)
 app.use('/api/v1', refreshTokenRouter)
+
+// batch
+
 app.use('/api/v1', Authenticate, ProfileRouter);
 app.use('/api/v1', Authenticate, getTraineeRouter);
 app.use('/api/v1/', Authenticate, disableTraineeRoute)
+app.use('/api/v1/', Authenticate, batchCreationRouter)
 app.get('/test', Authenticate, (req, res) => {
     const requester = req.user;
     res.status(200).json({
