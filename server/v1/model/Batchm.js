@@ -21,4 +21,26 @@ const createBatchm = (batch_id, batch_name, batch_start_date, batch_end_date, re
                 })
         })
 }
-module.exports = createBatchm;
+const getBatchm = (requester) => {
+    const isPrivileged = [101].includes(Number(requester.role));
+    if(!isPrivileged) {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to access this course data.'
+        });
+    }
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * from batch_data' , (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else
+            {
+                resolve(result)
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm};

@@ -5,13 +5,12 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const LoginModel = (user_mail, user_password) => {
     return new Promise((resolve, reject) => {
-            client.query('SELECT * FROM user_data WHERE user_email=$1 and status=$2', [user_mail, 'active'], async(err, result) => {
+            client.query('SELECT * FROM public.user_data WHERE user_email=$1 and status=$2', [user_mail, 'active'], async(err, result) => {
                 if(err)
                 {
-                    reject(err)
+                    return reject(err)
                 }
-
-                if(result.rows.length === 0)
+                if(!result  || result.rows.length === 0)
                 {
                     return resolve({ status: 'User Not Found or Account Disabled', code: 404})
                 }

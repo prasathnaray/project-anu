@@ -1,5 +1,5 @@
 const {generateBatchID} = require('../utils/idGenerator.js')
-const createBatchm = require('../model/Batchm.js')
+const {createBatchm, getBatchm} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
     const {batch_name, batch_start_date, batch_end_date} = req.body;

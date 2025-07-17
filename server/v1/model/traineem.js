@@ -33,7 +33,7 @@ const getTraineesm = (requester) => {
                 message: 'You do not have permission to view trainee profiles.'
             });
         }
-        client.query('SELECT user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, status FROM user_data WHERE user_role = $1', ['103'], (err, result) => {
+        client.query('SELECT user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, status FROM public.user_data WHERE user_role = $1', ['103'], (err, result) => {
             if(err){
                 return reject(err.message);
             }  
@@ -55,7 +55,7 @@ const disableTraineem = (requester , user_mail, status) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        client.query('UPDATE user_data SET status=$1 WHERE user_email=$2', [status , user_mail], (err, result) => {
+        client.query('UPDATE public.user_data SET status=$1 WHERE user_email=$2', [status , user_mail], (err, result) => {
             if(err)
             {
                 return reject(err.message)
