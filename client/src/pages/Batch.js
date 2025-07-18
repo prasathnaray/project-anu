@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical } from "lucide-react";
 import CreateBatch from "../components/admin/CreateBatch";
 import { jwtDecode } from "jwt-decode";
 import { Navigate } from "react-router-dom";
@@ -13,6 +13,7 @@ import GetBatchesAPI from "../API/GetBatchesAPI";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
+import getMonthYear from '../utils/DateChange';
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -206,11 +207,11 @@ function Batch()  {
                                                                         listBatch.map((listBatch, index) => (
                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{listBatch.batch_name}</td>
-                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{listBatch.batch_start_date}</td>
-                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{listBatch.batch_end_date}</td>
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_start_date)}</td>
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_end_date)}</td>
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">jb</th>
-                                                                                                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">jb</th>
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">jb</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]"><EllipsisVertical size={24} /></th>
                                                                                 {/* <th className={`py-2 px-4 font-normal`}>
                                                                                                 <div className={`inline-block px-3 py-1 rounded text-sm ${trainee.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>
                                                                                                         {trainee.status === "inactive" && <div>Disabled</div>}
