@@ -9,7 +9,8 @@ const ForgotPRouter = require('./routes/forgotpRoute');
 const getTraineeRouter = require('./routes/getTraineesRoute')
 const refreshTokenRouter = require('./routes/refreshTokenRouter');
 const disableTraineeRoute = require('./routes/disableTraineeRoute');
-const batchCreationRouter = require('./routes/createBatchRoute.js')
+const batchCreationRouter = require('./routes/createBatchRoute.js');
+const getBatchesRouter = require('./routes/getBatchesRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -45,7 +46,8 @@ app.use('/api/v1', refreshTokenRouter)
 app.use('/api/v1', Authenticate, ProfileRouter);
 app.use('/api/v1', Authenticate, getTraineeRouter);
 app.use('/api/v1/', Authenticate, disableTraineeRoute)
-app.use('/api/v1/', Authenticate, batchCreationRouter)
+app.use('/api/v1/', Authenticate, batchCreationRouter);
+app.use('/api/v1/', Authenticate, getBatchesRouter)
 app.get('/test', Authenticate, (req, res) => {
     const requester = req.user;
     res.status(200).json({

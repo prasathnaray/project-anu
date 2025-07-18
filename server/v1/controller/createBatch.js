@@ -14,4 +14,17 @@ const batchCreation = async(req, res) =>{
             res.status(500).send(err)
     }
 }
-module.exports = {batchCreation}
+const getBatchData= async(req,res) => {
+        const requester = req.user;
+        try 
+        {
+                const result = await getBatchm(requester);
+                res.status(200).send(result);
+        }
+        catch(err)
+        {
+                 console.log(err)
+                 res.status(500).send(err)      
+        }
+}
+module.exports = {batchCreation, getBatchData}

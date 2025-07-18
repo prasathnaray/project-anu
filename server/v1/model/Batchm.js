@@ -31,7 +31,7 @@ const getBatchm = (requester) => {
         });
     }
     return new Promise((resolve, reject) => {
-        client.query('SELECT * from batch_data' , (err, result) => {
+        client.query('SELECT * from public.batch_data' , (err, result) => {
             if(err)
             {
                 reject(err)

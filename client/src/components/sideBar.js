@@ -31,9 +31,9 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     }
     setTokData(token);
   }, []);
-  console.log(tokdata.role);
+  // console.log(tokdata.role);
 
-  console.log(handleButtonOpen);
+  // console.log(handleButtonOpen);
   return (
     // <div className="fixed top-0 left-0 h-screen md:w-[220px] sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white">
   <div className={`fixed top-0 left-0 h-screen ${

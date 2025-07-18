@@ -23,12 +23,10 @@ function AddTrainee() {
           trainee_dp: '',
           description: ''
   })
-
   console.log(handleInputData);
   const handleChange = (e) => {
-      const {name, value, files} = e.target;
+    const {name, value, files} = e.target;
      if (files) {
-        // For file input
         setHandleInputData((prevData) => ({
           ...prevData,
           [name]: files[0],
