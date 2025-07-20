@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
 import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical } from "lucide-react";
@@ -95,6 +95,26 @@ function Batch()  {
                         [name]: value,
                 });
         }
+         //toggle dropdown
+          const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+          const dropdownRefs = useRef({});  
+          const toggleDropdown = (index) => {
+            setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+          };
+          useEffect(() => {
+    const handleClickOutside = (event) => {
+      const isClickInside = Object.values(dropdownRefs.current).some(ref =>
+        ref && ref.contains(event.target)
+      );
+
+      if (!isClickInside) {
+        setOpenDropdownIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
         const BatchesData = async(token) => {
                         //e.preventDefault()
                         try
@@ -134,10 +154,7 @@ function Batch()  {
                                                         icon: false,
                                                         closeButton: CustomCloseButton,
                                                 }); 
-                                                // const updatedBatchList = await GetBatchesAPI(token);
-                                                // setListBatch(updatedBatchList);
                                                 handleClose();
-                                                // BatchesData()
                                                 BatchesData(token);
                                         }
                         }
@@ -209,15 +226,26 @@ function Batch()  {
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{listBatch.batch_name}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_start_date)}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_end_date)}</td>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">jb</th>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">jb</th>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]"><EllipsisVertical size={24} /></th>
-                                                                                {/* <th className={`py-2 px-4 font-normal`}>
-                                                                                                <div className={`inline-block px-3 py-1 rounded text-sm ${trainee.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>
-                                                                                                        {trainee.status === "inactive" && <div>Disabled</div>}
-                                                                                                        {trainee.status === "active" && <div>Active</div>}
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">-</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">-</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                        <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
+                                                                                        {openDropdownIndex === index && (
+                                                                                                <div
+                                                                                                 ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                                        transition-all ease-in-out duration-500 origin-top-right
+                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                                                                                                `} 
+                                                                                                >
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View </button>
+                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Associate Trainees</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Associate Instructors</button>
+
                                                                                                 </div>
-                                                                                </th>                                                                                 */}
+                                                                                        )}
+                                                                                </th>
                                                                         </tr>
                                                                         ))
                                                                         ) : (

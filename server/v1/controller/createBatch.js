@@ -10,7 +10,6 @@ const batchCreation = async(req, res) =>{
     }
     catch(err)
     {
-            console.log(err)
             res.status(500).send(err)
     }
 }
@@ -23,7 +22,6 @@ const getBatchData= async(req,res) => {
         }
         catch(err)
         {
-                 console.log(err)
                  res.status(500).send(err)      
         }
 }

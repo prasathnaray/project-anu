@@ -19,10 +19,10 @@ function RoutesPath() {
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<Profile />} />
                             <Route path="/trainee" element={<Trainee /> } />
-                            <Route path="/trainee/add" element={<AddTrainee /> } />
+                            <Route path="/:people/add" element={<AddTrainee /> } />
                             <Route path="/queries" element={<Queries />} />
                             <Route path="/instructors" element={<Instructors />} />
-                            <Route path="/instructor/add" element={<Instructors />} />
+                            <Route path="/:people/add" element={<Instructors />} />
                             <Route path="/batch" element={<Batch />} />
                     </Route>
                     <Route path="*" element={<Login />}/>

@@ -3,6 +3,7 @@ import SideBar from '../sideBar';
 import NavBar from '../navBar';
 import { Lock, MessageCircleWarning, UserPen } from 'lucide-react';
 import Profile from '../../pages/Profile';
+import { useParams } from 'react-router-dom';
 import AddTraineeStep1 from './step/AddTraineeStep1';
 import AddTraineeStep3 from './step/AddTraineeStep3';
 import AddTraineeStep2 from './step/AddTraineeStep2';
@@ -38,6 +39,8 @@ function AddTrainee() {
         }));
       }
   }
+  const data = useParams();
+  console.log(data)
   const tokenData = localStorage.getItem('user_token')
   //console.log(tokenData);
   const submitHandle = async(e) => {
@@ -68,7 +71,7 @@ function AddTrainee() {
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
     };
-    const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
   const handleNext = (e) => {
     e.preventDefault();
     setCurrentStep((prev) => prev + 1);
@@ -97,7 +100,11 @@ function AddTrainee() {
             <div className="bg-gray-100 h-screen overflow-y-auto">
                   <div className="px-10 py-4 w-full max-w-[1800px] mx-auto">
                             <div className="text-gray-500 lg:mt-5 mt-1">Trainees / Add new trainee</div>
-                            <div className="mt-5 font-semibold text-xl text-gray-600">Add new Trainees</div>
+                            <div className="mt-5 font-semibold text-xl text-gray-600 flex justify-between items-center">
+                                      <div>Add new Trainees</div>
+                                      {data.people==="trainee" && <div>Hello Trainee</div>}
+                                      {data.people==="instructor" && <div>Hello Instructor</div>}
+                            </div>
                             {/* <div className="flex justify-center items-center"> */}
                               <div className="mt-5 bg-white rounded-3xl mx-auto shadow-md px-[50px] py-10">
                                   <div className="grid grid-cols-3 pt-6 gap-2">
