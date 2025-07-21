@@ -1,5 +1,5 @@
 import React from 'react'
-
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 function AddTraineeStep1({handleChange, handleInputData}) {
   return (
     <div className="mt-7 grid grid-cols-2 gap-5">
@@ -87,7 +87,7 @@ function AddTraineeStep1({handleChange, handleInputData}) {
                                                          Date of Birth
                                                       </label>
                                                     </div>
-                                                    <div className="relative mt-4">
+                                                    {/* <div className="relative mt-4">
                                                       <input
                                                         type="text"
                                                         id="gender"
@@ -107,7 +107,25 @@ function AddTraineeStep1({handleChange, handleInputData}) {
                                                       >
                                                           Gender
                                                       </label>
-                                                    </div>
+                                                    </div> */}
+                                                    <div className="mt-4">
+                                                        <FormControl fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}>
+                                                          <InputLabel id="program-select-label">Select Gender</InputLabel>
+                                                          <Select
+                                                            labelId="program-select-label"
+                                                            onChange={handleChange}
+                                                            name="trainee_gender"
+                                                            value={handleInputData.trainee_gender}
+                                                            label="Select Gender"
+                                                            className=""
+                                                          >
+                                                              <MenuItem value={'Male'}>Male</MenuItem>
+                                                              <MenuItem value={'Female'}>Female</MenuItem>
+                                                              <MenuItem value={'Other'}>Other</MenuItem>
+                                                          </Select>
+                                                        </FormControl>
+                                                  </div>
+
                                   </div>
   )
 }

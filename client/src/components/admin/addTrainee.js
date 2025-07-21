@@ -13,6 +13,16 @@ import APP_URL from '../../API/config';
 import AddTraineeAPI from '../../API/AddTraineeAPI.js';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 function AddTrainee() {
+  const data = useParams();
+  const programOptions = [
+    { label: 'Trainee', value: 'trainee' },
+    { label: 'Instructor', value: 'instructor' }
+  ];
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const handleProgramChange = (event) => {
+    setSelectedProgram(event.target.value);
+  };
+  console.log(selectedProgram);
   const [handleInputData, setHandleInputData] = useState({
           trainee_name: '',
           trainee_email_address: '',
@@ -23,19 +33,9 @@ function AddTrainee() {
           trainee_confirm_password: '',
           status: '',
           trainee_dp: '',
-          description: ''
+          description: '',
   })
   console.log(handleInputData);
-  const data = useParams();
-  console.log(data)
-  const programOptions = [
-    { label: 'Trainee', value: 'trainee' },
-    { label: 'Instructor', value: 'instructor' }
-  ];
-  const [selectedProgram, setSelectedProgram] = useState('');
-  const handleProgramChange = (event) => {
-    setSelectedProgram(event.target.value);
-  };
   const handleChange = (e) => {
     const {name, value, files} = e.target;
      if (files) {
@@ -51,7 +51,6 @@ function AddTrainee() {
       }
   }
   const tokenData = localStorage.getItem('user_token')
-  //console.log(tokenData);
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
