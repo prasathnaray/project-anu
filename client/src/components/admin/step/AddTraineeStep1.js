@@ -120,9 +120,9 @@ function AddTraineeStep1({handleChange, handleInputData, listBatches}) {
                                                             label="Select Gender"
                                                             className=""
                                                           >
-                                                              <MenuItem value={'Male'}>Male</MenuItem>
-                                                              <MenuItem value={'Female'}>Female</MenuItem>
-                                                              <MenuItem value={'Other'}>Other</MenuItem>
+                                                              <MenuItem value={'male'}>Male</MenuItem>
+                                                              <MenuItem value={'female'}>Female</MenuItem>
+                                                              <MenuItem value={'prefer_not_to_say'}>Prefer not to say</MenuItem>
                                                           </Select>
                                                         </FormControl>
                                                   </div>

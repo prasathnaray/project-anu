@@ -32,7 +32,7 @@ function AddTrainee() {
           {
               const tokenData = localStorage.getItem('user_token')
               const response = await GetBatchesAPI(tokenData);
-              setListBatches(response.data);
+              setListBatches(response.data.rows);
           }
           catch(err)
           {
@@ -71,10 +71,12 @@ function AddTrainee() {
         }));
       }
   }
+  const roleCode = handleInputData.role === "trainee" ? 103 : 102;
+  //console.log(roleCode);
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
-      formData.append('user_anu_id', 'ANUT0100')
+      formData.append('user_anu_id', 'ANUT010011')
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
       formData.append('user_contact_num', handleInputData.trainee_contact_address)
@@ -82,7 +84,7 @@ function AddTrainee() {
       formData.append('user_gender', handleInputData.trainee_gender)
       formData.append('user_batch', handleInputData.trainee_batch)
       formData.append('user_password', handleInputData.trainee_password)
-      formData.append('user_role', handleInputData.role)
+      formData.append('user_role', roleCode)
       formData.append('status', handleInputData.status);
       formData.append('description', handleInputData.description)
       formData.append('file', handleInputData.trainee_dp)

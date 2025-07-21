@@ -1,6 +1,6 @@
 const client = require('../utils/conn.js');
 // const {HashedPassword} = require('../utils/hash.js');
-const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, requester) => {
+const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, user_batch, requester) => {
     return new Promise((resolve, reject) => {
             const isPrivileged = [102, 101].includes(Number(requester.role));
             if(!isPrivileged)
@@ -11,13 +11,24 @@ const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_c
                     message: 'You do not have permission to create a trainee profile.'
                 });
             }
-            client.query('INSERT INTO public.user_data (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)' , [user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description], (err, result) => {
+            client.query('INSERT INTO public.user_data(user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)' , [user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description], (err, result) => {
                   if(err){
                     return reject(err);
                   }  
                   else
                   {
-                        return resolve(result);
+                            client.query('INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)', [user_batch, user_email] ,(err2, result2) => {
+                                if (err2) return reject(err2)
+                                
+                                return resolve({
+                                    status: 'success',
+                                    code: 200,
+                                    message: 'Profile Created Successfully',
+                                    data: {
+                                        user_email
+                                    }
+                                })
+                            })
                   }
             })
     })

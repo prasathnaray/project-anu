@@ -27,7 +27,7 @@ const CreateTraineeController = async (req, res) => {
                         })
                 }
                 const file = req.file;
-                const {user_anu_id, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description } = req.body;
+                const {user_anu_id, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, user_batch } = req.body;
                 const filePath = `trainee_images/${file.originalname}`;
                 const { data, error } = await client.storage
                         .from(process.env.BUCKET_NAME)
@@ -39,7 +39,7 @@ const CreateTraineeController = async (req, res) => {
                                 return res.status(500).json({ status: 'Error', message: error.message });
                 }
                 let hashedPass = await HashPassword(user_password); ;
-                const result = await traineem(user_anu_id, filePath, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, requester);
+                const result = await traineem(user_anu_id, filePath, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, user_batch, requester);
                 res.status(200).json({
                         status: 'Success',
                         message: 'File uploaded to Supabase Storage.',
