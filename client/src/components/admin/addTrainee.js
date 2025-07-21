@@ -11,6 +11,7 @@ import { Navigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import APP_URL from '../../API/config';
 import AddTraineeAPI from '../../API/AddTraineeAPI.js';
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 function AddTrainee() {
   const [handleInputData, setHandleInputData] = useState({
           trainee_name: '',
@@ -25,6 +26,16 @@ function AddTrainee() {
           description: ''
   })
   console.log(handleInputData);
+  const data = useParams();
+  console.log(data)
+  const programOptions = [
+    { label: 'Trainee', value: 'trainee' },
+    { label: 'Instructor', value: 'instructor' }
+  ];
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const handleProgramChange = (event) => {
+    setSelectedProgram(event.target.value);
+  };
   const handleChange = (e) => {
     const {name, value, files} = e.target;
      if (files) {
@@ -39,8 +50,6 @@ function AddTrainee() {
         }));
       }
   }
-  const data = useParams();
-  console.log(data)
   const tokenData = localStorage.getItem('user_token')
   //console.log(tokenData);
   const submitHandle = async(e) => {
@@ -98,12 +107,47 @@ function AddTrainee() {
                           <NavBar />
             </div>
             <div className="bg-gray-100 h-screen overflow-y-auto">
-                  <div className="px-10 py-4 w-full max-w-[1800px] mx-auto">
-                            <div className="text-gray-500 lg:mt-5 mt-1">Trainees / Add new trainee</div>
+                  <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
+                            <div className="text-gray-500 lg:mt-5 mt-1">{data.people.charAt(0).toUpperCase() + data.people.slice(1)} / Add new {data.people}</div>
                             <div className="mt-5 font-semibold text-xl text-gray-600 flex justify-between items-center">
-                                      <div>Add new Trainees</div>
-                                      {data.people==="trainee" && <div>Hello Trainee</div>}
-                                      {data.people==="instructor" && <div>Hello Instructor</div>}
+                                      <div>Add new {data.people.charAt(0).toUpperCase() + data.people.slice(1)}s</div>
+                                      {data.people==="trainee" && 
+                                          <div className="w-[250px]">
+                                                  <FormControl fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}>
+                                                    <InputLabel id="program-select-label">Select people</InputLabel>
+                                                    <Select
+                                                      labelId="program-select-label"
+                                                      value={selectedProgram}
+                                                      onChange={handleProgramChange}
+                                                      label="Select people"
+                                                      className=""
+                                                    >
+                                                      {programOptions.map((opt) => (
+                                                        <MenuItem key={opt.value} value={opt.value}>
+                                                          {opt.label}
+                                                        </MenuItem>
+                                                      ))}
+                                                    </Select>
+                                                  </FormControl>
+                                          </div>}
+                                      {data.people==="instructor" &&                                           <div className="w-[250px]">
+                                                  <FormControl fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}>
+                                                    <InputLabel id="program-select-label">Select people</InputLabel>
+                                                    <Select
+                                                      labelId="program-select-label"
+                                                      value={selectedProgram}
+                                                      onChange={handleProgramChange}
+                                                      label="Select people"
+                                                      className=""
+                                                    >
+                                                      {programOptions.map((opt) => (
+                                                        <MenuItem key={opt.value} value={opt.value}>
+                                                          {opt.label}
+                                                        </MenuItem>
+                                                      ))}
+                                                    </Select>
+                                                  </FormControl>
+                                          </div>}
                             </div>
                             {/* <div className="flex justify-center items-center"> */}
                               <div className="mt-5 bg-white rounded-3xl mx-auto shadow-md px-[50px] py-10">
@@ -155,9 +199,9 @@ function AddTrainee() {
                                   {currentStep === 1 && <AddTraineeStep2 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   {currentStep === 2 && <AddTraineeStep3 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   <div className={`mt-7  ${currentStep === 0 ? ' flex justify-end items-center' : ' flex justify-between items-center'} gap-5`}>
-                                                {currentStep > 0 && <button className="bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold" onClick={() => setCurrentStep(currentStep - 1)}>Prev</button>}
-                                                {currentStep < 2 && <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>}
-                                                {currentStep ==2 && <button className={`bg-[#8DC63F] px-4 py-2 rounded text-white font-semibold`} onClick={submitHandle}>Submit</button>}
+                                                {currentStep > 0 && <button className="bg-[#8DC63F] px-8 py-1 rounded text-white font-semibold" onClick={() => setCurrentStep(currentStep - 1)}>Prev</button>}
+                                                {currentStep < 2 && <button className={`bg-[#8DC63F] px-8 py-1 rounded text-white font-semibold`} onClick={() => setCurrentStep(currentStep + 1)}>Next</button>}
+                                                {currentStep ==2 && <button className={`bg-[#8DC63F] px-8 py-1 rounded text-white font-semibold`} onClick={submitHandle}>Submit</button>}
                                   </div>
                             </div>
                             {/* </div> */}

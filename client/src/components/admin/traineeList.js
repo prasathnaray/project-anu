@@ -84,7 +84,7 @@ function TraineeList() {
                                 <NavBar />
                        </div>
                         <div className="bg-gray-100 ">
-                                <div className="px-10 py-8 w-full max-w-[1800px] mx-auto">
+                                        <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                             <div className="text-gray-500">Dashboard / Trainees</div>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Trainees</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10 ">

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-// import { CourseIcon } from '@hugeicons-pro/core-stroke-rounded';
 import { BookOpen, ChevronLeft, ClipboardPenLine, GraduationCap } from 'lucide-react';
 import logo from '../assets/image (3).png';
+import MaterialRipple from "material-ripple-effects";
 import {
   Notification03Icon,
   UserSharingIcon,
@@ -23,19 +23,15 @@ import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie } from 'lucide-react';
 function SideBar({ handleButtonOpen, buttonOpen }) {
+  const ripple = new MaterialRipple();
   const [tokdata, setTokData] = useState({});
-   const token = jwtDecode(localStorage.getItem('user_token'));
-  //console.log(token.role);
+  const token = jwtDecode(localStorage.getItem('user_token'));
   useEffect(() => {
     if (localStorage.getItem('user_token')) { 
     }
     setTokData(token);
   }, []);
-  // console.log(tokdata.role);
-
-  // console.log(handleButtonOpen);
   return (
-    // <div className="fixed top-0 left-0 h-screen md:w-[220px] sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white">
   <div className={`fixed top-0 left-0 h-screen ${
         buttonOpen === false
           ? "md:w-[85px] transition-all"
@@ -63,19 +59,19 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
             <ul className={`${buttonOpen === false ? "py-5 px-[23px]" : "py-5 px-8"}`}>
               {tokdata.role == 103 && 
               <>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/home" className="flex gap-5"><Mortarboard02Icon size={26}/>Curriculum</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/startups" className="flex gap-5"><CourseIcon size={26}/>Courses</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><ChartRoseIcon size={26}/>Analysis</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><ChartBarLineIcon size={26}/>Progress</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><UserIcon size={26}/>Profile</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/home" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><Mortarboard02Icon size={26}/>Curriculum</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/startups" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><CourseIcon size={26}/>Courses</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><ChartRoseIcon size={26}/>Analysis</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><ChartBarLineIcon size={26}/>Progress</a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><UserIcon size={26}/>Profile</a></li>
               </>
               }
               {tokdata.role == 101 && 
               <>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/dashboard" className="flex gap-5 text-gray-500 hover:text-white"><LayoutDashboard size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Dashboard</div></a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/instructors" className="flex gap-5 text-gray-500 hover:text-white"><ClipboardPenLine size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/trainee" className="flex gap-5 text-gray-500 hover:text-white"><GraduationCap size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/batch" className="flex gap-5 text-gray-500 hover:text-white"><Users size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Batch</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/dashboard" className="flex gap-5 text-gray-500 hover:text-white" ><LayoutDashboard size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Dashboard</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/instructors" className="flex gap-5 text-gray-500 hover:text-white"><ClipboardPenLine size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/trainee" className="flex gap-5 text-gray-500 hover:text-white"><GraduationCap size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/batch" className="flex gap-5 text-gray-500 hover:text-white"><Users size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Batch</div></a></li>
                 {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><UserIcon size={21}/>Report</a></li> */}
                 {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><UserIcon size={21}/>Analysis</a></li> */}
               </>
