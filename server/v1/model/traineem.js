@@ -2,7 +2,7 @@ const client = require('../utils/conn.js');
 // const {HashedPassword} = require('../utils/hash.js');
 const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, requester) => {
     return new Promise((resolve, reject) => {
-            const isPrivileged = [102].includes(Number(requester.role));
+            const isPrivileged = [102, 101].includes(Number(requester.role));
             if(!isPrivileged)
             {
                 return resolve({
@@ -11,7 +11,7 @@ const traineem = (user_anu_id, user_profile_photo, user_name, user_email, user_c
                     message: 'You do not have permission to create a trainee profile.'
                 });
             }
-            client.query('INSERT INTO user_data (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)' , [user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description], (err, result) => {
+            client.query('INSERT INTO public.user_data (user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)' , [user_anu_id, user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description], (err, result) => {
                   if(err){
                     return reject(err);
                   }  
@@ -67,4 +67,5 @@ const disableTraineem = (requester , user_mail, status) => {
         })
     })
 }
+
 module.exports = {traineem, getTraineesm, disableTraineem};

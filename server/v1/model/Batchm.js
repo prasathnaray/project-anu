@@ -43,4 +43,27 @@ const getBatchm = (requester) => {
         })
     })
 }
-module.exports = {createBatchm, getBatchm};
+const associateBatchm = (requester, batch_id, user_id) => {
+    const isPrivileged = [101,  102].includes(Number(requester.role));
+    if(!isPrivileged)
+    {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to view trainee profiles'
+        })
+    }
+    return new Promise((resolve, reject) => {
+        client.query('INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)', [batch_id, user_id] ,(err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm, associateBatchm};

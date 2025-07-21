@@ -12,7 +12,9 @@ import { jwtDecode } from 'jwt-decode';
 import APP_URL from '../../API/config';
 import AddTraineeAPI from '../../API/AddTraineeAPI.js';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import GetBatchesAPI from '../../API/GetBatchesAPI.js';
 function AddTrainee() {
+  const tokenData = localStorage.getItem('user_token')
   const data = useParams();
   const programOptions = [
     { label: 'Trainee', value: 'trainee' },
@@ -23,17 +25,36 @@ function AddTrainee() {
     setSelectedProgram(event.target.value);
   };
   console.log(selectedProgram);
+  ///batches data 
+  const [listBatches, setListBatches] = useState([]);
+  const getBatches = async() => {
+          try
+          {
+              const tokenData = localStorage.getItem('user_token')
+              const response = await GetBatchesAPI(tokenData);
+              setListBatches(response.data);
+          }
+          catch(err)
+          {
+            console.log(GetBatchesAPI)
+          }
+  }
+  useEffect(() => {
+      getBatches()
+  }, [])
   const [handleInputData, setHandleInputData] = useState({
           trainee_name: '',
           trainee_email_address: '',
           trainee_contact_address: '',
           trainee_dob: '',
           trainee_gender: '',
+          trainee_batch: '',
           trainee_password: '',
           trainee_confirm_password: '',
           status: '',
           trainee_dp: '',
           description: '',
+          role: '' 
   })
   console.log(handleInputData);
   const handleChange = (e) => {
@@ -50,7 +71,6 @@ function AddTrainee() {
         }));
       }
   }
-  const tokenData = localStorage.getItem('user_token')
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
@@ -60,8 +80,9 @@ function AddTrainee() {
       formData.append('user_contact_num', handleInputData.trainee_contact_address)
       formData.append('user_dob', handleInputData.trainee_dob);
       formData.append('user_gender', handleInputData.trainee_gender)
+      formData.append('user_batch', handleInputData.trainee_batch)
       formData.append('user_password', handleInputData.trainee_password)
-      formData.append('user_role', '103')
+      formData.append('user_role', handleInputData.role)
       formData.append('status', handleInputData.status);
       formData.append('description', handleInputData.description)
       formData.append('file', handleInputData.trainee_dp)
@@ -116,10 +137,11 @@ function AddTrainee() {
                                                     <InputLabel id="program-select-label">Select people</InputLabel>
                                                     <Select
                                                       labelId="program-select-label"
-                                                      value={selectedProgram}
-                                                      onChange={handleProgramChange}
+                                                      value={handleInputData.role}
+                                                      onChange={handleChange}
                                                       label="Select people"
                                                       className=""
+                                                      name="role"
                                                     >
                                                       {programOptions.map((opt) => (
                                                         <MenuItem key={opt.value} value={opt.value}>
@@ -129,15 +151,16 @@ function AddTrainee() {
                                                     </Select>
                                                   </FormControl>
                                           </div>}
-                                      {data.people==="instructor" &&                                           <div className="w-[250px]">
+                                          {data.people==="instructor" &&                                           <div className="w-[250px]">
                                                   <FormControl fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}>
                                                     <InputLabel id="program-select-label">Select people</InputLabel>
                                                     <Select
                                                       labelId="program-select-label"
-                                                      value={selectedProgram}
-                                                      onChange={handleProgramChange}
+                                                      value={handleInputData.role}
+                                                      onChange={handleChange}
                                                       label="Select people"
                                                       className=""
+                                                      name="role"
                                                     >
                                                       {programOptions.map((opt) => (
                                                         <MenuItem key={opt.value} value={opt.value}>
@@ -194,7 +217,7 @@ function AddTrainee() {
                                               </span>
                                             </div>
                                   </div>
-                                  {currentStep === 0 && <AddTraineeStep1 handleChange={handleChange} handleInputData={handleInputData}/>}
+                                  {currentStep === 0 && <AddTraineeStep1 handleChange={handleChange} handleInputData={handleInputData} listBatches={listBatches}/>}
                                   {currentStep === 1 && <AddTraineeStep2 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   {currentStep === 2 && <AddTraineeStep3 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   <div className={`mt-7  ${currentStep === 0 ? ' flex justify-end items-center' : ' flex justify-between items-center'} gap-5`}>

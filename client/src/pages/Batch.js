@@ -120,7 +120,7 @@ function Batch()  {
                         try
                         {
                                 const result = await GetBatchesAPI(token);
-                                setListBatch(result.data.rows);
+                                setListBatch(result.data);
                         }
                         catch(err)
                         {

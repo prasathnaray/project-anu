@@ -1,6 +1,7 @@
 import React from 'react'
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-function AddTraineeStep1({handleChange, handleInputData}) {
+import { FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
+function AddTraineeStep1({handleChange, handleInputData, listBatches}) {
+  console.log(listBatches)
   return (
     <div className="mt-7 grid grid-cols-2 gap-5">
                                                    <div className="relative">
@@ -122,6 +123,26 @@ function AddTraineeStep1({handleChange, handleInputData}) {
                                                               <MenuItem value={'Male'}>Male</MenuItem>
                                                               <MenuItem value={'Female'}>Female</MenuItem>
                                                               <MenuItem value={'Other'}>Other</MenuItem>
+                                                          </Select>
+                                                        </FormControl>
+                                                  </div>
+                                                  <div className="mt-4">
+                                                      <FormControl fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}>
+                                                          <InputLabel id="batch-select-label">Select Batch</InputLabel>
+                                                          <Select
+                                                            labelId="batch-select-label"
+                                                            onChange={handleChange}
+                                                            name="trainee_batch"
+                                                            value={handleInputData.trainee_batch}
+                                                            label="Select batch"
+                                                            className=""
+                                                          >
+                                                              {Array.isArray(listBatches) && listBatches.length > 0 &&
+                                                                listBatches.map((obj) => (
+                                                                  <MenuItem key={obj.batch_id} value={obj.batch_id}>
+                                                                    {obj.batch_name}
+                                                                  </MenuItem>
+                                                                ))}
                                                           </Select>
                                                         </FormControl>
                                                   </div>
