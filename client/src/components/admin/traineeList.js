@@ -8,6 +8,7 @@ import AddTrainee from './addTrainee';
 import IMAGE_URL from '../../API/imageUrl';
 import axios from 'axios';
 import showDisableConfirmToast from '../../utils/showDisableConfirmToast';
+import showEnableConfirmToast from '../../utils/showEnableConfirmToast';
 function TraineeList() {
   const token = localStorage.getItem("user_token");
   const [traineeList, setTraineeList] = useState([]);
@@ -137,7 +138,7 @@ function TraineeList() {
                                                                                                 `} 
                                                                                                 >
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                {trainee.status === "inactive"? <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, 'active')}>Enable</button>: <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, 'inactive')}>Disable</button>}
+                                                                                                                {trainee.status === "inactive"? <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showEnableConfirmToast(trainee.user_email, handleTraineeList, token, 'active')}>Enable</button>: <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, 'inactive')}>Disable</button>}
                                                                                                                 {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Delete</button>
 

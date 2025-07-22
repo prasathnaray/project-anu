@@ -72,11 +72,10 @@ function AddTrainee() {
       }
   }
   const roleCode = handleInputData.role === "trainee" ? 103 : 102;
-  //console.log(roleCode);
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
-      formData.append('user_anu_id', 'ANUT010011')
+      formData.append('user_anu_id', 'ANUT0100111')
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
       formData.append('user_contact_num', handleInputData.trainee_contact_address)
