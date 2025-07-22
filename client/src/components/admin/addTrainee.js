@@ -2,6 +2,8 @@ import React, {useEffect, useState} from 'react'
 import SideBar from '../sideBar';
 import NavBar from '../navBar';
 import { Lock, MessageCircleWarning, UserPen } from 'lucide-react';
+import { toast, POSITION  } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Profile from '../../pages/Profile';
 import { useParams } from 'react-router-dom';
 import AddTraineeStep1 from './step/AddTraineeStep1';
@@ -75,7 +77,7 @@ function AddTrainee() {
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
-      formData.append('user_anu_id', 'ANUT0100111')
+      formData.append('user_anu_id', 'ANUT0100112')
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
       formData.append('user_contact_num', handleInputData.trainee_contact_address)
@@ -90,11 +92,16 @@ function AddTrainee() {
       try
       {
           const result = await AddTraineeAPI(tokenData, formData);
-          console.log(result);
+          toast.success(`Trainee enabled successfully`);
+          return <Navigate to="/trainee" replace/> 
       } 
       catch(err)
       {
-         console.log(err)
+        if(err.response.data.code === '23505')
+        {
+            toast.error(`${handleInputData.role.charAt(0).toUpperCase() + handleInputData.role.slice(1)} already exists`);
+            return <Navigate to="/trainee" replace/>
+        }
       } 
   }
     const [buttonOpen, setButtonOpen] = useState(true);

@@ -1,5 +1,5 @@
 import React from 'react'
-import { FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, TextField, Button} from '@mui/material';
 function AddTraineeStep1({handleChange, handleInputData, listBatches}) {
   console.log(listBatches)
   return (
@@ -88,27 +88,6 @@ function AddTraineeStep1({handleChange, handleInputData, listBatches}) {
                                                          Date of Birth
                                                       </label>
                                                     </div>
-                                                    {/* <div className="relative mt-4">
-                                                      <input
-                                                        type="text"
-                                                        id="gender"
-                                                        className="block px-2.5 pb-2.5 pt-3 w-full text-gray-900 bg-transparent rounded-sm border border-gray-300 appearance-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 peer"
-                                                        placeholder=" "
-                                                        onChange={handleChange}
-                                                        value={handleInputData.trainee_gender}
-                                                        name="trainee_gender"
-                                                      />
-                                                      <label
-                                                        htmlFor="gender"
-                                                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
-                                                                  peer-focus:px-2 
-                                                                  peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
-                                                                  peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 peer-focus:text-blue-600
-                                                                  rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
-                                                      >
-                                                          Gender
-                                                      </label>
-                                                    </div> */}
                                                     <div className="mt-4">
                                                         <FormControl fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}>
                                                           <InputLabel id="program-select-label">Select Gender</InputLabel>
@@ -146,7 +125,6 @@ function AddTraineeStep1({handleChange, handleInputData, listBatches}) {
                                                           </Select>
                                                         </FormControl>
                                                   </div>
-
                                   </div>
   )
 }

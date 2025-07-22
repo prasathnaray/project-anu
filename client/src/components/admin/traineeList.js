@@ -30,7 +30,6 @@ function TraineeList() {
         }
   }
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-
   const toggleDropdown = (index) => {
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
   };
@@ -120,7 +119,7 @@ function TraineeList() {
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{trainee.user_name}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">UFT</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">test</td>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">jb</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{trainee.batch_id}</th>
                                                                                 <th className={`py-2 px-4 font-normal`}>
                                                                                                 <div className={`inline-block px-3 py-1 rounded text-sm ${trainee.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>
                                                                                                         {trainee.status === "inactive" && <div>Disabled</div>}
