@@ -68,7 +68,7 @@ function Login() {
               navigate('/dashboard');
             }
           } catch (err) {
-            if (err?.status === 401 || err?.status === 404) {
+            if (err?.response?.data?.code === 401 || err?.response?.data?.code === 404) {
               toast.error("invalid credentials", {
                 toastId: 'invalid-credentials',
                 autoClose: 3000,
@@ -92,7 +92,6 @@ function Login() {
             [name]: value,
         }));
    }
-  //console.log(changepassword);
   return (
     <div className="h-screen grid grid-cols-2">
       <div className="bg-gray-100 flex justify-center items-center">

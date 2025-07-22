@@ -4,10 +4,21 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast, Slide, Zoom } from 'react-toastify';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <App />
+    <ToastContainer 
+          position="top-center"
+          hideProgressBar={true}
+          autoClose={3000}
+          closeOnClick
+          pauseOnHover
+          draggable
+          transition={Zoom}
+          theme="colored"
+      />
   </React.StrictMode>
 );
 

@@ -77,7 +77,7 @@ function AddTrainee() {
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
-      formData.append('user_anu_id', 'ANUT0100112')
+      formData.append('user_anu_id', 'ANUT0100113')
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
       formData.append('user_contact_num', handleInputData.trainee_contact_address)

@@ -1,14 +1,33 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
 import { ArrowUpWideNarrow, ChevronLeft, ChevronRight } from "lucide-react";
 import IMAGE_URL from "../API/imageUrl";
+import GetIntructorsAPI from "../API/GetIntructorsAPI";
+// import IMAGE_URL from "../API/imageUrl";
 function Instructors(){
     const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
     };
     let token = localStorage.getItem('user_data');
+    const [instructors, setInstructors] = useState('')
+    const getData = async() => {
+        try
+        {   
+            let token = localStorage.getItem('user_token');
+            const result = await GetIntructorsAPI(token);
+            setInstructors(result.data);
+        }
+        catch(err)
+        {
+            console.log(err)
+        }
+    }
+    useEffect(() => {
+        getData()
+        // console.log(instructors);
+    }, [])
     return (
         <div className={'flex'}>
             <div>
@@ -48,7 +67,24 @@ function Instructors(){
                                                                 </tr>
                                                         </thead>
                                                         <tbody>
-                                                                
+                                                                {instructors.length > 0 ? (
+                                                                    instructors.map((instructor, index) => (
+                                                                        <tr key={index} className="text-sm text-gray-700">
+                                                                        <td><img src={IMAGE_URL+instructor.user_profile_photo} className="w-10 cursor-pointer"/></td>
+                                                                        <td className="px-4 py-2">{instructor.user_name}</td>
+                                                                        <td className="px-4 py-2">dad</td>
+                                                                        <td className="px-4 py-2">adad</td>
+                                                                        <td className="px-4 py-2">{instructor.status}</td>
+                                                                        </tr>
+                                                                    ))
+                                                                    ) : (
+                                                                    <tr>
+                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                        No data found
+                                                                        </td>
+                                                                    </tr>
+                                                                    )}
+
                                                         </tbody>
                                                 </table>
                                                 <div className="flex justify-end items-center mt-5 gap-2">
