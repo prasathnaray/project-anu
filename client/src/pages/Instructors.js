@@ -81,7 +81,7 @@ function Instructors(){
                                                                                                 </div>
                                                                         </td>
                                                                         <td>                                                                        
-                                                                            <th className="py-2 px-4 text-[#8DC63F]"><button className="text-gray-500"><EllipsisVertical size={23} /></button></th>
+                                                                            <div className="py-2 px-4 text-[#8DC63F]"><button className="text-gray-500"><EllipsisVertical size={23} /></button></div>
                                                                         </td>
                                                                         </tr>
                                                                     ))

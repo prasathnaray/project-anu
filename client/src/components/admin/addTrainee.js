@@ -13,9 +13,10 @@ import { Navigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import APP_URL from '../../API/config';
 import AddTraineeAPI from '../../API/AddTraineeAPI.js';
-import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, Chip, Box, OutlinedInput} from '@mui/material';
 import GetBatchesAPI from '../../API/GetBatchesAPI.js';
 function AddTrainee() {
+  const data = useParams();
   const [redirect, setRedirect] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState('');
   const [listBatches, setListBatches] = useState([]);
@@ -26,20 +27,19 @@ function AddTrainee() {
           trainee_contact_address: '',
           trainee_dob: '',
           trainee_gender: '',
-          trainee_batch: '',
+          trainee_batch: [],
           trainee_password: '',
           trainee_confirm_password: '',
           status: '',
           trainee_dp: '',
           description: '',
-          role: '' 
+          role: data.people || '' 
   })
   const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
     };
   const [currentStep, setCurrentStep] = useState(0);
-  const data = useParams();
   const programOptions = [
     { label: 'Trainee', value: 'trainee' },
     { label: 'Instructor', value: 'instructor' }
@@ -73,10 +73,16 @@ function AddTrainee() {
           [name]: files[0],
         }));
       } else {
-        setHandleInputData((prevData) => ({
-          ...prevData,
-          [name]: value,
-        }));
+        // const isMultiSelect = Array.isArray(value);
+        // setHandleInputData((prevData) => ({
+        //   ...prevData,
+        //   [name]: isMultiSelect ? [...value] : value,
+        // }));
+         const isBatchField = name === 'trainee_batch';
+          setHandleInputData((prevData) => ({
+            ...prevData,
+            [name]: isBatchField ? (Array.isArray(value) ? value : [value]) : value,
+          }));
       }
   }
   const roleCode = handleInputData.role === "trainee" ? 103 : 102;
@@ -89,12 +95,29 @@ function AddTrainee() {
       formData.append('user_contact_num', handleInputData.trainee_contact_address)
       formData.append('user_dob', handleInputData.trainee_dob);
       formData.append('user_gender', handleInputData.trainee_gender)
-      formData.append('user_batch', handleInputData.trainee_batch)
+      handleInputData.trainee_batch.forEach((batch) => {
+            formData.append('user_batch[]', batch);
+      });
+
+      // if (handleInputData.role==="instructor") {
+      //     handleInputData.trainee_batch.forEach((batch) =>
+      //       formData.append('user_batch[]', batch)
+      //     );
+      // } else {
+      //     // formData.append('user_batch', handleInputData.trainee_batch);
+      //     handleInputData.trainee_batch.forEach((batch) =>
+      //       formData.append('user_batch[]', batch)
+      //     );
+      // }
       formData.append('user_password', handleInputData.trainee_password)
       formData.append('user_role', roleCode)
       formData.append('status', handleInputData.status);
       formData.append('description', handleInputData.description)
       formData.append('file', handleInputData.trainee_dp)
+      // console.log('FormData entries:');
+      // for (let pair of formData.entries()) {
+      //   console.log(`${pair[0]}: ${pair[1]}`);
+      // }
       try
       {
           const result = await AddTraineeAPI(tokenData, formData);
@@ -233,7 +256,7 @@ function AddTrainee() {
                                               </span>
                                             </div>
                                   </div>
-                                  {currentStep === 0 && <AddTraineeStep1 handleChange={handleChange} handleInputData={handleInputData} listBatches={listBatches}/>}
+                                  {currentStep === 0 && <AddTraineeStep1 handleChange={handleChange} handleInputData={handleInputData} listBatches={listBatches} data={data}/>}
                                   {currentStep === 1 && <AddTraineeStep2 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   {currentStep === 2 && <AddTraineeStep3 handleChange={handleChange} handleInputData={handleInputData}/>}
                                   <div className={`mt-7  ${currentStep === 0 ? ' flex justify-end items-center' : ' flex justify-between items-center'} gap-5`}>
