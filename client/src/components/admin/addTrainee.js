@@ -16,19 +16,39 @@ import AddTraineeAPI from '../../API/AddTraineeAPI.js';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import GetBatchesAPI from '../../API/GetBatchesAPI.js';
 function AddTrainee() {
-  const tokenData = localStorage.getItem('user_token')
+  const [redirect, setRedirect] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const [listBatches, setListBatches] = useState([]);
+  const tokenData = localStorage.getItem('user_token');
+  const [handleInputData, setHandleInputData] = useState({
+          trainee_name: '',
+          trainee_email_address: '',
+          trainee_contact_address: '',
+          trainee_dob: '',
+          trainee_gender: '',
+          trainee_batch: '',
+          trainee_password: '',
+          trainee_confirm_password: '',
+          status: '',
+          trainee_dp: '',
+          description: '',
+          role: '' 
+  })
+  const [buttonOpen, setButtonOpen] = useState(true);
+    const handleButtonOpen = () => {
+        setButtonOpen(!buttonOpen);
+    };
+  const [currentStep, setCurrentStep] = useState(0);
   const data = useParams();
   const programOptions = [
     { label: 'Trainee', value: 'trainee' },
     { label: 'Instructor', value: 'instructor' }
   ];
-  const [selectedProgram, setSelectedProgram] = useState('');
   const handleProgramChange = (event) => {
     setSelectedProgram(event.target.value);
   };
   console.log(selectedProgram);
   ///batches data 
-  const [listBatches, setListBatches] = useState([]);
   const getBatches = async() => {
           try
           {
@@ -44,20 +64,6 @@ function AddTrainee() {
   useEffect(() => {
       getBatches()
   }, [])
-  const [handleInputData, setHandleInputData] = useState({
-          trainee_name: '',
-          trainee_email_address: '',
-          trainee_contact_address: '',
-          trainee_dob: '',
-          trainee_gender: '',
-          trainee_batch: '',
-          trainee_password: '',
-          trainee_confirm_password: '',
-          status: '',
-          trainee_dp: '',
-          description: '',
-          role: '' 
-  })
   console.log(handleInputData);
   const handleChange = (e) => {
     const {name, value, files} = e.target;
@@ -77,7 +83,7 @@ function AddTrainee() {
   const submitHandle = async(e) => {
       e.preventDefault();
       const formData = new FormData();
-      formData.append('user_anu_id', 'ANUT0100113')
+      // formData.append('user_anu_id', 'ANUT0100113')
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
       formData.append('user_contact_num', handleInputData.trainee_contact_address)
@@ -93,22 +99,24 @@ function AddTrainee() {
       {
           const result = await AddTraineeAPI(tokenData, formData);
           toast.success(`Trainee enabled successfully`);
-          return <Navigate to="/trainee" replace/> 
+          // return <Navigate to="/trainee" replace/> 
+          setRedirect(true)
       } 
       catch(err)
       {
         if(err.response.data.code === '23505')
         {
             toast.error(`${handleInputData.role.charAt(0).toUpperCase() + handleInputData.role.slice(1)} already exists`);
-            return <Navigate to="/trainee" replace/>
+            // return <Navigate to="/trainee" replace/>
+            setRedirect(true);
         }
       } 
-  }
-    const [buttonOpen, setButtonOpen] = useState(true);
-    const handleButtonOpen = () => {
-        setButtonOpen(!buttonOpen);
-    };
-  const [currentStep, setCurrentStep] = useState(0);
+  };
+    if(redirect)
+    {
+      return <Navigate to="/trainee" replace/>
+    }
+
   const handleNext = (e) => {
     e.preventDefault();
     setCurrentStep((prev) => prev + 1);

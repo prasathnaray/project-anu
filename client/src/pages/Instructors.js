@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical } from "lucide-react";
 import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
 // import IMAGE_URL from "../API/imageUrl";
@@ -71,10 +71,18 @@ function Instructors(){
                                                                     instructors.map((instructor, index) => (
                                                                         <tr key={index} className="text-sm text-gray-700">
                                                                         <td><img src={IMAGE_URL+instructor.user_profile_photo} className="w-10 cursor-pointer"/></td>
-                                                                        <td className="px-4 py-2">{instructor.user_name}</td>
-                                                                        <td className="px-4 py-2">dad</td>
-                                                                        <td className="px-4 py-2">adad</td>
-                                                                        <td className="px-4 py-2">{instructor.status}</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">{instructor.user_name}</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">dad</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">adad</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                                <div className={`inline-block px-3 py-1 rounded text-sm ${instructor.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>
+                                                                                                        {instructor.status === "inactive" && <div>Disabled</div>}
+                                                                                                        {instructor.status === "active" && <div>Active</div>}
+                                                                                                </div>
+                                                                        </td>
+                                                                        <td>                                                                        
+                                                                            <th className="py-2 px-4 text-[#8DC63F]"><button className="text-gray-500"><EllipsisVertical size={23} /></button></th>
+                                                                        </td>
                                                                         </tr>
                                                                     ))
                                                                     ) : (
