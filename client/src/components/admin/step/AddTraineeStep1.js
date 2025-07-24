@@ -1,5 +1,6 @@
 import React from 'react'
 import { FormControl, InputLabel, Select, MenuItem, TextField, Button, Box, OutlinedInput, Chip} from '@mui/material';
+import { ValidatorComponent } from 'react-material-ui-form-validator';
 function AddTraineeStep1({handleChange, handleInputData, listBatches, data}) {
   console.log(listBatches)
   return (
