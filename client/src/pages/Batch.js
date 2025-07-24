@@ -95,7 +95,7 @@ function Batch()  {
                         [name]: value,
                 });
         }
-         //toggle dropdown
+         
           const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
           const dropdownRefs = useRef({});  
           const toggleDropdown = (index) => {

@@ -18,7 +18,7 @@ function RoutesPath() {
                     <Route element={<PrivateRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/profile" element={<Profile />} />
-                            <Route path="/trainee" element={<Trainee /> } />
+                            <Route path="/trainees" element={<Trainee /> } />
                             <Route path="/:people/add" element={<AddTrainee /> } />
                             <Route path="/queries" element={<Queries />} />
                             <Route path="/instructors" element={<Instructors />} />

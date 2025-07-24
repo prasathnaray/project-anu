@@ -22,12 +22,18 @@ const CreateTraineeController = async (req, res) => {
         try{
                 if(!req.file)
                 {
-                        return res.status(200).json({
+                        return res.status(404).json({
                         error: 'No file uploaded'   
                         })
                 }
                 const file = req.file;
                 const {user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, user_batch } = req.body;
+                if(!user_name || !user_email || !user_contact_num)
+                {
+                        return res.status(501).json({
+                                error: `${'Missing Fields'}`
+                        })
+                }
                 const filePath = `trainee_images/${file.originalname}`;
                 const { data, error } = await client.storage
                         .from(process.env.BUCKET_NAME)

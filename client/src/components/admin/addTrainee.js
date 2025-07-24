@@ -15,6 +15,7 @@ import APP_URL from '../../API/config';
 import AddTraineeAPI from '../../API/AddTraineeAPI.js';
 import { FormControl, InputLabel, Select, MenuItem, Chip, Box, OutlinedInput} from '@mui/material';
 import GetBatchesAPI from '../../API/GetBatchesAPI.js';
+import CustomCloseButton from '../../utils/CustomCloseButton';
 function AddTrainee() {
   const data = useParams();
   const [redirect, setRedirect] = useState(false);
@@ -130,14 +131,40 @@ function AddTrainee() {
         if(err.response.data.code === '23505')
         {
             toast.error(`${handleInputData.role.charAt(0).toUpperCase() + handleInputData.role.slice(1)} already exists`);
-            // return <Navigate to="/trainee" replace/>
             setRedirect(true);
+        }
+        else if(err.response.status === 403)
+        {
+            toast.error("please login again" , {
+                autoClose: 3000,
+                toastId: 'login-again',
+                icon: false,
+                closeButton: CustomCloseButton,
+            });
+        }
+        else if(err.response.status === 404)
+        {
+            toast.error("Photo Should not be empty" , {
+                autoClose: 3000,
+                toastId: 'photo-missing',
+                icon: false,
+                closeButton: CustomCloseButton,
+            });
+        } 
+        else if(err.response.status === 501)
+        {
+            toast.error("fields should not be empty" , {
+                  autoClose: 3000,
+                  toastId: 'Missing Input Fields',
+                  icon: false,
+                  closeButton: CustomCloseButton,
+              });
         }
       } 
   };
     if(redirect)
     {
-      return <Navigate to="/trainee" replace/>
+      return <Navigate to={'/'+handleInputData.role+'s'} replace/>
     }
 
   const handleNext = (e) => {
