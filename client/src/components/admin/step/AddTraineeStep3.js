@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, TextareaAutosize  } from '@mui/material';
 
 function AddTraineeStep3({ handleChange, handleInputData }) {
   const fileInputRef = useRef(null);
@@ -34,13 +34,10 @@ function AddTraineeStep3({ handleChange, handleInputData }) {
           fullWidth
           size="small" sx={{ minHeight: '35px' }}
           onClick={handleClick}
-          InputProps={{
-            readOnly: true,
-          }}
         />
       </div>
 
-      <div className="relative">
+      {/* <div className="relative">
         <textarea
           id="confirmPassword"
           className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-sm border border-gray-300 appearance-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 peer"
@@ -59,7 +56,21 @@ function AddTraineeStep3({ handleChange, handleInputData }) {
         >
           Description
         </label>
-      </div>
+      </div> */}
+            <div className="mt-4">
+                    <TextField fullWidth variant="outlined" size="small" sx={{ minHeight: '55px' }}
+                                id="outlined-basic" 
+                                label="Description" 
+                                name="description"
+                                type="password"
+                                onChange={handleChange}
+                                value={handleInputData.description}
+                                multiline
+                                minRows={3}
+                                maxRows={6}
+                                placeholder="Write something..."
+                    />
+            </div>
     </div>
   );
 }
