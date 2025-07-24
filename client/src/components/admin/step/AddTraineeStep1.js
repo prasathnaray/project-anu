@@ -1,10 +1,18 @@
-import React from 'react'
+import React, {useRef, useEffect, useState} from 'react'
 import { FormControl, InputLabel, Select, MenuItem, TextField, Button, Box, OutlinedInput, Chip} from '@mui/material';
-import { ValidatorComponent } from 'react-material-ui-form-validator';
+import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import EmailValidation from '../../../utils/EmailValidation';
 function AddTraineeStep1({handleChange, handleInputData, listBatches, data}) {
-  console.log(listBatches)
+  const[validateMail, setValidateMail] = useState(true)
+  const [emailTouched, setEmailTouched] = useState(false);
+  const validationChange = async(e) => {
+        const mail = e.target.value;
+        setValidateMail(EmailValidation(mail));
+        setEmailTouched(true);
+  }
+  console.log(validateMail);
   return (
-    <div className="mt-7 grid grid-cols-2 gap-5">
+                      <ValidatorForm className="mt-7 grid grid-cols-2 gap-5">
                                                     <div>
                                                           <TextField fullWidth variant="outlined" size="small" sx={{ minHeight: '35px' }}
                                                             id="outlined-basic" 
@@ -19,8 +27,22 @@ function AddTraineeStep1({handleChange, handleInputData, listBatches, data}) {
                                                             id="outlined-basic" 
                                                             label="Email address" 
                                                             name="trainee_email_address"
-                                                            onChange={handleChange}
+                                                            onChange={(e) => {handleChange(e); validationChange(e);}}
                                                             value={handleInputData.trainee_email_address}
+                                                            error={
+                                                              emailTouched && (
+                                                                handleInputData.trainee_email_address.trim() === '' || validateMail === false
+                                                              )
+                                                            }
+                                                            helperText={
+                                                              emailTouched
+                                                                ? handleInputData.trainee_email_address.trim() === ''
+                                                                  ? 'Field should not be empty'
+                                                                  : validateMail === false
+                                                                  ? 'Not a valid email.'
+                                                                  : ''
+                                                                : ''
+                                                            }
                                                           />
                                                     </div>
                                                     <div className="mt-6">
@@ -121,7 +143,7 @@ function AddTraineeStep1({handleChange, handleInputData, listBatches, data}) {
                                                       </div>
                                                     )}
 
-                                  </div>
+                                  </ValidatorForm>
   )
 }
 
