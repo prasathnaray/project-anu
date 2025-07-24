@@ -1,9 +1,10 @@
 import React, {useState, useEffect} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical } from "lucide-react";
+import { ArrowBigDownIcon, ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical } from "lucide-react";
 import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
+import { ChevronDown } from 'lucide-react';
 // import IMAGE_URL from "../API/imageUrl";
 function Instructors(){
     const [buttonOpen, setButtonOpen] = useState(true);
@@ -70,11 +71,11 @@ function Instructors(){
                                                                 {instructors.length > 0 ? (
                                                                     instructors.map((instructor, index) => (
                                                                         <tr key={index} className="text-sm text-gray-700">
-                                                                        <td><img src={IMAGE_URL+instructor.user_profile_photo} className="w-10 cursor-pointer"/></td>
-                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">{instructor.user_name}</td>
-                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">dad</td>
-                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">adad</td>
-                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                        <td className="border-b-2"><img src={IMAGE_URL+instructor.user_profile_photo} className="w-10 cursor-pointer"/></td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">{instructor.user_name}</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">{instructor.batch_id.length>1 ? (<div className="flex justify-between items-center">{instructor.batch_id[0]}<button><ChevronDown size={24}/></button></div>): (<div>{instructor.batch_id}</div>)}</td>
+                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
                                                                                                 <div className={`inline-block px-3 py-1 rounded text-sm ${instructor.status === "inactive" ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full" : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"}`}>
                                                                                                         {instructor.status === "inactive" && <div>Disabled</div>}
                                                                                                         {instructor.status === "active" && <div>Active</div>}
