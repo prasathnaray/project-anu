@@ -14,6 +14,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import getMonthYear from '../utils/DateChange';
+import TablePagination from '@mui/material/TablePagination';
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -66,6 +67,16 @@ function Batch()  {
         const [openBatch, setOpenBatch] = useState(false);
         const [startDate, setStartDate] = useState(null);
         const [endDate, setEndDate] = useState(null);
+        const [page, setPage] = React.useState(2);
+        const [rowsPerPage, setRowsPerPage] = React.useState(2);
+        const [rowCount, setRowCount] = useState(0);
+        const handleChangePage = (event, newPage) => {
+                setPage(newPage);
+        };
+        const handleChangeRowsPerPage = (event) => {
+                        setRowsPerPage(parseInt(event.target.value, 10));
+                        setPage(0);
+        };
         const handleClose = () => {
                 setOpenBatch(false);
                 setStartDate(null);
@@ -121,6 +132,7 @@ function Batch()  {
                         {
                                 const result = await GetBatchesAPI(token);
                                 setListBatch(result.data.rows);
+                                setRowCount(result.data.rowCount);
                         }
                         catch(err)
                         {
@@ -257,13 +269,15 @@ function Batch()  {
                                                                   )}  
                                                         </tbody>
                                                 </table>
-                                                <div className="flex justify-end items-center mt-5 gap-2">
-                                                                <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white"><button><ChevronLeft size={20}/></button></div>
-                                                                <div className="border px-2 rounded border-gray-400 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white"><button>1</button></div>
-                                                                <div className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white"><button>2</button></div>
-                                                                <div className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white"><button>3</button></div>
-                                                                <div className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white"><button>4</button></div>
-                                                                <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white"><button><ChevronRight size={20}/></button></div>
+                                                <div className="flex justify-end items-center mt-6 gap-10">
+                                                        <TablePagination 
+                                                        component="div"
+                                                        count={rowCount}
+                                                        page={page}
+                                                        onPageChange={handleChangePage}
+                                                        rowsPerPage={rowsPerPage}
+                                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                                                        />
                                                 </div>
                                             </div>
                                 </div>
