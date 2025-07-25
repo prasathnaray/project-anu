@@ -53,21 +53,21 @@ function AdminDashboard(){
                                                                                        <span className="font-semibold px-2">Trainees (in total)</span>
                                                                                        <div className="flex justify-between items-center px-2 pt-5">
                                                                                                     <div className="text-[#8DC63F]"><GraduationCap size={43}/></div>
-                                                                                                    <div className="text-3xl text-gray-600">{dashboardData[1]?.count || 0}</div>
+                                                                                                    <div className="text-3xl text-gray-600">{dashboardData?.getTraineesIns?.rows[1]?.count || 0}</div>
                                                                                        </div>
                                                                                 </div>
                                                                                 <div className="border p-2 ">
                                                                                         <span className="font-semibold">Instrutors (in total)</span>
                                                                                          <div className="flex justify-between items-center px-2 pt-5">
                                                                                                     <div className="text-[#8DC63F]"><ClipboardPenLine size={43}/></div>
-                                                                                                    <div className="text-3xl text-gray-600">{dashboardData[0]?.count || 0}</div>
+                                                                                                    <div className="text-3xl text-gray-600">{dashboardData?.getTraineesIns?.rows[0]?.count || 0}</div>
                                                                                          </div>
                                                                                 </div>
                                                                                 <div className="border p-2">
                                                                                         <span className="font-semibold">Batches (in total)</span>
                                                                                          <div className="flex justify-between items-center px-2 pt-5">
                                                                                                     <div className="text-[#8DC63F]"><GraduationCap size={43}/></div>
-                                                                                                    <div className="text-3xl text-gray-600">80</div>
+                                                                                                    <div className="text-3xl text-gray-600">{dashboardData?.getBatchDas?.rows[0]?.count || 0}</div>
                                                                                          </div>
                                                                                 </div>
                                                                         </div>

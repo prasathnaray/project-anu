@@ -4,7 +4,7 @@ const getDashboardC = async(req, res) => {
     try
     {
         const result = await getDashboardDatam(requester);
-        res.status(200).send(result.rows);
+        res.status(200).send(result);
     }
     catch(err)
     {
