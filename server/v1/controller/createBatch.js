@@ -1,5 +1,5 @@
 const {generateBatchID} = require('../utils/idGenerator.js')
-const {createBatchm, getBatchm, associateBatchm} = require('../model/Batchm.js')
+const {createBatchm, getBatchm, associateBatchm, deleteBatchm} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
     const {batch_name, batch_start_date, batch_end_date} = req.body;
@@ -38,4 +38,19 @@ const associateBatchc = async(req, res) => {
                 res.status(500).send(err.message)
         }
 }
-module.exports = {batchCreation, getBatchData, associateBatchc}
+const deleteBatchc = async(req, res) => {
+        const requester = req.user;
+        const batch_id = req.params.batch_id;
+        try
+        {
+                const result = await deleteBatchm(requester, batch_id);
+                res.status(200).send(result);
+        }
+        catch(err)
+        {
+                res.status(500).send(err)
+                console.log(err.message)
+        }
+
+}
+module.exports = {batchCreation, getBatchData, associateBatchc, deleteBatchc}

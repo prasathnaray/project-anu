@@ -15,6 +15,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import getMonthYear from '../utils/DateChange';
 import TablePagination from '@mui/material/TablePagination';
+import DeleteBatchAPI from "../API/deleteBatchAPI";
+import DeleteToast from "../utils/deleteToast";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -87,6 +89,34 @@ function Batch()  {
                                 batch_end_date: null
                 });
         };
+
+        // delete api 
+                const deleteSubmit = async(batch_id) => {
+                        try
+                        {
+                                let tokenn = localStorage.getItem('user_token')
+                                // const result = await DeleteBatchAPI(tokenn, batch_id);
+                                // if(result)
+                                // {
+                                //         BatchesData(tokenn)
+                                // }
+                                DeleteToast(batch_id, () => BatchesData(tokenn), tokenn);
+                        }       
+                        catch(err)
+                        {
+                                // console.log()
+                                if(err?.response?.status == 403)
+                                {
+                                        toast.error("please login again" , {
+                                                autoClose: 3000,
+                                                toastId: 'login-again',
+                                                icon: false,
+                                                closeButton: CustomCloseButton,
+                                        });
+                                }
+                        }
+                }
+        //
         const [buttonOpen, setButtonOpen] = useState(true);
         const handleButtonOpen = () => {
                 setButtonOpen(!buttonOpen);
@@ -250,7 +280,8 @@ function Batch()  {
                                                                                                         ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                                                 `} 
                                                                                                 >
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View </button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
                                                                                                                 {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Associate Trainees</button>
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Associate Instructors</button>

@@ -66,4 +66,27 @@ const associateBatchm = (requester, batch_id, user_id) => {
         })
     })
 }
-module.exports = {createBatchm, getBatchm, associateBatchm};
+const deleteBatchm = (requester, batch_id) => {
+    const isPrivileged = [101,  102].includes(Number(requester.role));
+    if(!isPrivileged)
+    {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to view trainee profiles'
+        })
+    }
+    return new Promise((resolve, reject) => {
+        client.query('DELETE FROM batch_data WHERE batch_id=$1', [batch_id], (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }   
+            else
+            {
+                resolve(result);
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm};

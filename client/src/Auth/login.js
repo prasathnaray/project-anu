@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import { PuffLoader,RingLoader, CircleLoader , MoonLoader, ClipLoader} from 'react-spinners';
 import ForgotPassword from '../utils/ForgotPassword';
+import ForgotPasswordAPI from '../API/ForgotPasswordAPI';
 function Login() {
   //icon change for password input
   const [icon, setIcon] = useState(EyeOff);
@@ -92,6 +93,18 @@ function Login() {
             [name]: value,
         }));
    }
+   const ResetPassword = async(e) => {
+          e.preventDefault();
+          try
+          {
+              const result = await ForgotPasswordAPI(changepassword)
+              console.log(result);
+          }
+          catch(err)
+          {
+            console.log(err)
+          }
+   }
   return (
     <div className="h-screen grid grid-cols-2">
       <div className="bg-gray-100 flex justify-center items-center">
@@ -153,7 +166,7 @@ function Login() {
                   className="rounded px-2 py-3 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
               />
               <div className="flex justify-end items-center gap-3">
-                  <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-5 py-2 font-semibold transition-all ease-in-out">Reset Passowrd</button>
+                  <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-5 py-2 font-semibold transition-all ease-in-out" onClick={ResetPassword}>Reset Passowrd</button>
                   <button className="text-red-500 hover:bg-red-200 px-5 py-2 rounded transition-all ease-in-out" onClick={() => setShowModal(false)}>Cancel</button>
               </div>
       </ForgotPassword>

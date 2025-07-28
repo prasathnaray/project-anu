@@ -12,7 +12,8 @@ import showEnableConfirmToast from '../../utils/showEnableConfirmToast';
 import { CircleUserRound } from 'lucide-react';
 function TraineeList() {
   const token = localStorage.getItem("user_token");
-  const [traineeList, setTraineeList] = useState([]);
+  const [traineeList, setTraineeList] = useState({});
+//   const [hashTraineeList, setHashTraineeList] = useState({});
   const [count, setCount] = useState(0);
   const[showModal, setShowModal] = useState(false);
   const handleAddTrainee = () => setShowModal(true);
@@ -21,7 +22,7 @@ function TraineeList() {
         try
         {
                 const response = await TraineeListAPI(token);
-                console.log(response.data);
+                //console.log(response.data);
                 setTraineeList(response.data.rows);
                 setCount(response.data.length);
         }
@@ -30,6 +31,7 @@ function TraineeList() {
                 console.error("Error fetching trainee list:", error);
         }
   }
+ // console.log(traineeList);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const toggleDropdown = (index) => {
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
