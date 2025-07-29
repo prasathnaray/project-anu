@@ -30,6 +30,7 @@ function Login() {
   const[showModal, setShowModal] = useState(false);
   //handle loading
   const [loading, setLoading] = useState(false);
+  const [loadingpassword, setPasswordLoading] = useState(false);
   //const [] = useState([]);
   //navigating when success
   const navigate = useNavigate();
@@ -95,14 +96,45 @@ function Login() {
    }
    const ResetPassword = async(e) => {
           e.preventDefault();
+          if(!changepassword.reset_password_mail)
+          {
+              toast.error("field should not be empty" , {
+                  autoClose: 3000,
+                  toastId: 'input-missing',
+                  icon: false,
+                  closeButton: CustomCloseButton,
+              });
+              return;
+          }
+          setPasswordLoading(true);
           try
           {
               const result = await ForgotPasswordAPI(changepassword)
-              console.log(result);
+              if(result.data.logResponse.code == 200)
+              {
+                  toast.success("Password request sent." , {
+                        autoClose: 3000,
+                        toastId: 'request-sent',
+                        icon: false,
+                        closeButton: CustomCloseButton,
+                  });
+              }
           }
           catch(err)
           {
-            console.log(err)
+            if (err?.response?.data?.code === 500 || err?.response?.data?.code === 404) {
+              toast.error("invalid credentials", {
+                toastId: 'invalid-credentials',
+                autoClose: 3000,
+                icon: false,
+                closeButton: CustomCloseButton,
+              });
+            }
+          }
+          finally
+          {
+            setPasswordLoading(false);
+            setShowModal(false)
           }
    }
   return (
@@ -166,7 +198,13 @@ function Login() {
                   className="rounded px-2 py-3 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
               />
               <div className="flex justify-end items-center gap-3">
-                  <button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-5 py-2 font-semibold transition-all ease-in-out" onClick={ResetPassword}>Reset Passowrd</button>
+                  <button className={`${loadingpassword ? ("bg-gray-300 text-gray-500 font-semibold rounded px-5 py-2 text-lg transition-all ease-in-out") : ("bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-2 font-semibold text-lg transition-all ease-in-out")}`} onClick={ResetPassword}>
+                          {loadingpassword ? (
+                              <div>Sending <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/></div>
+                          ) : (
+                              "Reset Password"
+                          )}
+                  </button>
                   <button className="text-red-500 hover:bg-red-200 px-5 py-2 rounded transition-all ease-in-out" onClick={() => setShowModal(false)}>Cancel</button>
               </div>
       </ForgotPassword>
