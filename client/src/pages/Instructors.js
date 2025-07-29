@@ -47,7 +47,7 @@ function Instructors(){
                 <div>
                             <NavBar />
                 </div>
-                <div className="bg-gray-100">
+                <div className="bg-gray-100 h-screen">
                             <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                             <div className="text-gray-500">Dashboard / Instructors</div>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Instructors</div>

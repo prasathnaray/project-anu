@@ -223,19 +223,21 @@ function Batch()  {
         }
 
     return (
-        <div className={`flex`}>
+        <div className={`flex flex-col min-h-screen`}>
                 <div>
-                    <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> 
+                        <NavBar />
+                    {/* <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>  */}
+
                 </div>
-                        <div className={`${
-                        buttonOpen === true
-                        ? "ms-[221px] flex-grow"
-                        : "ms-[85.5px] flex-grow"
-                        } `}>
-                        <div> 
-                                <NavBar />
-                       </div>
-                        <div className="bg-gray-100 h-screen">
+                <div className="flex flex-grow">
+                                <div>
+                                      <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>  
+                                </div>
+                                   <div 
+                        className={`${
+          buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
+        } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
+                        <div className="">
                                 <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                             <div className="text-gray-500">Dashboard / Batch</div>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Batches</div>
@@ -314,6 +316,9 @@ function Batch()  {
                                 </div>
                         </div>
                 </div>
+                </div>
+                
+                     
                 <CreateBatch isVisible={openBatch} onClose={handleClose}>
                     <div className="flex justify-between items-center">
                         <div className="text-lg">Create Batch</div>

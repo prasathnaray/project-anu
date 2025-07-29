@@ -16,16 +16,30 @@ function Course() {
     return <Navigate to="/" replace />;
   }
   return (
-    <div className={`flex`}>
-            <div>
-                    <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>
+    <div className={`flex flex-col min-h-screen`}>
+            <div className="w-full">
+                    <NavBar />
+                    {/* <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> */}
             </div>
-            <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[85.5px] flex-grow"} `}>
+            {/* <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[85.5px] flex-grow"} `}>
                     <div>
-                            <NavBar />
+                            
                     </div>
                     <div className="bg-gray-100">
                             <div></div>
+                    </div>
+            </div> */}
+            <div className="flex flex-grow">
+                    <div className="">
+                          <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
+                    </div>
+                    <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[85.5px] flex-grow"} `}>
+                      <div>
+                             aa 
+                      </div>
+                      <div className="bg-gray-100">
+                              <div></div>
+                      </div>
                     </div>
             </div>
     </div>

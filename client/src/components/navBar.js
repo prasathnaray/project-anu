@@ -40,14 +40,16 @@ function NavBar() {
   }, []);
   return (
     <div className="navbar dm-sans">
-      <nav className="bg-white shadow-sm border">
-        <div className="flex flex-wrap items-center justify-between py-2 px-1">
+      <nav className="bg-[#8DC63F] shadow-sm border">
+        <div className="flex flex-wrap items-center justify-between py-[3px] px-1">
           <div className="flex justify-start items-center ms-3">
-            <div className="text-black">
+            <div className="text-white">
               {currentPath === "/reports" && <div>Reports</div>}
               {currentPath === "/dashboard" && <div>Dashboard</div>}
               {currentPath === "/profile" && <div>Profile</div>}
               {currentPath === "/settings" && <div>Settings</div>}
+              {currentPath === "/course" && <div>Course</div>}
+              {currentPath === "/batch" && <div>Course</div>}
             </div>
           </div>
           <div className="flex md:order-2">
@@ -75,24 +77,24 @@ function NavBar() {
               </svg>
               <span className="sr-only">Searchh</span>
             </button>
-             <div className="relative md:block">
-              <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
-                <button>
-                  <MessageCircleMore size={25} />
-                </button>
-              </div>
-            </div>
-            <div className="relative md:block">
-              <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
-                <button>
-                  <Search size={25} />
-                </button>
-              </div>
-            </div>
-            <div className="relative md:block">
-              <div className="px-3 py-2 ms-3 text-gray-500 hover:text-[#8DC63F]">
+             {/* <div className="relative md:block">
+              <div className="px-2 py-2 ms-3 text-gray-200 hover:text-[#8DC63F]">
                 <button className="">
-                  <Bell size={25} />
+                  <MessageCircleMore size={20} />
+                </button>
+              </div>
+            </div> */}
+            <div className="relative md:block">
+              <div className="px-2 py-2 ms-1 text-gray-200">
+                <button className="">
+                  <Search size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="relative md:block">
+              <div className="px-3 py-2 ms-1 text-gray-200">
+                <button className="">
+                  <Bell size={20} />
                 </button>
               </div>
             </div>
@@ -103,9 +105,9 @@ function NavBar() {
                 </button>
               </div>
             </div> */}
-            <div className=" ms-3 relative">
-              <button onClick={() => toggleDropdown('user-options')} className="text-blue-500 hover:bg-gray-200 p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
-                <CircleUser size={25} />
+            <div className=" ms-1 relative">
+              <button onClick={() => toggleDropdown('user-options')} className="text-gray-200 hover:bg-[#8DC63F] p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
+                <CircleUser size={20} />
               </button>
               {openDropdownIndex === 'user-options' && (
                 <div
