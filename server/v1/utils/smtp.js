@@ -4,27 +4,28 @@ const nodemailer = nodemailerModule.default || nodemailerModule;
 
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
-const transport = nodemailer.createTransport({
-  host: process.env.MAIL_TRAP_HOST,
-  port: 2525,
-  auth: {
-    user: process.env.MAIL_TRAP_USERNAME,
-    pass: process.env.MAIL_TRAP_PASSWORD_SMTP
-  }
-});
+const mailSender = async (forgotPassword) => {
+  const transport = nodemailer.createTransport({
+    host: process.env.MAIL_TRAP_HOST,
+    port: 2525,
+    auth: {
+      user: process.env.MAIL_TRAP_USERNAME,
+      pass: process.env.MAIL_TRAP_PASSWORD_SMTP
+    }
+  });
 
-(async () => {
   try {
     const info = await transport.sendMail({
-      from: '"Maddison Foo Koch" <hell@example.com>',
-      to: "abiya@htic.iitm.ac.in",
-      subject: "Check",
+      from: '"No reply" <no-reply@htic.iitm.ac.in>',
+      to: forgotPassword,
+      subject: "Forgot Password",
       text: "Hello world?",
       html: "<b>Hello world?</b>",
     });
-
-    console.log("Message sent:", info.messageId);
+    return { messageId: info.messageId };
   } catch (err) {
-    console.error("SendMail error:", err);
+    throw new Error(err.message || "Mail sending failed");
   }
-})();
+};
+
+module.exports = mailSender;

@@ -14,7 +14,7 @@ const forgotm = (user_mail, ipaddress) => {
                         message: 'No user found with the provided email.'
                     });
                 }
-                client.query('INSERT INTO forgot_password_request_activity (user_mail, ip_address) VALUES ($1, $2)', [user_mail, ipaddress], (err, insertResult) => {
+                client.query('INSERT INTO forgot_password_request_activity(user_mail, ip_address) VALUES ($1, $2)', [user_mail, ipaddress], (err, insertResult) => {
                     if(err) {
                         return reject(err);
                     }
