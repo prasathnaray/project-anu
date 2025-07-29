@@ -24,6 +24,9 @@ function Course() {
                     <div>
                             <NavBar />
                     </div>
+                    <div className="bg-gray-100">
+                            <div></div>
+                    </div>
             </div>
     </div>
   )
