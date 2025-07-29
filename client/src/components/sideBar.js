@@ -21,7 +21,7 @@ import {
 } from "hugeicons-react";
 import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
-import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie } from 'lucide-react';
+import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie, Notebook} from 'lucide-react';
 function SideBar({ handleButtonOpen, buttonOpen }) {
   const ripple = new MaterialRipple();
   const [tokdata, setTokData] = useState({});
@@ -72,6 +72,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/batch" className="flex gap-5 text-gray-500 hover:text-white"><Users size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Batch</div></a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/instructors" className="flex gap-5 text-gray-500 hover:text-white"><ClipboardPenLine size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/trainees" className="flex gap-5 text-gray-500 hover:text-white"><GraduationCap size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></a></li>
+                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/course" className="flex gap-5 text-gray-500 hover:text-white"><Notebook size={24}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
                 {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><UserIcon size={21}/>Report</a></li> */}
                 {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><UserIcon size={21}/>Analysis</a></li> */}
               </>

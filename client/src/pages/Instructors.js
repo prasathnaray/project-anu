@@ -5,13 +5,15 @@ import { ArrowBigDownIcon, ArrowUpWideNarrow, ChevronLeft, ChevronRight, Ellipsi
 import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
 import { ChevronDown } from 'lucide-react';
+import { Navigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 // import IMAGE_URL from "../API/imageUrl";
 function Instructors(){
     const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
     };
-    let token = localStorage.getItem('user_data');
+    let token = localStorage.getItem('user_token');
     const [instructors, setInstructors] = useState('')
     const getData = async() => {
         try
@@ -27,8 +29,11 @@ function Instructors(){
     }
     useEffect(() => {
         getData()
-        // console.log(instructors);
     }, [])
+    const decoded = jwtDecode(token);
+    if (!decoded.role) {
+        return <Navigate to="/" replace />;
+    }
     return (
         <div className={'flex'}>
             <div>
