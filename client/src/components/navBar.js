@@ -50,6 +50,7 @@ function NavBar() {
               {currentPath === "/settings" && <div>Settings</div>}
               {currentPath === "/course" && <div>Course</div>}
               {currentPath === "/batch" && <div>Course</div>}
+              {currentPath === "/instructors" && <div>Instructors</div>}
             </div>
           </div>
           <div className="flex md:order-2">
