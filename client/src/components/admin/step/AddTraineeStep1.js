@@ -19,6 +19,7 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import { twMerge } from "tailwind-merge";
+import NameValidation from "../../../utils/NameValidation";
 function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
   //for email validation
   const [validateMail, setValidateMail] = useState(true);
@@ -29,16 +30,23 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
     setValidateMail(EmailValidation(mail));
     setEmailTouched(true);
   };
-
   //for phone validation
   const [validatePhone, setValidatePhone] = useState(true);
   const [phoneTouched, setPhoneTouched] = useState(false);
-
   const phoneValidationChange = async (e) => {
     const phone = e.target.value;
     setValidatePhone(PhoneValidation(phone));
     setPhoneTouched(true);
   };
+
+  //name validation
+  const [validateName, setValidateName] = useState(true);
+  const [nameTouched, setNameTouched] = useState(false);
+  const nameValidationChange = async (e) => {
+    const name = e.target.value;
+    setValidateName(NameValidation(name));
+    setNameTouched(true);
+  }
   //shake effect
   const [shakeLabel, setShakeLabel] = useState(false);
   const handleEmailBlur = (e) => {
@@ -59,7 +67,6 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
       }, 200);
     }
   };
-
   return (
     <ValidatorForm className="mt-7 grid grid-cols-2 gap-5">
       <div>
@@ -71,8 +78,26 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
           id="outlined-basic"
           label="Full Name"
           name="trainee_name"
-          onChange={handleChange}
+          onChange={(e) => {
+            handleChange(e)
+            nameValidationChange(e)
+          }}
           value={handleInputData.trainee_name}
+          error={
+            nameTouched &&
+            (handleInputData.trainee_name.trim() === "" ||
+              validateName === false)
+          }
+          className={shakeLabel ? "shake-label" : ""}
+          helperText={
+            nameTouched
+              ? handleInputData.trainee_name.trim() === ""
+                ? "Field should not be empty"
+                : validateName === false
+                ? "Not a valid name."
+                : "\u00A0"
+              : "\u00A0"
+          }
         />
       </div>
       <div>
