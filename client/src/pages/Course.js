@@ -26,9 +26,12 @@ function Course() {
                           <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
                     </div>
                     <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[55.5px] flex-grow"} `}>
-                      <div className="bg-gray-100  h-screen">
-                              <div>adaa</div>
-                      </div>
+                              <div className="bg-gray-100 h-screen">
+                                                <div className={`${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
+                                                                                                <div className="pt-12">sidh</div>
+                                                </div>
+
+                              </div>
                     </div>
             </div>
     </div>

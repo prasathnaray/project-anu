@@ -94,7 +94,7 @@ function AdminDashboard(){
                   <div className="text-white bg-[#8DC63F] p-2 rounded-full">
                     <Calendar01Icon size={21} />
                   </div>
-                  <span className="text-lg text-gray-500">Schedules</span>
+                  <span className="text-lg text-gray-500">Approvals</span>
                 </div>
                 <div className="border">
 
