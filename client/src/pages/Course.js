@@ -17,7 +17,7 @@ function Course() {
   }
   return (
     <div className={`flex flex-col min-h-screen`}>
-            <div className="w-full">
+            <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
                     <NavBar />
                     {/* <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> */}
             </div>
@@ -25,7 +25,7 @@ function Course() {
                     <div className="">
                           <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
                     </div>
-                    <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[85.5px] flex-grow"} `}>
+                    <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[55.5px] flex-grow"} `}>
                       <div className="bg-gray-100  h-screen">
                               <div>adaa</div>
                       </div>
