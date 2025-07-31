@@ -29,7 +29,6 @@ const [profileData, setProfileData] = useState({})
               Authorization: `Bearer ${localStorage.getItem('user_token')}`
             }
         });
-        //console.log(response.data.data.user_name)
         if(response){
             setProfileData(response.data);
         }
