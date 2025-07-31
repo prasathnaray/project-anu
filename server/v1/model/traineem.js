@@ -78,5 +78,27 @@ const disableTraineem = (requester , user_mail, status) => {
         })
     })
 }
-
-module.exports = {traineem, getTraineesm, disableTraineem};
+const deleteTraineem = (requester, user_mail) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [101, 102].includes(Number(requester.role));
+        if(!isPrivileged)
+        {
+            return resolve({
+                  status: 'Unauthorized',
+                  code: 401,
+                  message: 'You do not have permission to view trainee profiles'
+            })
+        }
+        client.query('DELETE FROM public.user_data WHERE user_email=$1 and user_role=$2', [user_mail, '103'], (err, result) => {
+                if(err)
+                {
+                   return reject(err.message)
+                }
+                else
+                {
+                    return resolve(result);
+                }
+        })
+    })
+}
+module.exports = {traineem, getTraineesm, disableTraineem, deleteTraineem};

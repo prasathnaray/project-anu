@@ -1,4 +1,4 @@
-const {getTraineesm, traineem, disableTraineem} = require('../model/traineem.js');
+const {getTraineesm, traineem, disableTraineem, deleteTraineem} = require('../model/traineem.js');
 const {HashPassword} = require('../utils/hash.js');
 const client = require('../utils/supaBaseConfig.js');
 const path = require('path');
@@ -85,4 +85,21 @@ const DisableTrainee = async(req, res) => {
                 res.status(500).send(err)
         }
 }
-module.exports = {TraineeController, CreateTraineeController, DisableTrainee};
+const deleteTraineec = async(req, res)=> {
+        const requester = req.user;
+        const user_mail = req.params.user_mail
+        try
+        {
+                // res.send(user_mail)
+                const result = await deleteTraineem(requester, user_mail);
+                res.status(200).json({
+                        affectedRows: result.rowCount,
+                        status: `${result.rowCount==0?'Data not available': 'deleted successfully'}`
+                });
+        }
+        catch(err)
+        {
+                res.status(500).send(err)
+        }
+}
+module.exports = {TraineeController, CreateTraineeController, DisableTrainee, deleteTraineec};

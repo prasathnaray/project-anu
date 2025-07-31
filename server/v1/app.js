@@ -15,6 +15,7 @@ const associateBatchRouter = require('./routes/associateBatchRoute.js');
 const getInstructorRouter = require('./routes/getInstructorRoute.js');
 const dashboardRouter = require('./routes/dashboardRoute.js');
 const deleteBatchRouter = require('./routes/deleteBatchRoute.js');
+const deleteTraineeRouter = require('./routes/deleteTraineeRoute.js')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -64,3 +65,4 @@ app.get('/test', Authenticate, (req, res) => {
     });
 });
 app.use('/api/v1', Authenticate, createTraineeRouter);
+app.use('/api/v1', Authenticate, deleteTraineeRouter);

@@ -21,6 +21,8 @@ import axios from "axios";
 import showDisableConfirmToast from "../../utils/showDisableConfirmToast";
 import showEnableConfirmToast from "../../utils/showEnableConfirmToast";
 import { CircleUserRound } from "lucide-react";
+import DeleteTraineeAPI from "../../API/DeleteTraineeAPI";
+import DeleteTraineeToast from "../../utils/deleteTraineeToast";
 function TraineeList() {
   const token = localStorage.getItem("user_token");
   const [traineeList, setTraineeList] = useState({});
@@ -60,7 +62,6 @@ function TraineeList() {
         setOpenDropdownIndex(null);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -80,6 +81,19 @@ function TraineeList() {
       console.log(err);
     }
   };
+  //const [deleteTrainee, setDeleteTrainee] = useState("")
+  // const handleDelete = async(e) => {
+  //       try
+  //       {
+  //             const token = localStorage.getItem('user_token')
+  //             const response = DeleteTraineeAPI(token, deleteTrainee)
+  //             console.log(response);
+  //       }
+  //       catch(err)
+  //       {
+          
+  //       }
+  // }
   return (
     <div className={`flex flex-col min-h-screen`}>
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -276,7 +290,15 @@ function TraineeList() {
                                     </button>
                                   )}
                                   {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
-                                  <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">
+                                  <button 
+                                  onClick={() => {
+                                    DeleteTraineeToast(
+                                      trainee.user_email,
+                                      handleTraineeList,
+                                      token
+                                    )
+                                  }}
+                                  className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">
                                     Delete
                                   </button>
                                 </div>
