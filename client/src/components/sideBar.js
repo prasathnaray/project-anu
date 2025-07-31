@@ -21,6 +21,7 @@ import {
 } from "hugeicons-react";
 import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
+import { useParams } from 'react-router-dom';
 import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie, Notebook} from 'lucide-react';
 function SideBar({ handleButtonOpen, buttonOpen }) {
   const ripple = new MaterialRipple();
@@ -67,8 +68,6 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/instructors" className="flex gap-5 text-gray-500 hover:text-white"><ClipboardPenLine size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/trainees" className="flex gap-5 text-gray-500 hover:text-white"><GraduationCap size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 `} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/course" className="flex gap-5 text-gray-500 hover:text-white"><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
-                {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/startups" className="flex gap-5"><UserIcon size={21}/>Report</a></li> */}
-                {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><UserIcon size={21}/>Analysis</a></li> */}
               </>
               }
               {tokdata.role == 102 && 
