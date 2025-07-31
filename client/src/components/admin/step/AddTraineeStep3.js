@@ -60,7 +60,7 @@ function AddTraineeStep3({ handleChange, handleInputData }) {
             <div className="mt-4">
                     <TextField fullWidth variant="outlined" size="small" sx={{ minHeight: '55px' }}
                                 id="outlined-basic" 
-                                label="Description" 
+                                label="Qualification" 
                                 name="description"
                                 type="password"
                                 onChange={handleChange}
