@@ -217,7 +217,7 @@ function TraineeList() {
                               test
                             </td>
                             <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                              {trainee.batch_id}
+                              {trainee.batch_name}
                             </th>
                             <th className={`py-2 px-4 font-normal`}>
                               <div

@@ -44,7 +44,7 @@ const getTraineesm = (requester) => {
                 message: 'You do not have permission to view trainee profiles.'
             });
         }
-        client.query('SELECT user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, status, batch_id FROM public.user_data LEFT JOIN public.batch_people_data ON public.user_data.user_email = public.batch_people_data.user_id  WHERE user_role = $1', ['103'], (err, result) => {
+        client.query("SELECT ud.user_profile_photo, ud.user_name, ud.user_email, ud.user_contact_num, ud.user_dob, ud.user_gender, ud.status, bpd.batch_id, bpd.user_id, bd.batch_name, bd.batch_start_date, bd.batch_end_date FROM  public.user_data ud LEFT JOIN public.batch_people_data bpd ON ud.user_email = bpd.user_id LEFT JOIN public.batch_data bd ON bd.batch_id = ANY(bpd.batch_id) WHERE ud.user_role=$1", ['103'], (err, result) => {
             if(err){
                 return reject(err.message);
             }  

@@ -90,25 +90,25 @@ function Instructors(){
                                                                         <td className="border-b-2"><img src={IMAGE_URL+instructor.user_profile_photo} className="w-10 h-10 rounded-full object-cover cursor-pointer"/></td>
                                                                         <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">{instructor.user_name}</td>
                                                                         <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
-                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2 align-top">
-                                                                        {instructor.batch_id.length > 1 ? (
-                                                                            <div className="flex justify-between items-start gap-2 w-full">
+                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2 ">
+                                                                        {instructor.batch_names.length > 1 ? (
+                                                                            <div className="flex justify-between items-center gap-2 w-full">
                                                                             <div className="flex flex-col gap-1">
                                                                                 {seeBatches[index] ? (
                                                                                 <div className="flex flex-wrap gap-1 transition-all ease-in-out duration-300">
-                                                                                    {instructor.batch_id.map((id, i) => (
-                                                                                    <span key={i} className="inline-block">{id}{i < instructor.batch_id.length - 1 ? ',' : ''}</span>
+                                                                                    {instructor.batch_names.map((id, i) => (
+                                                                                    <span key={i} className="inline-block">{id}{i < instructor.batch_names.length - 1 ? ',' : ''}</span>
                                                                                     ))}
                                                                                 </div>
                                                                                 ) : (
-                                                                                <div>{instructor.batch_id[0]}</div>
+                                                                                <div>{instructor.batch_names[0]}</div>
                                                                                 )}
                                                                             </div>
                                                                             <button
                                                                                 onClick={() => handleBatchOpen(index)}
                                                                                 className="shrink-0 text-gray-500"
                                                                             >
-                                                                                {seeBatches[index] ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                                                                {seeBatches[index] ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                                                                             </button>
                                                                             </div>
                                                                         ) : (

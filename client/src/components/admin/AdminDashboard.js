@@ -4,6 +4,7 @@ import NavBar from "../navBar";
 import SideBar from "../sideBar";
 import { ClipboardPenLine, GraduationCap, LayoutDashboard, NotepadText } from "lucide-react";
 import getDashboardAPI from "../../API/dashboardAPI";
+import { Calendar01Icon } from "hugeicons-react";
 function AdminDashboard(){
     const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
@@ -52,7 +53,7 @@ function AdminDashboard(){
 
             <div className="border border-t-1 border-r-0 border-l-0 border-b-0 p-4">
               <div className="grid grid-cols-3 gap-4">
-                <div className="border p-2 rounded">
+                <div className="border p-2 rounded shadow-md">
                   <span className="font-semibold px-2">Trainees (in total)</span>
                   <div className="flex justify-between items-center px-2 pt-5">
                     <div className="text-[#8DC63F]">
@@ -63,7 +64,7 @@ function AdminDashboard(){
                     </div>
                   </div>
                 </div>
-                <div className="border p-2">
+                <div className="border p-2 shadow-md">
                   <span className="font-semibold">Instructors (in total)</span>
                   <div className="flex justify-between items-center px-2 pt-5">
                     <div className="text-[#8DC63F]">
@@ -74,7 +75,7 @@ function AdminDashboard(){
                     </div>
                   </div>
                 </div>
-                <div className="border p-2">
+                <div className="border p-2 shadow-md">
                   <span className="font-semibold">Batches (in total)</span>
                   <div className="flex justify-between items-center px-2 pt-5">
                     <div className="text-[#8DC63F]">
@@ -87,6 +88,17 @@ function AdminDashboard(){
                 </div>
               </div>
             </div>
+          </div>
+          <div className="border bg-white rounded-sm mt-3">
+                <div className="m-2 flex gap-4 items-center">
+                  <div className="text-white bg-[#8DC63F] p-2 rounded-full">
+                    <Calendar01Icon size={21} />
+                  </div>
+                  <span className="text-lg text-gray-500">Schedules</span>
+                </div>
+                <div className="border">
+
+                </div>
           </div>
         </div>
       </div>

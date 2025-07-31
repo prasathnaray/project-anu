@@ -13,6 +13,7 @@ function Dashboard() {
         <>
           {decoded.role == 103 && <TraineeDashboard />}
           {decoded.role == 101 && <AdminDashboard />}
+          {decoded.role == 102 && <TraineeDashboard /> }
         </>
   )
 }
