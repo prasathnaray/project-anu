@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 import SideBar from '../components/sideBar';
 import { Navigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
-import { ArrowUpWideNarrow } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVerticalIcon } from 'lucide-react';
 function Course() {
   //button toggle sidebar
   const [buttonOpen, setButtonOpen] = useState(false);
@@ -47,13 +47,20 @@ function Course() {
                                                           <table className="w-full text-left border-collapse">
                                                                     <thead>
                                                                           <tr className="border-b border-gray-300 shadow-sm">
-                                                                                  <th className="py-2 px-4"></th>
                                                                                   <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Course Name</div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
                                                                                   <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                                   <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Batch associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                  <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Status</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                  <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Action</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                           </tr>
                                                                     </thead>
+                                                                    <tbody>
+                                                                            <tr className="text-sm text-gray-700">
+                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
+                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
+                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
+                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2"><button><EllipsisVerticalIcon icon={20}/></button></td>
+                                                                            </tr>
+                                                                    </tbody>
                                                           </table>
                                                       </div>
                                                 </div>
