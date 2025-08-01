@@ -8,6 +8,7 @@ import { ChevronDown } from 'lucide-react';
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import {Select, MenuItem} from '@mui/material';
+import DeleteInstructorToast from "../utils/deleteInstructorToast";
 // import IMAGE_URL from "../API/imageUrl";
 function Instructors(){
     const [buttonOpen, setButtonOpen] = useState(false);
@@ -148,7 +149,17 @@ function Instructors(){
                                                                             >
                                                                                 <MenuItem value="view">View</MenuItem>
                                                                                 <MenuItem value="edit">Edit</MenuItem>
-                                                                                <MenuItem value="delete">Delete</MenuItem>
+                                                                                <MenuItem 
+                                                                                    value="delete" 
+                                                                                    onClick={() => {
+                                                                                        DeleteInstructorToast(
+                                                                                            instructor.user_email,
+                                                                                            getData,
+                                                                                            token
+                                                                                        )
+                                                                                    }}
+                                                                                >Delete
+                                                                                </MenuItem>
                                                                                 <MenuItem value="disable">Disable</MenuItem>
                                                                             </Select>
                                                                             </div>
