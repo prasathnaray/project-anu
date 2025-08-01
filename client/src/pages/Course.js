@@ -1,11 +1,12 @@
 import React, {useState} from 'react'
 import { jwtDecode } from 'jwt-decode'
 import SideBar from '../components/sideBar';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import { ArrowUpWideNarrow, EllipsisVerticalIcon, X } from 'lucide-react';
 import AddCourse from '../components/admin/AddCourse';
 import { TextField } from '@mui/material';
+import SubSideBar from '../components/subSideBar';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
