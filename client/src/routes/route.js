@@ -11,6 +11,7 @@ import Queries from '../pages/Queries';
 import Instructors from '../pages/Instructors';
 import Batch from '../pages/Batch';
 import Course from '../pages/Course';
+import AddCourse from '../components/admin/AddCourse';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -26,6 +27,7 @@ function RoutesPath() {
                             <Route path="/:people/add" element={<Instructors />} />
                             <Route path="/batch" element={<Batch />} />
                             <Route path="/course" element={<Course />}/>
+                            <Route path="/course/add" element={<AddCourse />} />
                     </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

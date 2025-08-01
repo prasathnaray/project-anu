@@ -3,13 +3,20 @@ import { jwtDecode } from 'jwt-decode'
 import SideBar from '../components/sideBar';
 import { Navigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
-import { ArrowUpWideNarrow, EllipsisVerticalIcon } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVerticalIcon, X } from 'lucide-react';
+import AddCourse from '../components/admin/AddCourse';
+import { TextField } from '@mui/material';
 function Course() {
   //button toggle sidebar
+  const [openCourse, setOpenCourse] = useState(false);
+  const handleClose = () => {
+    setOpenCourse(false);
+  }
   const [buttonOpen, setButtonOpen] = useState(false);
   const handleButtonOpen = () => {
       setButtonOpen(!buttonOpen);
   };
+  console.log(openCourse)
   ///main Layout
   let token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
@@ -42,7 +49,7 @@ function Course() {
                                                                   className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                                 />
                                                               </div>
-                                                              <div className="flex justify-end items-center"><a href="/instructor/add" className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Add Course</a></div>
+                                                              <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={() => setOpenCourse(true)}>Add Course</button></div>
                                                           </div>
                                                           <table className="w-full text-left border-collapse">
                                                                     <thead>
@@ -68,6 +75,49 @@ function Course() {
                               </div>
                     </div>
             </div>
+            <AddCourse isVisible={openCourse} onClose={handleClose}>
+                  <>
+                      <div className="flex justify-between items-center">
+                              <div>Add Course</div>
+                              <div><button onClick={handleClose} className="text-red-500 hover:bg-red-50 p-1 hover:rounded"><X size={24}/></button></div>
+                      </div>
+                      <div className="grid grid-cols-5 gap-5 mt-5">
+                                <div> 
+                                      <TextField 
+                                              fullWidth
+                                              variant="outlined"
+                                              size="small"
+                                              sx={{ minHeight: "35px" }}
+                                              id="outlined-basic"
+                                              label="Course Name"
+                                              name="batch_name"
+                                      />
+                                </div>
+                                <div> 
+                                      <TextField  
+                                              fullWidth
+                                              variant="outlined"
+                                              size="small"
+                                              sx={{ minHeight: "35px" }}
+                                              id="outlined-basic"
+                                              label="Start date"
+                                              name="batch_name"
+                                      />
+                                </div>
+                                <div> 
+                                      <TextField 
+                                              fullWidth
+                                              variant="outlined"
+                                              size="small"
+                                              sx={{ minHeight: "35px" }}
+                                              id="outlined-basic"
+                                              label="Course Name"
+                                              name="batch_name"
+                                      />
+                                </div>
+                      </div>
+                  </>
+            </AddCourse>
     </div>
   )
 }

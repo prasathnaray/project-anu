@@ -22,4 +22,27 @@ const getInstructorsm = (requester) => {
             })
     })
 }
-module.exports = {getInstructorsm};
+const deleteInstructorsm = (requester, user_mail) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101].includes(Number(requester.role))
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this profile.'
+            })
+        }
+        client.query('DELETE FROM public.user_data WHERE user_email=$1 and user_role=$2', [user_mail, '102'], (err, result) => {
+                if(err)
+                {
+                   return reject(err.message)
+                }
+                else
+                {
+                    return resolve(result);
+                }
+        })
+    })
+}
+module.exports = {getInstructorsm, deleteInstructorsm};
