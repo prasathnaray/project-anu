@@ -6,8 +6,8 @@ import CreateBatch from "../components/admin/CreateBatch";
 import { jwtDecode } from "jwt-decode";
 import { Navigate } from "react-router-dom";
 import { X } from 'lucide-react';
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+// import DatePicker from "react-datepicker";
+// import "react-datepicker/dist/react-datepicker.css";
 import CreateBatchAPI from "../API/CreateBatchAPI";
 import GetBatchesAPI from "../API/GetBatchesAPI";
 import { ToastContainer, toast } from 'react-toastify';
@@ -17,6 +17,11 @@ import getMonthYear from '../utils/DateChange';
 import TablePagination from '@mui/material/TablePagination';
 import DeleteBatchAPI from "../API/deleteBatchAPI";
 import DeleteToast from "../utils/deleteToast";
+import { TextField } from "@mui/material";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker"; // required
+import dayjs from "dayjs";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -117,7 +122,7 @@ function Batch()  {
                         }
                 }
         //
-        const [buttonOpen, setButtonOpen] = useState(true);
+        const [buttonOpen, setButtonOpen] = useState(false);
         const handleButtonOpen = () => {
                 setButtonOpen(!buttonOpen);
         };
@@ -226,8 +231,6 @@ function Batch()  {
         <div className={`flex flex-col min-h-screen`}>
                 <div>
                         <NavBar />
-                    {/* <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>  */}
-
                 </div>
                 <div className="flex flex-grow">
                                 <div>
@@ -285,8 +288,9 @@ function Batch()  {
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
                                                                                                                 {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Associate Trainees</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Associate Instructors</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
 
                                                                                                 </div>
                                                                                         )}
@@ -324,53 +328,78 @@ function Batch()  {
                         <div className="text-lg">Create Batch</div>
                         <div><button onClick={handleClose} className="text-red-500 hover:bg-red-50 p-1 hover:rounded"><X size={24}/></button></div>
                     </div>
-                    <div className="relative mt-5">
-                        <input
-                        type="text"
-                        id="Name"
-                        className="block px-2.5 pb-2.5 pt-3 w-full text-sm text-gray-900 bg-transparent rounded-sm border border-gray-300 appearance-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 peer"
-                        placeholder=" "
-                        name="batch_name"
-                        onChange={handleChange}
-                        value={batchData.batch_name}
+                    <div className="mt-5">
+                        <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                sx={{ minHeight: "35px" }}
+                                id="outlined-basic"
+                                label="Batch name"
+                                name="batch_name"
+                                onChange={handleChange}
+                                value={batchData.batch_name}
                         />
-                        <label
-                        htmlFor="Name"
-                        className="absolute text-sm text-gray-600 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 
-                                        peer-focus:px-2 
-                                        peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2
-                                        peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4
-                                                       peer-focus:text-blue-600
-
-                                        rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto start-1"
-                        >
-                        Batch Name
-                        </label>
                     </div>
+                    {/* <div className="mt-5">
+                        <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                sx={{ minHeight: "35px" }}
+                                id="outlined-basic"
+                                label="Course name"
+                                name="course_name"
+                        />
+                    </div> */}
                     <div className="grid grid-cols-2 gap-5">
-                        <div className="relative">
-                                        <DatePicker
-                                                id="endDate"
-                                                selected={startDate}
-                                                onChange={(date) => {
-                                                        setStartDate(date);
-                                                        setBatchData(prev => ({ ...prev, batch_start_date: date }));
-                                                }}
-                                                dateFormat="yyyy-MM-dd"
-                                                customInput={<CustomDateInput />}
-                                        />
+                        <div className="mt-5">
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="Starting Date"
+                                value={
+                                batchData.batch_start_date
+                                        ? dayjs(batchData.batch_start_date)
+                                        : null
+                                }
+                                onChange={(date) => {
+                                        setStartDate(date);
+                                        setBatchData(prev => ({ ...prev, batch_start_date: date }));
+                                }}
+                                slotProps={{
+                                textField: {
+                                        fullWidth: true,
+                                        variant: "outlined",
+                                        size: "small",
+                                        sx: { minHeight: "35px" },
+                                },
+                                }}
+                                />
+                              </LocalizationProvider>
                         </div>
-                        <div className="relative">
-                                        <DatePicker
-                                                id="endDate"
-                                                selected={endDate}
-                                                onChange={(date) => {
-                                                        setEndDate(date)
-                                                        setBatchData(prev => ({ ...prev, batch_end_date: date }));
-                                                }}
-                                                dateFormat="yyyy-MM-dd"
-                                                customInput={<CustomDateInput2 />}
-                                        />
+                        <div className="mt-5">
+                            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                label="End Date"
+                                value={
+                                batchData.batch_end_date
+                                        ? dayjs(batchData.batch_end_date)
+                                        : null
+                                }
+                                onChange={(date) => {
+                                        setEndDate(date);
+                                        setBatchData(prev => ({ ...prev, batch_end_date: date }));
+                                }}
+                                slotProps={{
+                                textField: {
+                                        fullWidth: true,
+                                        variant: "outlined",
+                                        size: "small",
+                                        sx: { minHeight: "35px" },
+                                },
+                                }}
+                                />
+                              </LocalizationProvider>
                         </div>
                     </div>
                     <div className="mt-5 flex justify-end items-center">

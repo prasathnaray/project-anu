@@ -10,7 +10,7 @@ import { jwtDecode } from "jwt-decode";
 import {Select, MenuItem} from '@mui/material';
 // import IMAGE_URL from "../API/imageUrl";
 function Instructors(){
-    const [buttonOpen, setButtonOpen] = useState(true);
+    const [buttonOpen, setButtonOpen] = useState(false);
     const [seeBatches, setSeeBatches] = useState({});
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
