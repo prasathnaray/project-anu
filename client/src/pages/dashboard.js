@@ -1,6 +1,7 @@
 import React from 'react'
 import TraineeDashboard from '../components/trainee/TraineeDashboard.js';
 import AdminDashboard from '../components/admin/AdminDashboard.js';
+import SuperAdminDashboard from '../components/superadmin/SuperAdminDashboard.js'
 import { jwtDecode } from 'jwt-decode';
 import { Navigate } from 'react-router-dom';
 function Dashboard() {
@@ -11,11 +12,11 @@ function Dashboard() {
   }
   return (
         <>
+          {decoded.role == 99 && <SuperAdminDashboard />}
           {decoded.role == 103 && <TraineeDashboard />}
           {decoded.role == 101 && <AdminDashboard />}
           {decoded.role == 102 && <TraineeDashboard /> }
         </>
   )
 }
-
 export default Dashboard;

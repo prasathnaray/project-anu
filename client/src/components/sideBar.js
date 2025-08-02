@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { BookOpen, ChevronLeft, ClipboardPenLine, GraduationCap } from 'lucide-react';
+import { BookCheck, BookOpen, ChevronLeft, ClipboardPenLine, GraduationCap } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import MaterialRipple from "material-ripple-effects";
 import {
@@ -54,6 +54,12 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
         <div className={`${buttonOpen===false ? "md:px-[4px] pt-4": "md:px-[50px] pt-4"}`}><button><img src={logo} /></button></div>
         <div className="">
             <ul className={`${buttonOpen === false ? "py-3 px-[7px]" : "py-5 px-8"}`}>
+              {tokdata.role == 99 && 
+              <>
+                  <li className={`${data==="/curriuclam"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/course" className={`${data==="/curriculam" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><BookCheck size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Curriculum</div></a></li>
+                  <li className={`${data==="/course"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/course" className={`${data==="/course" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
+              </>
+              }
               {tokdata.role == 103 && 
               <>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/home" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><Mortarboard02Icon size={26}/>Curriculum</a></li>
@@ -79,7 +85,6 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/courses" className="flex gap-5 text-gray-500 hover:text-white"><BookText size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/reports" className="flex gap-5 text-gray-500 hover:text-white"><ChartPie size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Reports</div></a></li>
                 <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/queries" className="flex gap-5 text-gray-500 hover:text-white"><MessageSquareText size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Queries</div></a></li>
-                {/* <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5"><User size={26}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Profile</div></a></li> */}
               </>
               }
             </ul> 

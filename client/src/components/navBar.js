@@ -10,7 +10,9 @@ import {
 import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
+import { jwtDecode } from "jwt-decode";
 function NavBar() {
+    // const tokenRes = jwtDecode(localStorage.removeItem("user_token"));
     const ripple = new MaterialRipple();
    const dropdownRefs = useRef({});
   const currentPath = window.location.pathname;
@@ -42,7 +44,7 @@ function NavBar() {
     <div className="navbar dm-sans">
       <nav className="bg-[#8DC63F] shadow-sm border">
         <div className="flex flex-wrap items-center justify-between py-[3px] px-1">
-          <div className="flex justify-start items-center ms-3">
+          <div className="flex justify-start items-center ms-3 gap-10">
             <div className="text-white">
               {currentPath === "/reports" && <div>Reports</div>}
               {currentPath === "/dashboard" && <div>Dashboard</div>}

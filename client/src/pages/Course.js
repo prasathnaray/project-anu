@@ -21,7 +21,7 @@ function Course() {
   ///main Layout
   let token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
-  if (decoded.role != 101) {
+  if (decoded.role != 101 && decoded.role != 99) {
     return <Navigate to="/" replace />;
   }
   return (
