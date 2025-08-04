@@ -3,13 +3,36 @@ import { jwtDecode } from 'jwt-decode';
 import { Navigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { ArrowUpWideNarrow, EllipsisVertical } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVertical, X } from 'lucide-react';
+import CurriculumCreation from '../components/superadmin/CuriculumCreation';
+import { TextField } from '@mui/material';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
+  const [openCuriculum, setOpenCuriculum] = React.useState(false);
   const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
   };
+  const handleClose = (e) => {
+        setOpenCuriculum(false);
+  }
+  const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
+  const dropdownRefs = React.useRef({});  
+  const toggleDropdown = (index) => {
+    setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+  };
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      const isClickInside = Object.values(dropdownRefs.current).some(ref =>
+        ref && ref.contains(event.target)
+      );
+      if (!isClickInside) {
+        setOpenDropdownIndex(null);
+      }
+   } 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  });
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
@@ -38,7 +61,7 @@ function Curiculam() {
                                                                   className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                               />
                                                         </div>
-                                                        <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Create Curiculam</button></div>
+                                                        <div className="flex justify-end items-center"><button onClick={() => setOpenCuriculum(true)} className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Create Curiculam</button></div>
                                                 </div>
                                                 <table className="w-full text-left border-collapse">
                                                     <thead className=''>
@@ -55,7 +78,7 @@ function Curiculam() {
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">scv</td>
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">sc</td>
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                            <button><EllipsisVertical size={24} /></button>
+                                                                            <button onClick={() => toggleDropdown()}><EllipsisVertical size={24} /></button>
                                                                     </td>
                                                           </tr>
                                                     </tbody>
@@ -65,6 +88,28 @@ function Curiculam() {
                             </div>
                     </div>
               </div>
+              <CurriculumCreation isVisible={openCuriculum} onClose={handleClose}>
+                        <div className="">
+                                    <div className="flex justify-between items-center gap-5">
+                                                  <div>Create Curiculum</div>
+                                                  <button  onClick={handleClose} className="hover:bg-red-100 p-1 hover:text-gray-700 rounded"><X size={20}/></button>
+                                    </div>
+                                    <div className="mt-5">
+                                            <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{ minHeight: "35px" }}
+                                                    id="outlined-basic"
+                                                    label="Curiculum Name"
+                                                    name="batch_name"
+                                            />
+                                    </div>
+                                    <div className="flex justify-end items-end mt-5">
+                                              <button className="bg-[#8DC63F] px-3 py-2 text-white">Save</button>
+                                    </div>
+                        </div>
+              </CurriculumCreation>
       </div>
   )
 }
