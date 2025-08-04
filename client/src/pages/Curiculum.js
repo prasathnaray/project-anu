@@ -5,12 +5,13 @@ import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { ArrowUpWideNarrow, EllipsisVertical, X } from 'lucide-react';
 import CurriculumCreation from '../components/superadmin/CuriculumCreation';
+import AddCuriculumAPI from '../API/AddCuriculumAPI';
 import { TextField } from '@mui/material';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
   const [curriculumData, setCurriculumData] = React.useState({
-      curriculum_name: ''
+      curiculum_name: ''
   })
   const [openCuriculum, setOpenCuriculum] = React.useState(false);
   const handleChange = (e) => {
@@ -26,7 +27,7 @@ function Curiculam() {
   const handleClose = (e) => {
         setOpenCuriculum(false);
         setCurriculumData({
-              curriculum_name: ''
+            curiculum_name: ''
         })
   }
   const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
@@ -46,9 +47,20 @@ function Curiculam() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   });
-
-    console.log(curriculumData);
-
+  console.log(curriculumData);
+  const createCuriculum = async(e) => {
+    e.preventDefault();
+    try
+    {
+        const token = localStorage.getItem('user_token');
+        const response = await AddCuriculumAPI(token, curriculumData);
+        console.log(response);
+    }
+    catch(err)
+    {
+        console.log(err)
+    }
+  }
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
@@ -115,21 +127,20 @@ function Curiculam() {
                                                     fullWidth
                                                     variant="outlined"
                                                     size="small"
-                                                    sx={{ minHeight: "35px" }}
+                                                    sx={{ minHeight: "35px" }}  
                                                     id="outlined-basic"
                                                     label="Curiculum Name"
-                                                    name="curriculum_name"
+                                                    name="curiculum_name"
                                                     onChange={handleChange}
-                                                    value={curriculumData.curriculum_name}
+                                                    value={curriculumData.curiculum_name}
                                             />
                                     </div>
                                     <div className="flex justify-end items-end mt-5">
-                                              <button className="bg-[#8DC63F] px-3 py-2 text-white">Save</button>
+                                              <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={createCuriculum}>Save</button>
                                     </div>
                         </div>
               </CurriculumCreation>
       </div>
   )
 }
-
 export default Curiculam;
