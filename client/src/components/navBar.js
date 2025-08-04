@@ -12,7 +12,8 @@ import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
 function NavBar() {
-    // const tokenRes = jwtDecode(localStorage.removeItem("user_token"));
+    const tokenRes = jwtDecode(localStorage.getItem("user_token"));
+    console.log(tokenRes);
     const ripple = new MaterialRipple();
    const dropdownRefs = useRef({});
   const currentPath = window.location.pathname;
@@ -87,6 +88,13 @@ function NavBar() {
                 </button>
               </div>
             </div> */}
+            <div className="relative md:block">
+              <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
+                  {tokenRes.role == "99" && <div className="text-sm text-gray-100">Welcome Super Admin</div>}
+                  {tokenRes.role == "101" && <div className="text-sm text-white">Welcome Admin</div>}
+                  {tokenRes.role == "102" && <div className="text-sm text-white">Welcome Instructor</div>}
+              </div>
+            </div>
             <div className="relative md:block">
               <div className="px-2 py-2 ms-1 text-gray-200">
                 <button className="">

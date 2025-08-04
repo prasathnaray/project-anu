@@ -6,7 +6,6 @@ const client = new Client({
     rejectUnauthorized: false,
   },
 });
-
 client.connect(err => {
   if (err) {
     console.error('Connection error', err.stack);
@@ -14,5 +13,4 @@ client.connect(err => {
     console.log('Connected');
   }
 });
-
 module.exports = client;
