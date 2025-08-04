@@ -13,7 +13,7 @@ import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
 function NavBar() {
     const tokenRes = jwtDecode(localStorage.getItem("user_token"));
-    console.log(tokenRes);
+    // console.log(tokenRes);
     const ripple = new MaterialRipple();
    const dropdownRefs = useRef({});
   const currentPath = window.location.pathname;

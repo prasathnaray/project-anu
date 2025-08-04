@@ -9,12 +9,25 @@ import { TextField } from '@mui/material';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
+  const [curriculumData, setCurriculumData] = React.useState({
+      curriculum_name: ''
+  })
   const [openCuriculum, setOpenCuriculum] = React.useState(false);
+  const handleChange = (e) => {
+      const {name, value} = e.target;
+      setCurriculumData({
+            ...openCuriculum,
+            [name]: value,
+      });
+  }
   const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
   };
   const handleClose = (e) => {
         setOpenCuriculum(false);
+        setCurriculumData({
+              curriculum_name: ''
+        })
   }
   const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
   const dropdownRefs = React.useRef({});  
@@ -33,6 +46,9 @@ function Curiculam() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   });
+
+    console.log(curriculumData);
+
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
@@ -102,7 +118,9 @@ function Curiculam() {
                                                     sx={{ minHeight: "35px" }}
                                                     id="outlined-basic"
                                                     label="Curiculum Name"
-                                                    name="batch_name"
+                                                    name="curriculum_name"
+                                                    onChange={handleChange}
+                                                    value={curriculumData.curriculum_name}
                                             />
                                     </div>
                                     <div className="flex justify-end items-end mt-5">

@@ -33,7 +33,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     setTokData(token);
   }, []);
   const data = window.location.pathname;
-  console.log(data)
+  // console.log(data)
   return (
   <div className={`fixed top-[50px] left-0 h-screen ${
         buttonOpen === false
