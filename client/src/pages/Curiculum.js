@@ -9,9 +9,11 @@ import AddCuriculumAPI from '../API/AddCuriculumAPI';
 import { TextField } from '@mui/material';
 import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
+import GetCuriculumAPI from '../API/getCuriculumAPI';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
+  const [curiculumList, setCuriculumList] = React.useState({})
   const [curriculumData, setCurriculumData] = React.useState({
       curiculum_name: ''
   })
@@ -66,6 +68,7 @@ function Curiculam() {
                                                         closeButton: CustomCloseButton,
               }); 
               handleClose();
+              GetCuriculumList();
         }
     }
     catch(err)
@@ -73,6 +76,22 @@ function Curiculam() {
         console.log(err)
     }
   }
+  const GetCuriculumList = async(e) => {
+    try
+    {
+      const token = localStorage.getItem('user_token');
+      const result = await GetCuriculumAPI(token);
+      setCuriculumList(result.data.result);
+    }
+    catch(err)
+    {
+      console.log(err)
+    }
+  }
+  React.useEffect(() => {
+      GetCuriculumList();
+  }, [])
+  console.log(curiculumList)
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
@@ -113,14 +132,31 @@ function Curiculam() {
                                                                 </tr>
                                                     </thead>
                                                     <tbody>
-                                                          <tr className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">sc</td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">scv</td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">sc</td>
+                                                          {curiculumList.length > 0 ? (
+                                                                curiculumList.map((data, index) => (
+                                                                  <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                            <button onClick={() => toggleDropdown()}><EllipsisVertical size={24} /></button>
+                                                                      {data?.curiculum_nam || 'N/A'}
                                                                     </td>
-                                                          </tr>
+                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">scv</td>
+                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                      {data?.code || 'N/A'}
+                                                                    </td>
+                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                      <button onClick={() => toggleDropdown()}>
+                                                                        <EllipsisVertical size={24} />
+                                                                      </button>
+                                                                    </td>
+                                                                  </tr>
+                                                                ))
+                                                              ) : (
+                                                                <tr>
+                                                                  <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                    No data found
+                                                                  </td>
+                                                                </tr>
+                                                             )}
+
                                                     </tbody>
                                                 </table>
                                       </div>

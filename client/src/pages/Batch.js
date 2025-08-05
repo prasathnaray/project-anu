@@ -341,6 +341,19 @@ function Batch()  {
                                 value={batchData.batch_name}
                         />
                     </div>
+                    <div className="mt-5">
+                        <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                sx={{ minHeight: "35px" }}
+                                id="outlined-basic"
+                                label="Select curiculum"
+                                name="curiculum_name"
+                                // onChange={handleChange}
+                                // value={batchData.batch_name}
+                        />
+                    </div>
                     {/* <div className="mt-5">
                         <TextField
                                 fullWidth
