@@ -24,7 +24,7 @@ const getCur = async(req, res) => {
         res.status(200).json({
                 code: 200,
                 status: 'Success',
-                result: result
+                result: result.rows
         })
     }
     catch(err)
