@@ -17,11 +17,12 @@ import getMonthYear from '../utils/DateChange';
 import TablePagination from '@mui/material/TablePagination';
 import DeleteBatchAPI from "../API/deleteBatchAPI";
 import DeleteToast from "../utils/deleteToast";
-import { TextField } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"; 
 import dayjs from "dayjs";
+import GetCuriculumAPI from "../API/getCuriculumAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -90,6 +91,8 @@ function Batch()  {
                 setEndDate(null);
                 setBatchData({
                                 batch_name: '',
+                                curiculum_name: '',
+                                courses_data: '',
                                 batch_start_date: null,
                                 batch_end_date: null
                 });
@@ -219,6 +222,23 @@ function Batch()  {
                         }
                 }
         }
+        const [curList, setCurList] = useState({});
+        const getCuriculumList = async() => {
+                try
+                {       
+                       const TOKEN = localStorage.getItem('user_token')
+                       const result = await GetCuriculumAPI(TOKEN);
+                        setCurList(result.data.result);
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+        }
+        React.useEffect(() => {
+                getCuriculumList()
+        }, [])
+                console.log(curList)
         if (!token) {
                         return <Navigate to="/" replace />;
         }
@@ -320,9 +340,7 @@ function Batch()  {
                                 </div>
                         </div>
                 </div>
-                </div>
-                
-                     
+                </div>     
                 <CreateBatch isVisible={openBatch} onClose={handleClose}>
                     <div className="flex justify-between items-center">
                         <div className="text-lg">Create Batch</div>
@@ -341,7 +359,7 @@ function Batch()  {
                                 value={batchData.batch_name}
                         />
                     </div>
-                    <div className="mt-5">
+                    {/* <div className="mt-5">
                         <TextField
                                 fullWidth
                                 variant="outlined"
@@ -353,18 +371,35 @@ function Batch()  {
                                 // onChange={handleChange}
                                 // value={batchData.batch_name}
                         />
-                    </div>
-                    {/* <div className="mt-5">
-                        <TextField
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                sx={{ minHeight: "35px" }}
-                                id="outlined-basic"
-                                label="Course name"
-                                name="course_name"
-                        />
                     </div> */}
+                    <div className="mt-5">
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="program-select-label">Select Curiculum</InputLabel>
+                              <Select
+                                labelId="program-select-label"
+                                label="Select Curiculum"
+                                className=""
+                                onChange={handleChange}
+                                name="curiculum_name"
+                                value={batchData?.curiculum_name}
+                              >
+                                        {Array.isArray(curList) && curList.length > 0 ? (
+                                                curList.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.curiculum_id}>
+                                                        {data?.curiculum_nam}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
+                          </div>
                     <div className="grid grid-cols-2 gap-5">
                         <div className="mt-5">
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
