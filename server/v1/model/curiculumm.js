@@ -1,6 +1,6 @@
 const client = require('../utils/conn');
 const curiculumm = (curiculum_name, requester) => {
-    const isPrivileged = [101,  102].includes(Number(requester.role));
+    const isPrivileged = [101, 99].includes(Number(requester.role));
     return new Promise((resolve, reject) => {  
         if(!isPrivileged)
         {
@@ -22,4 +22,28 @@ const curiculumm = (curiculum_name, requester) => {
         })
     })
 }
-module.exports = {curiculumm}
+
+const getCurriculumm = (requester) => {
+    const isPrivileged = [101, 99].includes(Number(requester.role));
+    return new Promise((resolve, reject) => {
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
+        client.query('SELECT * from public.curiculum_data', (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result)
+            }
+        })
+    })
+}
+module.exports = {curiculumm, getCurriculumm}

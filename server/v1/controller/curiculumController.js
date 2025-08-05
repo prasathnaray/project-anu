@@ -1,4 +1,4 @@
-const {curiculumm} = require('../model/curiculumm');
+const {curiculumm, getCurriculumm} = require('../model/curiculumm');
 const createCur = async(req, res) => {
         const requester = req.user;
         const {curiculum_name} = req.body;
@@ -6,14 +6,30 @@ const createCur = async(req, res) => {
         {
             const result = await curiculumm(curiculum_name, requester);
             res.status(200).json({
-                err: 200,
+                code: 200,
                 status: 'Success',
                 result: result
             })
         }
         catch(err)
         {
-            console.log(err)
+            res.status(500).send(err)
         }
 }
-module.exports = {createCur}
+const getCur = async(req, res) => {
+    const requester = req.user;
+    try
+    {
+        const result = await getCurriculumm(requester);
+        res.status(200).json({
+                code: 200,
+                status: 'Success',
+                result: result
+        })
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {createCur, getCur}

@@ -7,6 +7,8 @@ import { ArrowUpWideNarrow, EllipsisVertical, X } from 'lucide-react';
 import CurriculumCreation from '../components/superadmin/CuriculumCreation';
 import AddCuriculumAPI from '../API/AddCuriculumAPI';
 import { TextField } from '@mui/material';
+import { toast } from 'react-toastify';
+import CustomCloseButton from '../utils/CustomCloseButton';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
@@ -53,8 +55,18 @@ function Curiculam() {
     try
     {
         const token = localStorage.getItem('user_token');
+        console.log(token);
         const response = await AddCuriculumAPI(token, curriculumData);
-        console.log(response);
+        if(response?.data?.code === 200)
+        {
+              toast.success("Curiculum Created" , {
+                                                        autoClose: 3000,
+                                                        toastId: 'success-batch-inserted',
+                                                        icon: false,
+                                                        closeButton: CustomCloseButton,
+              }); 
+              handleClose();
+        }
     }
     catch(err)
     {
