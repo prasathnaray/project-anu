@@ -30,4 +30,27 @@ const coursem = (requester) => {
         });
     })
 }
-module.exports = coursem;
+const createCoursem = (courseid, course_name, curiculum_id, requester) => {
+    return new Promise((resolve, reject) => {
+        const isPriviledged = [99].includes(Number(requester.role));
+        if(!isPriviledged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this course data.'
+            })
+        }
+        client.query('INSERT INTO public.course_data(course_id, course_name, curiculum_id) VALUES($1, $2, $3)', [courseid, course_name, curiculum_id], (err, result) => {
+                if(err)
+                {
+                    return reject(err);
+                }
+                else
+                {
+                    return resolve(result);
+                }
+        })
+    })
+}
+module.exports = {coursem, createCoursem};
