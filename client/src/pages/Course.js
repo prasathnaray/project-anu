@@ -122,7 +122,7 @@ function Course() {
                                         <Select
                                         labelId="batch-select-label"
                                         name="trainee_batch"
-                                        label="Select Batch"
+                                        label="Select curiculum"
                                         >
                                                                                         {Array.isArray(curiculumList) && curiculumList.length > 0 ? (
                                                                                                curiculumList.map((data, index) => (
