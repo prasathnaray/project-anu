@@ -5,11 +5,13 @@ import { Navigate, Outlet } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import { ArrowUpWideNarrow, EllipsisVerticalIcon, X } from 'lucide-react';
 import AddCourse from '../components/admin/AddCourse';
-import { TextField } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import SubSideBar from '../components/subSideBar';
+import GetCuriculumAPI from '../API/getCuriculumAPI';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
+  const [curiculumList, setCuriculumList] = React.useState({})
   const handleClose = () => {
     setOpenCourse(false);
   }
@@ -17,6 +19,21 @@ function Course() {
   const handleButtonOpen = () => {
       setButtonOpen(!buttonOpen);
   };
+  const GetCuriculumList = async(e) => {
+    try
+    {
+      const token = localStorage.getItem('user_token');
+      const result = await GetCuriculumAPI(token);
+      setCuriculumList(result.data.result);
+    }
+    catch(err)
+    {
+      console.log(err)
+    }
+  }
+  React.useEffect(() => {
+        GetCuriculumList();
+  }, [])
   console.log(openCourse)
   ///main Layout
   let token = localStorage.getItem('user_token');
@@ -82,7 +99,7 @@ function Course() {
                               <div>Add Course</div>
                               <div><button onClick={handleClose} className="text-red-500 hover:bg-red-50 p-1 hover:rounded"><X size={24}/></button></div>
                       </div>
-                      <div className="grid grid-cols-5 gap-5 mt-5">
+                      <div className="grid grid-cols-2 gap-5 mt-5">
                                 <div> 
                                       <TextField 
                                               fullWidth
@@ -91,30 +108,33 @@ function Course() {
                                               sx={{ minHeight: "35px" }}
                                               id="outlined-basic"
                                               label="Course Name"
-                                              name="batch_name"
+                                              name="course_name"
                                       />
                                 </div>
                                 <div> 
-                                      <TextField  
-                                              fullWidth
-                                              variant="outlined"
-                                              size="small"
-                                              sx={{ minHeight: "35px" }}
-                                              id="outlined-basic"
-                                              label="Start date"
-                                              name="batch_name"
-                                      />
-                                </div>
-                                <div> 
-                                      <TextField 
-                                              fullWidth
-                                              variant="outlined"
-                                              size="small"
-                                              sx={{ minHeight: "35px" }}
-                                              id="outlined-basic"
-                                              label="Course Name"
-                                              name="batch_name"
-                                      />
+                                      <FormControl
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px" }}
+                                        >
+                                        <InputLabel id="batch-select-label">Select Curiculum</InputLabel>
+                                        <Select
+                                        labelId="batch-select-label"
+                                        name="trainee_batch"
+                                        label="Select Batch"
+                                        >
+                                                                                        {Array.isArray(curiculumList) && curiculumList.length > 0 ? (
+                                                                                               curiculumList.map((data, index) => (
+                                                                                                       <MenuItem key={index} value={data?.curiculum_id}>
+                                                                                                       {data?.curiculum_nam}
+                                                                                                       </MenuItem>
+                                                                                               ))
+                                                                                       ) : (
+                                                                                               <MenuItem disabled>No data found</MenuItem>
+                                                                                       )}
+                                        </Select>
+                                        </FormControl>
                                 </div>
                       </div>
                   </>

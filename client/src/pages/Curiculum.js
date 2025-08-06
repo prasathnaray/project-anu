@@ -10,6 +10,7 @@ import { TextField } from '@mui/material';
 import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import GetCuriculumAPI from '../API/getCuriculumAPI';
+import DeleteCuriculumToast from '../utils/deleteCuriculumtoast';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
@@ -88,6 +89,25 @@ function Curiculam() {
       console.log(err)
     }
   }
+  const DeleteCuriculum = (curiculum_id) => {
+    try
+    {
+      const token = localStorage.getItem('user_token');
+      DeleteCuriculumToast(curiculum_id, () => GetCuriculumList(), token)
+    }
+    catch(err)
+    {
+      if(err?.response?.status == 403)
+      {
+              toast.error("please login again" , {
+                      autoClose: 3000,
+                      toastId: 'login-again',
+                      icon: false,
+                      closeButton: CustomCloseButton,
+              });
+      }
+    }
+  }
   React.useEffect(() => {
       GetCuriculumList();
   }, [])
@@ -143,9 +163,26 @@ function Curiculam() {
                                                                       {data?.code || 'N/A'}
                                                                     </td>
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                      <button onClick={() => toggleDropdown()}>
+                                                                      <button onClick={() => toggleDropdown(index)}>
                                                                         <EllipsisVertical size={24} />
                                                                       </button>
+                                                                      {openDropdownIndex === index && (
+                                                                                                <div
+                                                                                                 ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                                        transition-all ease-in-out duration-500 origin-top-right
+                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                                                                                                `} 
+                                                                                                >
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => DeleteCuriculum(data?.curiculum_id)}>Delete</button>
+                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
+                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
+
+                                                                                                </div>
+                                                                        )}
                                                                     </td>
                                                                   </tr>
                                                                 ))
