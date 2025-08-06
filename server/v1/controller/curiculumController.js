@@ -1,4 +1,4 @@
-const {curiculumm, getCurriculumm} = require('../model/curiculumm');
+const {curiculumm, getCurriculumm, deleteCuriculum} = require('../model/curiculumm');
 const createCur = async(req, res) => {
         const requester = req.user;
         const {curiculum_name} = req.body;
@@ -32,4 +32,21 @@ const getCur = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {createCur, getCur}
+const deleteCur = async(req, res) => {
+    const requester = req.user;
+    const curiculum_id = req.params.curiculum_id;
+    try
+    {
+        const result = await deleteCuriculum(curiculum_id, requester);
+        res.status(200).json({
+            code: 200,
+            status: 'Success',
+            result: 'Deleted successfully'
+        })
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {createCur, getCur, deleteCur}
