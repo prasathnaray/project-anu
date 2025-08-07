@@ -79,6 +79,7 @@ function Batch()  {
         const [page, setPage] = React.useState(2);
         const [rowsPerPage, setRowsPerPage] = React.useState(2);
         const [rowCount, setRowCount] = useState(0);
+        const [corList, setCorList] = useState({});
         const handleChangePage = (event, newPage) => {
                 setPage(newPage);
         };
@@ -97,6 +98,7 @@ function Batch()  {
                                 batch_start_date: null,
                                 batch_end_date: null
                 });
+                setCorList({})
         };
 
         // delete api 
@@ -104,11 +106,6 @@ function Batch()  {
                         try
                         {
                                 let tokenn = localStorage.getItem('user_token')
-                                // const result = await DeleteBatchAPI(tokenn, batch_id);
-                                // if(result)
-                                // {
-                                //         BatchesData(tokenn)
-                                // }
                                 DeleteToast(batch_id, () => BatchesData(tokenn), tokenn);
                         }       
                         catch(err)
@@ -241,7 +238,6 @@ function Batch()  {
                         console.log(err)
                 }
         }
-        const [corList, setCorList] = useState({});
         const getCourseByCurData = async(curiculum_id) => {
                 if (!curiculum_id) return;
                 try
