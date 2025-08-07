@@ -30,7 +30,7 @@ const coursem = (requester) => {
         });
     })
 }
-const createCoursem = (courseid, course_name, curiculum_id, requester) => {
+const createCoursem = (course_name, curiculum_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99].includes(Number(requester.role));
         if(!isPriviledged)
@@ -41,7 +41,7 @@ const createCoursem = (courseid, course_name, curiculum_id, requester) => {
                 message: 'You do not have permission to access this course data.'
             })
         }
-        client.query('INSERT INTO public.course_data(course_id, course_name, curiculum_id) VALUES($1, $2, $3)', [courseid, course_name, curiculum_id], (err, result) => {
+        client.query('INSERT INTO course_data(course_name, curiculum_id) VALUES($1, $2)', [course_name, curiculum_id], (err, result) => {
                 if(err)
                 {
                     return reject(err);

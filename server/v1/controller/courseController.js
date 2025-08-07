@@ -1,15 +1,13 @@
 const {createCoursem} = require("../model/coursem");
-
 const CourseController = async(req, res) => {
         const requester = req.user;
-        const {course_name, curiculum_name} = req.body;
+        const {course_name, curiculum_id} = req.body;
         try
         {
-            const result = await createCoursem(course_name, curiculum_name);
+            const result = await createCoursem(course_name, curiculum_id, requester);
             res.status(200).json({
                 code: 200,
                 status: 'Success',
-                result: result
             })
         }
         catch(err)

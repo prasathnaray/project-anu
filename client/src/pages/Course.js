@@ -8,12 +8,42 @@ import AddCourse from '../components/admin/AddCourse';
 import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import SubSideBar from '../components/subSideBar';
 import GetCuriculumAPI from '../API/getCuriculumAPI';
+import CreateCourseAPI from '../API/createCourseAPI';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
   const [curiculumList, setCuriculumList] = React.useState({})
+  const [courseData, setCourseData] = React.useState({
+        course_name: '',
+        curiculum_id: ''
+  })
+  const handleCourse = (e) => {
+        const {name, value} = e.target;
+        setCourseData({
+               ...courseData,
+                [name]: value,  
+        })
+  }
+
+  const CreatCourse = async() => {
+        try
+        {
+                const token = localStorage.getItem('user_token');
+                const response = await CreateCourseAPI(token, courseData);
+                console.log(response);
+        }
+        catch(err)
+        {
+                console.log(err)
+        }
+  }
+  console.log(courseData);
   const handleClose = () => {
     setOpenCourse(false);
+    setCourseData({
+        course_name: '',
+        curiculum_id: ''
+    })
   }
   const [buttonOpen, setButtonOpen] = useState(false);
   const handleButtonOpen = () => {
@@ -108,7 +138,9 @@ function Course() {
                                               sx={{ minHeight: "35px" }}
                                               id="outlined-basic"
                                               label="Course Name"
+                                              onChange={handleCourse}
                                               name="course_name"
+                                              value={courseData.course_name}
                                       />
                                 </div>
                                 <div> 
@@ -121,8 +153,10 @@ function Course() {
                                         <InputLabel id="batch-select-label">Select Curiculum</InputLabel>
                                         <Select
                                         labelId="batch-select-label"
-                                        name="trainee_batch"
+                                        name="curiculum_id"
                                         label="Select curiculum"
+                                        onChange={handleCourse}
+                                        value={courseData.curiculum_id}
                                         >
                                                                                         {Array.isArray(curiculumList) && curiculumList.length > 0 ? (
                                                                                                curiculumList.map((data, index) => (
@@ -136,6 +170,9 @@ function Course() {
                                         </Select>
                                         </FormControl>
                                 </div>
+                      </div>
+                      <div className="flex justify-end item-center mt-5">
+                                                <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={CreatCourse}>Save</button>                                                
                       </div>
                   </>
             </AddCourse>

@@ -19,7 +19,8 @@ const deleteTraineeRouter = require('./routes/deleteTraineeRoute.js')
 const deleteInstructorRouter = require('./routes/deleteInstructorRoute.js');
 const curiculumCreateRouter = require('./routes/curiculamRoute.js');
 const getCuriculumRouter = require('./routes/getCuriculumRoute.js');
-const deleteCuriculumRouter = require('./routes/deleteCuriculumRoute.js')
+const deleteCuriculumRouter = require('./routes/deleteCuriculumRoute.js');
+const createCourseRouter = require('./routes/createCourseRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -74,3 +75,4 @@ app.use('/api/v1', Authenticate, deleteTraineeRouter);
 app.use('/api/v1', Authenticate, deleteInstructorRouter);
 app.use('/api/v1', Authenticate, curiculumCreateRouter);
 app.use('/api/v1', Authenticate, getCuriculumRouter);
+app.use('/api/v1/', Authenticate, createCourseRouter)
