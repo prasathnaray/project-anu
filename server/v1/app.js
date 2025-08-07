@@ -22,6 +22,7 @@ const getCuriculumRouter = require('./routes/getCuriculumRoute.js');
 const deleteCuriculumRouter = require('./routes/deleteCuriculumRoute.js');
 const createCourseRouter = require('./routes/createCourseRoute.js');
 const getCoursesRouter = require('./routes/GetCourseRoute.js');
+const getCoursesByCuriculumRouter = require('./routes/getCoursesByCurRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -78,3 +79,4 @@ app.use('/api/v1', Authenticate, curiculumCreateRouter);
 app.use('/api/v1', Authenticate, getCuriculumRouter);
 app.use('/api/v1/', Authenticate, createCourseRouter);
 app.use('/api/v1/', Authenticate, getCoursesRouter);
+app.use('/api/v1', Authenticate, getCoursesByCuriculumRouter);

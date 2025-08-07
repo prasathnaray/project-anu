@@ -23,6 +23,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"; 
 import dayjs from "dayjs";
 import GetCuriculumAPI from "../API/getCuriculumAPI";
+import GetCoursesByCuriculumAPI from "../API/GetCoursesByCuriculumAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -143,6 +144,11 @@ function Batch()  {
                         ...batchData,
                         [name]: value,
                 });
+
+                if(name === "curiculum_name" && value)
+                {
+                      getCourseByCurData(value);  
+                }
         }
          
           const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
@@ -235,10 +241,27 @@ function Batch()  {
                         console.log(err)
                 }
         }
+        const [corList, setCorList] = useState({});
+        const getCourseByCurData = async(curiculum_id) => {
+                if (!curiculum_id) return;
+                try
+                {
+                        const token = localStorage.getItem('user_token');
+                        const result = await GetCoursesByCuriculumAPI(token, curiculum_id)
+                        setCorList(result.result)
+                }
+                catch(err)
+                {
+                        console.log(err)
+                        setCorList({});
+                }
+        }
+        console.log(corList)
         React.useEffect(() => {
                 getCuriculumList()
         }, [])
-                console.log(curList)
+
+                //console.log(curList)
         if (!token) {
                         return <Navigate to="/" replace />;
         }
@@ -359,20 +382,7 @@ function Batch()  {
                                 value={batchData.batch_name}
                         />
                     </div>
-                    {/* <div className="mt-5">
-                        <TextField
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                sx={{ minHeight: "35px" }}
-                                id="outlined-basic"
-                                label="Select curiculum"
-                                name="curiculum_name"
-                                // onChange={handleChange}
-                                // value={batchData.batch_name}
-                        />
-                    </div> */}
-                    <div className="mt-5">
+                    <div className="mt-5 relative overflow-visible z-[1200]">
                             <FormControl
                               fullWidth
                               variant="outlined"
@@ -387,6 +397,22 @@ function Batch()  {
                                 onChange={handleChange}
                                 name="curiculum_name"
                                 value={batchData?.curiculum_name}
+                                MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 1300 // must be higher than modal
+                                        }
+                                        }
+                                }}
                               >
                                         {Array.isArray(curList) && curList.length > 0 ? (
                                                 curList.map((data, index) => (
@@ -399,7 +425,51 @@ function Batch()  {
                                         )}
                               </Select>
                             </FormControl>
-                          </div>
+                    </div>
+                    <div className="mt-5 relative overflow-visible z-[1200]">
+                            <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="program-select-label">Select Course</InputLabel>
+                              <Select
+                                labelId="program-select-label"
+                                label="Select Course"
+                                className=""
+                                onChange={handleChange}
+                                //name="curiculum_name"
+                                //value={batchData?.curiculum_name}
+                                 MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 2300 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                              >
+                                        {Array.isArray(corList) && corList.length > 0 ? (
+                                                corList.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.course_id}>
+                                                        {data?.course_name}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
+                    </div>
                     <div className="grid grid-cols-2 gap-5">
                         <div className="mt-5">
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
