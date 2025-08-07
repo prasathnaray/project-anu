@@ -53,4 +53,27 @@ const createCoursem = (course_name, curiculum_id, requester) => {
         })
     })
 }
-module.exports = {coursem, createCoursem};
+const getCoursem = (requester) => {
+    return new Promise((resolve, reject) => {
+        const isPriviledged = [99, 101].includes(Number(requester.role));
+        if(!isPriviledged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this course data.'
+            })
+        }
+        client.query('SELECT * FROM course_data', (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {coursem, createCoursem, getCoursem};

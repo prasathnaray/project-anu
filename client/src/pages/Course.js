@@ -11,6 +11,7 @@ import GetCuriculumAPI from '../API/getCuriculumAPI';
 import CreateCourseAPI from '../API/createCourseAPI';
 import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
+import GetCoursesAPI from '../API/GetCoursesAPI';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
@@ -19,6 +20,7 @@ function Course() {
         course_name: '',
         curiculum_id: ''
   })
+  const [courseList, setCourseList] = React.useState({})
   const handleCourse = (e) => {
         const {name, value} = e.target;
         setCourseData({
@@ -36,6 +38,19 @@ function Course() {
         curiculum_id: ''
     })
   }
+
+   const GetCoursesList = async() => {
+        try
+        {
+                const token = localStorage.getItem('user_token');
+                const result = await GetCoursesAPI(token);
+                setCourseList(result.data.result);
+        }
+        catch(err)
+        {
+                console.log(err)
+        }
+  }
     const CreatCourse = async() => {
         try
         {
@@ -50,6 +65,7 @@ function Course() {
                                 closeButton: CustomCloseButton,
                         }); 
                         handleClose();
+                        GetCoursesList();
                 }
         }
         catch(err)
@@ -73,9 +89,14 @@ function Course() {
       console.log(err)
     }
   }
+ 
   React.useEffect(() => {
         GetCuriculumList();
   }, [])
+  React.useEffect(() => {
+        GetCoursesList()
+  }, [])
+  console.log(courseList);
   console.log(openCourse)
   ///main Layout
   let token = localStorage.getItem('user_token');
@@ -121,13 +142,24 @@ function Course() {
                                                                           </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                            <tr className="text-sm text-gray-700">
-                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
-                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
-                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
-                                                                                    <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2"><button><EllipsisVerticalIcon icon={20}/></button></td>
-                                                                            </tr>
+                                                                        {Array.isArray(courseList) && courseList.length > 0 ? (
+                                                                        courseList.map((data, index) => (
+                                                                        <tr className="text-sm text-gray-700" key={index}>
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">{data?.course_name}</td>
+                                                                                <td className="py-2 px-4 text-gray-600 font-medium border-b-2">--</td>
+                                                                                <td className="py-2 px-4 text-gray-600 font-medium border-b-2">--</td>
+                                                                                <td className="py-2 px-4 font-semibold border-b-2">
+                                                                                <button><EllipsisVerticalIcon size={20}/></button>
+                                                                                </td>
+                                                                        </tr>
+                                                                        ))
+                                                                        ) : (
+                                                                        <tr>
+                                                                                                <td colSpan={4} className="py-4 text-center text-gray-500">No courses available</td>
+                                                                        </tr>
+                                                                        )}
                                                                     </tbody>
+
                                                           </table>
                                                       </div>
                                                 </div>
