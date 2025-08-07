@@ -9,6 +9,8 @@ import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/mater
 import SubSideBar from '../components/subSideBar';
 import GetCuriculumAPI from '../API/getCuriculumAPI';
 import CreateCourseAPI from '../API/createCourseAPI';
+import { toast } from 'react-toastify';
+import CustomCloseButton from '../utils/CustomCloseButton';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
@@ -25,18 +27,7 @@ function Course() {
         })
   }
 
-  const CreatCourse = async() => {
-        try
-        {
-                const token = localStorage.getItem('user_token');
-                const response = await CreateCourseAPI(token, courseData);
-                console.log(response);
-        }
-        catch(err)
-        {
-                console.log(err)
-        }
-  }
+
   console.log(courseData);
   const handleClose = () => {
     setOpenCourse(false);
@@ -44,6 +35,27 @@ function Course() {
         course_name: '',
         curiculum_id: ''
     })
+  }
+    const CreatCourse = async() => {
+        try
+        {
+                const token = localStorage.getItem('user_token');
+                const response = await CreateCourseAPI(token, courseData);
+                if(response)
+                {
+                        toast.success("Course Created" , {
+                                autoClose: 3000,
+                                toastId: 'course-inserted',
+                                icon: false,
+                                closeButton: CustomCloseButton,
+                        }); 
+                        handleClose();
+                }
+        }
+        catch(err)
+        {
+                console.log(err)
+        }
   }
   const [buttonOpen, setButtonOpen] = useState(false);
   const handleButtonOpen = () => {
