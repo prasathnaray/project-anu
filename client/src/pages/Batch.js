@@ -17,7 +17,7 @@ import getMonthYear from '../utils/DateChange';
 import TablePagination from '@mui/material/TablePagination';
 import DeleteBatchAPI from "../API/deleteBatchAPI";
 import DeleteToast from "../utils/deleteToast";
-import { FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
+import { Box, Chip, FormControl, InputLabel, MenuItem, Select, TextField } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker"; 
@@ -94,7 +94,7 @@ function Batch()  {
                 setBatchData({
                                 batch_name: '',
                                 curiculum_name: '',
-                                courses_data: '',
+                                course_names: [],
                                 batch_start_date: null,
                                 batch_end_date: null
                 });
@@ -131,23 +131,31 @@ function Batch()  {
         const [batchData, setBatchData] = useState({
                 batch_name: '', 
                 batch_start_date: startDate, 
-                batch_end_date: endDate
+                batch_end_date: endDate,
+                curiculum_name: '',
+                course_data: [],
         });
         //
         const [listBatch, setListBatch] = useState([]);
         const handleChange = (e) => {
-              const {name, value} = e.target;
-                setBatchData({
+        const { name, value } = e.target;
+                if (name === "course_data") {
+                        setBatchData({
                         ...batchData,
-                        [name]: value,
-                });
-
-                if(name === "curiculum_name" && value)
-                {
-                      getCourseByCurData(value);  
+                        [name]: typeof value === "string" ? value.split(",") : value,
+                        });
+                } 
+                else {
+                        setBatchData({
+                                ...batchData,
+                                [name]: value,
+                        });
+                        if (name === "curiculum_name" && value) {
+                                getCourseByCurData(value);
+                        }
                 }
-        }
-         
+        };
+         console.log(batchData);
           const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
           const dropdownRefs = useRef({});  
           const toggleDropdown = (index) => {
@@ -413,7 +421,7 @@ function Batch()  {
                                         {Array.isArray(curList) && curList.length > 0 ? (
                                                 curList.map((data, index) => (
                                                         <MenuItem key={index} value={data?.curiculum_id}>
-                                                        {data?.curiculum_nam}
+                                                                {data?.curiculum_nam}
                                                         </MenuItem>
                                                 ))
                                         ) : (
@@ -435,8 +443,8 @@ function Batch()  {
                                 label="Select Course"
                                 className=""
                                 onChange={handleChange}
-                                //name="curiculum_name"
-                                //value={batchData?.curiculum_name}
+                                name="course_data"
+                                value={batchData?.course_data || []}
                                  MenuProps={{
                                         disablePortal: false, // ← force to portal
                                         anchorOrigin: {
@@ -453,6 +461,22 @@ function Batch()  {
                                         }
                                         }
                                 }}
+                                renderValue={(selectedIds) => (
+                                         Array.isArray(selectedIds) ? (
+                                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                                        {selectedIds.map((id) => {
+                                                        const course = corList.find((c) => c.course_id === id);
+                                                        return (
+                                                        <Chip
+                                                                key={id}
+                                                                label={course ? course.course_name : id}
+                                                                sx={{ borderRadius: "4px" }}
+                                                        />
+                                                        );
+                                                        })}
+                                                </Box>
+                                                ) : null 
+                                )}
                               >
                                         {Array.isArray(corList) && corList.length > 0 ? (
                                                 corList.map((data, index) => (
