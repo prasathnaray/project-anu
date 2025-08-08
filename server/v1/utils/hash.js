@@ -13,11 +13,6 @@ function encrypt(text) {
         iv: iv.toString('hex'),
         encryptedData: encrypted
       })
-    // return {
-    //   iv: iv.toString('hex'),
-    //   encryptedData: encrypted
-    // };
-
   }
   
 function decrypt(encryptedData, ivHex) {
@@ -27,14 +22,12 @@ function decrypt(encryptedData, ivHex) {
     return decrypted;
     //console.log(decrypted);
 }
-
 const HashPassword = async(plainPassword) =>{
     const saltRounds = 10;
     const hashed = await bcrypt.hash(plainPassword, saltRounds);
     //console.log(hashed);
     return hashed;
 }
-
 async function comparePasswords(enteredPassword, hashedPasswordFromDB) {
     const match = await bcrypt.compare(enteredPassword, hashedPasswordFromDB);
     return match;
@@ -45,4 +38,3 @@ async function comparePasswords(enteredPassword, hashedPasswordFromDB) {
 // encrypt('prasath@example.com');
 // decrypt('194afa5dc1e3392dbf700b8f439748edd862ebb7490a6b6b6b5626e1399dacc7', '3a73a1ba62419d8ea89c47f6965e3faf')
 module.exports = {comparePasswords, HashPassword};
-// module.exports = {encrypt, decrypt}
