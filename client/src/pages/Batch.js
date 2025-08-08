@@ -197,7 +197,7 @@ function Batch()  {
                 const token = localStorage.getItem("user_token");
                 try
                 {
-                        if(!batchData.batch_name || !batchData.batch_start_date || !batchData.batch_end_date)
+                        if(!batchData.batch_name || !batchData.batch_start_date || !batchData.batch_end_date || !batchData.curiculum_name || !batchData.course_data)
                         {
                                 toast.error("please fill all the fields" , {
                                         autoClose: 3000,
