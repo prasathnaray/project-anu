@@ -142,7 +142,8 @@ function Batch()  {
                 if (name === "course_data") {
                         setBatchData({
                         ...batchData,
-                        [name]: typeof value === "string" ? value.split(",") : value,
+                        // [name]: typeof value === "string" ? value.split(",") : value,
+                        [name]: Array.isArray(value) ? value.map(String) : value.split(",").map(String),
                         });
                 } 
                 else {
@@ -437,9 +438,10 @@ function Batch()  {
                               size="small"
                               sx={{ minHeight: "35px" }}
                             >
-                              <InputLabel id="program-select-label">Select Course</InputLabel>
+                              <InputLabel id="chip-select-label">Select Course</InputLabel>
                               <Select
-                                labelId="program-select-label"
+                                multiple
+                                labelId="chip-select-label"
                                 label="Select Course"
                                 className=""
                                 onChange={handleChange}
