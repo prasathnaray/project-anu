@@ -32,9 +32,5 @@ async function comparePasswords(enteredPassword, hashedPasswordFromDB) {
     const match = await bcrypt.compare(enteredPassword, hashedPasswordFromDB);
     return match;
     //console.log(match);
-}  
-//hashPassword('hashed123')
-// /comparePasswords('hashed123', '$2b$10$aH7WDNUDHOib0IbYbpbs.evz4hSXkH1B.ni8quKVWzDhdTi8xwG7C')
-// encrypt('prasath@example.com');
-// decrypt('194afa5dc1e3392dbf700b8f439748edd862ebb7490a6b6b6b5626e1399dacc7', '3a73a1ba62419d8ea89c47f6965e3faf')
+} 
 module.exports = {comparePasswords, HashPassword};
