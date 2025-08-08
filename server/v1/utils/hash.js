@@ -31,6 +31,5 @@ const HashPassword = async(plainPassword) =>{
 async function comparePasswords(enteredPassword, hashedPasswordFromDB) {
     const match = await bcrypt.compare(enteredPassword, hashedPasswordFromDB);
     return match;
-    //console.log(match);
 } 
 module.exports = {comparePasswords, HashPassword};
