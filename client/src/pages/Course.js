@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 import SideBar from '../components/sideBar';
 import { Navigate, Outlet } from 'react-router-dom';
 import NavBar from '../components/navBar';
-import { ArrowUpWideNarrow, EllipsisVerticalIcon, X } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVertical, EllipsisVerticalIcon, X } from 'lucide-react';
 import AddCourse from '../components/admin/AddCourse';
 import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import SubSideBar from '../components/subSideBar';
@@ -12,6 +12,7 @@ import CreateCourseAPI from '../API/createCourseAPI';
 import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import GetCoursesAPI from '../API/GetCoursesAPI';
+import DeleteCourseToast from '../utils/deleteCourseToast';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
@@ -89,7 +90,43 @@ function Course() {
       console.log(err)
     }
   }
- 
+  const handleDelete = async(course_id) => {
+        try
+        {
+                const token = localStorage.getItem('user_token');
+                DeleteCourseToast(course_id, () => GetCoursesList(), token);
+        }
+        catch(err)
+        {
+              if(err?.response?.status == 403)
+                {
+                        toast.error("please login again" , {
+                                autoClose: 3000,
+                                toastId: 'login-again',
+                                icon: false,
+                                closeButton: CustomCloseButton,
+                        });
+                }
+        }
+  }
+            const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
+            const dropdownRefs = React.useRef({});  
+            const toggleDropdown = (index) => {
+                setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+            };
+            React.useEffect(() => {
+      const handleClickOutside = (event) => {
+                        const isClickInside = Object.values(dropdownRefs.current).some(ref =>
+                        ref && ref.contains(event.target)
+                        );
+                
+                        if (!isClickInside) {
+                        setOpenDropdownIndex(null);
+                        }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
   React.useEffect(() => {
         GetCuriculumList();
   }, [])
@@ -149,7 +186,22 @@ function Course() {
                                                                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">--</td>
                                                                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">--</td>
                                                                                 <td className="py-2 px-4 font-semibold border-b-2">
-                                                                                <button><EllipsisVerticalIcon size={20}/></button>
+                                                                                                {/* <button onClick={() => handleDelete(data.course_id)}><EllipsisVerticalIcon size={20}/></button> */}
+                                                                                                 <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
+                                                                                                                                                                                        {openDropdownIndex === index && (
+                                                                                                                                                                                                <div
+                                                                                                                                                                                                 ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                                                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                                                                                                                                        transition-all ease-in-out duration-500 origin-top-right
+                                                                                                                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                                                                                                                                                                                                `} 
+                                                                                                                                                                                                >
+                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
+                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => handleDelete(data.course_id)}>Delete</button>
+                                                                                                                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
+                                                                                                
+                                                                                                                                                                                                </div>
+                                                                                                                                                                                        )}
                                                                                 </td>
                                                                         </tr>
                                                                         ))

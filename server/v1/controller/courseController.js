@@ -1,4 +1,4 @@
-const {createCoursem, getCoursem, getCoursesByCurm} = require("../model/coursem");
+const {createCoursem, getCoursem, getCoursesByCurm, deleteCoursem} = require("../model/coursem");
 const CourseController = async(req, res) => {
         const requester = req.user;
         const {course_name, curiculum_id} = req.body;
@@ -49,4 +49,27 @@ const getCoursesByCurController = async(req, res) => {
         res.status(500).send(err);
     }
 }
-module.exports = {CourseController, getCoursesC, getCoursesByCurController};
+const courseDeletionController = async(req, res) => {
+    const requester = req.user;
+    const course_id = req.params.course_id;
+    try
+    {
+        const result = await deleteCoursem(course_id, requester);
+        let message;
+        if (!result || result.rowCount == 0) {
+            message = 'Data ain’t exists';
+        } else {
+            message = 'Deleted successfully';
+        }
+        res.status(200).json({
+            code: 200,
+            status: 'Success',
+            result: message
+        })
+    }
+    catch(err)
+    {
+        res.status(500).json(err)
+    }
+}
+module.exports = {CourseController, getCoursesC, getCoursesByCurController, courseDeletionController};

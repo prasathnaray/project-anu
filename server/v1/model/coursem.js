@@ -99,4 +99,27 @@ const getCoursesByCurm = (curiculum_id, requester) => {
         })
     })
 }
-module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm};
+const deleteCoursem = (course_id, requester) => {
+    return new Promise((resolve, reject) => {
+        const isPriviledged = [99, 101].includes(Number(requester.role));
+        if(!isPriviledged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: "You don't have a permission"
+            })
+        }
+        client.query('DELETE FROM course_data WHERE course_id=$1', [course_id], (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem};
