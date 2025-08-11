@@ -205,7 +205,7 @@ function Curiculam() {
                         <div className="">
                                     <div className="flex justify-between items-center gap-5">
                                                   <div>Create Curiculum</div>
-                                                  <button  onClick={handleClose} className="hover:bg-red-100 p-1 hover:text-gray-700 rounded"><X size={20}/></button>
+                                                  <button onClick={handleClose} className="hover:bg-red-100 p-1 hover:text-gray-700 rounded"><X size={20}/></button>
                                     </div>
                                     <div className="mt-5">
                                             <TextField
