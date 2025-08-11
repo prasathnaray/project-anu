@@ -347,21 +347,21 @@ function Batch()  {
                                                                         ))
                                                                         ) : (
                                                                         <tr>
-                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
-                                                                                No data found
-                                                                        </td>
+                                                                                <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                                        No data found
+                                                                                </td>
                                                                         </tr>
                                                                   )}  
                                                         </tbody>
                                                 </table>
                                                 <div className="flex justify-end items-center mt-6 gap-10">
                                                         <TablePagination 
-                                                        component="div"
-                                                        count={rowCount}
-                                                        page={page}
-                                                        onPageChange={handleChangePage}
-                                                        rowsPerPage={rowsPerPage}
-                                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                                                                component="div"
+                                                                count={rowCount}
+                                                                page={page}
+                                                                onPageChange={handleChangePage}
+                                                                rowsPerPage={rowsPerPage}
+                                                                onRowsPerPageChange={handleChangeRowsPerPage}
                                                         />
                                                 </div>
                                             </div>

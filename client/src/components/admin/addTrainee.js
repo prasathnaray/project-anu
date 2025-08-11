@@ -84,6 +84,12 @@ function AddTrainee() {
   const roleCode = handleInputData.role === "trainee" ? 103 : 102;
   const submitHandle = async(e) => {
       e.preventDefault();
+      if(handleInputData.trainee_password !== handleInputData.trainee_confirm_password)
+      {
+        toast.error(`Password does'nt match`);
+        return;
+      }
+
       const formData = new FormData();
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
@@ -98,6 +104,7 @@ function AddTrainee() {
       formData.append('status', handleInputData.status);
       formData.append('description', handleInputData.description)
       formData.append('file', handleInputData.trainee_dp)
+      
       try
       {
           const result = await AddTraineeAPI(tokenData, formData);
