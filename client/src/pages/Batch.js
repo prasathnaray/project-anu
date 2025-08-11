@@ -321,8 +321,8 @@ function Batch()  {
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{listBatch.batch_name}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_start_date)}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_end_date)}</td>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">-</th>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">-</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts[0]?.count || 0}</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts[1]?.count || 0}</th>
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                         <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
                                                                                         {openDropdownIndex === index && (
