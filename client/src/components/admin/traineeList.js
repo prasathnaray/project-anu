@@ -157,22 +157,22 @@ function TraineeList() {
                             <ArrowUpWideNarrow size={20} />
                           </button>
                         </th>
-                        <th className="py-2 px-4 text-[#8DC63F]">
+                        {/* <th className="py-2 px-4 text-[#8DC63F]">
                           <div className="flex items-center gap-2">
                             <span>Course</span>
                             <button className="">
                               <ArrowUpWideNarrow size={20} />
                             </button>
                           </div>
-                        </th>
-                        <th className="py-2 px-4 text-[#8DC63F]">
+                        </th> */}
+                        {/* <th className="py-2 px-4 text-[#8DC63F]">
                           <div className="flex items-center gap-2">
                             <span>Module</span>
                             <button className="">
                               <ArrowUpWideNarrow size={20} />
                             </button>
                           </div>
-                        </th>
+                        </th> */}
                         <th className="py-2 px-4 text-[#8DC63F]">
                           <div className="flex items-center gap-2">
                             <span>Batch</span>
@@ -209,12 +209,6 @@ function TraineeList() {
                             </td>
                             <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                               {trainee.user_name}
-                            </td>
-                            <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                              UFT
-                            </td>
-                            <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                              test
                             </td>
                             <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                               {trainee.batch_name}

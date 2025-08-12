@@ -79,7 +79,7 @@ function Instructors(){
                                                                 <tr className="border-b border-gray-300 shadow-sm">
                                                                         <th className="py-2 px-4"></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Instructor Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
-                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Course</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                        {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Course</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Batch associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Status</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                 </tr>
@@ -90,14 +90,15 @@ function Instructors(){
                                                                         <tr key={index} className="text-sm text-gray-700">
                                                                         <td className="border-b-2"><img src={IMAGE_URL+instructor.user_profile_photo} className="w-10 h-10 rounded-full object-cover cursor-pointer"/></td>
                                                                         <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">{instructor.user_name}</td>
-                                                                        <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td>
+                                                                        {/* <td  className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">dad</td> */}
                                                                         <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2 ">
-                                                                        {instructor.batch_names.length > 1 ? (
+                                                                        {instructor.batch_names.length > 0 ? (
                                                                             <div className="flex justify-between items-center gap-2 w-full">
                                                                             <div className="flex flex-col gap-1">
                                                                                 {seeBatches[index] ? (
                                                                                 <div className="flex flex-wrap gap-1 transition-all ease-in-out duration-300">
                                                                                     {instructor.batch_names.map((id, i) => (
+                                                                                        // <span>{id}</span>
                                                                                     <span key={i} className="inline-block">{id}{i < instructor.batch_names.length - 1 ? ',' : ''}</span>
                                                                                     ))}
                                                                                 </div>

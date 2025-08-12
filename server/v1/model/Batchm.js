@@ -31,7 +31,7 @@ const getBatchm = (requester) => {
         });
     }
     return new Promise((resolve, reject) => {
-        const query = `WITH role_counts AS (SELECT b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role, COUNT(*) AS role_count FROM batch_data b LEFT JOIN batch_people_data bpd ON b.batch_id = ANY(bpd.batch_id) LEFT JOIN user_data ud ON bpd.user_id = ud.user_email GROUP BY b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role) SELECT batch_id, batch_name, batch_start_date, batch_end_date, SUM(role_count) AS total_users, JSON_AGG(JSON_BUILD_OBJECT('role', user_role, 'count', role_count)) AS role_counts FROM role_counts GROUP BY batch_id, batch_name, batch_start_date, batch_end_date`
+        const query = `WITH role_counts AS (SELECT b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role, COUNT(*) AS role_count FROM batch_data b LEFT JOIN batch_people_data bpd ON b.batch_id = ANY(bpd.batch_id) LEFT JOIN user_data ud ON bpd.user_id = ud.user_email GROUP BY b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role) SELECT batch_id, batch_name, batch_start_date, batch_end_date, SUM(role_count) AS total_users, JSON_AGG(JSON_BUILD_OBJECT('role', user_role, 'count', role_count)) FILTER (WHERE user_role IS NOT NULL) AS role_counts FROM role_counts GROUP BY batch_id, batch_name, batch_start_date, batch_end_date`
         client.query(query, (err, result) => {
             if(err)
             {

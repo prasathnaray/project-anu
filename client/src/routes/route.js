@@ -13,6 +13,7 @@ import Batch from '../pages/Batch';
 import Course from '../pages/Course';
 import AddCourse from '../components/admin/AddCourse';
 import Curiculum from '../pages/Curiculum';
+import BatchIndividual from '../pages/BatchIndividual';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -30,6 +31,7 @@ function RoutesPath() {
                             <Route path="/course" element={<Course />}/>
                             <Route path="/course/add" element={<AddCourse />} />
                             <Route path="/curriculum" element={<Curiculum />} />
+                            <Route path="/batch/:batch_id" element={<BatchIndividual />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

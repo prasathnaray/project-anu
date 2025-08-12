@@ -318,11 +318,11 @@ function Batch()  {
                                                                {listBatch.length > 0 ? (
                                                                         listBatch.map((listBatch, index) => (
                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
-                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{listBatch.batch_name}</td>
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold"><a href={`/batch/${listBatch.batch_id}`}>{listBatch.batch_name}</a></td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_start_date)}</td>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_end_date)}</td>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts[0]?.count || 0}</th>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts[1]?.count || 0}</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts == null && <div>0</div> || listBatch?.role_counts[0]?.count}</th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts == null && <div>0</div> || listBatch?.role_counts[1]?.count}</th>
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                         <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
                                                                                         {openDropdownIndex === index && (
