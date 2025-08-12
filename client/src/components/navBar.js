@@ -11,6 +11,7 @@ import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Ico
 import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
+import { Badge } from "@mui/material";
 function NavBar() {
     const tokenRes = jwtDecode(localStorage.getItem("user_token"));
     // console.log(tokenRes);
@@ -104,9 +105,11 @@ function NavBar() {
             </div>
             <div className="relative md:block">
               <div className="px-3 py-2 ms-1 text-gray-200">
-                <button className="">
-                  <Bell size={20} />
-                </button>
+                <div className="">
+                  <Badge badgeContent={'0'} color="error">
+                        <Bell size={20} />
+                  </Badge>
+                </div>
               </div>
             </div>
             {/* <div className="relative md:block">
