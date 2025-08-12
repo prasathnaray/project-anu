@@ -33,7 +33,7 @@ function RoutesPath() {
                             <Route path="/course/add" element={<AddCourse />} />
                             <Route path="/curriculum" element={<Curiculum />} />
                             <Route path="/batch/:batch_id" element={<BatchIndividual />} />
-                            <Route path="/all-request" element={<Requests />} />
+                            <Route path="/all-requests" element={<Requests />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

@@ -17,6 +17,11 @@ function BatchIndividual() {
             <div className="flex flex-grow">
                     <div className="">
                             <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
+                    </div>
+                    <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[55.5px] flex-grow"} `}>
+                            <div className="bg-gray-100 h-screen pt-12">
+
+                            </div>
                     </div>                                              
             </div>
     </div>
