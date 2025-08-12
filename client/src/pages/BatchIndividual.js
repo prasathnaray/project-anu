@@ -20,7 +20,9 @@ function BatchIndividual() {
                     </div>
                     <div className={`${buttonOpen === true ? "ms-[221px] flex-grow" : "ms-[55.5px] flex-grow"} `}>
                             <div className="bg-gray-100 h-screen pt-12">
+                                        <div className="">
 
+                                        </div>
                             </div>
                     </div>                                              
             </div>
