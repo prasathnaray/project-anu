@@ -100,7 +100,6 @@ function Batch()  {
                 });
                 setCorList({})
         };
-
         // delete api 
                 const deleteSubmit = async(batch_id) => {
                         try
@@ -123,7 +122,7 @@ function Batch()  {
                         }
                 }
         //
-        const [buttonOpen, setButtonOpen] = useState(false);
+        const [buttonOpen, setButtonOpen] = useState(true);
         const handleButtonOpen = () => {
                 setButtonOpen(!buttonOpen);
         };

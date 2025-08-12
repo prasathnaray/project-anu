@@ -65,7 +65,7 @@ function TraineeList() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  const [buttonOpen, setButtonOpen] = useState(false);
+  const [buttonOpen, setButtonOpen] = useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
   };

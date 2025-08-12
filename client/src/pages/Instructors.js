@@ -11,7 +11,7 @@ import {Select, MenuItem} from '@mui/material';
 import DeleteInstructorToast from "../utils/deleteInstructorToast";
 // import IMAGE_URL from "../API/imageUrl";
 function Instructors(){
-    const [buttonOpen, setButtonOpen] = useState(false);
+    const [buttonOpen, setButtonOpen] = useState(true);
     const [seeBatches, setSeeBatches] = useState({});
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);

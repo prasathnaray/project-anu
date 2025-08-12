@@ -13,10 +13,12 @@ import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import GetCoursesAPI from '../API/GetCoursesAPI';
 import DeleteCourseToast from '../utils/deleteCourseToast';
+import TagCourse from '../components/superadmin/TagCourse';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
   const [curiculumList, setCuriculumList] = React.useState({})
+//   const [couseList, setCourseList] = React.useState({})
   const [courseData, setCourseData] = React.useState({
         course_name: '',
         curiculum_id: ''
@@ -29,15 +31,15 @@ function Course() {
                 [name]: value,  
         })
   }
-
-
   console.log(courseData);
+  const [tagCourse, setTagCourse] = useState(false);
   const handleClose = () => {
     setOpenCourse(false);
     setCourseData({
         course_name: '',
         curiculum_id: ''
     })
+    setTagCourse(false)
   }
 
    const GetCoursesList = async() => {
@@ -74,7 +76,7 @@ function Course() {
                 console.log(err)
         }
   }
-  const [buttonOpen, setButtonOpen] = useState(false);
+  const [buttonOpen, setButtonOpen] = useState(true);
   const handleButtonOpen = () => {
       setButtonOpen(!buttonOpen);
   };
@@ -134,7 +136,7 @@ function Course() {
         GetCoursesList()
   }, [])
   console.log(courseList);
-  console.log(openCourse)
+  console.log(openCourse);
   ///main Layout
   let token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
@@ -196,8 +198,9 @@ function Course() {
                                                                                                                                                                                                         ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                                                                                                                                                 `} 
                                                                                                                                                                                                 >
-                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => handleDelete(data.course_id)}>Delete</button>
+                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">View</button>
+                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded" onClick={() => handleDelete(data.course_id)}>Delete</button>
+                                                                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded" onClick={() => setTagCourse(true)}>Tag Course</button>
                                                                                                                                                                                                                 {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
                                                                                                 
                                                                                                                                                                                                 </div>
@@ -272,6 +275,73 @@ function Course() {
                       </div>
                   </>
             </AddCourse>
+            <TagCourse isVisible={tagCourse} onClose={handleClose}>
+                        <>
+                                <div className="flex justify-between items-center">
+                                        <div>Tag Course</div>
+                                        <div><button onClick={handleClose} className="text-red-500 hover:bg-red-50 p-1 hover:rounded"><X size={24}/></button></div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-5 mt-5">
+                                <div> 
+                                      <FormControl
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px" }}
+                                        >
+                                        <InputLabel id="batch-select-label">Select User</InputLabel>
+                                        <Select
+                                        labelId="course-select-label"
+                                        // name="curiculum_id"
+                                        label="Select course"
+                                        //onChange={handleCourse}
+                                        //value={courseData.curiculum_id}
+                                        >
+                                                {Array.isArray(courseList) && courseList.length > 0 ? (
+                                                        courseList.map((data, index) => (
+                                                                <MenuItem key={index} value={data?.couse_id}>
+                                                                {data?.course_name}
+                                                                </MenuItem>
+                                                        ))
+                                                ) : (
+                                                        <MenuItem disabled>No data found</MenuItem>
+                                                )}
+                                        </Select>
+                                        </FormControl>
+                                </div>
+                                <div> 
+                                      <FormControl
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px" }}
+                                        >
+                                        <InputLabel id="batch-select-label">Select course</InputLabel>
+                                        <Select
+                                        labelId="course-select-label"
+                                        // name="curiculum_id"
+                                        label="Select course"
+                                        //onChange={handleCourse}
+                                        //value={courseData.curiculum_id}
+                                        >
+                                                {Array.isArray(courseList) && courseList.length > 0 ? (
+                                                        courseList.map((data, index) => (
+                                                                <MenuItem key={index} value={data?.couse_id}>
+                                                                {data?.course_name}
+                                                                </MenuItem>
+                                                        ))
+                                                ) : (
+                                                        <MenuItem disabled>No data found</MenuItem>
+                                                )}
+                                        </Select>
+                                        </FormControl>
+                                </div>
+                      </div>
+                      <div className="flex justify-end item-center mt-5">
+                                                <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={CreatCourse}>Save</button>                                                
+                      </div>
+                        </>
+            </TagCourse>
     </div>
   )
 }

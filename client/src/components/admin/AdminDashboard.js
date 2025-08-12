@@ -6,7 +6,7 @@ import { ClipboardPenLine, GraduationCap, LayoutDashboard, NotepadText } from "l
 import getDashboardAPI from "../../API/dashboardAPI";
 import { Calendar01Icon } from "hugeicons-react";
 function AdminDashboard(){
-    const [buttonOpen, setButtonOpen] = useState(false);
+    const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
     };
