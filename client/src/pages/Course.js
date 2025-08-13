@@ -14,6 +14,7 @@ import CustomCloseButton from '../utils/CustomCloseButton';
 import GetCoursesAPI from '../API/GetCoursesAPI';
 import DeleteCourseToast from '../utils/deleteCourseToast';
 import TagCourse from '../components/superadmin/TagCourse';
+import GetAdminsAPI from '../API/getAdminsAPI';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
@@ -23,6 +24,19 @@ function Course() {
         course_name: '',
         curiculum_id: ''
   })
+  const [adminData, setAdminData] = React.useState({})
+  const fetchAdminData = async() => {
+        try
+        {
+                const token = localStorage.getItem('user_token')
+                const result = await GetAdminsAPI(token);
+                console.log(result      )
+        }
+        catch(err)
+        {
+                console.log(err)
+        }
+  }
   const [courseList, setCourseList] = React.useState({})
   const handleCourse = (e) => {
         const {name, value} = e.target;
@@ -134,6 +148,9 @@ function Course() {
   }, [])
   React.useEffect(() => {
         GetCoursesList()
+  }, [])
+  React.useEffect(() => {
+        fetchAdminData()
   }, [])
   console.log(courseList);
   console.log(openCourse);

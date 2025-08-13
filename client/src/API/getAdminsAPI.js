@@ -8,4 +8,4 @@ function GetAdminsAPI(token){
     })
     return result;
 }
-export default GetAdminsAPI
+export default GetAdminsAPI;
