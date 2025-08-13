@@ -83,4 +83,4 @@ app.use('/api/v1/', Authenticate, createCourseRouter);
 app.use('/api/v1/', Authenticate, getCoursesRouter);
 app.use('/api/v1', Authenticate, getCoursesByCuriculumRouter);
 app.use('/api/v1', Authenticate, deleteCourseRouter);
-// app.use('/api/v1', Authenticate, getAdminRouter);
+app.use('/api/v1', Authenticate, getAdminRouter);
