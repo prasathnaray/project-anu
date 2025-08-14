@@ -30,7 +30,7 @@ function Course() {
         {
                 const token = localStorage.getItem('user_token')
                 const result = await GetAdminsAPI(token);
-                console.log(result      )
+                setAdminData(result.data.rows)
         }
         catch(err)
         {
@@ -150,10 +150,13 @@ function Course() {
         GetCoursesList()
   }, [])
   React.useEffect(() => {
-        fetchAdminData()
+        fetchAdminData();
   }, [])
-  console.log(courseList);
-  console.log(openCourse);
+
+  React.useEffect(() => {
+        console.log(adminData)
+  }, [adminData])
+
   ///main Layout
   let token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
@@ -306,18 +309,18 @@ function Course() {
                                         size="small"
                                         sx={{ minHeight: "35px" }}
                                         >
-                                        <InputLabel id="batch-select-label">Select User</InputLabel>
+                                        <InputLabel id="user-select-label">Select User</InputLabel>
                                         <Select
-                                        labelId="course-select-label"
+                                        labelId="user-select-label"
                                         // name="curiculum_id"
-                                        label="Select course"
+                                        label="Select User"
                                         //onChange={handleCourse}
                                         //value={courseData.curiculum_id}
                                         >
-                                                {Array.isArray(courseList) && courseList.length > 0 ? (
-                                                        courseList.map((data, index) => (
-                                                                <MenuItem key={index} value={data?.couse_id}>
-                                                                {data?.course_name}
+                                                {Array.isArray(adminData) && adminData.length > 0 ? (
+                                                        adminData.map((data, index) => (
+                                                                <MenuItem key={index} value={data?.user_email}>
+                                                                {data?.user_name}
                                                                 </MenuItem>
                                                         ))
                                                 ) : (

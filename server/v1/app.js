@@ -55,7 +55,7 @@ app.use(express.urlencoded({extended: true}));
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter)
 app.use('/api/v1', refreshTokenRouter)
-app.use('/api/v1', getVrDataRouter);
+app.use('/api/v1', Authenticate, getVrDataRouter);
 app.use('/api/v1', Authenticate, deleteBatchRouter);
 // batch
 
