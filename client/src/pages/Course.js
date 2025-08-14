@@ -25,6 +25,18 @@ function Course() {
         curiculum_id: ''
   })
   const [adminData, setAdminData] = React.useState({})
+  const [tagCourseState, setTagCourseState] = React.useState({
+        user_id: '',
+        course_id: ''
+  })
+  const handleTagCourse = (e) => {
+        const {name, value} = e.target;
+        setTagCourseState({
+                ...tagCourseState,
+                [name]: value,
+        })
+  }
+  console.log(tagCourseState);
   const fetchAdminData = async() => {
         try
         {
@@ -312,10 +324,10 @@ function Course() {
                                         <InputLabel id="user-select-label">Select User</InputLabel>
                                         <Select
                                         labelId="user-select-label"
-                                        // name="curiculum_id"
+                                        name="user_id"
                                         label="Select User"
-                                        //onChange={handleCourse}
-                                        //value={courseData.curiculum_id}
+                                        onChange={handleTagCourse}
+                                        value={tagCourseState.user_id}
                                         >
                                                 {Array.isArray(adminData) && adminData.length > 0 ? (
                                                         adminData.map((data, index) => (
@@ -339,14 +351,14 @@ function Course() {
                                         <InputLabel id="batch-select-label">Select course</InputLabel>
                                         <Select
                                         labelId="course-select-label"
-                                        // name="curiculum_id"
+                                        name="course_id"
                                         label="Select course"
-                                        //onChange={handleCourse}
-                                        //value={courseData.curiculum_id}
+                                        onChange={handleTagCourse}
+                                        value={tagCourseState.course_id}
                                         >
                                                 {Array.isArray(courseList) && courseList.length > 0 ? (
                                                         courseList.map((data, index) => (
-                                                                <MenuItem key={index} value={data?.couse_id}>
+                                                                <MenuItem key={index} value={data?.course_id}>
                                                                 {data?.course_name}
                                                                 </MenuItem>
                                                         ))
@@ -358,7 +370,7 @@ function Course() {
                                 </div>
                       </div>
                       <div className="flex justify-end item-center mt-5">
-                                                <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={CreatCourse}>Save</button>                                                
+                                <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={CreatCourse}>Save</button>                                                
                       </div>
                         </>
             </TagCourse>

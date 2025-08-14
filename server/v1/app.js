@@ -26,6 +26,7 @@ const getCoursesByCuriculumRouter = require('./routes/getCoursesByCurRoute.js');
 const deleteCourseRouter = require('./routes/deleteCourseRoute.js');
 const getAdminRouter = require('./routes/getAdminsRoute.js');
 const getVrDataRouter = require('./routes/getVrDataRoute.js');
+const notifyRouter = require('./routes/notificationRoutes.js')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -54,7 +55,8 @@ app.use(express.urlencoded({extended: true}));
 //Auth route
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter)
-app.use('/api/v1', refreshTokenRouter)
+app.use('/api/v1', refreshTokenRouter);
+app.use('/api/v1', notifyRouter)
 app.use('/api/v1', Authenticate, getVrDataRouter);
 app.use('/api/v1', Authenticate, deleteBatchRouter);
 // batch
