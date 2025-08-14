@@ -1,7 +1,7 @@
 const client = require('../utils/conn');
 const adminm = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [99].includes(Number(requester.role))
+        const isPrivileged = [99, 101].includes(Number(requester.role))
         if(!isPrivileged)
         {
           return resolve({
