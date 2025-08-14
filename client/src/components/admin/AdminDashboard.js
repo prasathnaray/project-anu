@@ -5,9 +5,9 @@ import SideBar from "../sideBar";
 import { ClipboardPenLine, GraduationCap, LayoutDashboard, NotepadText } from "lucide-react";
 import getDashboardAPI from "../../API/dashboardAPI";
 import { Calendar01Icon } from "hugeicons-react";
-import { useNotifications } from '../../Hooks/useNotification';
+// import { useNotifications } from '../../Hooks/useNotification';
 function AdminDashboard(){
-    const { notifications, loading } = useNotifications();
+    // const { notifications, loading } = useNotifications();
     const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
@@ -30,7 +30,7 @@ function AdminDashboard(){
         //console.log(dashboardData);
     }, [])
     console.log(dashboardData)
-        if (loading) return <p>Loading notifications...</p>;
+        // if (loading) return <p>Loading notifications...</p>;
 
     return (
   <div className="flex flex-col min-h-screen">
