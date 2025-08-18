@@ -66,6 +66,10 @@ function Course() {
         course_name: '',
         curiculum_id: ''
     })
+    setTagCourseForm({
+                                user_id: '',
+                                course_id: ''
+                        })  
     setTagCourse(false)
   }
 
@@ -161,7 +165,8 @@ function Course() {
                         const response = await TagCourseAPI(token, tagCourseForm);
                         //console.log(response);
                         toast.success("Successfully tagged");    
-                        handleClose();            
+                        handleClose();    
+                              
                 }
                 catch(err)
                 {
@@ -173,6 +178,16 @@ function Course() {
                                         icon: false,
                                         closeButton: CustomCloseButton,
                                 });
+                        }
+                        else if(err?.response?.data?.code == '23505')
+                        {
+                                toast.error("data already exists", {
+                                        autoClose: 3000,
+                                        icon: false,
+                                        toastId: 'already-exits',
+                                        closeButton: CustomCloseButton,
+                                });
+                                handleClose()
                         }
                 }
             }
