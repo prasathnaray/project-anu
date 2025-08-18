@@ -15,6 +15,7 @@ import GetCoursesAPI from '../API/GetCoursesAPI';
 import DeleteCourseToast from '../utils/deleteCourseToast';
 import TagCourse from '../components/superadmin/TagCourse';
 import GetAdminsAPI from '../API/getAdminsAPI';
+import TagCourseAPI from '../API/TagCourseAPI';
 function Course() {
   //button toggle sidebar
   const [openCourse, setOpenCourse] = useState(false);
@@ -142,6 +143,39 @@ function Course() {
             const toggleDropdown = (index) => {
                 setOpenDropdownIndex(openDropdownIndex === index ? null : index);
             };
+            const [tagCourseForm, setTagCourseForm] = React.useState({
+                user_id: '',
+                course_id: ''
+            })
+            const handleCourseTag = (e) => {
+                const {name, value} = e.target;
+                setTagCourseForm({
+                        ...tagCourseForm,
+                        [name]: value,
+                })
+            }
+            const tagCousesubmit = async() => {
+                try
+                {
+                        const token = localStorage.getItem('user_token')
+                        const response = await TagCourseAPI(token, tagCourseForm);
+                        //console.log(response);
+                        toast.success("Successfully tagged");    
+                        handleClose();            
+                }
+                catch(err)
+                {
+                        if(err?.response?.status == 403)
+                        {
+                                toast.error("please login again" , {
+                                        autoClose: 3000,
+                                        toastId: 'login-again',
+                                        icon: false,
+                                        closeButton: CustomCloseButton,
+                                });
+                        }
+                }
+            }
             React.useEffect(() => {
       const handleClickOutside = (event) => {
                         const isClickInside = Object.values(dropdownRefs.current).some(ref =>
@@ -333,8 +367,8 @@ function Course() {
                                         labelId="user-select-label"
                                         name="user_id"
                                         label="Select User"
-                                        onChange={handleTagCourse}
-                                        value={tagCourseState.user_id}
+                                        onChange={handleCourseTag}
+                                        value={tagCourseForm.user_id}
                                         >
                                                 {Array.isArray(adminData) && adminData.length > 0 ? (
                                                         adminData.map((data, index) => (
@@ -360,8 +394,8 @@ function Course() {
                                         labelId="course-select-label"
                                         name="course_id"
                                         label="Select course"
-                                        onChange={handleTagCourse}
-                                        value={tagCourseState.course_id}
+                                        onChange={handleCourseTag}
+                                        value={tagCourseForm.course_id}
                                         >
                                                 {Array.isArray(courseList) && courseList.length > 0 ? (
                                                         courseList.map((data, index) => (
@@ -377,7 +411,7 @@ function Course() {
                                 </div>
                       </div>
                       <div className="flex justify-end item-center mt-5">
-                                <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={CreatCourse}>Save</button>                                                
+                                <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={tagCousesubmit}>Save</button>                                                
                       </div>
                         </>
             </TagCourse>

@@ -125,7 +125,7 @@ const deleteCoursem = (course_id, requester) => {
 
 const tagCoursem = (user_id, course_id, requester) => {
     return new Promise((resolve, reject) => {
-        const isPriviledged = [].includes(Number(requester.role));
+        const isPriviledged = [99].includes(Number(requester.role));
         if(!isPriviledged)
         {
             return resolve({
