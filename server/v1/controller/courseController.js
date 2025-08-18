@@ -1,4 +1,4 @@
-const {createCoursem, getCoursem, getCoursesByCurm, deleteCoursem} = require("../model/coursem");
+const {createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem} = require("../model/coursem");
 const CourseController = async(req, res) => {
         const requester = req.user;
         const {course_name, curiculum_id} = req.body;
@@ -72,4 +72,17 @@ const courseDeletionController = async(req, res) => {
         res.status(500).json(err)
     }
 }
-module.exports = {CourseController, getCoursesC, getCoursesByCurController, courseDeletionController};
+const tagCourseController = async(req, res) => {
+    const requester = req.user;
+    const {user_id, course_id} = req.body
+    try
+    {
+        const result = await tagCoursem(user_id, course_id, requester);
+        res.status(200).send(result);
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {CourseController, getCoursesC, getCoursesByCurController, courseDeletionController, tagCourseController};

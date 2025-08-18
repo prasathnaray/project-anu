@@ -122,4 +122,28 @@ const deleteCoursem = (course_id, requester) => {
         })
     })
 }
-module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem};
+
+const tagCoursem = (user_id, course_id, requester) => {
+    return new Promise((resolve, reject) => {
+        const isPriviledged = [].includes(Number(requester.role));
+        if(!isPriviledged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: "You don't have a permission"
+            })
+        }
+        client.query('INSERT INTO course_availability(user_id, course_id) VALUES($1, $2)', [user_id, course_id], (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result)
+            }
+        })
+    })
+}
+module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem};

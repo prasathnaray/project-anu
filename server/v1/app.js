@@ -27,6 +27,7 @@ const deleteCourseRouter = require('./routes/deleteCourseRoute.js');
 const getAdminRouter = require('./routes/getAdminsRoute.js');
 const getVrDataRouter = require('./routes/getVrDataRoute.js');
 const notifyRouter = require('./routes/notificationRoutes.js')
+const tagCourseRouter = require('./routes/TagCourseRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -88,3 +89,4 @@ app.use('/api/v1/', Authenticate, getCoursesRouter);
 app.use('/api/v1', Authenticate, getCoursesByCuriculumRouter);
 app.use('/api/v1', Authenticate, deleteCourseRouter);
 app.use('/api/v1', Authenticate, getAdminRouter);
+app.use('/api/v1', Authenticate, tagCourseRouter);
