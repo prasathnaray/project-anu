@@ -256,8 +256,8 @@ function Course() {
                                                                     <thead>
                                                                           <tr className="border-b border-gray-300 shadow-sm">
                                                                                   <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Course Name</div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
-                                                                                  <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                  <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Batch associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                  <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Course availability</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                  {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Batch associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
                                                                                   <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Action</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                           </tr>
                                                                     </thead>
@@ -266,8 +266,7 @@ function Course() {
                                                                         courseList.map((data, index) => (
                                                                         <tr className="text-sm text-gray-700" key={index}>
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">{data?.course_name}</td>
-                                                                                <td className="py-2 px-4 text-gray-600 font-medium border-b-2">--</td>
-                                                                                <td className="py-2 px-4 text-gray-600 font-medium border-b-2">--</td>
+                                                                                <td className="py-2 px-4 text-gray-600 font-medium border-b-2">{data?.access_status === true ? ( <span className="px-2 py-1 bg-green-100 animate duration-0.3 blink text-sm">Approved</span> ): (<span className="px-2 py-1 bg-red-100 text-sm">Request</span>)}</td>
                                                                                 <td className="py-2 px-4 font-semibold border-b-2">
                                                                                                 {/* <button onClick={() => handleDelete(data.course_id)}><EllipsisVerticalIcon size={20}/></button> */}
                                                                                                  <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>

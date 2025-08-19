@@ -55,7 +55,7 @@ const createCoursem = (course_name, curiculum_id, requester) => {
 }
 const getCoursem = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPriviledged = [99, 101].includes(Number(requester.role));
+        const isPriviledged = [101, 99].includes(Number(requester.role));
         if(!isPriviledged)
         {
             return resolve({
@@ -64,7 +64,7 @@ const getCoursem = (requester) => {
                 message: 'You do not have permission to access this course data.'
             })
         }
-        client.query('SELECT * FROM course_data', (err, result) => {
+        client.query('SELECT c.course_id, c.course_name, c.curiculum_id, ca.access_status, ca.user_id FROM course_data c LEFT JOIN course_availability ca ON c.course_id = ca.course_id;', (err, result) => {
             if(err)
             {
                 return reject(err)
