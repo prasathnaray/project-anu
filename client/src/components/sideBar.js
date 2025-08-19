@@ -61,13 +61,30 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </>
               }
               {tokdata.role == 103 && 
-              <>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 mt-2`}><a href="/home" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><Mortarboard02Icon size={26}/>Curriculum</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2`}><a href="/courses" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><CourseIcon size={26}/>Courses</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/analysis" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><ChartRoseIcon size={26}/>Analysis</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/progress" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><ChartBarLineIcon size={26}/>Progress</a></li>
-                <li className={`flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-2 hover:text-white mb-2 `}><a href="/profile" className="flex gap-5" onMouseDown={(e) => ripple.create(e, "dark", "circle")}><UserIcon size={26}/>Profile</a></li>
-              </>
+                  ["home","courses","analysis","progress","profile"].map((route,i) => {
+                    const items = [
+                      { icon: <Mortarboard02Icon size={20}/>, label: "Curriculum" },
+                      { icon: <CourseIcon size={20}/>, label: "Courses" },
+                      { icon: <ChartRoseIcon size={20}/>, label: "Analysis" },
+                      { icon: <ChartBarLineIcon size={20}/>, label: "Progress" },
+                      { icon: <UserIcon size={20}/>, label: "Profile" }
+                    ];
+                    return (
+                      <li key={route}
+                        className={`${data===`/${route}` 
+                          ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-2 mt-2' 
+                          : 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-2 mt-2'}`}
+                        onMouseDown={(e) => ripple.create(e,"dark","circle")}
+                      >
+                        <a href={`/${route}`} className={`${data===`/${route}` ? 'text-white flex gap-5' : 'flex justify-between items-center gap-5 text-gray-500'}`}>
+                          {items[i].icon}
+                          <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>
+                            {items[i].label}
+                          </div>
+                        </a>
+                      </li>
+                    )
+                  })
               }
               {tokdata.role == 101 && 
               <>

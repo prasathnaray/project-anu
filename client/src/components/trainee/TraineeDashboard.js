@@ -4,45 +4,40 @@ import NavBar from '../navBar';
 import { LayoutDashboard } from 'lucide-react';
 
 function TraineeDashboard() {
+  const [progressState, setProgressState] = React.useState(false);
+  const handleProgress = () => {
+    setProgressState(!progressState);
+  }
   const [buttonOpen, setButtonOpen] = useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
   };
   return (
-    
-    <div className={`flex`}>
-                <div>
-                    <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> 
-                </div>
-                <div className={`${
-          buttonOpen === true
-            ? "ms-[221px] flex-grow"
-            : "ms-[85.5px] flex-grow"
-        } `}>
-                        <div>
-                                <NavBar />
-                        </div>
-                        <div className="bg-gray-100 h-screen">
-                                <div className="px-2 grid grid-cols-3 gap-4">
-                                        <div className="border bg-white rounded-sm mt-3 col-span-2">
-                                              <div className="m-2 flex gap-4 items-center">
-                                                <div className="text-white bg-[#8DC63F] p-2 rounded-full"><LayoutDashboard size={21}/></div>
-                                                <span className="text-lg text-gray-500">General Dashboard</span>
-                                              </div>
-                                              <div className="border border-t-1 border-r-0 border-l-0 border-b-0 p-4">
-                                                    <div className="grid grid-cols-3 gap-4">
-                                                            <div className="border p-2 bg-blue-100">sodfj</div>
-                                                            <div className="border p-2 bg-blue-100">dh</div>
-                                                            <div className="border p-2 bg-blue-100">skfj</div>
-                                                    </div>
-                                              </div>
-                                        </div>
-                                        <div className="col-span-1 border bg-white rounded-sm mt-3">
-                                              <div>dcf</div>
-                                        </div>
+    <div className={'flex flex-col min-h-screen'}>
+            <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
+                        <NavBar />
+            </div>
+            <div className="flex flex-grow pt-12">
+                    <div>
+                            <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
+                    </div>
+                    <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
+                          <div className="border bg-white px-10 flex justify-start items-center py-4 gap-5">
+                                      <button className={`${progressState === true ? 'bg-[#8DC63F] text-white transition-all ease-in-out px-4 py-1 rounded-full font-semibold text-sm': 'bg-gray-200 px-4 py-1 rounded-full font-semibold text-gray-600 text-sm transition-all ease-in-out'} `} onClick={handleProgress}>Progress</button>
+                                      <button className="bg-gray-200 px-4 py-1 rounded-full font-semibold text-gray-600 text-sm hover:bg-[#8DC63F] hover:text-white transition-all ease-in-out">My Learning</button>
+                          </div>
+                          <div className="px-10 pt-4">
+                                <div className="grid grid-cols-3 gap-5">
+                                      <div className="col-span-2 border bg-white">
+                                            
+                                      </div>
+                                      <div className="bg-white text-md">
+                                              <div>Hello</div>
+                                      </div>
                                 </div>
-                        </div>
-                </div>
+                          </div>
+                    </div>
+            </div>
     </div>
   )
 }

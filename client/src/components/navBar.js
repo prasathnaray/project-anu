@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
 import { Badge } from "@mui/material";
+import logo from '../assets/image (3).png';
 function NavBar() {
     const tokenRes = jwtDecode(localStorage.getItem("user_token"));
     // console.log(tokenRes);
@@ -47,7 +48,7 @@ function NavBar() {
       <nav className="bg-[#8DC63F] shadow-sm border">
         <div className="flex flex-wrap items-center justify-between py-[3px] px-1">
           <div className="flex justify-start items-center ms-3 gap-10">
-            <div className="text-white">
+            <div className="text-white flex justify-between item-center">
               {currentPath === "/reports" && <div>Reports</div>}
               {currentPath === "/dashboard" && <div>Dashboard</div>}
               {currentPath === "/profile" && <div>Profile</div>}
