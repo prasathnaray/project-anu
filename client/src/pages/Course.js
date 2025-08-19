@@ -164,9 +164,20 @@ function Course() {
                         const token = localStorage.getItem('user_token')
                         const response = await TagCourseAPI(token, tagCourseForm);
                         //console.log(response);
-                        toast.success("Successfully tagged");    
-                        handleClose();    
-                              
+                        if(response.data.error?.code === "23505")
+                        {
+                             toast.error("data already exists", {
+                                        autoClose: 3000,
+                                        icon: false,
+                                        toastId: 'already-exits',
+                                        closeButton: CustomCloseButton,
+                                });   
+                                handleClose();
+                        }
+                        else{
+                            toast.success("Successfully tagged");    
+                            handleClose();        
+                        }             
                 }
                 catch(err)
                 {

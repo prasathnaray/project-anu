@@ -7,15 +7,17 @@ import {
   UserSettings01Icon,
   Logout01Icon
 } from "hugeicons-react";
+import { createClient } from "@supabase/supabase-js";
 import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
 import { Badge } from "@mui/material";
 import logo from '../assets/image (3).png';
+import { supabase } from "../supabaseClient";
 function NavBar() {
     const tokenRes = jwtDecode(localStorage.getItem("user_token"));
-    // console.log(tokenRes);
+    // console.log(tokenRes)
     const ripple = new MaterialRipple();
    const dropdownRefs = useRef({});
   const currentPath = window.location.pathname;
@@ -29,6 +31,8 @@ function NavBar() {
   const toggleDropdown = (index) => {
     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
   };
+
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       const isClickInside = Object.values(dropdownRefs.current).some(ref =>
@@ -42,6 +46,45 @@ function NavBar() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const [count, setCount] = useState(0);
+  const fetchCount = async () => {
+  const { count, error } = await supabase
+    .from("course_availability")
+    .select("*", { count: "exact", head: true }) 
+    .eq("user_id", tokenRes.user_mail)
+    .is("access_status", true); // only pending (unread)
+
+   if (error) {
+      console.error("Error fetching count:", error);
+    } else {
+      console.log(count?? 0)
+      //setCount(count);
+    }
+};
+
+  useEffect(() => {
+    fetchCount();
+
+    // Realtime: listen for new availability entries
+    const channel = supabase
+      .channel("course_availability")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "course_availability" },
+        async (payload) => {
+          if (payload.new.user_id === tokenRes.user_mail) {
+            setCount((prev) => prev + 1);
+            await fetchCount();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
   return (
     <div className="navbar dm-sans">
@@ -92,7 +135,7 @@ function NavBar() {
             </div> */}
             <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
-                  {tokenRes.role == "99" && <div className="text-sm text-gray-100">Welcome Super Admin</div>}
+                  {tokenRes.role == "99" && <div className="text-sm text-gray-100">Welcome Super Admin </div>}
                   {tokenRes.role == "101" && <div className="text-sm text-white">Welcome Admin</div>}
                   {tokenRes.role == "102" && <div className="text-sm text-white">Welcome Instructor</div>}
               </div>
@@ -107,7 +150,7 @@ function NavBar() {
             <div className="relative md:block">
               <div className="px-3 py-2 ms-1 text-gray-200">
                 <div className="">
-                  <Badge badgeContent={'0'} color="error">
+                  <Badge badgeContent={count} color="error">
                         <Bell size={20} />
                   </Badge>
                 </div>

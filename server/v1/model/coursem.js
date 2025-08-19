@@ -1,4 +1,5 @@
 const client = require('../utils/conn.js');
+const supabase = require('../supaBaseClient.js');
 
 const coursem = (requester) => {
     return new Promise((resolve, reject) => {
@@ -123,7 +124,7 @@ const deleteCoursem = (course_id, requester) => {
     })
 }
 
-const tagCoursem = (user_id, course_id, requester) => {
+const tagCoursem = async(user_id, course_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99].includes(Number(requester.role));
         if(!isPriviledged)
@@ -134,16 +135,23 @@ const tagCoursem = (user_id, course_id, requester) => {
                 message: "You don't have a permission"
             })
         }
-        client.query('INSERT INTO course_availability(user_id, course_id) VALUES($1, $2)', [user_id, course_id], (err, result) => {
-            if(err)
-            {
-                return reject(err)
-            }
-            else
-            {
-                return resolve(result)
-            }
+        resolve(supabase
+        .from('course_availability')
+        .insert({
+            user_id: user_id,
+            course_id: course_id,
         })
+    )
+        // client.query('INSERT INTO course_availability(user_id, course_id) VALUES($1, $2)', [user_id, course_id], (err, result) => {
+        //     if(err)
+        //     {
+        //         return reject(err)
+        //     }
+        //     else
+        //     {
+        //         return resolve(result)
+        //     }
+        // })
     })
 }
 module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem};

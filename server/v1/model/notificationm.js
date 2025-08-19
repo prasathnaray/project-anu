@@ -1,12 +1,10 @@
 const supabase = require('../supaBaseClient.js');
-const createNotification = async({ senderId, receiverId, message, link }) => {
+const tagCourseNotification = async({user_id, course_id}) => {
     return await supabase
-        .from('notifications')
+        .from('course_availability')
         .insert({
-            sender_id: senderId,
-            receiver_id: receiverId,
-            message,
-            link
+            user_id: user_id,
+            course_id: course_id,
         });
 }
-module.exports = createNotification;
+module.exports = tagCourseNotification;
