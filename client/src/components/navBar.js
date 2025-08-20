@@ -59,8 +59,8 @@ function NavBar() {
    if (error) {
       console.error("Error fetching count:", error);
     } else {
-      console.log(count?? 0)
-      //setCount(count);
+      //console.log(count?? 0)
+      setCount(count);
     }
 };
 
@@ -141,7 +141,7 @@ function NavBar() {
               </div>
             </div>
             <div className="relative md:block">
-              <div className="px-2 py-2 ms-1 text-gray-200">
+              <div className="px-3 py-2 ms-1 text-gray-200">
                 <button className="">
                   <Search size={20} />
                 </button>
@@ -150,7 +150,7 @@ function NavBar() {
             <div className="relative md:block">
               <div className="px-3 py-2 ms-1 text-gray-200">
                 <div className="">
-                  <Badge badgeContent={count} color="error">
+                  <Badge badgeContent={`${count}`} color="error">
                         <Bell size={20} />
                   </Badge>
                 </div>
