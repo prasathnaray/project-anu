@@ -2,6 +2,7 @@ import * as React from 'react';
 import { PieChart, pieArcClasses, pieClasses } from '@mui/x-charts/PieChart';
 import axios from 'axios';
 import { useState } from 'react';
+import GetgenderRatioAPI from '../API/GetgenderRatioAPI';
 
 export default function BasicPie() {
   const palette = ['#8DC63F', '#36A2EB', '#FFC107', '#FF5722'];
@@ -10,11 +11,7 @@ export default function BasicPie() {
   const handleAnalytics = async () => {
     try {
       const token = localStorage.getItem('user_token');
-      const response = await axios.get('http://localhost:4004/api/v1/get-gender-ratio', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      // ✅ Transform API response into PieChart format
+      const response = await GetgenderRatioAPI(token)
       const transformed = response.data.map((item, idx) => ({
         id: idx,
         value: Number(item.count),
@@ -30,7 +27,7 @@ export default function BasicPie() {
   React.useEffect(() => {
     handleAnalytics();
   }, []);
-
+  
   return (
     <PieChart
       colors={palette}
