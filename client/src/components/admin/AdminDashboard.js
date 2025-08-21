@@ -5,6 +5,7 @@ import SideBar from "../sideBar";
 import { ClipboardPenLine, GraduationCap, LayoutDashboard, NotepadText } from "lucide-react";
 import getDashboardAPI from "../../API/dashboardAPI";
 import { Calendar01Icon } from "hugeicons-react";
+import BasicPie from "../../charts/PieChart";
 // import { useNotifications } from '../../Hooks/useNotification';
 function AdminDashboard(){
     // const { notifications, loading } = useNotifications();
@@ -90,6 +91,12 @@ function AdminDashboard(){
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+            <div className="my-2 mx-5 text-lg">Gender Population</div>
+            <div className="flex justify-start items-center">
+              <div className="ms-5">
+                <BasicPie />
               </div>
             </div>
           </div>

@@ -5,7 +5,8 @@ import {
   Megaphone01Icon,
   Search02Icon,
   UserSettings01Icon,
-  Logout01Icon
+  Logout01Icon,
+  CircleIcon
 } from "hugeicons-react";
 import { createClient } from "@supabase/supabase-js";
 import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon} from 'lucide-react';
@@ -15,6 +16,12 @@ import { jwtDecode } from "jwt-decode";
 import { Badge } from "@mui/material";
 import logo from '../assets/image (3).png';
 import { supabase } from "../supabaseClient";
+import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AlarmIcon from '@mui/icons-material/Alarm';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+// import CircleIcon from '@mui/icons-material/Circle';
 function NavBar() {
     const tokenRes = jwtDecode(localStorage.getItem("user_token"));
     // console.log(tokenRes)
@@ -49,10 +56,12 @@ function NavBar() {
   }, []);
 
   const [count, setCount] = useState(0);
+  const [notify, setNotify] = useState([])
   const fetchCount = async () => {
-  const { count, error } = await supabase
+  const {data, count, error } = await supabase
     .from("course_availability")
-    .select("*", { count: "exact", head: true }) 
+    // .select("*", { count: "exact", head: true }) 
+    .select("course_id, access_status", { count: "exact" }) 
     .eq("user_id", tokenRes.user_mail)
     .is("access_status", true); // only pending (unread)
 
@@ -61,6 +70,7 @@ function NavBar() {
     } else {
       //console.log(count?? 0)
       setCount(count);
+      setNotify(data || [])
     }
 };
 
@@ -150,9 +160,56 @@ function NavBar() {
             <div className="relative md:block">
               <div className="px-3 py-2 ms-1 text-gray-200">
                 <div className="">
-                  <Badge badgeContent={`${count}`} color="error">
-                        <Bell size={20} />
-                  </Badge>
+                  <button
+                    onClick={() => toggleDropdown('notifications')}
+                    className="relative"
+                  >
+                    <Badge badgeContent={`${count}`} color="error">
+                      <Bell size={20} />
+                    </Badge>
+                  </button>
+                  {openDropdownIndex === 'notifications' && (
+                      <div
+                        ref={(el) => (dropdownRefs.current['notifications'] = el)}
+                        className="absolute right-0 mt-1 w-[480px] bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
+                      >
+                        <div className="p-3 border-b text-gray-700 text-xl">Notifications</div>
+
+                        {notify.length > 0 ? (
+                          <ul className="max-h-60 overflow-y-auto">
+                            {notify.map((n, idx) => (
+                              <li
+                                key={idx}
+                                className="px-4 py-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="text-black text-xs">
+                                      Course - {n.course_id} has been added
+                                  </div>
+                                  <IconButton
+                                    aria-label="delete"
+                                  >
+                                      <Badge badgeContent={''} 
+                                             color="success"
+                                             sx={{
+                                              "& .MuiBadge-badge": {
+                                                minWidth: "8px",
+                                                height: "8px",
+                                                padding: 0,
+                                                borderRadius: "50%",
+                                              },
+                                            }}
+                                      ></Badge>
+                                  </IconButton>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div className="p-4 text-gray-500 text-sm">No new notifications</div>
+                        )}
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
