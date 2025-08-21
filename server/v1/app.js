@@ -61,7 +61,6 @@ app.use('/api/v1', notifyRouter)
 app.use('/api/v1', Authenticate, getVrDataRouter);
 app.use('/api/v1', Authenticate, deleteBatchRouter);
 // batch
-
 app.use('/api/v1', Authenticate, ProfileRouter);
 app.use('/api/v1', Authenticate, getTraineeRouter);
 app.use('/api/v1/', Authenticate, disableTraineeRoute)
