@@ -57,31 +57,13 @@ function NavBar() {
 
   const [count, setCount] = useState(0);
   const [notify, setNotify] = useState([]);
-     const readNotification = async(id) => {
-        //const token = localStorage.getItem()
-        const {error} = await supabase
-          .from('course_availability')
-          .update({ access_status: true })
-          .eq("course_id", id)
-          .eq("user_id", tokenRes.user_mail);
-        if (error) {
-            console.error("Error marking as read:", error);
-        } else {
-          setNotify((prev) =>
-            prev.map((n) =>
-              n.course_id === id ? { ...n, access_status: false } : n
-            )
-          );
-          setCount((prev) => prev - 1);
-       }  
-  }
   const fetchCount = async () => {
   const {data, count, error } = await supabase
     .from("course_availability")
     // .select("*", { count: "exact", head: true }) 
-    .select("course_id, access_status", { count: "exact" }) 
+    .select("course_id, access_status, is_read", { count: "exact" }) 
     .eq("user_id", tokenRes.user_mail)
-    .is("access_status", true); // only pending (unread)
+    .is("is_read", false); // only pending (unread)
 
    if (error) {
       console.error("Error fetching count:", error);
@@ -91,7 +73,25 @@ function NavBar() {
       setNotify(data || [])
     }
 };
-
+const readNotification = async(id) => {
+        //const token = localStorage.getItem()
+        const {error} = await supabase
+          .from('course_availability')
+          .update({is_read: true })
+          .eq("course_id", id)
+          .eq("user_id", tokenRes.user_mail);
+        if (error) {
+            console.error("Error marking as read:", error);
+        } else {
+          setNotify((prev) =>
+            prev.map((n) =>
+              n.course_id === id ? { ...n, is_read: true } : n
+            )
+          );
+          setCount((prev) => Math.max(prev - 1, 0));
+       } 
+       fetchCount();  
+}
   useEffect(() => {
     fetchCount();
 
