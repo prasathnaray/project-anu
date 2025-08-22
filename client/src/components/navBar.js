@@ -56,7 +56,25 @@ function NavBar() {
   }, []);
 
   const [count, setCount] = useState(0);
-  const [notify, setNotify] = useState([])
+  const [notify, setNotify] = useState([]);
+     const readNotification = async(id) => {
+        //const token = localStorage.getItem()
+        const {error} = await supabase
+          .from('course_availability')
+          .update({ access_status: false })
+          .eq("course_id", id)
+          .eq("user_id", tokenRes.user_mail);
+        if (error) {
+            console.error("Error marking as read:", error);
+        } else {
+          setNotify((prev) =>
+            prev.map((n) =>
+              n.course_id === id ? { ...n, access_status: false } : n
+            )
+          );
+          setCount((prev) => prev - 1);
+       }  
+  }
   const fetchCount = async () => {
   const {data, count, error } = await supabase
     .from("course_availability")
@@ -186,6 +204,7 @@ function NavBar() {
                                   <div className="text-black text-xs">
                                       Course - {n.course_id} has been added
                                   </div>
+                                  <button onClick={() => {readNotification(n.course_id)}}>
                                   <IconButton
                                     aria-label="delete"
                                   >
@@ -201,6 +220,7 @@ function NavBar() {
                                             }}
                                       ></Badge>
                                   </IconButton>
+                                  </button>
                                 </div>
                               </li>
                             ))}
