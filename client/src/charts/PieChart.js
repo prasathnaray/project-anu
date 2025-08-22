@@ -23,11 +23,9 @@ export default function BasicPie() {
       console.log(err);
     }
   };
-
   React.useEffect(() => {
     handleAnalytics();
   }, []);
-  
   return (
     <PieChart
       colors={palette}
