@@ -61,7 +61,7 @@ function NavBar() {
         //const token = localStorage.getItem()
         const {error} = await supabase
           .from('course_availability')
-          .update({ access_status: false })
+          .update({ access_status: true })
           .eq("course_id", id)
           .eq("user_id", tokenRes.user_mail);
         if (error) {
