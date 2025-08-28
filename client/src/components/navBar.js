@@ -152,13 +152,6 @@ const readNotification = async(id) => {
               </svg>
               <span className="sr-only">Searchh</span>
             </button>
-             {/* <div className="relative md:block">
-              <div className="px-2 py-2 ms-3 text-gray-200 hover:text-[#8DC63F]">
-                <button className="">
-                  <MessageCircleMore size={20} />
-                </button>
-              </div>
-            </div> */}
             <div className="relative md:block">
               <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
                   {tokenRes.role == "99" && <div className="text-sm text-gray-100">Welcome Super Admin </div>}
