@@ -91,11 +91,9 @@ const readNotification = async(id) => {
           setCount((prev) => Math.max(prev - 1, 0));
        } 
        fetchCount();  
-}
+ }
   useEffect(() => {
     fetchCount();
-
-    // Realtime: listen for new availability entries
     const channel = supabase
       .channel("course_availability")
       .on(
