@@ -63,7 +63,7 @@ app.use('/api/v1', ForgotPRouter)
 app.use('/api/v1', refreshTokenRouter);
 app.use('/api/v1', getIndividualIvsRouter);
 app.use('/api/v1', notifyRouter);
-app.use('/api/v1', tokenIvsRouter);
+app.use('/api/v1', Authenticate, tokenIvsRouter);
 app.use('/api/v1', Authenticate, getVrDataRouter);
 app.use('/api/v1', Authenticate, deleteBatchRouter);
 // batch

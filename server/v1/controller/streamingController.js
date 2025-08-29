@@ -1,6 +1,7 @@
 const ivsClient = require('../utils/ivssetup');
 const { GetChannelCommand, GetStreamCommand} = require("@aws-sdk/client-ivs");
 const generateToken = require('../utils/generateIvsToken');
+const {streamData} = require('../model/vrModel')
 const getIndividualStreamingData = async(req, res) => {
     // try
     // {
@@ -43,20 +44,27 @@ const getIndividualStreamingData = async(req, res) => {
 
 
 const tokenIvs = async(req, res) => {
+    const requester = req.user;
     const {stageArn, userId, capabilities, attributes, duration} = req.body;
     try
     {
-         const tokenResponse = await generateToken(
-            stageArn,
-            userId || "user-" + Math.random().toString(36).substring(2, 8),
-            capabilities || ["PUBLISH", "SUBSCRIBE"],
-            attributes || {},
-            duration || 720
-        );
-        res.status(200).json(tokenResponse);
+        //  const tokenResponse = await generateToken(
+        //     stageArn,
+        //     userId || "user-" + Math.random().toString(36).substring(2, 8),
+        //     capabilities || ["PUBLISH", "SUBSCRIBE"],
+        //     attributes || {},
+        //     duration || 720
+        // );
+        // const participant = tokenResponse?.participantToken;
+        const result = await streamData(requester, stageArn, userId, capabilities, attributes, duration)
+        res.status(200).json({
+            //token: tokenResponse?.participantToken,
+            result: result
+        });
     }
     catch(err)
     {
+        console.log(err)
         res.status(500).send(err)
     }
 }
