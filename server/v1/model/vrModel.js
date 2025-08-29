@@ -16,4 +16,4 @@ const vrModel = (requester, data_check) => {
         })
     })
 }
-module.exports = vrModel;
+module.exports = {vrModel};

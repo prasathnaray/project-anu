@@ -4,6 +4,8 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'react-toastify/dist/ReactToastify.css';
+import "lity/dist/lity.css";
+import "lity/dist/lity.js";   // attaches itself to jQuery
 import { ToastContainer, toast, Slide, Zoom } from 'react-toastify';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

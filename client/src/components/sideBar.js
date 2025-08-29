@@ -18,6 +18,7 @@ import {
   Message01Icon,
   StudentCardIcon,
   ChartRoseIcon,
+  WirelessCloudAccessIcon,
 } from "hugeicons-react";
 import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
@@ -61,13 +62,14 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </>
               }
               {tokdata.role == 103 && 
-                  ["home","courses","analysis","progress","profile"].map((route,i) => {
+                  ["home","courses","analysis","progress","profile", "vrspace"].map((route,i) => {
                     const items = [
                       { icon: <Mortarboard02Icon size={20}/>, label: "Curriculum" },
                       { icon: <CourseIcon size={20}/>, label: "Courses" },
                       { icon: <ChartRoseIcon size={20}/>, label: "Analysis" },
                       { icon: <ChartBarLineIcon size={20}/>, label: "Progress" },
-                      { icon: <UserIcon size={20}/>, label: "Profile" }
+                      { icon: <UserIcon size={20}/>, label: "Profile" }, 
+                      {icon:  <WirelessCloudAccessIcon size={20} />, label: "Stream"}
                     ];
                     return (
                       <li key={route}

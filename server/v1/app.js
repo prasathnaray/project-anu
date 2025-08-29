@@ -29,7 +29,10 @@ const getVrDataRouter = require('./routes/getVrDataRoute.js');
 const notifyRouter = require('./routes/notificationRoutes.js')
 const tagCourseRouter = require('./routes/TagCourseRoute.js');
 const getGendersRoute = require('./routes/getGendersRoutes.js');
+const getIndividualIvsRouter = require('./routes/individualIvsRoute.js');
+const tokenIvsRouter = require('./routes/tokenIvsRoute.js');
 const Authenticate = require('./Auth/Authenticate');
+
 //enabling cors
 const cors = require('cors');
 const createTraineeRouter = require('./routes/createtraineeRoute');
@@ -58,7 +61,9 @@ app.use(express.urlencoded({extended: true}));
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter)
 app.use('/api/v1', refreshTokenRouter);
-app.use('/api/v1', notifyRouter)
+app.use('/api/v1', getIndividualIvsRouter);
+app.use('/api/v1', notifyRouter);
+app.use('/api/v1', tokenIvsRouter);
 app.use('/api/v1', Authenticate, getVrDataRouter);
 app.use('/api/v1', Authenticate, deleteBatchRouter);
 // batch
@@ -90,4 +95,4 @@ app.use('/api/v1', Authenticate, getCoursesByCuriculumRouter);
 app.use('/api/v1', Authenticate, deleteCourseRouter);
 app.use('/api/v1', Authenticate, getAdminRouter);
 app.use('/api/v1', Authenticate, tagCourseRouter);
-app.use('/api/v1', Authenticate, getGendersRoute)
+app.use('/api/v1', Authenticate, getGendersRoute);

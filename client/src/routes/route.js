@@ -15,6 +15,7 @@ import AddCourse from '../components/admin/AddCourse';
 import Curiculum from '../pages/Curiculum';
 import BatchIndividual from '../pages/BatchIndividual';
 import Requests from '../pages/Requests';
+import Stream from '../pages/Stream';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -34,6 +35,7 @@ function RoutesPath() {
                             <Route path="/curriculum" element={<Curiculum />} />
                             <Route path="/batch/:batch_id" element={<BatchIndividual />} />
                             <Route path="/all-requests" element={<Requests />} />
+                            <Route path="/vrspace" element={<Stream />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

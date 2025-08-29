@@ -13,7 +13,9 @@
   "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-ivs": "^3.876.0",
+    "@aws-sdk/client-ivs-realtime": "^3.876.0",
     "@aws-sdk/client-ivschat": "^3.876.0",
+    "@aws-sdk/credential-providers": "^3.876.0",
     "@supabase/supabase-js": "^2.50.5",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
