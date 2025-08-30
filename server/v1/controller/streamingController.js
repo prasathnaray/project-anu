@@ -44,7 +44,7 @@ const getIndividualStreamingData = async(req, res) => {
 
 
 const tokenIvs = async(req, res) => {
-    const requester = req.user;
+    //const requester = req.user;
     const {stageArn, userId, capabilities, attributes, duration} = req.body;
     try
     {
@@ -56,7 +56,7 @@ const tokenIvs = async(req, res) => {
         //     duration || 720
         // );
         // const participant = tokenResponse?.participantToken;
-        const result = await streamData(requester, stageArn, userId, capabilities, attributes, duration)
+        const result = await streamData(stageArn, userId, capabilities, attributes, duration)
         res.status(200).json({
             //token: tokenResponse?.participantToken,
             result: result
