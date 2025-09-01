@@ -173,6 +173,7 @@ function Course() {
                                         closeButton: CustomCloseButton,
                                 });   
                                 handleClose();
+                                GetCoursesList();
                         }
                         else{
                             toast.success("Successfully tagged");    

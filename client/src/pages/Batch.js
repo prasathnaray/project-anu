@@ -80,6 +80,11 @@ function Batch()  {
         const [rowsPerPage, setRowsPerPage] = React.useState(2);
         const [rowCount, setRowCount] = useState(0);
         const [corList, setCorList] = useState({});
+
+
+        /// batch search options
+                        
+        //
         const handleChangePage = (event, newPage) => {
                 setPage(newPage);
         };
@@ -175,6 +180,11 @@ function Batch()  {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+//batch data search
+             const [searchItem, setSearchItem] = React.useState('');
+             const [filteredUsers, setFilteredUsers] = useState([])
+
+        //
         const BatchesData = async(token) => {
                         //e.preventDefault()
                         try
@@ -182,12 +192,28 @@ function Batch()  {
                                 const result = await GetBatchesAPI(token);
                                 setListBatch(result.data.rows);
                                 setRowCount(result.data.rowCount);
+                                setFilteredUsers(result.data.rows)
                         }
                         catch(err)
                         {
                                 console.log(err)
                         }
         }
+
+        const handleSearchChange = (e) => {
+                        const value = e.target.value.toLowerCase();
+                        setSearchItem(value);
+
+                        if (!value) {
+                        setFilteredUsers(listBatch); // show all if search is cleared
+                        } else {
+                        const filtered = listBatch.filter((batch) =>
+                        batch.batch_name?.toLowerCase().includes(value)
+                        );
+                        setFilteredUsers(filtered);
+                        }
+        };
+
         useEffect(() => {
                 BatchesData(token)
         }, [])
@@ -297,7 +323,8 @@ function Batch()  {
                                                         <div className=""><input
                                                             type="text"
                                                             placeholder="Search Batch"
-                                                            name="reset_password_mail"
+                                                            value={searchItem}
+                                                            onChange={handleSearchChange}
                                                             className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                         /></div>
                                                         <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={() => setOpenBatch(true)}>Create Batch</button></div>
@@ -313,8 +340,8 @@ function Batch()  {
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>
                                                                 </tr>
                                                         </thead>
-                                                        <tbody>
-                                                               {listBatch.length > 0 ? (
+                                                        {/* <tbody> */}
+                                                               {/* {listBatch.length > 0 ? (
                                                                         listBatch.map((listBatch, index) => (
                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold"><a href={`/batch/${listBatch.batch_id}`}>{listBatch.batch_name}</a></td>
@@ -334,7 +361,6 @@ function Batch()  {
                                                                                                 >
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
-                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
@@ -350,8 +376,42 @@ function Batch()  {
                                                                                         No data found
                                                                                 </td>
                                                                         </tr>
-                                                                  )}  
-                                                        </tbody>
+                                                                  )}   */}
+
+                                                                  <tbody>
+                                                                                {filteredUsers.length > 0 ? (
+                                                                                filteredUsers.map((listBatch, index) => (
+                                                                                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
+                                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                        <a href={`/batch/${listBatch.batch_id}`}>{listBatch.batch_name}</a>
+                                                                                        </td>
+                                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                        {getMonthYear(listBatch.batch_start_date)}
+                                                                                        </td>
+                                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                        {getMonthYear(listBatch.batch_end_date)}
+                                                                                        </td>
+                                                                                        <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
+                                                                                        </th>
+                                                                                        <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count}
+                                                                                        </th>
+                                                                                        <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                        {/* dropdown actions */}
+                                                                                        </th>
+                                                                                </tr>
+                                                                                ))
+                                                                                ) : (
+                                                                                <tr>
+                                                                                <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                                        No data found
+                                                                                </td>
+                                                                                </tr>
+                                                                                )}
+                                                                </tbody>
+
+                                                        {/* </tbody> */}
                                                 </table>
                                                 <div className="flex justify-end items-center mt-6 gap-10">
                                                         <TablePagination 

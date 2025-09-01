@@ -107,8 +107,8 @@ function AdminDashboard(){
                   </div>
                   <span className="text-lg text-gray-500">Approvals</span>
                 </div>
-                <div className="border">
-
+                <div className="flex items-center justify-center">
+                      No data to show
                 </div>
           </div>
         </div>

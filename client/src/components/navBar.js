@@ -122,9 +122,10 @@ const readNotification = async(id) => {
               {currentPath === "/dashboard" && <div>Dashboard</div>}
               {currentPath === "/profile" && <div>Profile</div>}
               {currentPath === "/settings" && <div>Settings</div>}
-              {currentPath === "/course" && <div>Course</div>}
+              {currentPath === "/course" && <div>Courses</div>}
               {currentPath === "/batch" && <div>Course</div>}
               {currentPath === "/instructors" && <div>Instructors</div>}
+              {currentPath === "/trainees" && <div>Trainees</div>}
             </div>
           </div>
           <div className="flex md:order-2">
