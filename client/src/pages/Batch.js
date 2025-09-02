@@ -404,9 +404,9 @@ function Batch()  {
                                                                                 ))
                                                                                 ) : (
                                                                                 <tr>
-                                                                                <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
-                                                                                        No data found
-                                                                                </td>
+                                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                                                No data found
+                                                                                        </td>
                                                                                 </tr>
                                                                                 )}
                                                                 </tbody>

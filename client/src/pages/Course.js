@@ -262,7 +262,9 @@ function Course() {
                                                                   className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                                 />
                                                               </div>
-                                                              <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={() => setOpenCourse(true)}>Add Course</button></div>
+                                                              {jwtDecode(localStorage.getItem('user_token')).role == 99 && (
+                                                                        <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={() => setOpenCourse(true)}>Add Course</button></div>
+                                                              )}
                                                           </div>
                                                           <table className="w-full text-left border-collapse">
                                                                     <thead>
@@ -299,7 +301,14 @@ function Course() {
                                                                                                                                                                                                                         >
                                                                                                                                                                                                                         Tag Course
                                                                                                                                                                                                                         </button>
-                                                                                                                                                                                                                        )}
+                                                                                                                                                                                                                )}
+                                                                                                                                                                                                                {jwtDecode(localStorage.getItem('user_token')).role == 101 && (
+                                                                                                                                                                                                                        <button
+                                                                                                                                                                                                                                className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                                                                                                                                                                                                        >
+                                                                                                                                                                                                                                Request
+                                                                                                                                                                                                                        </button>
+                                                                                                                                                                                                                )}
                                                                                                                                                                                                                 {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
                                                                                                 
                                                                                                                                                                                                 </div>
