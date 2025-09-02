@@ -1,4 +1,4 @@
-const {createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem} = require("../model/coursem");
+const {createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem, requestCoursem} = require("../model/coursem");
 const CourseController = async(req, res) => {
         const requester = req.user;
         const {course_name, curiculum_id} = req.body;
@@ -91,4 +91,26 @@ const tagCourseController = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {CourseController, getCoursesC, getCoursesByCurController, courseDeletionController, tagCourseController};
+const requestCourseController = async(req, res) => {
+    const requester = req.user;
+    const {course_id} = req.body;
+
+    if(!course_id){
+        return res.status(403).json({
+            code: 403,
+            status: 'Field should not be empty'
+        })
+    }
+
+    try
+    {
+        const result = await requestCoursem(course_id, requester);
+        res.status(200).send(result);
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+        console.log(err)
+    }
+}
+module.exports = {CourseController, getCoursesC, getCoursesByCurController, courseDeletionController, tagCourseController, requestCourseController};

@@ -154,10 +154,9 @@ const tagCoursem = async(user_id, course_id, requester) => {
         // })
     })
 }
-
-const requestCoursem = async(user_id, course_id, requester) => {
+const requestCoursem = async(course_id, requester) => {
     return new Promise((resolve, reject) => {
-        const isPriviledged = [101].includes(Number(requester.role))
+        const isPriviledged = [101, 99].includes(Number(requester.role))
         if(!isPriviledged)
         {
             return resolve({
@@ -169,10 +168,11 @@ const requestCoursem = async(user_id, course_id, requester) => {
         resolve(supabase
             .from('course_availability')
             .insert({
-                user_id: user_id,
-                course_id: course_id
+                user_id: requester.user_mail,
+                course_id: course_id,
+                access_status: false
             })
         )
     })
 }
-module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem};
+module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem, requestCoursem};

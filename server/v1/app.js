@@ -31,6 +31,7 @@ const tagCourseRouter = require('./routes/TagCourseRoute.js');
 const getGendersRoute = require('./routes/getGendersRoutes.js');
 const getIndividualIvsRouter = require('./routes/individualIvsRoute.js');
 const tokenIvsRouter = require('./routes/tokenIvsRoute.js');
+const requestCourseRouter = require('./routes/RequestCourseRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 
 //enabling cors
@@ -96,3 +97,4 @@ app.use('/api/v1', Authenticate, deleteCourseRouter);
 app.use('/api/v1', Authenticate, getAdminRouter);
 app.use('/api/v1', Authenticate, tagCourseRouter);
 app.use('/api/v1', Authenticate, getGendersRoute);
+app.use('/api/v1', Authenticate, requestCourseRouter);
