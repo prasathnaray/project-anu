@@ -154,4 +154,25 @@ const tagCoursem = async(user_id, course_id, requester) => {
         // })
     })
 }
+
+const requestCoursem = async(user_id, course_id, requester) => {
+    return new Promise((resolve, reject) => {
+        const isPriviledged = [101].includes(Number(requester.role))
+        if(!isPriviledged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: "You don't have a permission"
+            })
+        }
+        resolve(supabase
+            .from('course_availability')
+            .insert({
+                user_id: user_id,
+                course_id: course_id
+            })
+        )
+    })
+}
 module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem};
