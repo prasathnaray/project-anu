@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IVS Publisher Test</title>
+    <script src="https://web-broadcast.live-video.net/1.28.0/amazon-ivs-web-broadcast.js"></script>
+</head>
+<body>
+    <h2>IVS Publisher Test</h2>
+    <video id="localVideo" autoplay playsinline muted style="width: 400px; border: 2px solid blue;"></video>
+    <br>
+    <button onclick="startPublishing()">Start Publishing</button>
+    <button onclick="stopPublishing()">Stop Publishing</button>
+    
+    <div id="status">Status: Ready</div>
+    <div id="debug"></div>
+
+    <script>
+    let stage = null;
+    let localStream = null;
+
+    async function startPublishing() {
+        try {
+            document.getElementById('status').textContent = 'Status: Getting token...';
+            
+            // Get token from your backend
+            const response = await fetch('http://localhost:4004/api/v1/tokenn', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    stageArn: "arn:aws:ivs:ap-south-1:299822065337:stage/zFMYIVZchIZO",
+                    userId: "test-publisher-" + Date.now(),
+                    capabilities: ["PUBLISH", "SUBSCRIBE"],
+                    duration: 1440
+                })
+            });
+            
+            const data = await response.json();
+            const token = data.result.data.token;
+            
+            document.getElementById('status').textContent = 'Status: Getting camera access...';
+            
+            // Get camera access
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: true, 
+                audio: true 
+            });
+            
+            // Show local preview
+            document.getElementById('localVideo').srcObject = localStream;
+            
+            document.getElementById('status').textContent = 'Status: Connecting to IVS...';
+            
+            // Create IVS stage
+            stage = new IVSStage.Stage(token, {
+                localStageStream: new IVSStage.LocalStageStream(localStream),
+                shouldPublishToStage: () => true,
+                getPublishConfiguration: () => ({ 
+                    video: true, 
+                    audio: true 
+                }),
+            });
+
+            stage.on('connected', () => {
+                document.getElementById('status').textContent = 'Status: Connected to IVS!';
+            });
+
+            stage.on('error', (err) => {
+                document.getElementById('status').textContent = 'Status: Error - ' + err.message;
+            });
+
+            await stage.join();
+            document.getElementById('status').textContent = 'Status: Publishing LIVE!';
+            
+        } catch (error) {
+            document.getElementById('status').textContent = 'Status: Error - ' + error.message;
+            console.error('Publishing error:', error);
+        }
+    }
+
+    async function stopPublishing() {
+        if (stage) {
+            await stage.leave();
+            stage = null;
+        }
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+        }
+        document.getElementById('localVideo').srcObject = null;
+        document.getElementById('status').textContent = 'Status: Stopped';
+    }
+    </script>
+</body>
+</html>

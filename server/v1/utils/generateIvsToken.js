@@ -10,7 +10,7 @@ const ivsClientt = new IVSRealTimeClient({
     secretAccessKey: process.env.AWS_IVS_SECRET_KEY,
   },
 });
-const generateToken = async (stageArn, userId, capabilities, attributes, duration) => {
+const generateToken = async(stageArn, userId, capabilities, attributes, duration) => {
   const command = new CreateParticipantTokenCommand({
     stageArn,
     userId,

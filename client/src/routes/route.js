@@ -16,6 +16,9 @@ import Curiculum from '../pages/Curiculum';
 import BatchIndividual from '../pages/BatchIndividual';
 import Requests from '../pages/Requests';
 import Stream from '../pages/Stream';
+// import Publisher from '../components/testComp';
+import IvsSubscriber from '../components/testComp';
+import IvsPublisher from '../components/ivsPublish';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -36,6 +39,8 @@ function RoutesPath() {
                             <Route path="/batch/:batch_id" element={<BatchIndividual />} />
                             <Route path="/all-requests" element={<Requests />} />
                             <Route path="/vrspace" element={<Stream />} />
+                            <Route path="/video" element={<IvsSubscriber />} />
+                            <Route path="/publish" element={<IvsPublisher />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

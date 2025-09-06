@@ -1,0 +1,551 @@
+// import React, { useEffect, useRef, useState } from "react";
+// import { Stage } from "amazon-ivs-web-broadcast";
+// import { jwtDecode } from "jwt-decode";
+
+// export default function IvsSubscriber() {
+//   const videoRef = useRef(null);
+//   const stageRef = useRef(null);
+//   const [error, setError] = useState(null);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [isStreamActive, setIsStreamActive] = useState(false);
+//   const [debugInfo, setDebugInfo] = useState("");
+
+//   useEffect(() => {
+//     console.log("Component mounted, videoRef:", videoRef.current);
+//     setDebugInfo("Component mounted");
+
+//     async function joinAsSubscriber() {
+//       try {
+//         setIsLoading(true);
+//         setDebugInfo("Getting token...");
+        
+//         // 1️⃣ Get token
+//         const tokenn = localStorage.getItem("user_token");
+//         if (!tokenn) throw new Error("No user token found");
+
+//         const decoded = jwtDecode(tokenn);
+//         const userMail = decoded.user_mail;
+
+//         const res = await fetch("http://localhost:4004/api/v1/tokenn", {
+//           method: "POST",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({
+//             stageArn: "arn:aws:ivs:ap-south-1:299822065337:stage/zFMYIVZchIZO",
+//             userId: userMail,
+//             capabilities: ["SUBSCRIBE"]
+//           }),
+//         });
+
+//         if (!res.ok) {
+//           throw new Error(`Token fetch failed: ${res.status} ${res.statusText}`);
+//         }
+
+//         const data = await res.json();
+//         const token = data.result.data.token;
+//         if (!token) throw new Error("No token received from backend");
+
+//         setDebugInfo("Token received, initializing stage...");
+
+//         // 2️⃣ Initialize Stage
+//         const stage = new Stage(token, {
+//           shouldSubscribeToParticipant: (participant) => {
+//             console.log("Should subscribe to participant: (on Creating stage)", participant);
+//             setDebugInfo(`Considering subscription to: ${participant.userId}`);
+//             return true;
+//           },
+          
+//           getSubscribeConfiguration: (participant) => ({
+//             video: true,
+//             audio: true,
+//           }),
+//         });
+//         stageRef.current = stage;
+//         // 3️⃣ Handle ALL stage events - FIXED VERSION
+//         //console.log(stage)
+//         stage.on("connected", () => {
+//             setDebugInfo("Connected to IVS stage");
+//            console.log("Connected to IVS stage");
+//         });
+
+
+//         stage.on("streamAdded", (remoteStream) => {
+//         console.log("Stream added:", remoteStream);
+//         setDebugInfo(`Stream added from: ${remoteStream.participantId}`);
+//         setIsStreamActive(true);
+
+//         if (!videoRef.current) {
+//           console.error("videoRef is null");
+//           setDebugInfo("ERROR: videoRef is null");
+//           return;
+//         }
+
+//   // Check available layers
+//   const videoTracks = remoteStream.mediaStream.getVideoTracks();
+//   const audioTracks = remoteStream.mediaStream.getAudioTracks();
+//   console.log("Video tracks:", videoTracks);
+//   console.log("Audio tracks:", audioTracks);
+
+//   if (videoTracks.length > 0) {
+//     console.log("Attaching video stream to video element");
+
+//     // Stop existing tracks if any
+//     if (videoRef.current.srcObject) {
+//       videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+//       videoRef.current.srcObject = null;
+//     }
+
+//     // Use the remoteStream directly
+//     videoRef.current.srcObject = remoteStream.mediaStream;
+
+//     // Play the video
+//     videoRef.current.play()
+//       .then(() => {
+//         console.log("Video playing successfully");
+//         setDebugInfo("Video playing successfully");
+//         setIsLoading(false);
+//         setError(null);
+//       })
+//       .catch(err => {
+//         console.error("Autoplay failed:", err);
+//         setDebugInfo(`Autoplay failed: ${err.message}`);
+//         setError("Click to play video");
+//       });
+//   } else {
+//     console.warn("No video tracks available yet");
+//     setDebugInfo("No video tracks in stream");
+//     setError("Stream has no video content");
+//   }
+// });
+
+//         stage.on("streamRemoved", (remoteStream) => {
+//           console.log("Remote stream removed:", remoteStream);
+//           setDebugInfo(`Stream removed: ${remoteStream.participantId}`);
+//           setIsStreamActive(false);
+//           if (videoRef.current?.srcObject) {
+//             videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+//             videoRef.current.srcObject = null;
+//             setError("Stream ended");
+//           }
+//         });
+
+//         // stage.on("participantJoined", (participant) => {
+//         //   console.log("Participant joined:", participant);
+//         //   setDebugInfo(`Participant joined: ${participant.userId}`);
+//         // });
+
+//         // stage.on("participantLeft", (participant) => {
+//         //   console.log("Participant left:", participant);
+//         //   setDebugInfo(`Participant left: ${participant.userId}`);
+//         // });  
+//         stage.on("participantJoined", (participant) => {
+//           console.log("Participant joined:", participant.userId);
+//           setDebugInfo(`Participant joined: ${participant.userId}`);
+
+//           // 🔑 Subscribe to new tracks from this participant
+//           participant.on("trackPublished", (track) => {
+//             console.log("Track published:", track.kind);
+
+//             track.on("subscribed", () => {
+//               console.log("Track subscribed:", track.kind);
+
+//               if (track.kind === "video" && videoRef.current) {
+//                 // Attach the video stream
+//                 console.log("Attaching full mediaStream directly")
+//                 videoRef.current.srcObject = track.mediaStream;
+
+//                 console.log("Video element srcObject:", videoRef);
+//                 console.log("ReadyState:", videoRef.current.readyState);
+//                 videoRef.current
+//                   .play()
+//                   .then(() => console.log("Video should be playing"))
+//                   .catch((err) => {
+//                     console.error("Autoplay blocked:", err);
+//                     setError("Click video to play");
+//                   });
+//               }
+
+//               if (track.kind === "audio" && videoRef.current?.srcObject) {
+//                 // Add audio to the same stream
+//                 const currentStream = videoRef.current.srcObject;
+//                 currentStream.addTrack(track.mediaStream.getAudioTracks()[0]);
+//               }
+//             });
+//           });
+//         });
+//           stage.on("participantLeft", (participant) => {
+//             console.log("Participant left:", participant.userId);
+//             setDebugInfo(`Participant left: ${participant.userId}`);
+
+//             if (videoRef.current?.srcObject) {
+//               videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+//               videoRef.current.srcObject = null;
+//             }
+//           });
+//         stage.on("error", (err) => {
+//           console.error("Stage error:", err);
+//           setDebugInfo(`Stage error: ${err.message}`);
+//           setError(`Stage error: ${err.message}`);
+//         });
+//         // 4️⃣ Join stage
+//         setDebugInfo("Joining stage...");
+//         await stage.join();
+//         console.log("Successfully joined stage (outside of stage)");
+//         setDebugInfo("Successfully joined stage"); 
+//       } catch (err) {
+//         console.error("Failed to join stage:", err);
+//         setDebugInfo(`Failed to join: ${err.message}`);
+//         setError(`Failed to join: ${err.message}`);
+//         setIsLoading(false);
+//       }
+//     }
+//     joinAsSubscriber();
+//     // Cleanup on unmount
+//     return () => {
+//       if (stageRef.current) {
+//         stageRef.current.leave();
+//         console.log("Left the stage");
+//         setDebugInfo("Left the stage");
+//       }
+//       if (videoRef.current && videoRef.current.srcObject) {
+//         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+//         videoRef.current.srcObject = null;
+//       }
+//     };
+//   }, []);
+//   const handleVideoClick = () => {
+//     if (videoRef.current) {
+//       setDebugInfo("Manual play attempt");
+//       videoRef.current.play()
+//         .then(() => {
+//           console.log("Video started by user interaction");
+//           setDebugInfo("Video started by user interaction");
+//           setError(null);
+//         })
+//         .catch(err => {
+//           console.error("Still cannot play video:", err);
+//           setDebugInfo(`Manual play failed: ${err.message}`);
+//           setError("Cannot play video. Check permissions.");
+//         });
+//     }
+//   };
+//   return (
+//     <div className="flex justify-center items-center h-screen bg-gray-100 relative">
+//       {isLoading && (
+//         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+//           <div className="text-white">Connecting to stream...</div>
+//         </div>
+//       )}
+//       <video
+//         ref={videoRef}
+//         autoPlay
+//         playsInline
+//         muted
+//         className="w-full max-w-[800px] h-auto border bg-black"
+//         // controls={false}
+//         // onClick={handleVideoClick}
+//       />
+//       {error && !isStreamActive && (
+//         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white z-20">
+//           <div className="text-center">
+//             <p>{error}</p>
+//             <p className="text-sm mt-2">Waiting for video stream</p>
+//           </div>
+//         </div>
+//       )}
+//       {error && isStreamActive && (
+//         <div 
+//           className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white cursor-pointer z-20"
+//           onClick={handleVideoClick}
+//         >
+//           <div className="text-center">
+//             <p>{error}</p>
+//             <p className="text-sm mt-2">Click to play video</p>
+//           </div>
+//         </div>
+//       )}
+//       {/* Debug panel */}
+//       <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white p-3 rounded text-xs max-w-md z-30">
+//         <div className="font-bold mb-2">Debug Info:</div>
+//         <div className="overflow-auto max-h-32">{debugInfo}</div>
+//         <div className="mt-2">
+//           Status: {isLoading ? "Connecting..." : isStreamActive ? "Streaming" : "Connected"}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+import React, { useEffect, useRef, useState } from "react";
+import { Stage, StageEvents } from "amazon-ivs-web-broadcast";
+import { jwtDecode } from "jwt-decode";
+
+export default function IvsSubscriber() {
+  const videoRef = useRef(null);
+  const stageRef = useRef(null);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isStreamActive, setIsStreamActive] = useState(false);
+  const [debugInfo, setDebugInfo] = useState("");
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");
+  const [retryCount, setRetryCount] = useState(0);
+
+  const connectToStage = async () => {
+    try {
+      setIsLoading(true);
+      setConnectionStatus("connecting");
+      setDebugInfo("Getting token...");
+      
+      // 1️⃣ Get token
+      const tokenn = localStorage.getItem("user_token");
+      if (!tokenn) throw new Error("No user token found");
+
+      const decoded = jwtDecode(tokenn);
+      const userMail = decoded.user_mail;
+
+      const res = await fetch("http://localhost:4004/api/v1/tokenn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stageArn: "arn:aws:ivs:ap-south-1:299822065337:stage/zFMYIVZchIZO",
+          userId: userMail,
+          capabilities: ["SUBSCRIBE"]
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Token fetch failed: ${res.status} ${res.statusText}`);
+      }
+
+      const data = await res.json();
+      const token = data.result.data.token;
+      if (!token) throw new Error("No token received from backend");
+
+      setDebugInfo("Token received, initializing stage...");
+
+      // 2️⃣ Initialize Stage
+      const stage = new Stage(token, {
+        shouldSubscribeToParticipant: (participant) => {
+          console.log("Should subscribe to participant:", participant);
+          setDebugInfo(`Considering subscription to: ${participant.userId}`);
+          return true;
+        },
+        
+        getSubscribeConfiguration: (participant) => ({
+          video: true,
+          audio: true,
+        }),
+      });
+      
+      stageRef.current = stage;
+
+      stage.on(StageEvents.STAGE_CONNECTION_STATE_CHANGED, () => {
+        setConnectionStatus("connected");
+        setDebugInfo("Connected to IVS stage");
+        console.log("Connected to IVS stage");
+      });
+     //edhachum na edha pannu
+      // stage.on(StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED, (participant, remoteStream) => {
+      //   console.log("Stream added:", participant.userId, remoteStream);
+      //   setDebugInfo(`Stream added from: ${participant.userId}`);
+      //   setIsStreamActive(true);
+      //   if (!videoRef.current) {
+      //     console.error("videoRef is null");
+      //     setDebugInfo("ERROR: videoRef is null");
+      //     return;
+      //   }
+      //   // Check available tracks
+      //   const videoTracks = remoteStream.mediaStream.getVideoTracks()[0];
+      //   const audioTracks = remoteStream.mediaStream.getAudioTracks()[0];
+      //   console.log("Video tracks:", videoTracks.length);
+      //   console.log("Audio tracks:", audioTracks.length);
+      //   // Stop existing tracks if any
+      //   if (videoRef.current.srcObject) {
+      //     videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      //   }
+      //   videoRef.current.srcObject = remoteStream.mediaStream;
+      //   videoRef.current.play()
+      //     .then(() => {
+      //       console.log("Video playing successfully");
+      //       setDebugInfo("Video playing successfully");
+      //       setIsLoading(false);
+      //       setError(null);
+      //     })
+      //     .catch(err => {
+      //       console.error("Autoplay failed:", err);
+      //       setDebugInfo(`Autoplay failed: ${err.message}`);
+      //       setError("Click to play video");
+      //     });
+      // });
+
+      stage.on(StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED, (participant, streams) => {
+  console.log("Streams added:", participant.userId, streams);
+
+  streams.forEach((remoteStream) => {
+    if (remoteStream.streamType === "video") {
+      const ms = new MediaStream([remoteStream.mediaStreamTrack]);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = ms;
+        videoRef.current
+          .play()
+          .then(() => console.log("Video playing successfully"))
+          .catch((err) => console.error("Autoplay failed:", err));
+      }
+    }
+  });
+});
+      // stage.on(StageEvents.STAGE_STREAM_ADAPTION_CHANGED, (remoteStream) => {
+      //   console.log("Remote stream removed:", remoteStream);
+      //   setDebugInfo(`Stream removed: ${remoteStream.participantId}`);
+      //   setIsStreamActive(false);
+      //   if (videoRef.current?.srcObject) {
+      //     videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      //   }
+      // });
+      stage.on(StageEvents.STAGE_PARTICIPANT_JOINED, (participant) => {
+        console.log("Participant joined:", participant.userId);
+        setDebugInfo(`Participant joined: ${participant.userId}`);
+      });
+      stage.on(StageEvents.STAGE_PARTICIPANT_LEFT, (participant) => {
+        console.log("Participant left:", participant.userId);
+        setDebugInfo(`Participant left: ${participant.userId}`);
+      });
+      stage.on(StageEvents.ERROR, (err) => {
+        console.error("Stage error:", err);
+        setDebugInfo(`Stage error: ${err.message}`);
+        setError(`Stage error: ${err.message}`);
+        setConnectionStatus("error");
+      });
+      stage.on("disconnected", () => {
+        setConnectionStatus("disconnected");
+        setDebugInfo("Disconnected from stage");
+      });
+      setDebugInfo("Joining stage...");
+      const connectionTimeout = setTimeout(() => {
+        if (connectionStatus !== "connected") {
+          setDebugInfo("Connection timeout - retrying...");
+          setError("Connection timeout. Retrying...");
+          handleRetry();
+        }
+      }, 10000);
+      await stage.join();
+      clearTimeout(connectionTimeout);
+      console.log("Successfully joined stage");
+      setDebugInfo("Successfully joined stage");
+    } catch (err) {
+      console.error("Failed to join stage:", err);
+      setDebugInfo(`Failed to join: ${err.message}`);
+      setError(`Failed to join: ${err.message}`);
+      setConnectionStatus("error");
+      setIsLoading(false);
+    }
+  };
+  const handleRetry = () => {
+    if (retryCount < 3) {
+      setRetryCount(prev => prev + 1);
+      setDebugInfo(`Retrying connection (attempt ${retryCount + 1}/3)...`);
+      setTimeout(() => {
+        connectToStage();
+      }, 2000 * retryCount);
+    } else {
+      setError("Max retry attempts reached. Please refresh the page.");
+    }
+  };
+  useEffect(() => {
+    console.log("Component mounted, videoRef:", videoRef.current);
+    setDebugInfo("Component mounted");
+    connectToStage();
+    return () => {
+      if (stageRef.current) {
+        stageRef.current.leave();
+        console.log("Left the stage");
+        setDebugInfo("Left the stage");
+      }
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, []);
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      setDebugInfo("Manual play attempt");
+      videoRef.current.play()
+        .then(() => {
+          console.log("Video started by user interaction");
+          setDebugInfo("Video started by user interaction");
+          setError(null);
+        })
+        .catch(err => {
+          console.error("Still cannot play video:", err);
+          setDebugInfo(`Manual play failed: ${err.message}`);
+          setError("Cannot play video. Check permissions.");
+        });
+    }
+  };
+  const handleReconnect = () => {
+    setRetryCount(0);
+    connectToStage();
+  };
+  return (
+    <div className="flex justify-center items-center h-screen bg-gray-100 relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+          <div className="text-white">
+            {connectionStatus === "connecting" ? "Connecting to stream..." : "Loading..."}
+            <div className="mt-2 text-sm">
+              Status: {connectionStatus}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-full max-w-[800px] h-auto border bg-black"
+        onClick={handleVideoClick}
+      />
+      {error && !isStreamActive && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white z-20">
+          <div className="text-center">
+            <p>{error}</p>
+            <p className="text-sm mt-2">Waiting for video stream</p>
+            {connectionStatus === "error" && (
+              <button 
+                className="mt-4 px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                onClick={handleReconnect}
+              >
+                Reconnect
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {error && isStreamActive && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white cursor-pointer z-20"
+          onClick={handleVideoClick}
+        >
+          <div className="text-center">
+            <p>{error}</p>
+            <p className="text-sm mt-2">Click to play video</p>
+          </div>
+        </div>
+      )}
+      {/* Debug panel */}
+      <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white p-3 rounded text-xs max-w-md z-30">
+        <div className="font-bold mb-2">Debug Info:</div>
+        <div className="overflow-auto max-h-32">{debugInfo}</div>
+        <div className="mt-2">
+          Status: {connectionStatus} | 
+          Stream: {isStreamActive ? "Active" : "Inactive"} | 
+          Retries: {retryCount}
+        </div>
+      </div>
+    </div>
+  );
+}

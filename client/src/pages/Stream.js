@@ -54,7 +54,8 @@ React.useEffect(() => {
                 <div>
                         <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>
                 </div>  
-                <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
+                {tokDecoded.role == 103 && (
+                  <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
                             <div>
                                 <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                             <div className="text-gray-600">Stream / All Stream</div>
@@ -120,6 +121,17 @@ React.useEffect(() => {
                                 </div>
                             </div>
                 </div>
+                )}
+
+                {tokDecoded.role == 101 && (
+                  <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
+                        <div>
+                                <div className={`${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
+
+                                </div>
+                        </div>
+                  </div>
+                )}
         </div>
     </div>
   )

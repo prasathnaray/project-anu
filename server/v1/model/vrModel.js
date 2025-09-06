@@ -1,5 +1,7 @@
 const client = require('../utils/conn.js');
-const generateToken = require('../utils/generateIvsToken.js')
+const generateToken = require('../utils/generateIvsToken.js');
+const {ListParticipantsCommand } = require('@aws-sdk/client-ivs-realtime');
+const ivsClient = require('../utils/ivssetup.js')
 const vrModel = (requester, data_check) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [101, 99, 102, 103].includes(Number(requester.role));
@@ -18,6 +20,8 @@ const vrModel = (requester, data_check) => {
         })
     })
 }
+
+
 
 // const streamData = async (requester, stageArn, userId, capabilities, attributes, duration) => {
 //     return new Promise((resolve, reject) => {
@@ -70,6 +74,7 @@ const streamData = async (stageArn, userId, capabilities, attributes, duration) 
     attributes || {},
     duration || 720
   );
+  const data = tokenResponse?.participantToken
   const participantId = tokenResponse?.participantToken?.participantId;
   if (!participantId) {
     throw new Error("Failed to generate participant token");
@@ -79,9 +84,38 @@ const streamData = async (stageArn, userId, capabilities, attributes, duration) 
     [userId, participantId, false]
   );
   return {
-    status: "Success",
-    data: result.rows[0],
-    token: tokenResponse.participantToken
+    // status: "Success",
+    // data: result.rows[0],
+    // token: tokenResponse.participantToken
+    data
   };
 };
-module.exports = {vrModel, streamData};
+
+
+const getActivePeople = async(req, res) => {
+  // const {roomId} = req.params;
+  // try
+  // {
+  //     const resp = await client.send(new ListParticipantsCommand({
+  //         roomIdentifier: roomId
+  //     }));
+
+  //     res.status(200).send(resp);
+  // }
+  // catch(err)
+  // {
+  //   res.status(500).send(err)
+  // }
+  return new Promise((resolve, reject) => {
+        const isPriviledged = [101, 99, 102, 103].includes(Number(requester.role));
+        if(!isPriviledged)
+        {
+                return resolve({
+                        status: 'Unauthorized',
+                        code: 401,
+                        message: 'You do not have permission to access this profile.'
+                });
+        }
+  })
+}
+module.exports = {vrModel, streamData, getActivePeople};
