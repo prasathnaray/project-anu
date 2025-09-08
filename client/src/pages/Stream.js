@@ -3,14 +3,17 @@ import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { Navigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { ArrowUpWideNarrow, EllipsisVertical } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVertical, EyeIcon } from 'lucide-react';
 import $ from "jquery";
+import IvsSubscriber from '../components/testComp';
 function Stream() {
-  const [buttonOpen, setButtonOpen] = React.useState(false);
+  const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
   };
   const token = localStorage.getItem('user_token');
+  const [participantInfo, setParticipantInfo] = React.useState([]);
+  console.log(participantInfo);
   const tokDecoded = jwtDecode(token);
   console.log(tokDecoded.role == 101);
     const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
@@ -127,12 +130,48 @@ React.useEffect(() => {
                   <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
                         <div>
                                 <div className={`${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
-
+                                          <div className="text-gray-600">Stream / All Stream</div>
+                                           <div className="mt-5 font-semibold text-xl text-gray-600">All Streams</div>
+                                           <div className="mt-5 bg-white rounded px-8 py-10">
+                                                        <div className="font-semibold text-xl text-gray-500 mb-10">My Streams</div>
+                                                        <table className="w-full text-left border-collapse">
+                                                                    <thead className=''>
+                                                                        <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                                                                <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Device Name</div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
+                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Device Id</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                            {Array.isArray(participantInfo)
+                                                                                ? participantInfo.map((stream, index) => (
+                                                                                    <tr key={index}>
+                                                                                      <td>{stream.id}</td>
+                                                                                      <td>{stream.userId}</td>
+                                                                                    </tr>
+                                                                                  ))
+                                                                                : participantInfo
+                                                                                ? (
+                                                                                    <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                                                                      <td className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">{participantInfo.id}</td>
+                                                                                      <td className="py-2 px-4 text-[#8DC63F]">{participantInfo.userId}</td>
+                                                                                      <td>
+                                                                                        <button className="block w-full text-left px-4 py-2 hover:bg-gray-50"><a href="http://localhost:3000/video" data-lity><EyeIcon size={20} /></a></button>
+                                                                                      </td>
+                                                                                    </tr>
+                                                                                  )
+                                                                                : null}    
+                                                                    </tbody>
+                                                        </table>
+                                            </div>
                                 </div>
                         </div>
                   </div>
                 )}
         </div>
+        <div id="ivs-player" style={{ display: "none" }}>
+              <IvsSubscriber onParticipantUpdate={setParticipantInfo} />
+        </div>  
     </div>
   )
 }

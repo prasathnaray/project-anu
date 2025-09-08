@@ -4,11 +4,9 @@ import { jwtDecode } from 'jwt-decode';
 
 const PrivateRoute = () => {
   const token = localStorage.getItem('user_token');
-
   if (!token) {
     return <Navigate to="/" replace />;
   }
-
   try {
     const decoded = jwtDecode(token);
     // Optional: Check for token expiration
