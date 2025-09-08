@@ -241,7 +241,7 @@ export default function IvsSubscriber({ onParticipantUpdate }) {
       const decoded = jwtDecode(tokenn);
       const userMail = decoded.user_mail;
 
-      const res = await fetch("http://localhost:4004/api/v1/tokenn", {
+      const res = await fetch("http://10.42.10.127:4004/api/v1/tokenn", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
