@@ -38,6 +38,24 @@ function Instructors(){
             console.log(err)
         }
     }
+
+    //search instructors 
+     const [searchItem, setSearchItem] = React.useState('');
+     const [filteredUsers, setFilteredUsers] = useState([]);
+     const handleSearchChange = (e) => {
+                        const value = e.target.value.toLowerCase();
+                        setSearchItem(value);
+
+                        if (!value) {
+                        setFilteredUsers(instructors); // show all if search is cleared
+                        } else {
+                        const filtered = instructors.filter((instructors) =>
+                        instructors.batch_name?.toLowerCase().includes(value)
+                        );
+                        setFilteredUsers(filtered);
+                        }
+    };
+
     useEffect(() => {
         getData()
     }, [])
