@@ -33,6 +33,7 @@ const getIndividualIvsRouter = require('./routes/individualIvsRoute.js');
 const tokenIvsRouter = require('./routes/tokenIvsRoute.js');
 const requestCourseRouter = require('./routes/RequestCourseRoute.js');
 const activePeopleRoomRouter = require('./routes/activePeopleRoomRoute.js');
+const progressRouter = require('./routes/progressRoute')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -60,12 +61,13 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 //Auth route
 app.use('/api/v1', LoginRouter);
-app.use('/api/v1', ForgotPRouter)
+app.use('/api/v1', ForgotPRouter);
 app.use('/api/v1', refreshTokenRouter);
 app.use('/api/v1', getIndividualIvsRouter);
 app.use('/api/v1', notifyRouter);
 app.use('/api/v1', tokenIvsRouter);
 app.use('/api/v1', activePeopleRoomRouter);
+app.use('/api/v1', Authenticate, progressRouter);
 app.use('/api/v1', Authenticate, getVrDataRouter);
 app.use('/api/v1', Authenticate, deleteBatchRouter);
 // batch
