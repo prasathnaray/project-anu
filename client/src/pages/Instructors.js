@@ -87,7 +87,8 @@ function Instructors(){
                                                         <div className=""><input
                                                             type="text"
                                                             placeholder="Search Instructor"
-                                                            name="reset_password_mail"
+                                                            onChange={handleSearchChange}
+                                                            //name="reset_password_mail"
                                                             className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                         /></div>
                                                         <div className="flex justify-end items-center"><a href="/instructor/add" className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Add Instructor</a></div>

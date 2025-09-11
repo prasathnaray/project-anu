@@ -34,7 +34,6 @@ const tokenIvsRouter = require('./routes/tokenIvsRoute.js');
 const requestCourseRouter = require('./routes/RequestCourseRoute.js');
 const activePeopleRoomRouter = require('./routes/activePeopleRoomRoute.js');
 const Authenticate = require('./Auth/Authenticate');
-
 //enabling cors
 const cors = require('cors');
 const createTraineeRouter = require('./routes/createtraineeRoute');
