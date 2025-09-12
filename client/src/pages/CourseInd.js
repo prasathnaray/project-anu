@@ -1,0 +1,41 @@
+import React from 'react'
+import { jwtDecode } from 'jwt-decode'
+import { Navigate } from 'react-router-dom';
+import NavBar from '../components/navBar';
+import SideBar from '../components/sideBar';
+function CourseInd() {
+  const [buttonOpen, setButtonOpen] = React.useState(true);
+  const handleButtonOpen = () => {
+    setButtonOpen(!buttonOpen);
+  };
+  let token = localStorage.getItem('user_token');
+  const decoded = jwtDecode(token);
+  if (decoded.role != 99) {
+    return <Navigate to="/" replace />;
+  }
+  return (
+    <div className={`flex flex-col min-h-screen`}>
+            <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
+                        <NavBar />
+            </div>
+            <div className="flex flex-grow">
+                        <div>
+                                <SideBar
+                                    handleButtonOpen={handleButtonOpen}
+                                    buttonOpen={buttonOpen}
+                                />
+                        </div>
+                       <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow`}>
+                                <div className="bg-gray-100 h-screen pt-12">
+                                    <div className={`${buttonOpen ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
+                                            <div className="text-gray-500">Dashboard / Course</div>
+                                            <div></div>
+                                    </div>
+                                </div>
+                        </div>
+            </div>
+    </div>
+  )
+}
+
+export default CourseInd
