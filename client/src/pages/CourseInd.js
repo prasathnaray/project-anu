@@ -8,6 +8,7 @@ import { IconButton } from '@mui/material';
 import { Plus } from 'lucide-react';
 import CollapsibleTable from '../components/CourseTable';
 import EnhancedTable from '../components/CourseTable';
+import CreateModule from '../components/superadmin/CreateModule'
 function CourseInd() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
@@ -45,13 +46,16 @@ function CourseInd() {
                                                                 </IconButton>
                                                         </div>
                                                         <div className="mt-10">
-                                                            <EnhancedTable />
+                                                            {/* <EnhancedTable /> */}
                                                         </div>
                                             </div>
                                     </div>
                                 </div>
                         </div>
             </div>
+            <CreateModule>
+                
+            </CreateModule>
     </div>
   )
 }

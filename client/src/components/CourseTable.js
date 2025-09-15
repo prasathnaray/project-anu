@@ -13,35 +13,29 @@ import TableSortLabel from '@mui/material/TableSortLabel';
 import Paper from '@mui/material/Paper';
 import { visuallyHidden } from '@mui/utils';
 import CompletionStats from '../charts/DonutChart';
-
 function createData(id, name, calories, fat, carbs, protein) {
   return { id, name, calories, fat, carbs, protein };
 }
-
 const rows = [
   createData(1, 'MOD1123', 305, 3.7),
   createData(2, 'MOD1124', 452, 25.0),
   createData(3, 'MOD1125', 262, 16.0)
 ];
-
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) return -1;
   if (b[orderBy] > a[orderBy]) return 1;
   return 0;
 }
-
 function getComparator(order, orderBy) {
   return order === 'desc'
     ? (a, b) => descendingComparator(a, b, orderBy)
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
-
 const headCells = [
   { id: 'name', numeric: false, disablePadding: true, label: 'Module ID', width: '30%' },
   { id: 'calories', numeric: true, disablePadding: false, label: 'Module Name', width: '30%' },
   { id: 'fat', numeric: true, disablePadding: false, label: 'Completion Stats', width: '40%' }
 ];
-
 function EnhancedTableHead({ order, orderBy, onRequestSort }) {
   const createSortHandler = (property) => (event) => {
     onRequestSort(event, property);
