@@ -19,21 +19,33 @@ function CourseInd() {
   const handleClose = () => {
         setOpenModule(false)
   }
-
+  //process api data here 
+  const [moduleData, setModuleData] = React.useState({
+        module_name: '',
+        course_name: ''
+  })
+  const handleChange = () => {
+        
+  }
   //fetch course data
-
-  const courseData = async() => {
+  const [courseData, setCourseData] = React.useState({})
+  const courseDataCall = async() => {
         try
         {
                 const token = localStorage.getItem('user_token')
                 const result = await GetCoursesAPI(token)
-                console.log(result);
+                setCourseData(result.data.result);
         }
         catch(err)
         {
                 console.log(err)
         }
   }
+ console.log(courseData)
+  React.useEffect(() => {
+        courseDataCall()
+        console.log(courseData);
+  }, [])
   const url = useParams();
   console.log(url)
   let token = localStorage.getItem('user_token');
@@ -109,19 +121,19 @@ function CourseInd() {
                   //onChange={handleCourse}
                   //value={courseData.curiculum_id}
                 >
-                  {/* {Array.isArray(curiculumList) &&
-                  curiculumList.length > 0 ? (
-                    curiculumList.map((data, index) => (
+                  {Array.isArray(courseData) &&
+                  courseData.length > 0 ? (
+                    courseData.map((data, index) => (
                       <MenuItem
                         key={index}
-                        value={data?.curiculum_id}
+                        value={data?.course_id}
                       >
-                        {data?.curiculum_nam}
+                        {data?.course_name}
                       </MenuItem>
                     ))
                   ) : (
                     <MenuItem disabled>No data found</MenuItem>
-                  )} */}
+                  )}
                 </Select>
               </FormControl>
             </div>
