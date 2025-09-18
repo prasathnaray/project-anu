@@ -16,6 +16,7 @@ import GetModuleApi from '../API/GetModuleAPI'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import GenderAnalytics from '../charts/PrpgressBar';
+import getChapterAPI from '../API/getChapterAPI';
 function Chapters() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
@@ -24,25 +25,25 @@ function Chapters() {
   const [openModule, setOpenModule] = React.useState(false)
   
   //process api data here 
-  const [moduleData, setModuleData] = React.useState({
-        module_name: '',
+  const [chapterData, setChapterData] = React.useState({
+        chapter_name: '',
         course_id: ''
   })
   const handleModuleChange = async(e) => {
         const {name, value} = e.target;
-        setModuleData({
-          ...moduleData,
+        setChapterData({
+          ...chapterData,
           [name]: value,
         })
   }
   const handleClose = () => {
         setOpenModule(false)
-        setModuleData({
-          module_name: '',
+        setChapterData({
+          chapter_name: '',
           course_id: ''
         })
   }
-  console.log(moduleData);
+  console.log(chapterData);
   //fetch course data
   const [courseData, setCourseData] = React.useState({})
   const courseDataCall = async() => {
@@ -57,7 +58,7 @@ function Chapters() {
                 console.log(err)
         }
   }
- console.log(courseData)
+//console.log(courseData)
 //get modules by course id
 const [moduleList, setModuleList] = React.useState([]);
 const urlData = useParams();
@@ -66,7 +67,7 @@ const getModuleCall = async(urlData) => {
       try
       {
         const token = localStorage.getItem('user_token');
-        const result = await GetModuleApi(token, urlData.course_id)
+        const result = await getChapterAPI(token, urlData.course_id)
         setModuleList(result.data)
       }
       catch(err)
@@ -83,7 +84,7 @@ React.useEffect(() => {
  //create module api call
  const createModuleCall = async(e) => {
         e.preventDefault();
-        if(!moduleData.module_name || !moduleData.course_id)
+        if(!chapterData.chapter_name || !chapterData.course_id)
         {
             toast.error("please fill all the fields" , {
                 autoClose: 3000,
@@ -96,7 +97,7 @@ React.useEffect(() => {
         try
         {
               const token = localStorage.getItem('user_token');
-              const result = await CreateModuleApi(token, moduleData);
+              const result = await CreateModuleApi(token, chapterData);
               if (result)
               {
                 toast.success("Module Created", {
@@ -108,7 +109,6 @@ React.useEffect(() => {
               }
               getModuleCall(urlData);
               handleClose();
-
         }
         catch(err)
         {
@@ -190,7 +190,7 @@ React.useEffect(() => {
                                                                                   <a href={`/course/${data?.module_id}`}>{data?.module_name}</a>
                                                                                 </td> */}
                                                                                 <td className="py-2 px-4 text-[#8Dc63F] font-semibold border-b-2">
-                                                                                    <a href={`/module/${data?.module_id}`}>{data?.module_name}</a>
+                                                                                    <a href={`/module/${data?.chapter_id}/${urlData.course_id}`}>{data?.chapter_name}</a>
                                                                                 </td>
                                                                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
 
@@ -221,7 +221,7 @@ React.useEffect(() => {
             </div>
             <CreateModule isVisible={openModule} onClose={handleClose}>
                         <div className="flex justify-between items-center">
-                                        <div>Create Module</div>
+                                        <div>Create Chapter</div>
                                         <div>
                                                         <button
                                                                 onClick={handleClose}
@@ -238,10 +238,10 @@ React.useEffect(() => {
                 variant="outlined"
                 size="small"
                 id="outlined-basic"
-                label="Module Name"
+                label="Chapter Name"
                 onChange={handleModuleChange}
-                name="module_name"
-                value={moduleData.module_name}
+                name="chapter_name"
+                value={chapterData.chapter_name}
               />
             </div>
             <div>
@@ -254,7 +254,7 @@ React.useEffect(() => {
                   name="course_id"
                   label="Select Course"
                   onChange={handleModuleChange}
-                  value={moduleData.course_id}
+                  value={chapterData.course_id}
                 >
                   {Array.isArray(courseData) &&
                   courseData.length > 0 ? (

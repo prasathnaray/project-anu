@@ -21,6 +21,7 @@ import IvsSubscriber from '../components/testComp';
 import IvsPublisher from '../components/ivsPublish';
 import Chapters from '../pages/Chapters';
 import Module from '../pages/Module';
+import Resource from '../pages/Resource';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -44,7 +45,8 @@ function RoutesPath() {
                             <Route path="/video" element={<IvsSubscriber />} />
                             <Route path="/publish" element={<IvsPublisher />} />
                             <Route path="/chapters/:course_id" element={<Chapters />} />
-                            <Route path="/module/:module_id" element={<Module />} />
+                            <Route path="/module/:chapter_id/:course_id" element={<Module />} />
+                            <Route path="/resource" element={<Resource />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

@@ -1,10 +1,7 @@
 const { createModuleModel , getModuleModel, subModuleModel, completionModel} = require('../model/modulem.js');
-
 const CreateModule = async (req, res) => {
     const requester = req.user;
-    const { course_id, module_name } = req.body;
-
-    // ✅ Validation before calling the model
+    const { course_id, chapter_name } = req.body;
     if (!course_id || course_id.trim() === "") {
         return res.status(400).json({
             status: "Bad Request",
@@ -12,17 +9,15 @@ const CreateModule = async (req, res) => {
             message: "course_id should not be empty"
         });
     }
-
-    if (!module_name || module_name.trim() === "") {
+    if (!chapter_name || chapter_name.trim() === "") {
         return res.status(400).json({
             status: "Bad Request",
             code: 400,
             message: "module_name should not be empty"
         });
     }
-
     try {
-        const result = await createModuleModel(course_id, module_name, requester);
+        const result = await createModuleModel(course_id, chapter_name, requester);
         res.status(200).send(result);
     } catch (err) {
         console.log(err);
