@@ -19,7 +19,8 @@ import Stream from '../pages/Stream';
 // import Publisher from '../components/testComp';
 import IvsSubscriber from '../components/testComp';
 import IvsPublisher from '../components/ivsPublish';
-import CourseInd from '../pages/CourseInd';
+import Chapters from '../pages/Chapters';
+import Module from '../pages/Module';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -42,7 +43,8 @@ function RoutesPath() {
                             <Route path="/vrspace" element={<Stream />} />
                             <Route path="/video" element={<IvsSubscriber />} />
                             <Route path="/publish" element={<IvsPublisher />} />
-                            <Route path="/course/:course_id" element={<CourseInd />} />
+                            <Route path="/chapters/:course_id" element={<Chapters />} />
+                            <Route path="/module/:module_id" element={<Module />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

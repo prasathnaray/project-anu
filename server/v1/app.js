@@ -33,7 +33,11 @@ const getIndividualIvsRouter = require('./routes/individualIvsRoute.js');
 const tokenIvsRouter = require('./routes/tokenIvsRoute.js');
 const requestCourseRouter = require('./routes/RequestCourseRoute.js');
 const activePeopleRoomRouter = require('./routes/activePeopleRoomRoute.js');
-const progressRouter = require('./routes/progressRoute')
+const progressRouter = require('./routes/progressRoute');
+const createModuleRouter = require('./routes/createModuleRoute.js');
+const getModuleRouter = require('./routes/getModuleRoute.js');
+const subModuleRouter = require('./routes/subModuleRoute.js');
+const moduleCompleteUserRouter = require('./routes/moduleCompleteUserRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -101,3 +105,13 @@ app.use('/api/v1', Authenticate, getAdminRouter);
 app.use('/api/v1', Authenticate, tagCourseRouter);
 app.use('/api/v1', Authenticate, getGendersRoute);
 app.use('/api/v1', Authenticate, requestCourseRouter);
+//module creation
+
+app.use('/api/v1', Authenticate, createModuleRouter);
+app.use('/api/v1', Authenticate, getModuleRouter);
+
+//sub-module
+app.use('/api/v1', Authenticate, subModuleRouter);
+
+//mark complete 
+app.use('/api/v1', Authenticate, moduleCompleteUserRouter);
