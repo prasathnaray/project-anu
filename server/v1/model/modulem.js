@@ -22,7 +22,7 @@ const createModuleModel = (course_id, chapter_name, requester) => {
         })
     })
 }
-const getModuleModel = (course_id, requester) => {
+const getModuleModel = (chapter_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101].includes(Number(requester.role))
         if(!isPrivileged)
@@ -33,7 +33,7 @@ const getModuleModel = (course_id, requester) => {
                 message: 'You do not have permission to access this profile.'
             })
         }
-        client.query('SELECT * FROM module_data WHERE course_id=$1', [course_id],  (err, result) => {
+        client.query('SELECT * FROM module_data WHERE chapter_id=$1', [chapter_id],  (err, result) => {
             if(err)
             {
                 reject(err)
@@ -113,4 +113,27 @@ const completionModel = (is_completed, submod_id, requester) => {
             })
     })
 }
-module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel}
+const createNewModuleModel = (module_name, chapter_id, requester) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [101].includes(Number(requester.role))
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this profile.'
+            })
+        }
+        client.query('INSERT INTO module_data(module_name, chapter_id) VALUES($1, $2)', [module_name, chapter_id], (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else 
+            {
+                resolve(result)
+            }
+        })
+    })
+}
+module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel, createNewModuleModel}

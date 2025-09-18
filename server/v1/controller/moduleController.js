@@ -1,4 +1,4 @@
-const { createModuleModel , getModuleModel, subModuleModel, completionModel} = require('../model/modulem.js');
+const { createModuleModel , getModuleModel, subModuleModel, completionModel, createNewModuleModel} = require('../model/modulem.js');
 const CreateModule = async (req, res) => {
     const requester = req.user;
     const { course_id, chapter_name } = req.body;
@@ -26,10 +26,10 @@ const CreateModule = async (req, res) => {
 };
 const GetModule = async (req, res) => {
     const requester = req.user;
-    const course_id  = req.query.course_id;
+    const chapter_id  = req.query.chapter_id;
     try
     {
-        const result = await getModuleModel(course_id, requester);
+        const result = await getModuleModel(chapter_id, requester);
         res.status(200).send(result.rows);
     }
     catch(err)
@@ -78,4 +78,31 @@ const completeModule = async (req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {CreateModule, GetModule, subModuleController, completeModule};
+const ModuleNewController = async (req, res) => {
+    const requester = req.user;
+    const { chapter_id, module_name } = req.body;  
+    if (!chapter_id || chapter_id.trim() === "") {
+        return res.status(400).json({
+            status: "Bad Request",
+            code: 400,
+            message: "chapter_id should not be empty"
+        });
+    }
+    if (!module_name || module_name.trim() === "") {
+        return res.status(400).json({
+            status: "Bad Request",
+            code: 400,
+            message: "module_name should not be empty"
+        });
+    } 
+    try
+    {
+        const result = await createNewModuleModel(module_name, chapter_id, requester);
+        res.status(200).send(result);
+    } 
+    catch(err)
+    {
+        res.status(500).send(err);
+    }
+}
+module.exports = {CreateModule, GetModule, subModuleController, completeModule, ModuleNewController};

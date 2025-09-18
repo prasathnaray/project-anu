@@ -3,26 +3,39 @@ import { jwtDecode } from 'jwt-decode';
 import { Navigate, useParams } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { ArrowUpWideNarrow, Plus, X } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVertical, Plus, X } from 'lucide-react';
 import { FormControl, IconButton, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import CreateModule from '../components/superadmin/CreateModule';
 import GetModuleApi from '../API/GetModuleAPI';
 import getChapterAPI from '../API/getChapterAPI';
+import ModuleNewAPI from '../API/ModuleNewAPI';
+import { toast } from 'react-toastify';
+import CustomCloseButton from '../utils/CustomCloseButton';
 function Module() {
   const [openModule, setOpenModule] = React.useState(false);
   const handleClose = () => {
-        setOpenModule(false)
+        setOpenModule(false);
+        setModuleData({
+                  module_name: '',
+                  chapter_id: ''
+        });
   }
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
   };
  //chapter calls
- 
  const [moduleData, setModuleData] = React.useState({
         module_name: '',
         chapter_id: ''
  })
+ const handleChange = (e) => {
+    const { name, value } = e.target;
+    setModuleData({
+      ...moduleData,
+      [name]: value,
+    });
+ }
  const url = useParams();
  console.log(url);
  const [chapterData, setChapterData] = React.useState([]);
@@ -38,18 +51,55 @@ function Module() {
         console.log(err);
     }
  }
+ const moduleApiCalls = async(moduleData) => {
+    try
+    {
+        const token = localStorage.getItem("user_token");
+        const response = await ModuleNewAPI(token, moduleData);
+        if(response)
+        {
+            toast.success("Module Created", {
+                  autoClose: 3000,
+                  toastId: "module-created",
+                  icon: false,
+                  closeButton: CustomCloseButton,
+            });  
+            handleClose();
+            getModules()
+        }
+    }   
+    catch(err)
+    {
+        console.log(err);
+    }
+ }
  React.useEffect(() => {
     chapterAPiCalls(url);
-    //console.log(chapterData);
  }, [])
- console.log(chapterData);
+ const [modCalls, setModCalls] = React.useState([]);
+ const getModules = async() => {
+    try
+    {
+        const token = localStorage.getItem("user_token");
+        const response = await GetModuleApi(token, url.chapter_id);
+        setModCalls(response.data);
+        //console.log(response.data);
+    }   
+    catch(err)
+    {
+        console.error(err);
+    }
+ }
+ React.useEffect(() => {
+    getModules()
+ }, [])
+ //console.log(chapterData);
   // decode token and restrict access
   const token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
   if (decoded.role != 101 && decoded.role != 99) {
     return <Navigate to="/" replace />;
   }
-
   return (
     <div className="flex flex-col min-h-screen">
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -90,14 +140,45 @@ function Module() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="text-sm text-gray-700">
-                      <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                        <a href="/resource">Module 1</a>
-                      </td>
-                      <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                        In Progress
-                      </td>
-                    </tr>
+                    {Array.isArray(modCalls) &&
+                    modCalls.length > 0 ? (
+                      modCalls.map((data, index) => (
+                        <tr
+                          className="text-sm text-gray-700"
+                          key={index}
+                        >
+                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                            <a href={`/module/${data?.module_id}`}>{data?.module_name}</a>
+                          </td>
+                          <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
+                            {data?.access_status === true ? (
+                              <span className="px-2 py-1 bg-green-100 text-sm">
+                                Approved
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-red-100 text-sm">
+                                Request
+                              </span>
+                            )}
+                          </td>
+                          {/* <td className="py-2 px-4 font-semibold border-b-2">
+                            <button
+                            >
+                              <EllipsisVertical size={24} />
+                            </button>
+                          </td> */}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={3}
+                          className="py-4 text-center text-gray-500"
+                        >
+                          No courses available
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -120,9 +201,9 @@ function Module() {
                         size="small"
                         id="outlined-basic"
                         label="Module Name"
-                        //onChange={handleModuleChange}
+                        onChange={handleChange}
                         name="module_name"
-                        //value={chapterData.chapter_name}
+                        value={moduleData.module_name}
                       />
                     </div>
                     <div>
@@ -132,10 +213,10 @@ function Module() {
                         </InputLabel>
                         <Select
                           labelId="batch-select-label"
-                          name="course_id"
+                          name="chapter_id"
                           label="Select Chapter"
-                        //   onChange={handleModuleChange}
-                        //   value={chapterData.course_id}
+                          onChange={handleChange}
+                          value={moduleData.chapter_id}
                         >
                           {Array.isArray(chapterData) &&
                           chapterData.length > 0 ? (
@@ -157,6 +238,7 @@ function Module() {
                   <div className="flex justify-end item-center mt-5">
                     <button
                       className="bg-[#8DC63F] px-3 py-2 text-white"
+                      onClick={() => {moduleApiCalls(moduleData); handleClose()}}
                     >
                       Save
                     </button>

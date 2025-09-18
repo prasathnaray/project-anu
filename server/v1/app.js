@@ -39,6 +39,7 @@ const getModuleRouter = require('./routes/getModuleRoute.js');
 const subModuleRouter = require('./routes/subModuleRoute.js');
 const moduleCompleteUserRouter = require('./routes/moduleCompleteUserRoute.js');
 const getChapterRouter = require('./routes/getChapterRouter.js');
+const NewModuleRouter = require('./routes/newModuleRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -110,7 +111,8 @@ app.use('/api/v1', Authenticate, requestCourseRouter);
 
 app.use('/api/v1', Authenticate, createModuleRouter);
 app.use('/api/v1', Authenticate, getModuleRouter);
-
+// new module creation
+app.use('/api/v1', Authenticate, NewModuleRouter);
 //sub-module
 app.use('/api/v1', Authenticate, subModuleRouter);
 
