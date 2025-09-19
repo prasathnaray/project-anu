@@ -92,7 +92,7 @@ const getSubModuleModel = (requester) => {
 }
 const completionModel = (is_completed, r_id, requester) => {
     return new Promise((resolve, reject) => {
-            const isPrivileged = [103].includes(Number(requester.role))
+            const isPrivileged = [103, 101].includes(Number(requester.role))
             if(!isPrivileged)
             {
                 return resolve({
