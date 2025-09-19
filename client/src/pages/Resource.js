@@ -9,6 +9,8 @@ import CreateModule from "../components/superadmin/CreateModule";
 import { toast } from "react-toastify";
 import CustomCloseButton from "../utils/CustomCloseButton";
 import axios from "axios";
+import getResourceAPI from "../API/GetResourceAPI";
+import CreateResourceApi from "../API/createResourcesAPI";
 
 function Resource() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
@@ -44,22 +46,17 @@ function Resource() {
   const createResourceAPI = async () => {
     try {
       const token = localStorage.getItem("user_token");
-      const response = await axios.post(
-        "http://localhost:4004/api/v1/create-resource",
-        resourceData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      toast.success("Resource Created", {
-        autoClose: 3000,
-        toastId: "resource-created",
-        closeButton: CustomCloseButton,
-      });
-      handleClose();
-      getResources();
+      const response = await CreateResourceApi(token, resourceData);
+      if (response)
+      {
+          toast.success("Resource Created", {
+            autoClose: 3000,
+            toastId: "resource-created",
+            closeButton: CustomCloseButton,
+          });
+          handleClose();
+          getResources();
+      }
     } catch (err) {
       console.error(err);
       toast.error("Failed to create resource");
@@ -70,11 +67,8 @@ function Resource() {
   const [resources, setResources] = React.useState([]);
   const getResources = async () => {
     try {
-      const response = await axios.get(`http://localhost:4004/api/v1/get-resources?module_id=${url.module_id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("user_token")}`,
-        },
-      });
+      const token = localStorage.getItem("user_token");
+      const response = await getResourceAPI(token, url.module_id);
       setResources(response.data);
     } catch (err) {
       console.error(err);
