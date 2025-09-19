@@ -17,6 +17,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import GenderAnalytics from '../charts/PrpgressBar';
 import getChapterAPI from '../API/getChapterAPI';
+import { ClipLoader } from 'react-spinners';
 function Chapters() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
@@ -207,7 +208,7 @@ React.useEffect(() => {
                                                                                 colSpan={3}
                                                                                 className="py-4 text-center text-gray-500"
                                                                               >
-                                                                                No courses available
+                                                                                <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
                                                                               </td>
                                                                             </tr>
                                                                           )}

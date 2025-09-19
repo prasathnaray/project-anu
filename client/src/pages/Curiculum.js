@@ -11,6 +11,7 @@ import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import GetCuriculumAPI from '../API/getCuriculumAPI';
 import DeleteCuriculumToast from '../utils/deleteCuriculumtoast';
+import { ClipLoader } from 'react-spinners';
 function Curiculam() {
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(false);
@@ -189,7 +190,7 @@ function Curiculam() {
                                                               ) : (
                                                                 <tr>
                                                                   <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
-                                                                    No data found
+                                                                    <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
                                                                   </td>
                                                                 </tr>
                                                              )}

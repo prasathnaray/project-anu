@@ -479,6 +479,7 @@ import DeleteCourseToast from "../utils/deleteCourseToast";
 import TagCourse from "../components/superadmin/TagCourse";
 import GetAdminsAPI from "../API/getAdminsAPI";
 import TagCourseAPI from "../API/TagCourseAPI";
+import { ClipLoader } from "react-spinners";
 
 function Course() {
   // Sidebar toggle
@@ -853,7 +854,7 @@ function Course() {
                           colSpan={3}
                           className="py-4 text-center text-gray-500"
                         >
-                          No courses available
+                          <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
                         </td>
                       </tr>
                     )}

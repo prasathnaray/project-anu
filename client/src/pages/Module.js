@@ -11,6 +11,7 @@ import getChapterAPI from '../API/getChapterAPI';
 import ModuleNewAPI from '../API/ModuleNewAPI';
 import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
+import { ClipLoader } from 'react-spinners';
 function Module() {
   const [openModule, setOpenModule] = React.useState(false);
   const handleClose = () => {
@@ -151,7 +152,7 @@ function Module() {
                             <a href={`/resource/${data?.module_id}`}>{data?.module_name}</a>
                           </td>
                           <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                            {data?.access_status === true ? (
+                            {/* {data?.access_status === true ? (
                               <span className="px-2 py-1 bg-green-100 text-sm">
                                 Approved
                               </span>
@@ -159,7 +160,8 @@ function Module() {
                               <span className="px-2 py-1 bg-red-100 text-sm">
                                 Request
                               </span>
-                            )}
+                            )} */} 
+                            "chart"
                           </td>
                           {/* <td className="py-2 px-4 font-semibold border-b-2">
                             <button
@@ -175,7 +177,7 @@ function Module() {
                           colSpan={3}
                           className="py-4 text-center text-gray-500"
                         >
-                          No courses available
+                          <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
                         </td>
                       </tr>
                     )}
