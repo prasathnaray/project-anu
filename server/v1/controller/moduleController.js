@@ -66,12 +66,12 @@ const subModuleController = async (req, res) => {
 }
 const completeModule = async (req, res) => {
     const requester = req.user;
-    const {is_completed, submod_id} = req.query;
+    const {is_completed, r_id} = req.query;
     //const submod_id = req.query.submod_id;
     try{
-        const result = await completionModel(is_completed, submod_id, requester);
+        const result = await completionModel(is_completed, r_id, requester);
         //console.log(submod_id);
-        res.status(200).send(result.rows);
+        res.status(200).send(result);
     }
     catch(err)
     {

@@ -90,7 +90,7 @@ const getSubModuleModel = (requester) => {
         })
     })
 }
-const completionModel = (is_completed, submod_id, requester) => {
+const completionModel = (is_completed, r_id, requester) => {
     return new Promise((resolve, reject) => {
             const isPrivileged = [103].includes(Number(requester.role))
             if(!isPrivileged)
@@ -101,7 +101,7 @@ const completionModel = (is_completed, submod_id, requester) => {
                     message: 'You do not have permission to access this profile.'
                 })
             }
-            client.query('INSERT INTO progress_data(user_id, is_completed, submod_id) VALUES($1, $2, $3)', [requester.user_mail, is_completed, submod_id], (err, result) => {
+            client.query('INSERT INTO progress_data(user_id, is_completed, resourse_id) VALUES($1, $2, $3)', [requester.user_mail, is_completed, r_id], (err, result) => {
                 if(err)
                 {
                     reject(err)
