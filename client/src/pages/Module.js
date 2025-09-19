@@ -148,7 +148,7 @@ function Module() {
                           key={index}
                         >
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <a href={`/module/${data?.module_id}`}>{data?.module_name}</a>
+                            <a href={`/resource/${data?.module_id}`}>{data?.module_name}</a>
                           </td>
                           <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
                             {data?.access_status === true ? (

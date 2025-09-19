@@ -46,7 +46,7 @@ function RoutesPath() {
                             <Route path="/publish" element={<IvsPublisher />} />
                             <Route path="/chapters/:course_id" element={<Chapters />} />
                             <Route path="/module/:chapter_id/:course_id" element={<Module />} />
-                            <Route path="/resource" element={<Resource />} />
+                            <Route path="/resource/:module_id" element={<Resource />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
