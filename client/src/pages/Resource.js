@@ -3,27 +3,94 @@ import { jwtDecode } from "jwt-decode";
 import { Navigate, useParams } from "react-router-dom";
 import NavBar from "../components/navBar";
 import SideBar from "../components/sideBar";
-import { ArrowUpWideNarrow, CheckCircle } from "lucide-react";
+import { ArrowUpWideNarrow, Plus, X, CheckCircle } from "lucide-react";
+import { FormControl, IconButton, InputLabel, Select, TextField } from "@mui/material";
+import CreateModule from "../components/superadmin/CreateModule";
+import { toast } from "react-toastify";
+import CustomCloseButton from "../utils/CustomCloseButton";
+import axios from "axios";
 
 function Resource() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
 
-  // Decode token
+  // popup state
+  const [openResource, setOpenResource] = React.useState(false);
+  const handleClose = () => {
+    setOpenResource(false);
+    setResourceData({
+      resource_name: "",
+      module_id: url.module_id, // auto assign from URL
+    });
+  };
+
+  // get module_id from URL params
+  const url = useParams();
+
+  const [resourceData, setResourceData] = React.useState({
+    resource_name: "",
+    module_id: url.module_id, // ensure correct mapping
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setResourceData({
+      ...resourceData,
+      [name]: value,
+    });
+  };
+
+  // create resource API call
+  const createResourceAPI = async () => {
+    try {
+      const token = localStorage.getItem("user_token");
+      const response = await axios.post(
+        "http://localhost:4004/api/v1/create-resource",
+        resourceData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Resource Created", {
+        autoClose: 3000,
+        toastId: "resource-created",
+        closeButton: CustomCloseButton,
+      });
+      handleClose();
+      getResources();
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create resource");
+    }
+  };
+
+  // fetch resources (dummy for now, replace with API later)
+  const [resources, setResources] = React.useState([]);
+  const getResources = async () => {
+    try {
+      const response = await axios.get(`http://localhost:4004/api/v1/get-resources?module_id=${url.module_id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("user_token")}`,
+        },
+      });
+      setResources(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  React.useEffect(() => {
+    getResources();
+  }, []);
+
+  // decode token
   const token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
   if (decoded.role != 101 && decoded.role != 99) {
     return <Navigate to="/" replace />;
   }
-
-  // Placeholder data for now
-  const resources = [
-    { resource_id: 1, resource_name: "Learning Resource", is_completed: false },
-    { resource_id: 2, resource_name: "Practice 1", is_completed: true },
-    { resource_id: 3, resource_name: "Practice 2", is_completed: false },
-    { resource_id: 4, resource_name: "Image Interpretation", is_completed: false },
-    { resource_id: 5, resource_name: "Test", is_completed: false },
-  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -52,8 +119,19 @@ function Resource() {
                 Learning Resources
               </div>
 
-              {/* Table for resources */}
+              {/* Table + Add Button */}
               <div className="mt-5 bg-white rounded px-8 py-10">
+                <div className="flex justify-start mb-4">
+                  <IconButton
+                    size="md"
+                    color="success"
+                    className="bg-green-200"
+                    onClick={() => setOpenResource(true)}
+                  >
+                    <Plus className="h-6 w-6" />
+                  </IconButton>
+                </div>
+
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-300 shadow-sm">
@@ -63,11 +141,7 @@ function Resource() {
                           <ArrowUpWideNarrow size={20} />
                         </button>
                       </th>
-                      <th className="py-2 px-4 text-[#8DC63F]">
-                        <div className="flex items-center gap-2">
-                          <span>Status</span>
-                        </div>
-                      </th>
+                      <th className="py-2 px-4 text-[#8DC63F]">Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -92,6 +166,34 @@ function Resource() {
           </div>
         </div>
       </div>
+      <CreateModule isVisible={openResource} onClose={handleClose}>
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-lg font-semibold">Create New Resource</div>
+          <IconButton onClick={handleClose}>
+            <X className="h-6 w-6" />
+          </IconButton>
+        </div>
+        <div className="">
+            <TextField
+              fullWidth
+              variant="outlined"
+              size="small"
+              id="outlined-basic"
+              label="Resource Name"
+              onChange={handleChange}
+              name="resource_name"
+              value={resourceData.resource_name}
+            />
+        </div>
+        <div className="flex justify-end mt-5">
+          <button
+            className="bg-[#8DC63F] px-3 py-2 text-white"
+            onClick={createResourceAPI}
+          >
+            Save
+          </button>
+        </div>
+      </CreateModule>
     </div>
   );
 }
