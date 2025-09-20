@@ -34,7 +34,7 @@ const getResourcesModel = (requester, module_id) => {
                 message: 'You do not have permission to access this profile.'
             })
         }
-        client.query('SELECT  * FROM resource_data WHERE module_id=$1', [module_id], (err, result) => {
+        client.query('SELECT rd.resource_id, rd.resource_name, rd.module_id, COUNT(pd.user_id) AS trainee_completed FROM resource_data rd LEFT JOIN progress_data pd ON pd.resourse_id = rd.resource_id WHERE rd.module_id=$1 GROUP BY rd.resource_id, rd.resource_name, rd.module_id;', [module_id], (err, result) => {
             if(err)
             {
                 return reject(err)

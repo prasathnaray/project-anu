@@ -135,7 +135,7 @@ function Resource() {
                           <ArrowUpWideNarrow size={20} />
                         </button>
                       </th>
-                      <th className="py-2 px-4 text-[#8DC63F]">Status</th>
+                      <th className="py-2 px-4 text-[#8DC63F]">No. of Trainees Completed</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -143,13 +143,14 @@ function Resource() {
                       <tr key={r.resource_id} className="text-sm text-gray-700">
                         <td className="py-2 px-4 border-b-2">{r.resource_name}</td>
                         <td className="py-2 px-4 border-b-2">
-                          {r.is_completed ? (
+                          {/* {r.is_completed ? (
                             <div className="flex items-center gap-2 text-green-600">
                               <CheckCircle size={16} /> Completed
                             </div>
                           ) : (
                             <span className="text-gray-400">Pending</span>
-                          )}
+                          )} */}
+                          {r.trainee_completed}
                         </td>
                       </tr>
                     ))}

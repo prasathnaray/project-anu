@@ -12,6 +12,7 @@ import ModuleNewAPI from '../API/ModuleNewAPI';
 import { toast } from 'react-toastify';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import { ClipLoader } from 'react-spinners';
+import StatsDonutChart from '../charts/PrpgressBar';
 function Module() {
   const [openModule, setOpenModule] = React.useState(false);
   const handleClose = () => {
@@ -132,7 +133,7 @@ function Module() {
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
                         <div className="flex items-center gap-2">
-                          <span>Completion Status</span>
+                          <span>Trainees Attended</span>
                           <button>
                             <ArrowUpWideNarrow size={20} />
                           </button>
@@ -141,47 +142,48 @@ function Module() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(modCalls) &&
-                    modCalls.length > 0 ? (
-                      modCalls.map((data, index) => (
-                        <tr
-                          className="text-sm text-gray-700"
-                          key={index}
-                        >
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <a href={`/resource/${data?.module_id}`}>{data?.module_name}</a>
-                          </td>
-                          <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                            {/* {data?.access_status === true ? (
-                              <span className="px-2 py-1 bg-green-100 text-sm">
-                                Approved
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 bg-red-100 text-sm">
-                                Request
-                              </span>
-                            )} */} 
-                            "chart"
-                          </td>
-                          {/* <td className="py-2 px-4 font-semibold border-b-2">
-                            <button
-                            >
-                              <EllipsisVertical size={24} />
-                            </button>
-                          </td> */}
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={3}
-                          className="py-4 text-center text-gray-500"
-                        >
-                          <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+                        {Array.isArray(modCalls.modules) && modCalls.modules.length > 0 ? (
+                          modCalls.modules.map((data, index) => {
+                            // find matching stats record for this module
+                            const stat = Array.isArray(modCalls.stats)
+                              ? modCalls.stats.find((s) => s.module_id === data.module_id)
+                              : null;
+
+                            return (
+                              <tr className="text-sm text-gray-700" key={index}>
+                                <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                                  <a href={`/resource/${data?.module_id}`}>{data?.module_name}</a>
+                                </td>
+
+                                <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
+                                  {stat ? (
+                                    <span>
+                                      <StatsDonutChart 
+                                                  completed={stat.users_completed_all || 0}
+                                                  total={stat.total_users || 0} 
+                                      />
+                                      {/* {stat.total_completed}/{stat.total_trainees} Attended */}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">0</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={3} className="py-4 text-center text-gray-500">
+                              <ClipLoader
+                                color="#8DC63F"
+                                size={24}
+                                className="ms-2"
+                                cssOverride={{ borderWidth: "4px" }}
+                              />
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
                 </table>
               </div>
             </div>
