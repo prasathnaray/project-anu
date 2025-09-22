@@ -62,14 +62,10 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </>
               }
               {tokdata.role == 103 && 
-                  ["home","courses","analysis","progress","profile", "vrspace"].map((route,i) => {
+                  ["curriculum", "courses"].map((route,i) => {
                     const items = [
                       { icon: <Mortarboard02Icon size={20}/>, label: "Curriculum" },
                       { icon: <CourseIcon size={20}/>, label: "Courses" },
-                      { icon: <ChartRoseIcon size={20}/>, label: "Analysis" },
-                      { icon: <ChartBarLineIcon size={20}/>, label: "Progress" },
-                      { icon: <UserIcon size={20}/>, label: "Profile" }, 
-                      {icon:  <WirelessCloudAccessIcon size={20} />, label: "Stream"}
                     ];
                     return (
                       <li key={route}
