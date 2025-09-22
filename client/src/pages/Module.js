@@ -101,7 +101,7 @@ function Module() {
   localStorage.setItem('last_page_visited', window.location.pathname);
   const token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
-  if (decoded.role != 101 && decoded.role != 99) {
+  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
   return (
@@ -119,11 +119,13 @@ function Module() {
             <div className={`${buttonOpen ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
               <div className="mt-5 font-semibold text-xl text-gray-600">Associated Modules</div>
               <div className="mt-5 bg-white rounded px-8 py-10">
-                <div className="font-semibold">
+                {decoded.role == 101 && (
+                      <div className="font-semibold">
                         <IconButton size="md" color="success" className="bg-green-200" onClick={() => setOpenModule(true)}>
                                     <Plus className="h-6 w-6" />
                         </IconButton>
-                </div>
+                      </div>
+                )}
                 <table className="w-full text-left border-collapse mt-10">
                   <thead>
                     <tr className="border-b border-gray-300 shadow-sm">
