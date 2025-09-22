@@ -18,6 +18,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import GenderAnalytics from '../charts/PrpgressBar';
 import getChapterAPI from '../API/getChapterAPI';
 import { ClipLoader } from 'react-spinners';
+import StatsDonutChart from '../charts/PrpgressBar';
 function Chapters() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
@@ -195,7 +196,10 @@ React.useEffect(() => {
                                                                                 </td>
                                                                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
 
-                                                                                    <GenderAnalytics />
+                                                                                    <StatsDonutChart 
+                                                                                                completed={data.users_completed_all || 0}
+                                                                                                total={data.total_users || 0} 
+                                                                                    />
                                                                                 </td>
                                                                                 <td className={`${decoded.role == 101 ?  "hidden" : "py-2 px-4 text-[#8DC63F]"}`}>
                                                                                       ad
