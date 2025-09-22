@@ -1,4 +1,4 @@
-const {getTraineesm, traineem, disableTraineem, deleteTraineem} = require('../model/traineem.js');
+const {getTraineesm, traineem, disableTraineem, deleteTraineem, indData} = require('../model/traineem.js');
 const {HashPassword} = require('../utils/hash.js');
 const client = require('../utils/supaBaseConfig.js');
 const path = require('path');
@@ -102,4 +102,12 @@ const deleteTraineec = async(req, res)=> {
                 res.status(500).send(err)
         }
 }
-module.exports = {TraineeController, CreateTraineeController, DisableTrainee, deleteTraineec};
+const indController = async(req, res) => {
+        try {
+                const result = await indData(req.user, req.params.user_mail);
+                res.status(200).send(result);       
+        } catch (error) {
+                res.status(500).send(err);
+        }
+}
+module.exports = {TraineeController, CreateTraineeController, DisableTrainee, deleteTraineec, indController};

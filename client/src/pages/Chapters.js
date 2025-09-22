@@ -5,7 +5,7 @@ import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { useParams } from 'react-router-dom';
 import { FormControl, IconButton, InputLabel, MenuItem, Select, TextField } from '@mui/material';
-import { ArrowUpWideNarrow, EllipsisVertical, Plus, X } from 'lucide-react';
+import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, List, Notebook, Plus, X } from 'lucide-react';
 import CollapsibleTable from '../components/CourseTable';
 import EnhancedTable from '../components/CourseTable';
 import CreateModule from '../components/superadmin/CreateModule'
@@ -46,7 +46,7 @@ function Chapters() {
         })
   }
   console.log(chapterData);
-  //fetch course data
+    //fetch course data
   const [courseData, setCourseData] = React.useState({})
   const courseDataCall = async() => {
         try
@@ -123,9 +123,10 @@ React.useEffect(() => {
   }, [])
   const url = useParams();
   console.log(url)
+  localStorage.setItem('last_page_visited', url.course_id);
   let token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
-  if (decoded.role != 101 && decoded.role != 99) {
+  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
   return (
@@ -142,15 +143,17 @@ React.useEffect(() => {
                         </div>
                        <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow`}>
                                 <div className="bg-gray-100 h-screen pt-12">
+                                    <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px] hover:underline hover:underline-offset-4"><a href={`/course`}>Course</a></span> / <List size={15}/> <a href={`${localStorage.getItem('last_page_visited')}`} className="text-[15px] hover:underline hover:underline-offset-4">Chapters</a></div>
                                     <div className={`${buttonOpen ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
-                                            <div className="text-gray-500">Course / Chapters</div>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Associated Chapters</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10">
-                                                        <div className="font-semibold">
-                                                                <IconButton size="md" color="success" className="bg-green-200" onClick={() => setOpenModule(true)}>
-                                                                            <Plus className="h-6 w-6" />
-                                                                </IconButton>
-                                                        </div>
+                                                        {decoded.role == 101 && (
+                                                                  <div className="font-semibold">
+                                                                          <IconButton size="md" color="success" className="bg-green-200" onClick={() => setOpenModule(true)}>
+                                                                                      <Plus className="h-6 w-6" />
+                                                                          </IconButton>
+                                                                  </div>
+                                                        )}
                                                         <div className="mt-10">
                                                             {/* <EnhancedTable /> */}
                                                             <table className="w-full text-left border-collapse">
@@ -170,7 +173,7 @@ React.useEffect(() => {
                                                                                 </button>
                                                                               </div>
                                                                             </th>
-                                                                            <th className={`${decoded.role == 101 ?  "hidden" : "py-2 px-4 text-[#8DC63F]"}`}>
+                                                                            <th className={`${decoded.role == 101 || decoded.role == 103 ?  "hidden" : "py-2 px-4 text-[#8DC63F]"}`}>
                                                                               <div className="flex items-center gap-2">
                                                                                 <span>Action</span>
                                                                                 <button>
@@ -195,13 +198,20 @@ React.useEffect(() => {
                                                                                     <a href={`/module/${data?.chapter_id}/${urlData.course_id}`}>{data?.chapter_name}</a>
                                                                                 </td>
                                                                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-
+                                                                                  {decoded.role == 103 ? (
+                                                                                    <StatsDonutChart 
+                                                                                          completed={parseInt(data.completed_modules_text?.split('/')[0] || 0, 10)}
+                                                                                          total={parseInt(data.completed_modules_text?.split('/')[1] || 0, 10)}
+                                                                                    />
+                                                                                    // <div className="text-gray-600">{data?.completed_modules_text}</div>
+                                                                                  ) : (
                                                                                     <StatsDonutChart 
                                                                                                 completed={data.users_completed_all || 0}
                                                                                                 total={data.total_users || 0} 
                                                                                     />
+                                                                                   )}
                                                                                 </td>
-                                                                                <td className={`${decoded.role == 101 ?  "hidden" : "py-2 px-4 text-[#8DC63F]"}`}>
+                                                                                <td className={`${decoded.role == 101 || decoded.role == 103 ?  "hidden" : "py-2 px-4 text-[#8DC63F]"}`}>
                                                                                       ad
                                                                                 </td>
                                                                               </tr>

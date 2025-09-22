@@ -101,4 +101,34 @@ const deleteTraineem = (requester, user_mail) => {
         })
     })
 }
-module.exports = {traineem, getTraineesm, disableTraineem, deleteTraineem};
+
+const indData = (requester, user_mail) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [103].includes(Number(requester.role));
+        if(!isPrivileged)
+        {
+            return resolve({
+                  status: 'Unauthorized',
+                  code: 401,
+                  message: 'You do not have permission to view trainee profiles'
+            })
+        }
+        client.query(`WITH pdt AS(SELECT resourse_id AS rid, user_id, is_completed FROM progress_data WHERE user_id=$1) 
+                     SELECT c.course_id, c.course_name, c.curiculum_id, ch.chapter_id, ch.chapter_name, md.module_id, md.module_name, rd.resource_name, pdt.is_completed from course_data c 
+                     LEFT JOIN chapter_data ch ON c.course_id = ch.course_id 
+                     LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id 
+                     LEFT JOIN resource_data rd ON md.module_id = rd.module_id 
+                     LEFT JOIN pdt ON pdt.rid = rd.resource_id`, [user_mail], (err, result) => {
+                if(err)
+                {
+                   return reject(err)
+                }
+                else
+                {
+                    return resolve(result);
+                }
+        })
+    
+})
+}
+module.exports = {traineem, getTraineesm, disableTraineem, deleteTraineem, indData};

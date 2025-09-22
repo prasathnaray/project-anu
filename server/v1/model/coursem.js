@@ -56,7 +56,7 @@ const createCoursem = (course_name, curiculum_id, requester) => {
 }
 const getCoursem = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPriviledged = [101, 99].includes(Number(requester.role));
+        const isPriviledged = [101, 99, 103].includes(Number(requester.role));
         if(!isPriviledged)
         {
             return resolve({
@@ -142,16 +142,6 @@ const tagCoursem = async(user_id, course_id, requester) => {
             course_id: course_id,
         })
     )
-        // client.query('INSERT INTO course_availability(user_id, course_id) VALUES($1, $2)', [user_id, course_id], (err, result) => {
-        //     if(err)
-        //     {
-        //         return reject(err)
-        //     }
-        //     else
-        //     {
-        //         return resolve(result)
-        //     }
-        // })
     })
 }
 const requestCoursem = async(course_id, requester) => {

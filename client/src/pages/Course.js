@@ -461,7 +461,7 @@ import { jwtDecode } from "jwt-decode";
 import SideBar from "../components/sideBar";
 import { Navigate } from "react-router-dom";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, EllipsisVertical, X } from "lucide-react";
+import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, Notebook, X } from "lucide-react";
 import AddCourse from "../components/admin/AddCourse";
 import {
   FormControl,
@@ -689,7 +689,8 @@ function Course() {
     return () =>
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  //save the url id in the session
+  
   useEffect(() => {
     GetCuriculumList();
     GetCoursesList();
@@ -699,7 +700,7 @@ function Course() {
   // Auth check
   let token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
-  if (decoded.role != 101 && decoded.role != 99) {
+  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
 
@@ -721,6 +722,7 @@ function Course() {
           } flex-grow`}
         >
           <div className="bg-gray-100 h-screen pt-12">
+            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Course</span></div>
             <div
               className={`${
                 buttonOpen
@@ -728,7 +730,6 @@ function Course() {
                   : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
               }`}
             >
-              <div className="text-gray-500">Dashboard / Course</div>
               <div className="mt-5 font-semibold text-xl text-gray-600">
                 Course
               </div>
