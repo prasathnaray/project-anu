@@ -82,7 +82,7 @@ function Resource() {
   // decode token
   const token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
-  if (decoded.role != 101 && decoded.role != 99) {
+  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
 
@@ -142,15 +142,21 @@ function Resource() {
                     {resources.map((r) => (
                       <tr key={r.resource_id} className="text-sm text-gray-700">
                         <td className="py-2 px-4 border-b-2">{r.resource_name}</td>
-                        <td className="py-2 px-4 border-b-2">
-                          {/* {r.is_completed ? (
-                            <div className="flex items-center gap-2 text-green-600">
-                              <CheckCircle size={16} /> Completed
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">Pending</span>
-                          )} */}
+                        {/* <td className="py-2 px-4 border-b-2">
                           {r.trainee_completed}
+                        </td> */}
+                        <td className="py-2 px-4 border-b-2">
+                          {decoded.role == 103 ? (
+                            r.is_completed ? (
+                              <div className="flex items-center gap-2 text-green-600">
+                                <CheckCircle size={16} /> Completed
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">Pending</span>
+                            )
+                          ) : (
+                            <span>{r.trainee_completed || 0}</span>
+                          )}
                         </td>
                       </tr>
                     ))}

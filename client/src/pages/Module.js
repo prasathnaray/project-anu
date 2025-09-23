@@ -137,7 +137,11 @@ function Module() {
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
                         <div className="flex items-center gap-2">
-                          <span>Trainees Attended</span>
+                          {decoded.role == "103" ? (
+                                  <span>Resources Completed</span>
+                          ) : (
+                                  <span>Trainees Attended</span>
+                          )}
                           <button>
                             <ArrowUpWideNarrow size={20} />
                           </button>
@@ -160,17 +164,24 @@ function Module() {
                                 </td>
 
                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                                  {stat ? (
-                                    <span>
-                                      <StatsDonutChart 
-                                                  completed={stat.users_completed_all || 0}
-                                                  total={stat.total_users || 0} 
-                                      />
-                                      {/* {stat.total_completed}/{stat.total_trainees} Attended */}
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-400">0</span>
-                                  )}
+                                 {stat ? (
+                                      Number(decoded.role) === 103 ? (
+                                        <span className="text-gray-700">
+                                          {/* {stat.completed_resources}/{stat.total_resources} completed */}
+                                          <StatsDonutChart 
+                                            completed={stat.completed_resources || 0}
+                                            total={stat.total_resources || 0} 
+                                          />
+                                        </span>
+                                      ) : (
+                                        <StatsDonutChart 
+                                          completed={stat.users_completed_all || 0}
+                                          total={stat.total_users || 0} 
+                                        />
+                                      )
+                                    ) : (
+                                      <span className="text-gray-400">0</span>
+                                    )}
                                 </td>
                               </tr>
                             );
