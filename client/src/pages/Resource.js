@@ -118,7 +118,7 @@ function Resource() {
               
               <div className="mt-5 bg-white rounded px-8 py-10">
                 {
-                decoded.role == 101 && (
+                decoded.role == 99 && (
                   <div className="flex justify-start mb-4">
                         <IconButton
                           size="md"
