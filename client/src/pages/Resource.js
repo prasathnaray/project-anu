@@ -3,14 +3,15 @@ import { jwtDecode } from "jwt-decode";
 import { Navigate, useParams } from "react-router-dom";
 import NavBar from "../components/navBar";
 import SideBar from "../components/sideBar";
-import { ArrowUpWideNarrow, Plus, X, CheckCircle } from "lucide-react";
-import { FormControl, IconButton, InputLabel, Select, TextField } from "@mui/material";
+import { ArrowUpWideNarrow, Plus, X, CheckCircle, LayoutDashboard, Bookmark, Notebook } from "lucide-react";
+import { FormControl, IconButton, InputLabel, List, Select, TextField } from "@mui/material";
 import CreateModule from "../components/superadmin/CreateModule";
 import { toast } from "react-toastify";
 import CustomCloseButton from "../utils/CustomCloseButton";
 import axios from "axios";
 import getResourceAPI from "../API/GetResourceAPI";
 import CreateResourceApi from "../API/createResourcesAPI";
+import { MarketingIcon } from "hugeicons-react";
 
 function Resource() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
@@ -100,6 +101,7 @@ function Resource() {
         {/* Main Content */}
         <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow`}>
           <div className="bg-gray-100 h-screen pt-12">
+            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px] hover:underline hover:underline-offset-4"><a href={`/course`}>Course</a></span> / <List size={15}/> <a href={`${localStorage.getItem('last_page_visited')}`} className="text-[15px] hover:underline hover:underline-offset-4">Chapters</a> / <Bookmark size={15}/> Modules / <MarketingIcon size={15}/>Resources</div>
             <div
               className={`${
                 buttonOpen
@@ -108,24 +110,27 @@ function Resource() {
               }`}
             >
               {/* Breadcrumb */}
-              <div className="text-gray-500">Course / Chapters / Modules / Resources</div>
               <div className="mt-5 font-semibold text-xl text-gray-600">
                 Learning Resources
               </div>
 
               {/* Table + Add Button */}
+              
               <div className="mt-5 bg-white rounded px-8 py-10">
-                <div className="flex justify-start mb-4">
-                  <IconButton
-                    size="md"
-                    color="success"
-                    className="bg-green-200"
-                    onClick={() => setOpenResource(true)}
-                  >
-                    <Plus className="h-6 w-6" />
-                  </IconButton>
-                </div>
-
+                {
+                decoded.role == 101 && (
+                  <div className="flex justify-start mb-4">
+                        <IconButton
+                          size="md"
+                          color="success"
+                          className="bg-green-200"
+                          onClick={() => setOpenResource(true)}
+                        >
+                          <Plus className="h-6 w-6" />
+                        </IconButton>
+                  </div>  
+                )
+              }
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-300 shadow-sm">

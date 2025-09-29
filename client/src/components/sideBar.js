@@ -62,8 +62,9 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </>
               }
               {tokdata.role == 103 && 
-                  ["course"].map((route,i) => {
+                  ["dashboard", "course"].map((route,i) => {
                     const items = [
+                      {icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
                       { icon: <CourseIcon size={20}/>, label: "Courses" },
                     ];
                     return (

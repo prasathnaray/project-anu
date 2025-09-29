@@ -147,7 +147,7 @@ React.useEffect(() => {
                                     <div className={`${buttonOpen ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Associated Chapters</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10">
-                                                        {decoded.role == 101 && (
+                                                        {decoded.role == 99 && (
                                                                   <div className="font-semibold">
                                                                           <IconButton size="md" color="success" className="bg-green-200" onClick={() => setOpenModule(true)}>
                                                                                       <Plus className="h-6 w-6" />
