@@ -203,5 +203,4 @@ function Resource() {
     </div>
   );
 }
-
 export default Resource;
