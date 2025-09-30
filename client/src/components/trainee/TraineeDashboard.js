@@ -51,7 +51,7 @@ function TraineeDashboard() {
                     <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
                           <div className="border bg-white px-10 flex justify-start items-center py-4 gap-5">
                                       <button className={`${progressState === true ? 'bg-[#8DC63F] text-white transition-all ease-in-out px-4 py-1 rounded-full font-semibold text-sm': 'bg-gray-200 px-4 py-1 rounded-full font-semibold text-gray-600 text-sm transition-all ease-in-out'} `} onClick={handleProgress}>Progress</button>
-                                      <button className="bg-gray-200 px-4 py-1 rounded-full font-semibold text-gray-600 text-sm hover:bg-[#8DC63F] hover:text-white transition-all ease-in-out">My Learning</button>
+                                      {/* <button className="bg-gray-200 px-4 py-1 rounded-full font-semibold text-gray-600 text-sm hover:bg-[#8DC63F] hover:text-white transition-all ease-in-out">My Learning</button> */}
                           </div>
                           <div className="px-10 pt-4">
                                 <div className="grid grid-cols-3 gap-5">
