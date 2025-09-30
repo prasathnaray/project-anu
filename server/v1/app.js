@@ -42,6 +42,7 @@ const getChapterRouter = require('./routes/getChapterRouter.js');
 const NewModuleRouter = require('./routes/newModuleRoute.js');
 const createResourceRouter = require('./routes/createResourceRoute.js');
 const getResourcesRouter = require('./routes/getResourcesRoute.js');
+const UserStatsRouter = require('./routes/UserStatusRoute');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -127,3 +128,6 @@ app.use('/api/v1', Authenticate, getChapterRouter);
 //resource 
 app.use('/api/v1', Authenticate, createResourceRouter);
 app.use('/api/v1', Authenticate, getResourcesRouter);
+
+//user stats
+app.use('/api/v1', Authenticate, UserStatsRouter);

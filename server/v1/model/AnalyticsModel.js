@@ -52,7 +52,7 @@ const UserStats = (requester) => {
             JOIN module_data m ON ch.chapter_id = m.chapter_id
             JOIN resource_data r ON m.module_id = r.module_id
             JOIN progress_data p ON r.resource_id = p.resourse_id
-            WHERE p.user_id = ${requester.user_mail}
+            WHERE p.user_id = $1
             AND p.is_completed = TRUE
             GROUP BY c.course_id
         )
@@ -68,7 +68,7 @@ const UserStats = (requester) => {
         LEFT JOIN user_completed uc 
             ON cr.course_id = uc.course_id
         ORDER BY completion_percentage DESC;
-            `, (err, result) => {
+            `,[requester.user_mail], (err, result) => {
                 if(err)
                 {
                     return reject(err)
