@@ -26,7 +26,7 @@ export default function StatsPieChart({ completed, total }) {
           {
             data,
             // 👇 remove innerRadius for pie
-            outerRadius: 60,
+            outerRadius: 100,
             paddingAngle: 2,
           },
         ]}

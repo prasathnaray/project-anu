@@ -56,6 +56,7 @@ function TraineeDashboard() {
                           <div className="px-10 pt-4">
                                 <div className="grid grid-cols-3 gap-5">
                                       <div className="col-span-2 border bg-white">
+                                            <div className="flex justify-start items-center p-2 text-xl font-semibold text-gray-500">Progress</div>
                                             <div className="ms-[100px] mt-2">
                                               {progressState === true && UserStatsData.length > 0 ? (
                                                 <StatsPieChart 
