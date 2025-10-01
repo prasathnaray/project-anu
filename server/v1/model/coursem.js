@@ -65,7 +65,21 @@ const getCoursem = (requester) => {
                 message: 'You do not have permission to access this course data.'
             })
         }
-        client.query('SELECT c.course_id, c.course_name, c.curiculum_id, ca.access_status, ca.user_id FROM course_data c LEFT JOIN course_availability ca ON c.course_id = ca.course_id;', (err, result) => {
+        client.query(`
+
+            SELECT 
+    cd.course_id,
+    cd.course_name,
+    bd.batch_name, 
+    bd.batch_start_date,
+    bd.batch_end_date,
+    ca.access_status 
+FROM batch_data bd
+JOIN course_data cd 
+    ON bd.course_data @> to_jsonb(cd.course_id::text)
+JOIN course_availability ca 
+    ON cd.course_id::text = trim(both '"' from ca.course_id::text); 
+            `, (err, result) => {
             if(err)
             {
                 return reject(err)

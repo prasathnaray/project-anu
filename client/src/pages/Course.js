@@ -583,7 +583,7 @@ function Course() {
       }
     }
   };
-
+  console.log(courseList);
   const [buttonOpen, setButtonOpen] = useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
@@ -770,6 +770,14 @@ function Course() {
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
                         <div className="flex items-center gap-2">
+                                  <div>Batch Name</div>
+                                  <button>
+                                        <ArrowUpWideNarrow size={20} />
+                                  </button>
+                        </div>
+                      </th>
+                      <th className="py-2 px-4 text-[#8DC63F]">
+                        <div className="flex items-center gap-2">
                           <span>Course availability</span>
                           <button>
                             <ArrowUpWideNarrow size={20} />
@@ -796,6 +804,10 @@ function Course() {
                         >
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
                             <a href={`/chapters/${data?.course_id}`}>{data?.course_name}</a>
+                          </td>
+                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                              {data?.batch_name}
+
                           </td>
                           <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
                             {data?.access_status === true ? (
