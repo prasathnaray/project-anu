@@ -287,7 +287,7 @@ function Instructors() {
                 </table>
 
                 {/* Pagination */}
-                <div className="flex justify-end items-center mt-5 gap-2">
+                {/* <div className="flex justify-end items-center mt-5 gap-2">
                   <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
                     <button>
                       <ChevronLeft size={20} />
@@ -310,7 +310,7 @@ function Instructors() {
                       <ChevronRight size={20} />
                     </button>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

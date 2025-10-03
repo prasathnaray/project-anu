@@ -413,7 +413,7 @@ function Batch()  {
 
                                                         {/* </tbody> */}
                                                 </table>
-                                                <div className="flex justify-end items-center mt-6 gap-10">
+                                                {/* <div className="flex justify-end items-center mt-6 gap-10">
                                                         <TablePagination 
                                                                 component="div"
                                                                 count={rowCount}
@@ -422,7 +422,7 @@ function Batch()  {
                                                                 rowsPerPage={rowsPerPage}
                                                                 onRowsPerPageChange={handleChangeRowsPerPage}
                                                         />
-                                                </div>
+                                                </div> */}
                                             </div>
                                 </div>
                         </div>

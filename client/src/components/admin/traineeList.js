@@ -618,7 +618,7 @@ function TraineeList() {
                   </table>
 
                   {/* Pagination */}
-                  <div className="flex justify-end items-center mt-5 gap-2">
+                  {/* <div className="flex justify-end items-center mt-5 gap-2">
                     <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] hover:text-white">
                       <button>
                         <ChevronLeft size={20} />
@@ -637,7 +637,7 @@ function TraineeList() {
                         <ChevronRight size={20} />
                       </button>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>

@@ -461,7 +461,7 @@ import { jwtDecode } from "jwt-decode";
 import SideBar from "../components/sideBar";
 import { Navigate } from "react-router-dom";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, Notebook, X } from "lucide-react";
+import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, Notebook, SlidersHorizontal, X } from "lucide-react";
 import AddCourse from "../components/admin/AddCourse";
 import {
   FormControl,
@@ -480,10 +480,16 @@ import TagCourse from "../components/superadmin/TagCourse";
 import GetAdminsAPI from "../API/getAdminsAPI";
 import TagCourseAPI from "../API/TagCourseAPI";
 import { ClipLoader } from "react-spinners";
+import CourseCustomisation from "../components/CourseCustomisation";
 
 function Course() {
   // Sidebar toggle
   const [openCourse, setOpenCourse] = useState(false);
+  const [changeState, setChangeState] = useState(false);
+  const handleChangeState = () => {
+    setChangeState(!changeState)
+  }
+  console.log(changeState);
   const [curiculumList, setCuriculumList] = useState([]);
   const [courseData, setCourseData] = useState({
     course_name: "",
@@ -700,7 +706,7 @@ function Course() {
   // Auth check
   let token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
-  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103) {
+  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103 && decoded.role != 102) {
     return <Navigate to="/" replace />;
   }
 
@@ -723,6 +729,17 @@ function Course() {
         >
           <div className="bg-gray-100 h-screen pt-12">
             <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Course</span></div>
+            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+                <button onClick={handleChangeState} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
+                  <LayoutDashboard size={15} /> 
+                  <span className="text-[13px]">Course List</span>
+                </button>
+                <button onClick={() => setChangeState(false)} className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded-full">
+                  <SlidersHorizontal size={15} className="text-gray-600" />
+                  <span className="text-[13px]">Customised Courses</span>
+                </button>
+            </div>
+            {changeState == true ? (
             <div
               className={`${
                 buttonOpen
@@ -840,12 +857,16 @@ function Course() {
                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
                                   View
                                 </button>
-                                <button
-                                  className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
-                                  onClick={() => handleDelete(data.course_id)}
-                                >
-                                  Delete
-                                </button>
+                                {jwtDecode(
+                                  localStorage.getItem("user_token")
+                                ).role == 99 && (
+                                    <button
+                                      className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                      onClick={() => handleDelete(data.course_id)}
+                                    >
+                                      Delete
+                                    </button>
+                                )}
                                 {jwtDecode(
                                   localStorage.getItem("user_token")
                                 ).role == 99 && (
@@ -875,10 +896,20 @@ function Course() {
                 </table>
               </div>
             </div>
+            ) : (
+              <div
+                  className={`${
+                    buttonOpen
+                      ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
+                      : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
+                  }`}
+              >
+                    <CourseCustomisation />
+              </div>
+            )}
           </div>
         </div>
       </div>
-
       {/* Add Course Modal */}
       <AddCourse isVisible={openCourse} onClose={handleClose}>
         <>
