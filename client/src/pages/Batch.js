@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical } from "lucide-react";
+import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical, LayoutDashboard, Notebook, Pen, Pencil, SlidersHorizontal } from "lucide-react";
 import CreateBatch from "../components/admin/CreateBatch";
 import { jwtDecode } from "jwt-decode";
 import { Navigate } from "react-router-dom";
@@ -24,6 +24,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import GetCuriculumAPI from "../API/getCuriculumAPI";
 import GetCoursesByCuriculumAPI from "../API/GetCoursesByCuriculumAPI";
+import CreateTargetedLearning from "../components/CreateTargetedLearning";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -80,7 +81,7 @@ function Batch()  {
         const [rowsPerPage, setRowsPerPage] = React.useState(2);
         const [rowCount, setRowCount] = useState(0);
         const [corList, setCorList] = useState({});
-
+        const [openTargetedLearning, setTargetedLearning] = React.useState(false);
 
         /// batch search options
                         
@@ -92,7 +93,11 @@ function Batch()  {
                         setRowsPerPage(parseInt(event.target.value, 10));
                         setPage(0);
         };
+
+        const [batchCus, setBatchCus] = useState(true);
+        console.log(batchCus);
         const handleClose = () => {
+                setTargetedLearning(false)
                 setOpenBatch(false);
                 setStartDate(null);
                 setEndDate(null);
@@ -313,9 +318,20 @@ function Batch()  {
                         className={`${
           buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
         } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
-                        <div className="">
+                        <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+                                <button onClick={() => setBatchCus(true)} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
+                                  <LayoutDashboard size={15} /> 
+                                  <span className="text-[13px]">Batch List</span>
+                                </button>
+                                <button onClick={() => setBatchCus(false)} className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded-full">
+                                  <SlidersHorizontal size={15} className="text-gray-600" />
+                                  <span className="text-[13px]">Targeted Learning</span>
+                                </button>
+                        </div>
+                        {batchCus==true ? (
+                                <div className="">
+                                <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Batch</span></div>
                                 <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
-                                            <div className="text-gray-500">Dashboard / Batch</div>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Batches</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10 ">
                                                 <div className="font-semibold text-xl text-gray-500">All Batches</div>
@@ -337,7 +353,7 @@ function Batch()  {
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                        {decoded.role == 99 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
+                                                                        {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
                                                                 </tr>
                                                         </thead>
                                                         {/* <tbody> */}
@@ -398,8 +414,24 @@ function Batch()  {
                                                                                         {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count}
                                                                                         </th>
                                                                                         <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                        {/* dropdown actions */}
-                                                                                        </th>
+                                                                                                        <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
+                                                                                                        {openDropdownIndex === index && (
+                                                                                                                <div
+                                                                                                                ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                                                        transition-all ease-in-out duration-500 origin-top-right
+                                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                                                                                                                `} 
+                                                                                                                >
+                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
+                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
+                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
+                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
+                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
+
+                                                                                                                </div>
+                                                                                                        )}
+                                                                                         </th>
                                                                                 </tr>
                                                                                 ))
                                                                                 ) : (
@@ -426,8 +458,36 @@ function Batch()  {
                                             </div>
                                 </div>
                         </div>
+                        ): (
+                                <div className={`${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
+                                                                <div className="mt-5 font-semibold text-xl text-gray-600">Targeted Learning</div>                                                
+                                                                <div className="mt-5 bg-white rounded px-8 py-10 ">
+                                                                                <div className="flex justify-end items-center">
+                                                                                        {/* <div className="text-bold">Custom Batches</div> */}
+                                                                                        <div><button className="p-2 bg-[#8DC63F] rounded-full text-white hover:rounded delay-150 transition ease-in-out duration-150" onClick={() => setTargetedLearning(true)}><Pencil size={15}/></button></div>
+                                                                                </div>
+                                                                </div>
+                                </div>
+                        )}    
                 </div>
-                </div>     
+                </div>
+                <CreateTargetedLearning isVisible={openTargetedLearning} onClose={handleClose}>
+                        <div className="flex justify-between items-center">
+                                        <div className="text-lg">Create Targeted Learning</div>
+                                        <div><button onClick={handleClose} className="text-red-500 hover:bg-red-50 p-1 hover:rounded"><X size={24}/></button></div>
+                        </div>
+                        <div className="mt-5">
+                                <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px"}}
+                                        id="outlined-basic"
+                                        label="Name"
+                                        name="batch_name"
+                                />
+                        </div>    
+                </CreateTargetedLearning>    
                 <CreateBatch isVisible={openBatch} onClose={handleClose}>
                     <div className="flex justify-between items-center">
                         <div className="text-lg">Create Batch</div>

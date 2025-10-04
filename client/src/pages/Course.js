@@ -485,7 +485,7 @@ import CourseCustomisation from "../components/CourseCustomisation";
 function Course() {
   // Sidebar toggle
   const [openCourse, setOpenCourse] = useState(false);
-  const [changeState, setChangeState] = useState(false);
+  const [changeState, setChangeState] = useState(true);
   const handleChangeState = () => {
     setChangeState(!changeState)
   }
@@ -729,7 +729,7 @@ function Course() {
         >
           <div className="bg-gray-100 h-screen pt-12">
             <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Course</span></div>
-            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+            {/* <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                 <button onClick={handleChangeState} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
                   <LayoutDashboard size={15} /> 
                   <span className="text-[13px]">Course List</span>
@@ -738,8 +738,7 @@ function Course() {
                   <SlidersHorizontal size={15} className="text-gray-600" />
                   <span className="text-[13px]">Customised Courses</span>
                 </button>
-            </div>
-            {changeState == true ? (
+            </div> */}
             <div
               className={`${
                 buttonOpen
@@ -896,17 +895,7 @@ function Course() {
                 </table>
               </div>
             </div>
-            ) : (
-              <div
-                  className={`${
-                    buttonOpen
-                      ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
-                      : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
-                  }`}
-              >
-                    <CourseCustomisation />
-              </div>
-            )}
+            
           </div>
         </div>
       </div>
