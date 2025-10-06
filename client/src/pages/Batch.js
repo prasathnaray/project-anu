@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 import GetCuriculumAPI from "../API/getCuriculumAPI";
 import GetCoursesByCuriculumAPI from "../API/GetCoursesByCuriculumAPI";
 import CreateTargetedLearning from "../components/CreateTargetedLearning";
+import TraineeListAPI from "../API/TraineeListAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -296,6 +297,65 @@ function Batch()  {
                 getCuriculumList()
         }, [])
 
+
+
+        ///Target Learning area
+                const [traineeState, setTraineeState] = React.useState({})
+                const [targetedLearning, setTargetedLearningState] = React.useState({
+                        tar_name: "",
+                        curiculum_id: "",
+                        course_id: "",
+                        chapter_id: "",
+                        module_id: [],
+                        resources_id: [],
+                        trainee_id: [],
+                        start_date: "",
+                        end_date: ""
+                })
+
+                const handleTChange = (e) => {
+                        const { name, value } = e.target;
+                        if (name === "course_data") {
+                                setTargetedLearningState({
+                                ...targetedLearning,
+                                [name]: Array.isArray(value) ? value.map(String) : value.split(",").map(String),
+                                });
+                        } 
+                        else {
+                                setTargetedLearningState({
+                                        ...targetedLearning,
+                                        [name]: value,
+                                });
+                                // if (name === "curiculum_name" && value) {
+                                //         getCourseByCurData(value);
+                                // }
+                        }
+                };
+                const TraineesListAPICall = async() => {
+                        if(jwtDecode(localStorage.getItem("user_token")).role!=102)
+                        {
+                                return;
+                        }
+                        try
+                        {
+                                let token = localStorage.getItem("user_token")
+                                const response = await TraineeListAPI(token);
+                                setTraineeState(response.data.rows);
+                                //cons ole.log(response);
+                        }
+                        catch(err)
+                        {
+                                console.log(err);
+                        }
+                }
+                React.useEffect(() => {
+                        TraineesListAPICall();
+                }, [])
+                // React.useEffect(() => {
+                //         console.log(traineeState);
+                // }, [])
+                console.log(traineeState);
+        ///
                 //console.log(curList)
         if (!token) {
                         return <Navigate to="/" replace />;
@@ -484,7 +544,8 @@ function Batch()  {
                                         sx={{ minHeight: "35px"}}
                                         id="outlined-basic"
                                         label="Name"
-                                        name="batch_name"
+                                        onChange={handleTChange}
+                                        name="tar_name"
                                 />
                         </div> 
                         <div className="mt-5">
@@ -495,7 +556,8 @@ function Batch()  {
                                         sx={{ minHeight: "35px"}}
                                         id="outlined-basic"
                                         label="Curiculum"
-                                        name="batch_name"
+                                        onChange={handleTChange}
+                                        name="curiculum_id"
                                 />
                         </div> 
                         <div className="mt-5 grid grid-cols-2 items-center gap-6">
@@ -506,7 +568,8 @@ function Batch()  {
                                         sx={{ minHeight: "35px"}}
                                         id="outlined-basic"
                                         label="Course"
-                                        name="batch_name"
+                                        onChange={handleTChange}
+                                        name="course_id"
                                 />
                                 <TextField
                                         fullWidth
@@ -515,7 +578,7 @@ function Batch()  {
                                         sx={{ minHeight: "35px"}}
                                         id="outlined-basic"
                                         label="Chapters"
-                                        name="batch_name"
+                                        name="chapter_id"
                                 />
                                 <TextField
                                         fullWidth
@@ -524,7 +587,9 @@ function Batch()  {
                                         sx={{ minHeight: "35px"}}
                                         id="outlined-basic"
                                         label="Modules"
-                                        name="batch_name"
+                                        onChange={handleTChange}
+                                        value={''}
+                                        name="module_id"
                                 />
                                 <TextField
                                         fullWidth
@@ -533,8 +598,99 @@ function Batch()  {
                                         sx={{ minHeight: "35px"}}
                                         id="outlined-basic"
                                         label="Resources"
-                                        name="batch_name"
+                                        onChange={handleTChange}
+                                        name="resources_id"
                                 />
+                        </div>
+                        <div className="mt-5 relative overflow-visible z-[1200]">
+                            <FormControl
+                                                fullWidth
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="program-select-label">Choose Trainees</InputLabel>
+                              <Select
+                                labelId="program-select-label"
+                                label="Choose Trainees"
+                                className=""
+                                onChange={handleTChange}
+                                name="trainee_id"
+                                //value={batchData?.curiculum_name}
+                                MenuProps={{
+                                        disablePortal: true, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 1600 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                              >
+                                        {Array.isArray(traineeState) && traineeState.length > 0 ? (
+                                                traineeState.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.user_email}>
+                                                                {data?.user_name}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>  
+                        </div>
+                        <div className="mt-5 grid grid-cols-2 gap-6">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                                label="Starting Date"
+                                                value={
+                                                batchData.batch_start_date
+                                                        ? dayjs(batchData.batch_start_date)
+                                                        : null
+                                                }
+                                                onChange={(date) => {
+                                                        // setStartDate(date);
+                                                        setBatchData(prev => ({ ...prev, batch_start_date: date }));
+                                                }}
+                                                slotProps={{
+                                                textField: {
+                                                        fullWidth: true,
+                                                        variant: "outlined",
+                                                        size: "small",
+                                                        sx: { minHeight: "35px" },
+                                                },
+                                                }}
+                                />
+                              </LocalizationProvider>
+                               <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                <DatePicker
+                                                label="End Date"
+                                                // value={
+                                                // batchData.batch_start_date
+                                                //         ? dayjs(batchData.batch_start_date)
+                                                //         : null
+                                                // }
+                                                // onChange={(date) => {
+                                                //         setStartDate(date);
+                                                //         setBatchData(prev => ({ ...prev, batch_start_date: date }));
+                                                // }}
+                                                slotProps={{
+                                                textField: {
+                                                        fullWidth: true,
+                                                        variant: "outlined",
+                                                        size: "small",
+                                                        sx: { minHeight: "35px" },
+                                                },
+                                                }}
+                                />
+                              </LocalizationProvider>
                         </div>
                         <div className="mt-5 flex justify-end items-center">
                              <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={handleSubmit}>Initiate</button>

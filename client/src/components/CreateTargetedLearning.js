@@ -23,7 +23,7 @@ function CreateTargetedLearning({isVisible, onClose, children}) {
       <div
         onClick={(e) => e.stopPropagation()}
         className={twMerge(
-          "w-[700px] transition-all",
+          "w-[800px] transition-all",
           shake ? "animate-shake" : ""
         )}
       >
