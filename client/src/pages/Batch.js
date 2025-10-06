@@ -486,7 +486,59 @@ function Batch()  {
                                         label="Name"
                                         name="batch_name"
                                 />
-                        </div>    
+                        </div> 
+                        <div className="mt-5">
+                                <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px"}}
+                                        id="outlined-basic"
+                                        label="Curiculum"
+                                        name="batch_name"
+                                />
+                        </div> 
+                        <div className="mt-5 grid grid-cols-2 items-center gap-6">
+                                <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px"}}
+                                        id="outlined-basic"
+                                        label="Course"
+                                        name="batch_name"
+                                />
+                                <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px"}}
+                                        id="outlined-basic"
+                                        label="Chapters"
+                                        name="batch_name"
+                                />
+                                <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px"}}
+                                        id="outlined-basic"
+                                        label="Modules"
+                                        name="batch_name"
+                                />
+                                <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ minHeight: "35px"}}
+                                        id="outlined-basic"
+                                        label="Resources"
+                                        name="batch_name"
+                                />
+                        </div>
+                        <div className="mt-5 flex justify-end items-center">
+                             <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={handleSubmit}>Initiate</button>
+                        </div>
                 </CreateTargetedLearning>    
                 <CreateBatch isVisible={openBatch} onClose={handleClose}>
                     <div className="flex justify-between items-center">

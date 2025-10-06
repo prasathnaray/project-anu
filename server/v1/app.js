@@ -43,6 +43,7 @@ const NewModuleRouter = require('./routes/newModuleRoute.js');
 const createResourceRouter = require('./routes/createResourceRoute.js');
 const getResourcesRouter = require('./routes/getResourcesRoute.js');
 const UserStatsRouter = require('./routes/UserStatusRoute');
+const createTargetedLearningRouter = require('./routes/CreateTargetedLearningRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -131,3 +132,6 @@ app.use('/api/v1', Authenticate, getResourcesRouter);
 
 //user stats
 app.use('/api/v1', Authenticate, UserStatsRouter);
+
+//targeted Learning 
+app.use('/api/v1', Authenticate, createTargetedLearningRouter);

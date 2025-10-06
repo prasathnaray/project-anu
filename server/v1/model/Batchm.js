@@ -22,7 +22,7 @@ const createBatchm = (batch_name, batch_start_date, batch_end_date, course_data,
         })
 }
 const getBatchm = (requester) => {
-    const isPrivileged = [101].includes(Number(requester.role));
+    const isPrivileged = [101, 102].includes(Number(requester.role));
     if(!isPrivileged) {
         return resolve({
             status: 'Unauthorized',
@@ -90,4 +90,30 @@ const deleteBatchm = (requester, batch_id) => {
         })
     })
 }
-module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm};
+const createTargetedLearning = (requester, tar_name, curiculum_id, chapter_id, module_id, resources_id, start_date, end_date, course_id, trainee_id) => {
+    const isPrivileged = [101, 102].includes(Number(requester.role))
+    if(!isPrivileged)
+    {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to view trainee profiles'  
+        })
+    }
+     const safeModuleIds = Array.isArray(module_id) && module_id.length > 0 ? module_id : null;
+     const safeResourceIds = Array.isArray(resources_id) && resources_id.length > 0 ? resources_id : null;
+     const traineeIds = Array.isArray(trainee_id) && trainee_id.length > 0 ? trainee_id : null;
+    return new Promise((resolve, reject) => {
+        client.query('INSERT INTO targeted_learning(tar_name, curiculum_id, chapter_id, modules_id, resources_id, start_date, end_date, course_id, trainee_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)', [tar_name, curiculum_id, chapter_id, safeModuleIds, safeResourceIds, start_date, end_date, course_id, traineeIds], (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {   
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning};
