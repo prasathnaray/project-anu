@@ -24,7 +24,7 @@ const curiculumm = (curiculum_name, requester) => {
 }
 
 const getCurriculumm = (requester) => {
-    const isPrivileged = [101, 99].includes(Number(requester.role));
+    const isPrivileged = [101, 99, 102].includes(Number(requester.role));
     return new Promise((resolve, reject) => {
         if(!isPrivileged)
         {

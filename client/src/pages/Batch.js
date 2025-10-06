@@ -26,6 +26,10 @@ import GetCuriculumAPI from "../API/getCuriculumAPI";
 import GetCoursesByCuriculumAPI from "../API/GetCoursesByCuriculumAPI";
 import CreateTargetedLearning from "../components/CreateTargetedLearning";
 import TraineeListAPI from "../API/TraineeListAPI";
+import GetCoursesAPI from "../API/GetCoursesAPI";
+import getChapterAPI from "../API/getChapterAPI";
+import GetModuleApi from "../API/GetModuleAPI";
+import getResourceAPI from "../API/GetResourceAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -292,13 +296,53 @@ function Batch()  {
                         setCorList({});
                 }
         }
+        const [chapterData, setChapterData] = React.useState([]);
+        const getChaptersByCorData = async(course_id) => {
+                if(!course_id) return;
+                try
+                {
+                        const token = localStorage.getItem("user_token");
+                        const response  = await getChapterAPI(token, course_id);
+                        setChapterData(response.data);
+                }
+                catch(err)
+                {
+                        console.log(err)
+
+                }
+        }
+        const [moduleList, setModuleList] = React.useState('')
+        const getModulesbyChapter = async(chapter_id) => {
+                if(!chapter_id) return;
+                try 
+                {
+                        const token = localStorage.getItem("user_token");
+                        const response = await GetModuleApi(token, chapter_id);
+                        setModuleList(response.data.modules)
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+        }
+        const [resourceList, setResourceList] = React.useState('')
+        const getResourceByModule = async(module_id) => {
+                if(!module_id) return;
+                try
+                {
+                        const token = localStorage.getItem('user_token');
+                        const response = await getResourceAPI(token, module_id);
+                        setResourceList(response.data);
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+        }
         console.log(corList)
         React.useEffect(() => {
                 getCuriculumList()
         }, [])
-
-
-
         ///Target Learning area
                 const [traineeState, setTraineeState] = React.useState({})
                 const [targetedLearning, setTargetedLearningState] = React.useState({
@@ -312,7 +356,7 @@ function Batch()  {
                         start_date: "",
                         end_date: ""
                 })
-
+                console.log(targetedLearning);
                 const handleTChange = (e) => {
                         const { name, value } = e.target;
                         if (name === "course_data") {
@@ -326,13 +370,24 @@ function Batch()  {
                                         ...targetedLearning,
                                         [name]: value,
                                 });
-                                // if (name === "curiculum_name" && value) {
-                                //         getCourseByCurData(value);
-                                // }
+                                if (name === "curiculum_id" && value) {
+                                        getCourseByCurData(value);
+                                }
+                                if (name === "course_id" && value) {
+                                      getChaptersByCorData(value);  
+                                }
+                                if(name === "chapter_id" && value)
+                                {
+                                     getModulesbyChapter(value);
+                                }
+                                if(name === "module_id" && value)
+                                {
+                                     getResourceByModule(value)     
+                                }
                         }
                 };
                 const TraineesListAPICall = async() => {
-                        if(jwtDecode(localStorage.getItem("user_token")).role!=102)
+                        if(jwtDecode(localStorage.getItem("user_token")).role!=101)
                         {
                                 return;
                         }
@@ -471,7 +526,7 @@ function Batch()  {
                                                                                         {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
                                                                                         </th>
                                                                                         <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count}
+                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count ?? 0}
                                                                                         </th>
                                                                                         <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                                         <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
@@ -546,10 +601,11 @@ function Batch()  {
                                         label="Name"
                                         onChange={handleTChange}
                                         name="tar_name"
+                                        value={targetedLearning?.tar_name}
                                 />
                         </div> 
                         <div className="mt-5">
-                                <TextField
+                                {/* <TextField
                                         fullWidth
                                         variant="outlined"
                                         size="small"
@@ -558,10 +614,53 @@ function Batch()  {
                                         label="Curiculum"
                                         onChange={handleTChange}
                                         name="curiculum_id"
-                                />
+                                        value={targetedLearning?.curiculum_id}
+                                /> */}
+                                <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="program-select-label">Select Curiculum</InputLabel>
+                              <Select
+                                labelId="program-select-label"
+                                label="Select Curiculum"
+                                className=""
+                                onChange={handleTChange}
+                                name="curiculum_id"
+                                value={targetedLearning?.curiculum_id}
+                                MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 1300 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                              >
+                                        {Array.isArray(curList) && curList.length > 0 ? (
+                                                curList.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.curiculum_id}>
+                                                                {data?.curiculum_nam}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
                         </div> 
                         <div className="mt-5 grid grid-cols-2 items-center gap-6">
-                                <TextField
+                                {/* <TextField
                                         fullWidth
                                         variant="outlined"
                                         size="small"
@@ -570,17 +669,93 @@ function Batch()  {
                                         label="Course"
                                         onChange={handleTChange}
                                         name="course_id"
-                                />
-                                <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        size="small"
-                                        sx={{ minHeight: "35px"}}
-                                        id="outlined-basic"
-                                        label="Chapters"
-                                        name="chapter_id"
-                                />
-                                <TextField
+                                        value={targetedLearning?.course_id}
+                                /> */}
+                                <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="program-select-label">Select Course</InputLabel>
+                              <Select
+                                labelId="program-select-label"
+                                label="Select Course"
+                                className=""
+                                onChange={handleTChange}
+                                name="course_id"
+                                value={targetedLearning?.course_id}
+                                MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 1300 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                              >
+                                        {Array.isArray(corList) && corList.length > 0 ? (
+                                                corList.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.course_id}>
+                                                                {data?.course_name}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
+                                <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="program-select-label">Select Chapter</InputLabel>
+                              <Select
+                                labelId="program-select-label"
+                                label="Select Chapter"
+                                className=""
+                                onChange={handleTChange}
+                                name="chapter_id"
+                                value={targetedLearning?.chapter_id}
+                                MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 1300 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                              >
+                                        {Array.isArray(chapterData) && chapterData.length > 0 ? (
+                                                chapterData.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.chapter_id}>
+                                                                {data?.chapter_name}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
+                                {/* <TextField
                                         fullWidth
                                         variant="outlined"
                                         size="small"
@@ -588,10 +763,69 @@ function Batch()  {
                                         id="outlined-basic"
                                         label="Modules"
                                         onChange={handleTChange}
-                                        value={''}
+                                        value={targetedLearning?.module_id || []}
                                         name="module_id"
-                                />
-                                <TextField
+                                /> */}
+                                <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="chip-select-label">Select Modules</InputLabel>
+                              <Select
+                                multiple
+                                labelId="chip-select-label"
+                                label="Select Modules"
+                                className=""
+                                onChange={handleTChange}
+                                name="module_id"
+                                value={targetedLearning?.module_id || []}
+                                 MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 2300 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                                renderValue={(selectedIds) => (
+                                         Array.isArray(selectedIds) ? (
+                                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                                        {selectedIds.map((id) => {
+                                                        const module = moduleList.find((m) => m.module_id === id);
+                                                        return (
+                                                        <Chip
+                                                                key={id}
+                                                                label={module ? module.module_name : id}
+                                                                sx={{ borderRadius: "4px" }}
+                                                        />
+                                                        );
+                                                        })}
+                                                </Box>
+                                                ) : null 
+                                )}
+                              >
+                                        {Array.isArray(moduleList) && moduleList.length > 0 ? (
+                                                moduleList.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.module_id}>
+                                                        {data?.module_name}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
+                                {/* <TextField
                                         fullWidth
                                         variant="outlined"
                                         size="small"
@@ -600,14 +834,74 @@ function Batch()  {
                                         label="Resources"
                                         onChange={handleTChange}
                                         name="resources_id"
-                                />
+                                        value={targetedLearning?.resources_id || []}
+                                /> */}
+                                <FormControl
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ minHeight: "35px" }}
+                            >
+                              <InputLabel id="chip-select-label">Select Resources</InputLabel>
+                              <Select
+                                multiple
+                                labelId="chip-select-label"
+                                label="Select Resources"
+                                className=""
+                                onChange={handleTChange}
+                                name="resources_id"
+                                value={targetedLearning?.resources_id || []}
+                                 MenuProps={{
+                                        disablePortal: false, // ← force to portal
+                                        anchorOrigin: {
+                                        vertical: "bottom",
+                                        horizontal: "left"
+                                        },
+                                        transformOrigin: {
+                                        vertical: "top",
+                                        horizontal: "left"
+                                        },
+                                        PaperProps: {
+                                        style: {
+                                                zIndex: 2300 // must be higher than modal
+                                        }
+                                        }
+                                }}
+                                renderValue={(selectedIds) => (
+                                         Array.isArray(selectedIds) ? (
+                                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                                        {selectedIds.map((id) => {
+                                                        const resource = resourceList.find((m) => m.resourceList === id);
+                                                        return (
+                                                        <Chip
+                                                                key={id}
+                                                                label={resource ? resource.resource_name : id}
+                                                                sx={{ borderRadius: "4px" }}
+                                                        />
+                                                        );
+                                                        })}
+                                                </Box>
+                                                ) : null 
+                                )}
+                              >
+                                        {Array.isArray(resourceList) && resourceList.length > 0 ? (
+                                                resourceList.map((data, index) => (
+                                                        <MenuItem key={index} value={data?.resource_id}>
+                                                        {data?.resource_name}
+                                                        </MenuItem>
+                                                ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )}
+                              </Select>
+                            </FormControl>
                         </div>
                         <div className="mt-5 relative overflow-visible z-[1200]">
                             <FormControl
-                                                fullWidth
-                                                variant="outlined"
-                                                size="small"
-                                                sx={{ minHeight: "35px" }}
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                sx={{ minHeight: "35px" }}
                             >
                               <InputLabel id="program-select-label">Choose Trainees</InputLabel>
                               <Select
@@ -616,7 +910,7 @@ function Batch()  {
                                 className=""
                                 onChange={handleTChange}
                                 name="trainee_id"
-                                //value={batchData?.curiculum_name}
+                                value={targetedLearning?.trainee_id}
                                 MenuProps={{
                                         disablePortal: true, // ← force to portal
                                         anchorOrigin: {
@@ -651,13 +945,13 @@ function Batch()  {
                                 <DatePicker
                                                 label="Starting Date"
                                                 value={
-                                                batchData.batch_start_date
-                                                        ? dayjs(batchData.batch_start_date)
+                                                targetedLearning.start_date
+                                                        ? dayjs(targetedLearning.start_date)
                                                         : null
                                                 }
                                                 onChange={(date) => {
                                                         // setStartDate(date);
-                                                        setBatchData(prev => ({ ...prev, batch_start_date: date }));
+                                                        setTargetedLearningState(prev => ({ ...prev, start_date: date }));
                                                 }}
                                                 slotProps={{
                                                 textField: {
@@ -672,15 +966,14 @@ function Batch()  {
                                <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DatePicker
                                                 label="End Date"
-                                                // value={
-                                                // batchData.batch_start_date
-                                                //         ? dayjs(batchData.batch_start_date)
-                                                //         : null
-                                                // }
-                                                // onChange={(date) => {
-                                                //         setStartDate(date);
-                                                //         setBatchData(prev => ({ ...prev, batch_start_date: date }));
-                                                // }}
+                                                value={
+                                                targetedLearning.end_date
+                                                        ? dayjs(targetedLearning.end_date)
+                                                        : null
+                                                }
+                                                onChange={(date) => {
+                                                        setTargetedLearningState(prev => ({ ...prev, end_date: date }));
+                                                }}
                                                 slotProps={{
                                                 textField: {
                                                         fullWidth: true,
