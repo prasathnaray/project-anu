@@ -30,6 +30,8 @@ import GetCoursesAPI from "../API/GetCoursesAPI";
 import getChapterAPI from "../API/getChapterAPI";
 import GetModuleApi from "../API/GetModuleAPI";
 import getResourceAPI from "../API/GetResourceAPI";
+import GetResourcesModuleIdsAPI from "../API/GetResourcesModuleIdsAPI";
+import CreateTargetedLearningAPI from "../API/CreateTargetedLearningAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -114,6 +116,18 @@ function Batch()  {
                                 batch_end_date: null
                 });
                 setCorList({})
+                setTargetedLearningState({
+                        tar_name: "",
+                        curiculum_id: "",
+                        course_id: "",
+                        chapter_id: "",
+                        module_id: [],
+                        resources_id: [],
+                        trainee_id: [],
+                        start_date: "",
+                        end_date: ""
+                })
+
         };
         // delete api 
                 const deleteSubmit = async(batch_id) => {
@@ -331,7 +345,7 @@ function Batch()  {
                 try
                 {
                         const token = localStorage.getItem('user_token');
-                        const response = await getResourceAPI(token, module_id);
+                        const response = await GetResourcesModuleIdsAPI(token, module_id);
                         setResourceList(response.data);
                 }
                 catch(err)
@@ -339,6 +353,7 @@ function Batch()  {
                         console.log(err)
                 }
         }
+        console.log(resourceList);
         console.log(corList)
         React.useEffect(() => {
                 getCuriculumList()
@@ -382,10 +397,45 @@ function Batch()  {
                                 }
                                 if(name === "module_id" && value)
                                 {
-                                     getResourceByModule(value)     
+                                //      getResourceByModule(value)    
+                                        getResourceByModule(value);
                                 }
                         }
                 };
+                const postTargetedAPICall = async(e) => {
+                        e.preventDefault();
+                        try
+                        {
+                                if(!targetedLearning.tar_name|| !targetedLearning.curiculum_id || !targetedLearning.course_id || !targetedLearning.chapter_id || !targetedLearning.module_id || !targetedLearning.resources_id || !targetedLearning.trainee_id || !targetedLearning.start_date || !targetedLearning.end_date)
+                                {
+                                         toast.error("please fill all the fields" , {
+                                                        autoClose: 3000,
+                                                        toastId: 'input-missing',
+                                                        icon: false,
+                                                        closeButton: CustomCloseButton,
+                                        });    
+                                }
+                                else
+                                {
+                                        let token = localStorage.getItem('user_token');
+                                        const response = await CreateTargetedLearningAPI(token, targetedLearning);
+                                        if(response)
+                                        {
+                                                toast.success("Targeted Learning Initiated" , {
+                                                        autoClose: 3000,
+                                                        toastId: 'success-tar-created',
+                                                        icon: false,
+                                                        closeButton: CustomCloseButton,
+                                                }); 
+                                                handleClose();
+                                        }
+                                }
+                        }
+                        catch(err)
+                        {
+                                console.log(err);
+                        }
+                }
                 const TraineesListAPICall = async() => {
                         if(jwtDecode(localStorage.getItem("user_token")).role!=101)
                         {
@@ -396,7 +446,7 @@ function Batch()  {
                                 let token = localStorage.getItem("user_token")
                                 const response = await TraineeListAPI(token);
                                 setTraineeState(response.data.rows);
-                                //cons ole.log(response);
+                                //console.log(response);
                         }
                         catch(err)
                         {
@@ -538,11 +588,11 @@ function Batch()  {
                                                                                                                         ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                                                                 `} 
                                                                                                                 >
-                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
+                                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button> */}
                                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
-                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
+                                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
                                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
-                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
+                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button> */}
 
                                                                                                                 </div>
                                                                                                         )}
@@ -871,7 +921,7 @@ function Batch()  {
                                          Array.isArray(selectedIds) ? (
                                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                                         {selectedIds.map((id) => {
-                                                        const resource = resourceList.find((m) => m.resourceList === id);
+                                                        const resource = resourceList.find((m) => m.resource_id === id);
                                                         return (
                                                         <Chip
                                                                 key={id}
@@ -905,12 +955,13 @@ function Batch()  {
                             >
                               <InputLabel id="program-select-label">Choose Trainees</InputLabel>
                               <Select
+                                multiple
                                 labelId="program-select-label"
                                 label="Choose Trainees"
                                 className=""
                                 onChange={handleTChange}
                                 name="trainee_id"
-                                value={targetedLearning?.trainee_id}
+                                value={targetedLearning?.trainee_id || []}
                                 MenuProps={{
                                         disablePortal: true, // ← force to portal
                                         anchorOrigin: {
@@ -927,6 +978,22 @@ function Batch()  {
                                         }
                                         }
                                 }}
+                                renderValue={(selectedIds) => (
+                                         Array.isArray(selectedIds) ? (
+                                                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                                                        {selectedIds.map((id) => {
+                                                        const trainees = traineeState.find((t) => t.user_email === id);
+                                                        return (
+                                                        <Chip
+                                                                key={id}
+                                                                label={trainees ? trainees.user_name : id}
+                                                                sx={{ borderRadius: "4px" }}
+                                                        />
+                                                        );
+                                                        })}
+                                                </Box>
+                                                ) : null 
+                                )}
                               >
                                         {Array.isArray(traineeState) && traineeState.length > 0 ? (
                                                 traineeState.map((data, index) => (
@@ -986,7 +1053,7 @@ function Batch()  {
                               </LocalizationProvider>
                         </div>
                         <div className="mt-5 flex justify-end items-center">
-                             <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={handleSubmit}>Initiate</button>
+                             <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={postTargetedAPICall}>Initiate</button>
                         </div>
                 </CreateTargetedLearning>    
                 <CreateBatch isVisible={openBatch} onClose={handleClose}>

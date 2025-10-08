@@ -1,4 +1,4 @@
-const {resourcem, getResourcesModel} = require('../model/resourcem');
+const {resourcem, getResourcesModel, getResourcesByModuleIds} = require('../model/resourcem');
 const CreateResourceController = async (req, res) => {
     const requester = req.user;
     const{module_id, resource_name} = req.body;
@@ -38,4 +38,17 @@ const getResourcesController = async (req, res) => {
         console.log(err);
     }
 }
-module.exports = {CreateResourceController, getResourcesController}
+const getResourcesByModuleIdsController = async (req, res) => {
+    const {module_id} = req.body
+    const requester = req.user;
+    try
+    {
+        const result = await getResourcesByModuleIds(requester, module_id);
+        res.status(200).send(result.rows);
+    }
+    catch(err)
+    {
+        res.status(500).send(err);
+    }
+}
+module.exports = {CreateResourceController, getResourcesController, getResourcesByModuleIdsController}

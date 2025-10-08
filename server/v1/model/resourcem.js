@@ -102,4 +102,28 @@ const getResourcesModel = (requester, module_id) => {
     });
   });
 };
-module.exports = {resourcem, getResourcesModel}
+const getResourcesByModuleIds = (requester, moduleIds) => {
+    return new Promise((resolve, reject) => {
+           const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
+           if(!isPrivileged) {
+                return resolve({
+                  status: 'Unauthorized',
+                  code: 401,
+                  message: 'You do not have permission to access this profile.'
+                });
+           }
+           if (!Array.isArray(moduleIds) || moduleIds.length === 0) {
+                return resolve({ status: 'No Data', code: 200, data: [] });
+           }
+           client.query('select * from resource_data where module_id = ANY($1)', [moduleIds], (err, result) => {
+              if(err)
+              {
+                reject(err)
+              }
+              else{
+                resolve(result)
+              }
+           })
+    })
+}
+module.exports = {resourcem, getResourcesModel, getResourcesByModuleIds}
