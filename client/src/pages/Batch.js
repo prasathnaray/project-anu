@@ -32,6 +32,7 @@ import GetModuleApi from "../API/GetModuleAPI";
 import getResourceAPI from "../API/GetResourceAPI";
 import GetResourcesModuleIdsAPI from "../API/GetResourcesModuleIdsAPI";
 import CreateTargetedLearningAPI from "../API/CreateTargetedLearningAPI";
+import GetTarLearningAPI from "../API/GetTarLearningAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -460,6 +461,26 @@ function Batch()  {
                 //         console.log(traineeState);
                 // }, [])
                 console.log(traineeState);
+
+
+
+                const [tarList, setTarList] = React.useState([])
+                const handleTarList = async() => {
+                        try
+                        {
+                                let token = localStorage.getItem('user_token');
+                                const response = await GetTarLearningAPI(token);
+                                setTarList(response.data)
+                                //console.log(response);
+                        }
+                        catch(err)
+                        {
+                                console.log(err)
+                        }
+                }
+                React.useEffect(() => {
+                        handleTarList()
+                }, [])
         ///
                 //console.log(curList)
         if (!token) {
@@ -630,6 +651,65 @@ function Batch()  {
                                                                                 <div className="flex justify-end items-center">
                                                                                         {/* <div className="text-bold">Custom Batches</div> */}
                                                                                         <div><button className="p-2 bg-[#8DC63F] rounded-full text-white hover:rounded delay-150 transition ease-in-out duration-150" onClick={() => setTargetedLearning(true)}><Pencil size={15}/></button></div>
+                                                                                </div>
+                                                                                <div className="mt-5">
+                                                                                        <table className="w-full text-left border-collapse">
+                                                                                                        <thead>
+                                                                                                                <tr className="border-b border-gray-300 shadow-sm text-sm"> 
+                                                                                                                        <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Batch Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
+                                                                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Start date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                                                        {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
+                                                                                                                        {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
+                                                                                                                        {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) } 
+                                                                                                                </tr>
+                                                                                                        </thead>
+                                                                                                        <tbody>
+                                                                                                        {tarList.length > 0 ? (
+                                                                                                        tarList.map((tarList, index) => (
+                                                                                                        <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
+                                                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                                                <a href={`/batch/${tarList.batch_id}`}>{tarList.tar_name}</a>
+                                                                                                                </td>
+                                                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                                                {getMonthYear(tarList.start_date)}
+                                                                                                                </td>
+                                                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                                                {getMonthYear(tarList.end_date)}
+                                                                                                                </td>
+                                                                                                                {/* <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                                                {tarList?.role_counts == null ? 0 : tarList?.role_counts[0]?.count}
+                                                                                                                </th> */}
+                                                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                                                                <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
+                                                                                                                                {openDropdownIndex === index && (
+                                                                                                                                        <div
+                                                                                                                                        ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                                                                        className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                                                                                transition-all ease-in-out duration-500 origin-top-right
+                                                                                                                                                ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                                                                                                                                        `} 
+                                                                                                                                        >
+                                                                                                                                                        {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button> */}
+                                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
+                                                                                                                                                        {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
+                                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
+                                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button> */}
+
+                                                                                                                                        </div>
+                                                                                                                                )}
+                                                                                                                </th>
+                                                                                                        </tr>
+                                                                                                        ))
+                                                                                                        ) : (
+                                                                                                        <tr>
+                                                                                                                <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                                                                        No data found
+                                                                                                                </td>
+                                                                                                        </tr>
+                                                                                                        )}
+                                                                                                </tbody>
+                                                                                        </table>
                                                                                 </div>
                                                                 </div>
                                 </div>

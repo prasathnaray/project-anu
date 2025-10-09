@@ -287,7 +287,7 @@ export default function IvsSubscriber({ onParticipantUpdate }) {
               autoPlay
               playsInline
               muted
-              className="w-full bg-black"
+              className="w-[70%] bg-black"
           />
     </div>
   );
