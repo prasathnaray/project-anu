@@ -116,4 +116,28 @@ const createTargetedLearning = (requester, tar_name, curiculum_id, chapter_id, m
         })
     })
 }
-module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning};
+
+const getTargetedLearningListModel = (requester) => {
+    const isPrivileged = [101, 102].includes(Number(requester.role));
+    if(!isPrivileged)
+    {
+            return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'You do not have permission to view trainee profiles'  
+            })
+    }
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * FROM targeted_learning', (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result)
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel};
