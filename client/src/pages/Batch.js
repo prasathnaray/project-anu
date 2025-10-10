@@ -34,6 +34,7 @@ import GetResourcesModuleIdsAPI from "../API/GetResourcesModuleIdsAPI";
 import CreateTargetedLearningAPI from "../API/CreateTargetedLearningAPI";
 import GetTarLearningAPI from "../API/GetTarLearningAPI";
 import DeleteTargetedLearningAPI from "../API/DeleteTargetedLearningAPI";
+import TLToast from "../utils/TLToast";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -105,6 +106,25 @@ function Batch()  {
 
         const [batchCus, setBatchCus] = useState(true);
         console.log(batchCus);
+        const [traineeState, setTraineeState] = React.useState([])
+        const TraineesListAPICall = async() => {
+                        // if(jwtDecode(localStorage.getItem("user_token")).role!=101)
+                        // {
+                        //         return;
+                        // }
+                        try
+                        {
+                                let token = localStorage.getItem("user_token")
+                                const response = await TraineeListAPI(token);
+                                setTraineeState([...response.data.rows]);
+                                // console.log(response);
+                        }
+                        catch(err)
+                        {
+                                console.log(err);
+                        }
+                }
+                //console.log(traineeState)
         const handleClose = () => {
                 setTargetedLearning(false)
                 setOpenBatch(false);
@@ -129,6 +149,8 @@ function Batch()  {
                         start_date: "",
                         end_date: ""
                 })
+                handleTarList();
+                //TraineesListAPICall();
 
         };
         // delete api 
@@ -361,7 +383,7 @@ function Batch()  {
                 getCuriculumList()
         }, [])
         ///Target Learning area
-                const [traineeState, setTraineeState] = React.useState({})
+                // const [traineeState, setTraineeState] = React.useState({})
                 const [targetedLearning, setTargetedLearningState] = React.useState({
                         tar_name: "",
                         curiculum_id: "",
@@ -438,33 +460,42 @@ function Batch()  {
                                 console.log(err);
                         }
                 }
-                const TraineesListAPICall = async() => {
-                        if(jwtDecode(localStorage.getItem("user_token")).role!=101)
-                        {
-                                return;
-                        }
-                        try
-                        {
-                                let token = localStorage.getItem("user_token")
-                                const response = await TraineeListAPI(token);
-                                setTraineeState(response.data.rows);
-                                //console.log(response);
-                        }
-                        catch(err)
-                        {
-                                console.log(err);
-                        }
-                }
+                // const TraineesListAPICall = async() => {
+                //         if(jwtDecode(localStorage.getItem("user_token")).role!=101)
+                //         {
+                //                 return;
+                //         }
+                //         try
+                //         {
+                //                 let token = localStorage.getItem("user_token")
+                //                 const response = await TraineeListAPI(token);
+                //                 setTraineeState(response.data.rows);
+                //                 //console.log(response);
+                //         }
+                //         catch(err)
+                //         {
+                //                 console.log(err);
+                //         }
+                // }
                 const deleteTargetedLearningCall = async(targeted_learning_id) => {
                         try
                         {
                                 let token = localStorage.getItem('user_token')
-                                const response = await DeleteTargetedLearningAPI(token, targeted_learning_id);
-                                console.log(response);
+                                TLToast(targeted_learning_id, () => handleTarList(), token)
+                                // const response = await DeleteTargetedLearningAPI(token, targeted_learning_id);
+                                // console.log(response);
                         }
                         catch(err)
                         {
-                                console.log(err)
+                                if(err?.response?.status == 403)
+                                {
+                                        toast.error("please login again" , {
+                                                autoClose: 3000,
+                                                toastId: 'login-again',
+                                                icon: false,
+                                                closeButton: CustomCloseButton,
+                                        });
+                                }
                         }
                 }
                 React.useEffect(() => {
@@ -473,7 +504,7 @@ function Batch()  {
                 // React.useEffect(() => {
                 //         console.log(traineeState);
                 // }, [])
-                console.log(traineeState);
+                //console.log(traineeState);
 
 
 
@@ -555,44 +586,6 @@ function Batch()  {
                                                                         {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
                                                                 </tr>
                                                         </thead>
-                                                        {/* <tbody> */}
-                                                               {/* {listBatch.length > 0 ? (
-                                                                        listBatch.map((listBatch, index) => (
-                                                                        <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
-                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold"><a href={`/batch/${listBatch.batch_id}`}>{listBatch.batch_name}</a></td>
-                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_start_date)}</td>
-                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">{getMonthYear(listBatch.batch_end_date)}</td>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts == null && <div>0</div> || listBatch?.role_counts[0]?.count}</th>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">{listBatch?.role_counts == null && <div>0</div> || listBatch?.role_counts[1]?.count}</th>
-                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                        <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
-                                                                                        {openDropdownIndex === index && (
-                                                                                                <div
-                                                                                                 ref={(el) => (dropdownRefs.current[index] = el)}
-                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
-                                                                                                        transition-all ease-in-out duration-500 origin-top-right
-                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
-                                                                                                `} 
-                                                                                                >
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
-
-                                                                                                </div>
-                                                                                        )}
-                                                                                </th>
-                                                                        </tr>
-                                                                        ))
-                                                                        ) : (
-                                                                        <tr>
-                                                                                <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
-                                                                                        No data found
-                                                                                </td>
-                                                                        </tr>
-                                                                  )}   */}
-
                                                                   <tbody>
                                                                                 {filteredUsers.length > 0 ? (
                                                                                 filteredUsers.map((listBatch, index) => (
@@ -682,7 +675,7 @@ function Batch()  {
                                                                                                         tarList.map((tarList, index) => (
                                                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                                                <a href={`/batch/${tarList.batch_id}`}>{tarList.tar_name}</a>
+                                                                                                                <a href={`/batch/${tarList.target_learning_id}`}>{tarList.tar_name}</a>
                                                                                                                 </td>
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                                                                                                 {getMonthYear(tarList.start_date)}
@@ -704,8 +697,8 @@ function Batch()  {
                                                                                                                                         `} 
                                                                                                                                         >
                                                                                                                                                         <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                                                        {decoded.role == 102 && (
-                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
+                                                                                                                                                        {decoded.role == 101 && (
+                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteTargetedLearningCall(tarList.target_learning_id)}>Delete</button>
                                                                                                                                                         )} 
                                                                                                                                                         {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
                                                                                                                                                         <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
