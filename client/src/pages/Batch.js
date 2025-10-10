@@ -33,6 +33,7 @@ import getResourceAPI from "../API/GetResourceAPI";
 import GetResourcesModuleIdsAPI from "../API/GetResourcesModuleIdsAPI";
 import CreateTargetedLearningAPI from "../API/CreateTargetedLearningAPI";
 import GetTarLearningAPI from "../API/GetTarLearningAPI";
+import DeleteTargetedLearningAPI from "../API/DeleteTargetedLearningAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -454,6 +455,18 @@ function Batch()  {
                                 console.log(err);
                         }
                 }
+                const deleteTargetedLearningCall = async(targeted_learning_id) => {
+                        try
+                        {
+                                let token = localStorage.getItem('user_token')
+                                const response = await DeleteTargetedLearningAPI(token, targeted_learning_id);
+                                console.log(response);
+                        }
+                        catch(err)
+                        {
+                                console.log(err)
+                        }
+                }
                 React.useEffect(() => {
                         TraineesListAPICall();
                 }, [])
@@ -690,8 +703,10 @@ function Batch()  {
                                                                                                                                                 ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                                                                                         `} 
                                                                                                                                         >
-                                                                                                                                                        {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button> */}
-                                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
+                                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
+                                                                                                                                                        {decoded.role == 102 && (
+                                                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
+                                                                                                                                                        )} 
                                                                                                                                                         {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
                                                                                                                                                         <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
                                                                                                                                                         <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button> */}

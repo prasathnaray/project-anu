@@ -140,4 +140,27 @@ const getTargetedLearningListModel = (requester) => {
         })
     })
 }
-module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel};
+const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
+    const isPrivileged = [101, 102].includes(Number(requester.role))
+    if(!isPrivileged)
+    {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: "You do not have permission to view"
+        })
+    }
+    return new Promise((resolve, reject) => {
+        client.query('DELETE FROM targeted_learning WHERE target_learning_id=$1', [targeted_learning_id], (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel};

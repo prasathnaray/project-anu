@@ -57,22 +57,50 @@ function NavBar() {
 
   const [count, setCount] = useState(0);
   const [notify, setNotify] = useState([]);
-  const fetchCount = async () => {
-  const {data, count, error } = await supabase
-    .from("course_availability")
-    // .select("*", { count: "exact", head: true }) 
-    .select("course_id, access_status, is_read", { count: "exact" }) 
-    .eq("user_id", tokenRes.user_mail)
-    .is("is_read", false); // only pending (unread)
+//   const fetchCount = async () => {
+//   const {data, count, error } = await supabase
+//     .from("course_availability")
+//     // .select("*", { count: "exact", head: true }) 
+//     .select("course_id, access_status, is_read", { count: "exact" }) 
+//     .eq("user_id", tokenRes.user_mail)
+//     .is("is_read", false); // only pending (unread)
 
-   if (error) {
-      console.error("Error fetching count:", error);
-    } else {
-      //console.log(count?? 0)
-      setCount(count);
-      setNotify(data || [])
-    }
+//    if (error) {
+//       console.error("Error fetching count:", error);
+//     } else {
+//       //console.log(count?? 0)
+//       setCount(count);
+//       setNotify(data || [])
+//     }
+// };
+const fetchCount = async () => {
+  try {
+    const [courseRes, traineeRes] = await Promise.all([
+      supabase
+        .from("course_availability")
+        .select("course_id, access_status, is_read", { count: "exact" })
+        .eq("user_id", tokenRes.user_mail)
+        .is("is_read", false),
+
+      supabase
+        .from("targeted_learning")
+        .select("tar_name, target_learning_id", { count: "exact" })
+        .contains("trainee_id", [tokenRes.user_mail])
+      ]);
+    console.log(traineeRes)
+    const total = (courseRes.count ?? 0) + (traineeRes.count ?? 0);
+    const allData = [
+      ...(courseRes.data?.map(d => ({ ...d, type: "course" })) || []),
+      ...(traineeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
+    ];
+
+    setCount(total);
+    setNotify(allData);
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+  }
 };
+console.log(count, tokenRes.user_mail)
 const readNotification = async(id) => {
         //const token = localStorage.getItem()
         const {error} = await supabase
@@ -107,11 +135,26 @@ const readNotification = async(id) => {
         }
       )
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    const traineeChannel = supabase
+      .channel("targeted_learning")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "targeted_learning" },
+        async (payload) => {
+          if (payload.new.user_id === tokenRes.user_mail) {
+            setNotify(prev => [payload.new, ...prev]);
+            setCount(prev => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+        supabase.removeChannel(traineeChannel);
+      };
   }, []);
+
+  console.log(notify)
   return (
     <div className="navbar dm-sans">
       <nav className="bg-[#8DC63F] shadow-sm border">
@@ -195,7 +238,7 @@ const readNotification = async(id) => {
                               >
                                 <div className="flex justify-between items-center">
                                   <div className="text-black text-xs">
-                                      Course - {n.course_id} has been added
+                                      {n.course_id ? 'Course has been added': `${n.tar_name} Targeted Learning has been initiated`} 
                                   </div>
                                   <button onClick={() => {readNotification(n.course_id)}}>
                                   <IconButton

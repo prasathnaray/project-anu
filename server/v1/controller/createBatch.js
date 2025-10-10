@@ -1,5 +1,5 @@
 const {generateBatchID} = require('../utils/idGenerator.js')
-const {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel} = require('../model/Batchm.js')
+const {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
     const {batch_name, batch_start_date, batch_end_date, course_data, curiculum_name} = req.body;
@@ -92,4 +92,20 @@ const getTargetedLearningC = async(req, res) => {
                 res.status(500).send(err);
         }
 }
-module.exports = {batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC}
+const deleteTargetedLearningC = async(req, res) => {
+        const requester = req.user;
+        const targeted_learning_id = req.params.targeted_learning_id
+        try
+        {
+                const result = await deleteTargetedLearningModel(requester, targeted_learning_id)
+                res.status(200).json({
+                        code: 200,
+                        status: result.rowCount == 1 ? 'Deleted Successfully' : 'No data available to delete'
+                });
+        }
+        catch(err)
+        {
+                res.status(500).send(err)
+        }
+}
+module.exports = {batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC}
