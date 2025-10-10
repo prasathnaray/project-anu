@@ -22,6 +22,7 @@ import IvsPublisher from '../components/ivsPublish';
 import Chapters from '../pages/Chapters';
 import Module from '../pages/Module';
 import Resource from '../pages/Resource';
+import Schedules from '../pages/Schedules';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -47,6 +48,7 @@ function RoutesPath() {
                             <Route path="/chapters/:course_id" element={<Chapters />} />
                             <Route path="/module/:chapter_id/:course_id" element={<Module />} />
                             <Route path="/resource/:module_id" element={<Resource />} />
+                            <Route path="/schedules" element={<Schedules />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

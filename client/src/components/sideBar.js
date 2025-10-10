@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { BookCheck, BookOpen, ChevronLeft, ClipboardPenLine, GraduationCap } from 'lucide-react';
+import { BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import MaterialRipple from "material-ripple-effects";
 import {
@@ -62,10 +62,11 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </>
               }
               {tokdata.role == 103 && 
-                  ["dashboard", "course"].map((route,i) => {
+                  ["dashboard", "course", "schedules"].map((route,i) => {
                     const items = [
                       {icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
                       { icon: <CourseIcon size={20}/>, label: "Courses" },
+                      {icon: <Calendar size={20}/>, label: "Schedules"}
                     ];
                     return (
                       <li key={route}
@@ -90,6 +91,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 <li className={`${data==="/batch" || data.startsWith("/batch/") ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/batch" className={` ${data==="/batch" || data.startsWith('/batch/') ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Users size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Batch</div></a></li>
                 <li className={`${data==="/instructors"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/instructors" className={`${data==="/instructors" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><ClipboardPenLine size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></a></li>
                 <li className={`${data==="/trainees"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/trainees" className={`${data==="/trainees" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><GraduationCap size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></a></li>
+                <li className={`${data==="/schedules"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/schedules" className={`${data==="/vrspace"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Calendar size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Schedules</div></a></li>
                 <li className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/course" className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'text-white flex gap-5 ': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
                 <li className={`${data==="/vrspace"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/vrspace" className={`${data==="/vrspace"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><WirelessCloudAccessIcon size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Streams</div></a></li>
               </>

@@ -665,7 +665,7 @@ function Batch()  {
                                                                                                                         <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Batch Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
                                                                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Start date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                                                        {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
+                                                                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                                                                         {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
                                                                                                                         {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) } 
                                                                                                                 </tr>
@@ -683,9 +683,28 @@ function Batch()  {
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                                                                                                 {getMonthYear(tarList.end_date)}
                                                                                                                 </td>
-                                                                                                                {/* <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                                                {tarList?.role_counts == null ? 0 : tarList?.role_counts[0]?.count}
-                                                                                                                </th> */}
+                                                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                                                {/* {                       tarList?.role_counts == null ? 0 : tarList?.role_counts[0]?.count} */}
+                                                                                                                        
+                                                                                                                                <div className="flex -space-x-2">
+                                                                                                                                        {/* {tarList.trainee_id.map((tid, index) => (
+                                                                                                                                                <div className="z-40 border-2 border-white rounded-full w-7 h-7 flex items-center justify-center bg-[#8DC63F] text-white text-xs font-semibold cursor-pointer">T</div>
+                                                                                                                                        ))} */}
+
+                                                                                                                                        {tarList.trainee_id.map((tid, index) => (
+                                                                                                                                                <div key={index} className="relative group">
+                                                                                                                                                <div className="z-40 border-2 border-white rounded-full w-7 h-7 flex items-center justify-center bg-[#8DC63F] text-white text-xs font-semibold cursor-pointer">
+                                                                                                                                                        T
+                                                                                                                                                </div>
+                                                                                                                                                {/* Tooltip */}
+                                                                                                                                                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-800 text-white text-[10px] rounded py-0.5 px-2 whitespace-nowrap shadow-md">
+                                                                                                                                                                {tid}
+                                                                                                                                                        </span>
+                                                                                                                                                </div>
+                                                                                                                                        ))}
+                                                                                                                                </div>
+                                                                                                                        
+                                                                                                                </th>
                                                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                                                                 <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
                                                                                                                                 {openDropdownIndex === index && (
