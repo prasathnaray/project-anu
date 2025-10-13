@@ -46,7 +46,8 @@ const UserStatsRouter = require('./routes/UserStatusRoute');
 const createTargetedLearningRouter = require('./routes/CreateTargetedLearningRoute.js');
 const getResourcesByModuleIdsRouter = require('./routes/getResourcesByModuleIdsRoute.js')
 const getTargetedLearningRouter = require('./routes/getTargetedLearningRoute.js');
-const deleteTargetedLearningRouter = require('./routes/deleteTargetedLearningRoute.js')
+const deleteTargetedLearningRouter = require('./routes/deleteTargetedLearningRoute.js');
+const getIndividualTLRouter = require('./routes/getIndividualTLRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -142,3 +143,4 @@ app.use('/api/v1', Authenticate, UserStatsRouter);
 app.use('/api/v1', Authenticate, createTargetedLearningRouter);
 app.use('/api/v1', Authenticate, getTargetedLearningRouter);
 app.use('/api/v1', Authenticate, deleteTargetedLearningRouter);
+app.use('/api/v1', Authenticate, getIndividualTLRouter);

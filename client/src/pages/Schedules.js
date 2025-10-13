@@ -7,6 +7,7 @@ import { LayoutDashboard, List, Notebook, SlidersHorizontal } from 'lucide-react
 import Calendar  from '@toast-ui/react-calendar';
 import '@toast-ui/calendar/dist/toastui-calendar.min.css';
 import GetTarLearningAPI from '../API/GetTarLearningAPI';
+import GetIndTargetedLearning from '../API/GetIndTargetedLearning';
 function Schedules() {
     //eventchange in calender 
     const [view, setView] = React.useState('month')
@@ -17,6 +18,10 @@ function Schedules() {
         };
         const [tarList, setTarList] = React.useState([])
         const handleTarList = async() => {
+                if(jwtDecode(localStorage.getItem('user_token')).role != 101)
+                {
+                        return;
+                }
                 try
                 {
                          let token = localStorage.getItem('user_token')
@@ -27,8 +32,42 @@ function Schedules() {
                                 calendarId: "1",
                                 title: item.tar_name,
                                 category: "time",
-                                start: item.start_date,
-                                end: item.end_date,
+                                start: item.start_date.split("T")[0] + 'T00:00:00',
+                                // end: new Date(item.end_date).toISOString().slice(0, 16),
+                                end: item.end_date.split("T")[0] + 'T23:59:59',
+                                isAllDay: true,
+                                category: "allday",
+                        }));
+                        setTarList(data);
+                        setEvents(formattedEvents);
+                         //console.log(response);
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+        }
+
+        const handleIndTarList = async() => {
+                if(jwtDecode(localStorage.getItem('user_token')).role != 103)
+                {
+                        return;
+                }
+                try
+                {
+                         let token = localStorage.getItem('user_token')
+                         const response = await GetIndTargetedLearning(token);
+                         const data = response.data.result;
+                        const formattedEvents = data.map((item) => ({
+                                id: item.target_learning_id,
+                                calendarId: "1",
+                                title: item.tar_name,
+                                category: "time",
+                                start: item.start_date.split("T")[0] + 'T00:00:00',
+                                // end: new Date(item.end_date).toISOString().slice(0, 16),
+                                end: item.end_date.split("T")[0] + 'T23:59:59',
+                                isAllDay: true,
+                                category: "allday",
                         }));
                         setTarList(data);
                         setEvents(formattedEvents);
@@ -40,14 +79,17 @@ function Schedules() {
                 }
         }
           React.useEffect(() => {
-                         handleTarList();
+                handleIndTarList()
+          }, [])
+          React.useEffect(() => {
+                handleTarList();
           }, []);
     let token = localStorage.getItem('user_token');
     if (!token) {
         return <Navigate to="/" replace />;
     }
     const decoded = jwtDecode(token);
-    if (decoded.role != 101 && decoded.role != 102) {
+    if (decoded.role != 101 && decoded.role != 102 && decoded.role !=103 ) {
         return <Navigate to="/" replace />;
     }
   return (

@@ -163,4 +163,28 @@ const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
         })
     })
 }
-module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel};
+
+const IndividualtllList = (requester) => {
+    const isPrivileged = [103].includes(Number(requester.role));
+    if(!isPrivileged)
+    {
+            return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'You do not have permission to view trainee profiles'  
+            })
+    }
+    return new Promise((resolve, reject) => {
+        client.query('SELECT * FROM targeted_learning where trainee_id@>$1', [`{${requester.user_mail}}`], (err, result) => {
+            if(err)
+            {
+                return reject(err)
+            }
+            else 
+            {
+                return resolve(result)
+            }
+        })
+    })
+}
+module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList};
