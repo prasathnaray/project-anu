@@ -2,10 +2,11 @@ import React, {useState, useEffect} from "react";
 import { jwtDecode } from "jwt-decode";
 import NavBar from "../navBar";
 import SideBar from "../sideBar";
-import { ClipboardPenLine, GraduationCap, LayoutDashboard, NotepadText } from "lucide-react";
+import { ClipboardPenLine, GraduationCap, LayoutDashboard, NotepadText, SlidersHorizontal } from "lucide-react";
 import getDashboardAPI from "../../API/dashboardAPI";
 import { Calendar01Icon } from "hugeicons-react";
 import BasicPie from "../../charts/PieChart";
+import TargetedLearningChart from "../../charts/TargetedLearningChart";
 // import { useNotifications } from '../../Hooks/useNotification';
 function AdminDashboard(){
     // const { notifications, loading } = useNotifications();
@@ -47,8 +48,29 @@ function AdminDashboard(){
           buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
         } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`} // 3rem = 12 (navbar height)
       >
-        <div className="px-10 grid grid-cols-3 gap-4">
-          <div className="border bg-white rounded-sm mt-3 col-span-2">
+        <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+                                <button className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
+                                      {/* <LayoutDashboard size={15} />  */}
+                                      <span className="text-[13px]">Overview</span>
+                                </button>
+                                <button className="flex items-center gap-1 px-2 py-[2px] rounded hover:bg-[#8DC63F] hover:text-white cursor-pointer transition-all duration-300 ease-in-out hover:rounded">
+                                      {/* <SlidersHorizontal size={15} className="text-gray-600" /> */}
+                                      <span className="text-[13px]">Users</span>
+                                </button>
+                                <button className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded">
+                                      {/* <SlidersHorizontal size={15} className="text-gray-600" /> */}
+                                      <span className="text-[13px]">Course</span>
+                                </button>
+                                <button className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded-full">
+                                      {/* <SlidersHorizontal size={15} clas sName="text-gray-600" /> */}
+                                      <span className="text-[13px]">Batch</span>
+                                </button>
+        </div>
+        <div className="px-3 grid grid-cols-3 gap-4">
+          <div className="border bg-white h-[calc(100vh-5rem)] overflow-y-auto mb-4 rounded-sm mt-3 col-span-2" style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none"
+                }}>
             <div className="m-2 flex gap-4 items-center">
               <div className="text-white bg-[#8DC63F] p-2 rounded-full">
                 <LayoutDashboard size={21} />
@@ -93,24 +115,53 @@ function AdminDashboard(){
                 </div>
               </div>
             </div>
-            <div className="my-2 mx-5 text-lg">Gender Population</div>
-            <div className="flex justify-start items-center">
+            <div className="my-2 mx-5 text-lg" style={{ fontWeight: 'bold', color: '#4B5563' }}>Gender Population</div>
+            <div className="flex justify-center items-center">
               <div className="ms-5">
                 <BasicPie />
               </div>
             </div>
+            <div className="my-2 mx-5 text-lg" style={{ fontWeight: 'bold', color: '#4B5563' }}>Targeted Learning v Batch Ratio</div>
+            <div className="flex justify-center items-center">
+              <div className="ms-5">
+                <TargetedLearningChart targetedLearning={dashboardData} />
+              </div>
+            </div>
           </div>
-          <div className="border bg-white rounded-sm mt-3">
-                <div className="m-2 flex gap-4 items-center">
+          <div className="flex flex-col gap-4 mt-3  h-[calc(100vh-5rem)]">
+              <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto"
+                style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none"
+                }}
+              >
+                <div className="flex gap-4 items-center mb-2">
                   <div className="text-white bg-[#8DC63F] p-2 rounded-full">
                     <Calendar01Icon size={21} />
                   </div>
                   <span className="text-lg text-gray-500">Approvals</span>
                 </div>
-                <div className="flex items-center justify-center">
-                      No data to show
+                <div className="flex items-center justify-center py-8 text-gray-500">
+                      <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
                 </div>
-          </div>
+              </div>
+                <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto"
+                style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none"
+                }}
+                >
+                  <div className="flex gap-4 items-center mb-2">
+                    <div className="text-white bg-[#8DC63F] p-2 rounded-full">
+                      <NotepadText size={21} />
+                    </div>
+                    <span className="text-lg text-gray-500">Recent Activity</span>
+                  </div>
+                  <div className="flex items-center justify-center py-8 text-gray-500">
+                        <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
+                  </div>
+                </div>
+              </div>
         </div>
       </div>
     </div> 

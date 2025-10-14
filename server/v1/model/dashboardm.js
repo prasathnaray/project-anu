@@ -58,17 +58,32 @@ const getDashboardDatam = (requester) => {
                     }
                 })
             })
+            const TLStats = new Promise((resolve, reject) => {
+                        client.query('SELECT * FROM targeted_learning' , (err, result) => {
+                            if(err)
+                            {
+                                return reject(err)
+                            }
+                            else
+                            {
+                                return resolve(result.rows);
+                            }
+                        })
+            })
             Promise.all([
                 getTraineesIns,
-                getBatchDas
+                getBatchDas,
+                TLStats
             ]).then(
                 ([
                     getTraineesIns,
-                    getBatchDas  
+                    getBatchDas, 
+                    TLStats  
                 ]) => {
                     resolve({
                         getTraineesIns,
-                        getBatchDas  
+                        getBatchDas,
+                        TLStats  
                     })
                 }
             ).catch((err) => {

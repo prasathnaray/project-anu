@@ -39,8 +39,8 @@ export default function BasicPie() {
           data: genderAnalytics,
         },
       ]}
-      width={200}
-      height={200}
+      width={250}
+      height={250}
     />
   );
 }

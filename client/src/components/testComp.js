@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Stage, StageEvents } from "amazon-ivs-web-broadcast";
 import { jwtDecode } from "jwt-decode";
+import APP_URL from "../API/config";
 
 // export default function IvsSubscriber() {
 //   const videoRef = useRef(null);
@@ -241,7 +242,7 @@ export default function IvsSubscriber({ onParticipantUpdate }) {
       const decoded = jwtDecode(tokenn);
       const userMail = decoded.user_mail;
 
-      const res = await fetch("http://localhost:4004/api/v1/tokenn", {
+      const res = await fetch(APP_URL+'/api/v1/tokenn', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
