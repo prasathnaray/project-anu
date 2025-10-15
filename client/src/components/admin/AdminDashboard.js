@@ -56,7 +56,7 @@ function AdminDashboard(){
       <div
         className={`${
           buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
-        } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`} // 3rem = 12 (navbar height)
+        } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
       >
         <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                                 <button onClick={() => setDashboardState('dashboard')}  className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
@@ -155,33 +155,17 @@ function AdminDashboard(){
                 {/* <div className="flex items-center justify-center py-8 text-gray-500">
                       <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
                 </div> */}
-                <div className="border grid grid-cols-4 py-4 px-1 mt-4 gap-4">
-                    <div className="col-span-2 flex justify-between item-center">
-                          <EllipsisVerticalIcon size={20} />
-                          <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>
+                {(dashboardData?.CourseDataList || []).map((data, index) => (
+                    <div className="border grid grid-cols-4 py-4 px-1 mt-4 gap-4">
+                          <div className="col-span-2 flex justify-between item-center">
+                                <EllipsisVerticalIcon size={20} />
+                                <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>
+                          </div>
+                          <div className="col-span-2 flex justify-end items-center gap-4">
+                              <span className="sm:text-sm rounded-full px-2 font-semibold">{data?.course_name}</span>
+                          </div>
                     </div>
-                    <div className="col-span-2 flex justify-end items-center gap-4">
-                        <span className="sm:text-md rounded-full">BTC</span>
-                    </div>
-                </div>
-                <div className="border grid grid-cols-4 py-4 px-1 mt-4 gap-4">
-                    <div className="col-span-2 flex justify-between item-center">
-                          <EllipsisVerticalIcon size={20} />
-                          <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>
-                    </div>
-                    <div className="col-span-2 flex justify-end items-center gap-4">
-                        <span className="sm:text-md rounded-full">BTC</span>
-                    </div>
-                </div>
-                <div className="border grid grid-cols-4 py-4 px-1 mt-4 gap-4">
-                    <div className="col-span-2 flex justify-between item-center">
-                          <EllipsisVerticalIcon size={20} />
-                          <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>
-                    </div>
-                    <div className="col-span-2 flex justify-end items-center gap-4">
-                        <span className="sm:text-md rounded-full">BTC</span>
-                    </div>
-                </div>
+                ))}
               </div>
                 <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto"
                 style={{
