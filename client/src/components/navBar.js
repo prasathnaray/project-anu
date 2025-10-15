@@ -1,4 +1,4 @@
-import React, { useMemo,useEffect, useRef, useState } from "react";
+import React, { useMemo, useEffect, useRef, useState } from "react";
 import {
   Notification03Icon,
   UserSharingIcon,
@@ -9,7 +9,7 @@ import {
   CircleIcon
 } from "hugeicons-react";
 import { createClient } from "@supabase/supabase-js";
-import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon} from 'lucide-react';
+import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon, Scan} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
@@ -23,6 +23,32 @@ import AlarmIcon from '@mui/icons-material/Alarm';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 // import CircleIcon from '@mui/icons-material/Circle';
 function NavBar() {
+
+
+  ///full screen test
+  const [isFullscreen, setFullscreen] = useState(false)
+
+
+  useEffect(() => {
+    const handleChange = () => {
+      const fs = !!document.fullscreenElement;
+      setFullscreen(fs);
+      localStorage.setItem("isFullscreen", fs);
+    };
+    document.addEventListener("fullscreenchange", handleChange);
+    return () => document.removeEventListener("fullscreenchange", handleChange);
+  }, []);
+  const makeFullscreen = async() => {
+    // setFullscreen(!isFullscreen)
+    // document.documentElement.requestFullscreen()
+
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
+    }
+  }
+  //
     const tokenRes = jwtDecode(localStorage.getItem("user_token"));
     // console.log(tokenRes)
     const ripple = new MaterialRipple();
@@ -208,6 +234,13 @@ const readNotification = async(id) => {
               <div className="px-3 py-2 ms-1 text-gray-200">
                 <button className="">
                   <Search size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="relative md:block">
+              <div className="px-3 py-2 ms-1 text-gray-200">
+                <button className="" onClick={makeFullscreen}>
+                  <Scan size={20} />
                 </button>
               </div>
             </div>
