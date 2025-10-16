@@ -156,13 +156,13 @@ function AdminDashboard(){
                       <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
                 </div> */}
                 {(dashboardData?.CourseDataList || []).map((data, index) => (
-                    <div className="border grid grid-cols-4 py-4 px-1 mt-4 gap-4">
+                    <div className="border grid grid-cols-4 py-4 px-1 mt-3 gap-4 rounded">
                           <div className="col-span-2 flex justify-between item-center">
-                                <EllipsisVerticalIcon size={20} />
+                                <EllipsisVerticalIcon size={20} className="text-gray-500"/>
                                 <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>
                           </div>
                           <div className="col-span-2 flex justify-end items-center gap-4">
-                              <span className="sm:text-sm rounded-full px-2 font-semibold">{data?.course_name}</span>
+                              <span className="sm:text-sm rounded-full px-2 font-semibold text-gray-500">{data?.course_name}</span>
                           </div>
                     </div>
                 ))}
