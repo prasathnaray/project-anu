@@ -9,7 +9,7 @@ import {
   CircleIcon
 } from "hugeicons-react";
 import { createClient } from "@supabase/supabase-js";
-import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon, Scan} from 'lucide-react';
+import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon, Scan, Minimize} from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { jwtDecode } from "jwt-decode";
@@ -44,8 +44,10 @@ function NavBar() {
 
     if (!document.fullscreenElement) {
       await document.documentElement.requestFullscreen();
+      setFullscreen(true);
     } else {
       await document.exitFullscreen();
+      setFullscreen(false);
     }
   }
   //
@@ -240,7 +242,7 @@ const readNotification = async(id) => {
             <div className="relative md:block">
               <div className="px-3 py-2 ms-1 text-gray-200">
                 <button className="" onClick={makeFullscreen}>
-                  <Scan size={20} />
+                  {isFullscreen ? <Minimize size={20} /> : <Scan size={20} />}
                 </button>
               </div>
             </div>
@@ -318,7 +320,7 @@ const readNotification = async(id) => {
                   ref={(el) => (dropdownRefs.current['user-options'] = el)}
                   className="absolute right-0 mt-2 w-22 bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
                 >
-                  <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 font-normal" >Profile</button>
+                  <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 font-normal" onClick={() => {navigate('/profile')}}>Profile</button>
                   <button className="block w-full text-left px-4 py-3 hover:bg-gray-50">Settings</button>
                   <button className="block w-full text-left px-4 py-3 hover:bg-gray-50" onClick={handleLogout}>Logout</button>
                 </div>

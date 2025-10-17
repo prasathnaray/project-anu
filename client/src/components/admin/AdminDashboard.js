@@ -84,7 +84,7 @@ function AdminDashboard(){
                 }}>
             <div className="m-2 flex gap-4 items-center">
               <div className="text-white bg-[#8DC63F] p-2 rounded-full">
-                <LayoutDashboard size={21} />
+                 <LayoutDashboard size={21} />
               </div>
               <span className="text-lg text-gray-500">General Dashboard</span>
             </div>
@@ -120,7 +120,7 @@ function AdminDashboard(){
                       <GraduationCap size={43} />
                     </div>
                     <div className="text-3xl text-gray-600">
-                      {dashboardData?.getBatchDas?.rows[0]?.count || 0}
+                       {dashboardData?.getBatchDas?.rows[0]?.count || 0}
                     </div>
                   </div>
                 </div>
@@ -129,18 +129,18 @@ function AdminDashboard(){
             <div className="my-2 mx-5 text-lg" style={{ fontWeight: 'bold', color: '#4B5563' }}>Gender Population</div>
             <div className="flex justify-center items-center">
               <div className="ms-5">
-                <BasicPie />
+                 <BasicPie />
               </div>
             </div>
             <div className="my-2 mx-5 text-lg" style={{ fontWeight: 'bold', color: '#4B5563' }}>Targeted Learning v Batch Ratio</div>
             <div className="flex justify-center items-center">
               <div className="ms-5">
-                <TargetedLearningChart targetedLearning={dashboardData} />
+                 <TargetedLearningChart targetedLearning={dashboardData} />
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-4 mt-3  h-[calc(100vh-5rem)]">
-              <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto"
+              <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto "
                 style={{
                         scrollbarWidth: "none",
                         msOverflowStyle: "none"
@@ -156,7 +156,7 @@ function AdminDashboard(){
                       <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
                 </div> */}
                 {(dashboardData?.CourseDataList || []).map((data, index) => (
-                    <div className="border grid grid-cols-4 py-4 px-1 mt-3 gap-4 rounded">
+                    <div className="border grid grid-cols-4 py-6 px-1 mt-3 gap-4 rounded bg-white">
                           <div className="col-span-2 flex justify-between item-center">
                                 <EllipsisVerticalIcon size={20} className="text-gray-500"/>
                                 <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>

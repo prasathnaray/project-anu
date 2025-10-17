@@ -5,7 +5,6 @@ const profilem = async (requester) => {
         // Check if user has permission
         const privilegedRoles = [99, 101, 102, 103];
         const isPrivileged = privilegedRoles.includes(Number(requester.role));
-
         if (!isPrivileged) {
             return {
                 status: 'Unauthorized',
@@ -13,8 +12,6 @@ const profilem = async (requester) => {
                 message: 'You do not have permission to access this profile.'
             };
         }
-
-        // Query the database
         const query = `
             SELECT
                 user_profile_photo, 
@@ -53,5 +50,4 @@ const profilem = async (requester) => {
         };
     }
 };
-
 module.exports = profilem;

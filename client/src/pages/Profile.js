@@ -46,16 +46,23 @@ const [profileData, setProfileData] = useState({})
     console.log(profileData);
   }, [profileData])
   //console.log(tokData.role);
+  const [buttonOpen, setButtonOpen] = React.useState(true);
+  const handleButtonOpen = () => {
+    setButtonOpen(!buttonOpen);
+  };
   return (
-    <div className={`flex`}>
+    <div className={`flex flex-col min-h-screen`}>
         <div> 
-            <SideBar /> 
+              <NavBar />
         </div>  
-        <div className="ms-[221px] flex-grow">
+        <div className="flex flex-grow">
                 <div>
-                    <NavBar />
+                    <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> 
                 </div>
-               <div className="p-4">
+                <div 
+                        className={`${
+          buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
+        } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
                       <div className="grid grid-cols-3 mx-5">
                         <div className="border p-5 rounded-md border-gray-200 shadow-md col-span-2">
                           <div className="text-lg flex justify-between items-center text-xl">
