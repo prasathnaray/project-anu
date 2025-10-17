@@ -82,23 +82,40 @@ const getDashboardDatam = (requester) => {
                     }
                 })
             })
+            const BatchPerUserList = new Promise((resolve, reject) => {
+                client.query('SELECT bd.batch_id, bd.batch_name, COUNT(bpd.user_id) AS total_users FROM batch_data bd JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id) JOIN user_data ud ON bpd.user_id = ud.user_email WHERE ud.user_role=$1 GROUP BY bd.batch_id, bd.batch_name ORDER BY bd.batch_id;', ['103'],
+                    (err, result) => {
+                        if(err)
+                        {
+                            return reject(err);
+                        }
+                        else
+                        {
+                            return resolve(result.rows);
+                        }
+                    }
+                )
+            })
             Promise.all([
                 getTraineesIns,
                 getBatchDas,
                 TLStats,
-                CourseDataList
+                CourseDataList,
+                BatchPerUserList
             ]).then(
                 ([
                     getTraineesIns,
                     getBatchDas, 
                     TLStats,
-                    CourseDataList  
+                    CourseDataList,
+                    BatchPerUserList  
                 ]) => {
                     resolve({
                         getTraineesIns,
                         getBatchDas,
                         TLStats,
-                        CourseDataList  
+                        CourseDataList,
+                        BatchPerUserList  
                     })
                 }
             ).catch((err) => {

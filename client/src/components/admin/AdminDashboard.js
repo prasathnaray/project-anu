@@ -187,7 +187,7 @@ function AdminDashboard(){
         </div>
         )}
         {dashboardState == "users" && (
-          <UsersA />
+          <UsersA APIS={dashboardData?.BatchPerUserList}/>
         )}
         {dashboardState == "courses" && (
           <CourseA />

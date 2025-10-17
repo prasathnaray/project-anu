@@ -1,6 +1,6 @@
 import React from 'react'
 import {jwtDecode} from 'jwt-decode';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { LayoutDashboard, List, Notebook, SlidersHorizontal } from 'lucide-react';
@@ -85,6 +85,7 @@ function Schedules() {
                 handleTarList();
           }, []);
     let token = localStorage.getItem('user_token');
+    const navigate = useNavigate();
     if (!token) {
         return <Navigate to="/" replace />;
     }
@@ -102,7 +103,7 @@ function Schedules() {
                                 <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>
                         </div>
                         <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
-                                <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px] hover:underline hover:underline-offset-4"><a href={`/course`}>Course</a></span> / <List size={15}/> <a href={`${localStorage.getItem('last_page_visited')}`} className="text-[15px] hover:underline hover:underline-offset-4">Chapters</a></div>
+                                <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px] hover:underline hover:underline-offset-4"><button onClick={() => {navigate('/batch')}}>batch</button></span></div>
                                 <div className="bg-gray-100">
                                                 <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                                                         <button onClick={() => setView('month')} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">

@@ -3,7 +3,11 @@ import axios from "axios";
 import React from "react"
 import GetIntructorsAPI from "../../../API/GetIntructorsAPI";
 import TraineeListAPI from "../../../API/TraineeListAPI";
-function UsersA({}){
+import { Train } from "lucide-react";
+import BasicPie from "../../../charts/PieChart";
+import TraineesPerBatch from "../../../charts/TraineesPerBatch";
+function UsersA({APIS}){
+    console.log(APIS);
     const programOptions = [
         { value: '103', label: 'Trainees' },
         { value: '102', label: 'Instructors' },
@@ -11,14 +15,13 @@ function UsersA({}){
     const [peopleState, setPeopleState] = React.useState('trainee');
     const [APIState, setAPIState] = React.useState([]);
     const [roleData, setRoleData] = React.useState({
-        role: '',
+        role: '103',
     });
     const handleAPI = async (roleValue) => {
         try
         {
             let token = localStorage.getItem('user_token');
             let response;
-
             if(roleValue === '102')
             {
                 response = await GetIntructorsAPI(token);
@@ -54,6 +57,9 @@ function UsersA({}){
     }, [])
     React.useEffect(() => {
         console.log(APIState);
+    }, [])
+    React.useEffect(() => {
+        handleAPI('103')
     }, [])
     console.log(roleData);
     return (
@@ -111,7 +117,8 @@ function UsersA({}){
                                             </div>
                     </div>
                     <div className="col-span-1 bg-white">
-                                    skjd
+                                    <div className="text-lg font-semibold text-gray-500 p-2">Trainees per batch</div>
+                                    <div className="flex items-center justify-center"><TraineesPerBatch PropsTraineesPerBatch={APIS} /></div>
                     </div>
         </div>
     )
