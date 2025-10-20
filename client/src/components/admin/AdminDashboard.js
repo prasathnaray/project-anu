@@ -58,24 +58,65 @@ function AdminDashboard(){
           buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
         } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
       >
-        <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+        {/* <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                                 <button onClick={() => setDashboardState('dashboard')}  className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
-                                      {/* <LayoutDashboard size={15} />  */}
                                       <span className="text-[13px]">Overview</span>
                                 </button>
                                 <button onClick={() => setDashboardState('users')} className="flex items-center gap-1 px-2 py-[2px] rounded hover:bg-[#8DC63F] hover:text-white cursor-pointer transition-all duration-300 ease-in-out hover:rounded">
-                                      {/* <SlidersHorizontal size={15} className="text-gray-600" /> */}
                                       <span className="text-[13px]" >Users</span>
                                 </button>
                                 <button onClick={() => setDashboardState('courses')} className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded">
-                                      {/* <SlidersHorizontal size={15} className="text-gray-600" /> */}
                                       <span className="text-[13px]" >Course</span>
                                 </button>
                                 <button onClick={() => setDashboardState('batches')} className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded-full">
-                                      {/* <SlidersHorizontal size={15} clas sName="text-gray-600" /> */}
                                       <span className="text-[13px]">Batch</span>
                                 </button>
-        </div>
+        </div> */}
+        <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+            <button
+              onClick={() => setDashboardState("dashboard")}
+              className={`flex justify-between gap-2 items-center px-2 py-[2px] rounded cursor-pointer font-semibold transition-all ease-in-out duration-300 ${
+                dashboardState === "dashboard"
+                  ? "bg-[#8DC63F] text-white"
+                  : "hover:bg-gray-100 hover:text-[#8DC63F]"
+              }`}
+            >
+              <span className="text-[13px]">Overview</span>
+            </button>
+
+            <button
+              onClick={() => setDashboardState("users")}
+              className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out font-semibold ${
+                dashboardState === "users"
+                  ? "bg-[#8DC63F] text-white"
+                  : "hover:bg-gray-100 hover:text-[#8DC63F]"
+              }`}
+            >
+              <span className="text-[13px]">Users</span>
+            </button>
+
+            <button
+              onClick={() => setDashboardState("courses")}
+              className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out font-semibold ${
+                dashboardState === "courses"
+                  ? "bg-[#8DC63F] text-white"
+                  : "hover:bg-gray-100 hover:text-[#8DC63F]"
+              }`}
+            >
+              <span className="text-[13px]">Course</span>
+            </button>
+
+            <button
+              onClick={() => setDashboardState("batches")}
+              className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out font-semibold ${
+                dashboardState === "batches"
+                  ? "bg-[#8DC63F] text-white"
+                  : "hover:bg-gray-100 hover:text-[#8DC63F]"
+              }`}
+            >
+              <span className="text-[13px]">Batch</span>
+            </button>
+          </div>
         {dashboardState == "dashboard" && (
           <div className={`px-3 grid grid-cols-3 gap-4 contentt ${showw ? 'visible' : ''} `}>
           <div className="border bg-white h-[calc(100vh-5rem)] overflow-y-auto mb-4 rounded-sm mt-3 col-span-2" style={{

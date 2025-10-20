@@ -86,7 +86,7 @@ function UsersA({APIS}){
                                                   </FormControl>
                                             </div>
                                 </div>
-                                <div className="p-2">
+                                <div className="p-5 overflow-y-auto">
                                                         <table className="w-full text-left border-collapse">
                                                             <thead>
                                                                 <tr className="border-b border-gray-300 shadow-sm text-sm">
@@ -99,15 +99,15 @@ function UsersA({APIS}){
                                                                 {APIState.map((instructor, index) => (
                                                                 <tr
                                                                     key={index}
-                                                                    className="border-b border-gray-200 hover:bg-gray-50 shadow-sm"
+                                                                    className="border-b border-gray-100 hover:bg-gray-50 shadow-sm"
                                                                 >
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                                                                    <td className="py-3 px-4 text-[#8DC63F] font-semibold border-b-2">
                                                                         {instructor?.user_name}
                                                                     </td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                                                                    <td className="py-3 px-4 text-[#8DC63F] font-semibold border-b-2">
                                                                         {instructor?.batch_names || instructor?.batch_name || 'N/A'}
                                                                     </td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                                                                    <td className="py-3 px-4 text-[#8DC63F] font-semibold border-b-2">
                                                                         <div>{instructor?.status}</div>
                                                                     </td>
                                                                 </tr>
