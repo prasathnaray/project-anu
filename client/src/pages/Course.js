@@ -459,7 +459,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import SideBar from "../components/sideBar";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import NavBar from "../components/navBar";
 import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, Notebook, SlidersHorizontal, X } from "lucide-react";
 import AddCourse from "../components/admin/AddCourse";
@@ -489,6 +489,7 @@ function Course() {
   const handleChangeState = () => {
     setChangeState(!changeState)
   }
+  const navigate = useNavigate()
   console.log(changeState);
   const [curiculumList, setCuriculumList] = useState([]);
   const [courseData, setCourseData] = useState({
@@ -819,7 +820,7 @@ function Course() {
                           key={index}
                         >
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <a href={`/chapters/${data?.course_id}`}>{data?.course_name}</a>
+                            <button onClick={() => navigate(`/chapters/${data?.course_id}`)}>{data?.course_name}</button>
                           </td>
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
                               {data?.batch_name}

@@ -1,6 +1,6 @@
 import React from 'react'
 import { jwtDecode } from 'jwt-decode';
-import { Navigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { ArrowUpWideNarrow, Bookmark, EllipsisVertical, LayoutDashboard, List, Notebook, Plus, X } from 'lucide-react';
@@ -78,6 +78,7 @@ function Module() {
  React.useEffect(() => {
     chapterAPiCalls(url);
  }, [])
+ const navigate = useNavigate();
  const [modCalls, setModCalls] = React.useState([]);
  const getModules = async() => {
     try
@@ -160,7 +161,7 @@ function Module() {
                             return (
                               <tr className="text-sm text-gray-700" key={index}>
                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                                  <a href={`/resource/${data?.module_id}`}>{data?.module_name}</a>
+                                  <button onClick={() => navigate(`/resource/${data?.module_id}`)}>{data?.module_name}</button>
                                 </td>
 
                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">

@@ -1,6 +1,6 @@
 import React from 'react'
 import { jwtDecode } from 'jwt-decode'
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { useParams } from 'react-router-dom';
@@ -20,6 +20,7 @@ import getChapterAPI from '../API/getChapterAPI';
 import { ClipLoader } from 'react-spinners';
 import StatsDonutChart from '../charts/PrpgressBar';
 function Chapters() {
+  const navigate = useNavigate();
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
@@ -195,7 +196,7 @@ React.useEffect(() => {
                                                                                   <a href={`/course/${data?.module_id}`}>{data?.module_name}</a>
                                                                                 </td> */}
                                                                                 <td className="py-2 px-4 text-[#8Dc63F] font-semibold border-b-2">
-                                                                                    <a href={`/module/${data?.chapter_id}/${urlData.course_id}`}>{data?.chapter_name}</a>
+                                                                                    <button onClick={() => navigate(`/module/${data?.chapter_id}/${urlData.course_id}`)}>{data?.chapter_name}</button>
                                                                                 </td>
                                                                                 <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
                                                                                   {decoded.role == 103 ? (
