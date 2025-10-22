@@ -10,9 +10,11 @@ import TargetedLearningChart from "../../charts/TargetedLearningChart";
 import UsersA from "./DashboardComponents/UsersA";
 import CourseA from "./DashboardComponents/CourseA";
 import BatchA from "./DashboardComponents/BatchA";
+import { useNavigate } from "react-router-dom";
 // import { useNotifications } from '../../Hooks/useNotification';
 function AdminDashboard(){
     // const { notifications, loading } = useNotifications();
+    const navigate = useNavigate();
     const [buttonOpen, setButtonOpen] = useState(true);
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
@@ -106,7 +108,7 @@ function AdminDashboard(){
               <span className="text-[13px]">Course</span>
             </button>
 
-            <button
+            {/* <button
               onClick={() => setDashboardState("batches")}
               className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out font-semibold ${
                 dashboardState === "batches"
@@ -115,7 +117,7 @@ function AdminDashboard(){
               }`}
             >
               <span className="text-[13px]">Batch</span>
-            </button>
+            </button> */}
           </div>
         {dashboardState == "dashboard" && (
           <div className={`px-3 grid grid-cols-3 gap-4 contentt ${showw ? 'visible' : ''} `}>
@@ -200,7 +202,7 @@ function AdminDashboard(){
                     <div className="border grid grid-cols-4 py-6 px-1 mt-3 gap-4 rounded bg-white">
                           <div className="col-span-2 flex justify-between item-center">
                                 <EllipsisVerticalIcon size={20} className="text-gray-500"/>
-                                <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2">View Chapters</span>
+                                <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2"><button onClick={() => navigate(`/chapters/${data.course_id}`)}>View Chapters</button></span>
                           </div>
                           <div className="col-span-2 flex justify-end items-center gap-4">
                               <span className="sm:text-sm rounded-full px-2 font-semibold text-gray-500">{data?.course_name}</span>
@@ -233,9 +235,9 @@ function AdminDashboard(){
         {dashboardState == "courses" && (
           <CourseA />
         )}
-        {dashboardState == "batches" && (
+        {/* {dashboardState == "batches" && (
           <BatchA />
-        )}
+        )} */}
       </div>
     </div> 
   </div>

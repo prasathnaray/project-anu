@@ -131,7 +131,7 @@ function CourseA() {
                                                     </Select>
                                                   </FormControl>
                                             </div>
-                                            <div className="font-semibold text-gray-500 px-2">Modules Completed by Trainees</div>
+                                            <div className="font-semibold text-gray-500 px-2">Modules Completed</div>
                           </div>
                           <div className="">
                                     {chapterId.chapter_id ? 
@@ -142,8 +142,8 @@ function CourseA() {
                                     ) : 
                                     (
                                         <div id='null'>
-                                                      <div className="flex justify-center items-center"><img src={nodata} alt="nodata" className="w-[30%]"/></div>
-                                                      <div className='text-center pb-2'>Please select the course</div>
+                                                      <div className="flex justify-center items-center"><img src={nodata} alt="nodata" className="w-[50%]"/></div>
+                                                      <div className='text-center pb-2'>Please select the Chapter</div>
                                         </div>
                                     )}
                           </div>
