@@ -11,17 +11,12 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
       </Typography>
     );
   }
-
-  // Convert API data into PieChart format
   const data = PropsTraineesPerBatch.map((batch, index) => ({
     id: index,
     value: Number(batch.total_users) || 0,
     label: batch.batch_name,
   }));
-
-  // Total trainees (for center display)
   const totalUsers = data.reduce((sum, item) => sum + item.value, 0);
-
   return (
     <Box
       position="relative"
@@ -35,13 +30,13 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
         series={[
           {
             data,
-            innerRadius: 80,
-            outerRadius: 120,
+            innerRadius: 130,
+            outerRadius: 150,
             paddingAngle: 2,
           },
         ]}
-        width={300}
-        height={300}
+        width={400}
+        height={400}
       />
 
       {/* Center text inside donut */}
