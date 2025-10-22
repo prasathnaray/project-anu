@@ -95,6 +95,27 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 <li className={`${data==="/schedules"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/schedules")}  className={`${data==="/schedules"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Calendar size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Schedules</div></button></li>
                 <li className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/course")}  className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'text-white flex gap-5 ': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></button></li>
                 <li className={`${data==="/vrspace"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/vrspace")}  className={`${data==="/vrspace"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><WirelessCloudAccessIcon size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Streams</div></button></li>
+                <li
+                  className={`fixed bottom-0 left-0 flex items-center ${
+                    buttonOpen ? 'justify-center' : 'justify-center'
+                  } mb-2`}
+                >
+                  <div
+                    className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
+                      buttonOpen ? 'text-sm opacity-100 mb-2' : 'opacity-0 w-0 px-0'
+                    }`}
+                  >
+                    v1.0.0
+                  </div>
+                  {!buttonOpen && (
+                    <div
+                      className="text-sm text-gray-400 transition-all duration-300 opacity-100 text-center p-2"
+                      title="v1.0.0"
+                    >
+                      v1.0.0
+                    </div>
+                  )}
+                </li>
               </>
               }
               {tokdata.role == 102 && 
