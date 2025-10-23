@@ -1,4 +1,3 @@
 
-//const APP_URL = 'https://project-anu.onrender.com';
-const APP_URL = 'http://localhost:4004';
+const APP_URL = 'https://project-anu.onrender.com';
 export default APP_URL;
