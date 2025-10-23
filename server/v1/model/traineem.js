@@ -33,7 +33,7 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
             })
     })
 }
-const getTraineesm = (requester) => {
+const getTraineesm = (requester, page, limit) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [101, 102].includes(Number(requester.role));
         if(!isPrivileged)
@@ -44,7 +44,8 @@ const getTraineesm = (requester) => {
                 message: 'You do not have permission to view trainee profiles.'
             });
         }
-        client.query("SELECT ud.user_profile_photo, ud.user_name, ud.user_email, ud.user_contact_num, ud.user_dob, ud.user_gender, ud.status, bpd.batch_id, bpd.user_id, bd.batch_name, bd.batch_start_date, bd.batch_end_date FROM  public.user_data ud LEFT JOIN public.batch_people_data bpd ON ud.user_email = bpd.user_id LEFT JOIN public.batch_data bd ON bd.batch_id = ANY(bpd.batch_id) WHERE ud.user_role=$1", ['103'], (err, result) => {
+        const offset = (page - 1) * limit;
+        client.query("SELECT COUNT(*) OVER() AS total_count, ud.user_profile_photo, ud.user_name, ud.user_email, ud.user_contact_num, ud.user_dob, ud.user_gender, ud.status, bpd.batch_id, bpd.user_id, bd.batch_name, bd.batch_start_date, bd.batch_end_date FROM  public.user_data ud LEFT JOIN public.batch_people_data bpd ON ud.user_email = bpd.user_id LEFT JOIN public.batch_data bd ON bd.batch_id = ANY(bpd.batch_id) WHERE ud.user_role=$1 ORDER BY ud.user_name LIMIT $2 OFFSET $3", ['103', limit, offset], (err, result) => {
             if(err){
                 return reject(err.message);
             }  

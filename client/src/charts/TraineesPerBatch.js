@@ -11,12 +11,15 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
       </Typography>
     );
   }
+
   const data = PropsTraineesPerBatch.map((batch, index) => ({
     id: index,
     value: Number(batch.total_users) || 0,
-    label: batch.batch_name,
+    label: batch.batch_name, // needed for tooltip only
   }));
+
   const totalUsers = data.reduce((sum, item) => sum + item.value, 0);
+
   return (
     <Box
       position="relative"
@@ -30,9 +33,13 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
         series={[
           {
             data,
-            innerRadius: 130,
-            outerRadius: 150,
+            innerRadius: 80,
+            outerRadius: 120,
             paddingAngle: 2,
+            label: {show: false},
+            tooltip: {
+              formatter: (datum) => `${datum.label}: ${datum.value}`, // show on hover
+            },
           },
         ]}
         width={400}
@@ -43,7 +50,7 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
       <Box
         position="absolute"
         top={0}
-        left={-47}
+        left={0}
         width="100%"
         height="100%"
         display="flex"

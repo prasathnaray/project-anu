@@ -21,8 +21,8 @@ export default function ChapterCompletion({ data = [] }) {
           xAxis={[{ scaleType: "linear", dataKey: "completed", label: "Users Completed" }]} // numeric values
           yAxis={[{ scaleType: "band", dataKey: "name", label: isModuleData ? "Modules" : "Chapters" }]} // categories
           series={[
-            { dataKey: "completed", label: "Users Completed", color: "#8DC63F", borderWith: 2, borderColor: "#558B2F" },
-            { dataKey: "total", label: "Total Users", color: "#C8E6C9", borderWith: 2, borderColor: "#81C784" },
+            { dataKey: "completed", label: "Trainees Completed", color: "#8DC63F", borderWith: 2, borderColor: "#558B2F" },
+            { dataKey: "total", label: "Total trainees", color: "#C8E6C9", borderWith: 2, borderColor: "#81C784" },
           ]}
           layout="horizontal"
           height={400}

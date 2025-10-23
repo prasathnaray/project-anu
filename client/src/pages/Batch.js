@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from "react";
 import SideBar from "../components/sideBar";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical, LayoutDashboard, Notebook, Pen, Pencil, SlidersHorizontal } from "lucide-react";
+import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical, LayoutDashboard, ListFilter, Notebook, Pen, Pencil, SlidersHorizontal } from "lucide-react";
 import CreateBatch from "../components/admin/CreateBatch";
 import { jwtDecode } from "jwt-decode";
 import { Navigate } from "react-router-dom";
@@ -35,6 +35,8 @@ import CreateTargetedLearningAPI from "../API/CreateTargetedLearningAPI";
 import GetTarLearningAPI from "../API/GetTarLearningAPI";
 import DeleteTargetedLearningAPI from "../API/DeleteTargetedLearningAPI";
 import TLToast from "../utils/TLToast";
+import FilterBatch from "../components/admin/FilterBatch";
+import filterBatchAPI from "../API/filterBatchAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -83,6 +85,18 @@ const CustomDateInput2 = React.forwardRef(({ value, onClick, onChange }, ref) =>
   </div>
 ));
 function Batch()  {
+        const [filterData, setFilterData] = useState({
+                         batch_name_filter: "",
+                         instructor_name_filter: "",
+        });
+        const handleFilterChange = (e) => {
+                const { name, value } = e.target;
+                setFilterData({
+                        ...filterData,
+                        [name]: value,
+                });
+        }
+        console.log(filterData);
         const token = localStorage.getItem('user_token')
         const [openBatch, setOpenBatch] = useState(false);
         const [startDate, setStartDate] = useState(null);
@@ -153,6 +167,46 @@ function Batch()  {
                 //TraineesListAPICall();
 
         };
+        const [openFilter, setOpenFilter] = useState(false);
+        const handleCloseFilter = () => {
+                setOpenFilter(!openFilter);
+                setFilterData({
+                                batch_name_filter: "",
+                                instructor_name_filter: "",     
+                })
+        }
+
+
+        //filter batch api calls
+        const filterBatchCall = async(e) => {
+                e.preventDefault();
+                if (!filterData.batch_name_filter && !filterData.instructor_name_filter) {
+                                toast.error("At least one filter must be filled", {
+                                                autoClose: 3000,
+                                                toastId: 'filter-batch',
+                                                icon: false,
+                                                closeButton: CustomCloseButton,
+                                        });
+                                return; // Stop execution
+                }
+                try
+                {
+                        let token = localStorage.getItem('user_token')
+                        const response = await filterBatchAPI(token, {
+                                batch_name: filterData.batch_name_filter,
+                                instructor_name: filterData.instructor_name_filter
+                        });
+                        setListBatch(response.data.rows);
+                        setFilteredUsers(response?.data);
+                        setRowCount(response.data.rowCount);
+                        handleCloseFilter();
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+        }
+        //ending of filter batch api calls
         // delete api 
                 const deleteSubmit = async(batch_id) => {
                         try
@@ -564,7 +618,10 @@ function Batch()  {
                                 <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                             <div className="mt-5 font-semibold text-xl text-gray-600">Batches</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10 ">
-                                                <div className="font-semibold text-xl text-gray-500">All Batches</div>
+                                                <div className="font-semibold text-xl text-gray-500 flex justify-between items-center">
+                                                        <div>All Batches</div>
+                                                        <div><button className="p-2 rounded-lg active:scale-95  transition-transform duration-100" onClick={() => setOpenFilter(true)}><ListFilter size={20}/></button></div>
+                                                </div>
                                                 <div className="grid grid-cols-2 items-center my-5">
                                                         <div className=""><input
                                                             type="text"
@@ -1340,6 +1397,41 @@ function Batch()  {
                         <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={handleSubmit}>Save</button>
                     </div>
                 </CreateBatch>
+
+                <FilterBatch isVisible={openFilter} onClose={handleCloseFilter}>
+                                <>
+                                      <div className="flex justify-between items-center">
+                                                <div className="text-lg">Choose to view</div>
+                                                <div><button onClick={handleCloseFilter} className="text-red-500 hover:bg-red-50 p-1 hover:rounded"><X size={24}/></button></div>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-5 mt-5">
+                                                 <TextField
+                                                                        id="standard-password-input"
+                                                                        label="Batch name"
+                                                                        type="text"
+                                                                        name="batch_name_filter"
+                                                                        value={filterData.batch_name_filter}
+                                                                        autoComplete="current-text"
+                                                                        variant="standard"
+                                                                        onChange={handleFilterChange}
+                                                />
+                                                <TextField
+                                                                        id="standard-password-input"
+                                                                        label="Instructor Name"
+                                                                        type="text"
+                                                                        name="instructor_name_filter"
+                                                                        autoComplete="current-text"
+                                                                        value={filterData.instructor_name_filter}
+                                                                        variant="standard"
+                                                                        onChange={handleFilterChange}
+                                                />
+                                      </div>
+                                      <div className="mt-5 flex justify-end items-center gap-4">
+                                                        <button className="text-red-600 font-semibold hover:bg-red-50 p-2">Clear</button>
+                                                        <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={filterBatchCall}>Apply</button>
+                                      </div>
+                                </>
+                </FilterBatch>
     </div>
     )
 }

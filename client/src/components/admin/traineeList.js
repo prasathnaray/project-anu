@@ -349,6 +349,7 @@
 
 
 import React, { useEffect, useRef, useState } from "react";
+import { TablePagination } from "@mui/material";
 import SideBar from "../sideBar";
 import NavBar from "../navBar";
 import {
@@ -372,20 +373,34 @@ function TraineeList() {
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
   const dropdownRefs = useRef({});
   const [searchQuery, setSearchQuery] = useState("");
-
-  const handleTraineeList = async () => {
+ //pagination
+ const [page, setPage] = useState(0);
+ const [rowsPerPage, setRowsPerPage] = useState(5);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+  const [loading, setLoading] = React.useState("");
+  const handleTraineeList = async (page, limit) => {
     try {
-      const response = await TraineeListAPI(token);
+      setLoading(true)
+      const response = await TraineeListAPI(token, page + 1, limit);
       setTraineeList(response.data.rows || []);
-      setCount(response.data.length || 0);
+      setCount(response.data.rows[0]?.total_count || 0);
     } catch (error) {
       console.error("Error fetching trainee list:", error);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    handleTraineeList();
-  }, []);
+    handleTraineeList(page, rowsPerPage);
+  }, [page, rowsPerPage]);
 
   // close dropdown on outside click
   useEffect(() => {
@@ -409,16 +424,6 @@ function TraineeList() {
     setButtonOpen(!buttonOpen);
   };
 
-  const handleDisable = async (id) => {
-    try {
-      const response = await axios.patch(
-        `http://localhost:4004/api/v1/disable-trainee/${id}`
-      );
-      console.log(response);
-    } catch (err) {
-      console.log(err);
-    }
-  };
 
   // 🔍 filter trainees by name, email, or batch
   const filteredTrainees = traineeList.filter((trainee) =>
@@ -426,7 +431,6 @@ function TraineeList() {
     trainee.user_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     trainee.batch_name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
   return (
     <div className={`flex flex-col min-h-screen`}>
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -511,133 +515,128 @@ function TraineeList() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredTrainees.length > 0 ? (
-                        filteredTrainees.map((trainee, index) => (
-                          <tr
-                            key={index}
-                            className="border-b border-gray-200 hover:bg-gray-50 shadow-sm"
-                          >
-                            <td className="py-2 px-4">
-                              <img
-                                src={IMAGE_URL + `${trainee.user_profile_photo}`}
-                                className="w-10 cursor-pointer"
-                                alt="profile"
-                              />
-                            </td>
-                            <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                              {trainee.user_name}
-                            </td>
-                            <td className="py-2 px-4 font-semibold text-[#8DC63F]">
-                              {trainee.batch_name}
-                            </td>
-                            <td className="py-2 px-4 font-normal">
-                              <div
-                                className={`inline-block px-3 py-1 rounded text-sm ${
-                                  trainee.status === "inactive"
-                                    ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full"
-                                    : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"
-                                }`}
-                              >
-                                {trainee.status === "inactive" ? "Disabled" : "Active"}
-                              </div>
-                            </td>
-                            <td className="py-2 px-4 relative">
-                              <button
-                                onClick={() => toggleDropdown(index)}
-                                className="text-gray-500"
-                              >
-                                <EllipsisVertical size={23} />
-                              </button>
-                              {openDropdownIndex === index && (
-                                <div
-                                  ref={(el) =>
-                                    (dropdownRefs.current[index] = el)
-                                  }
-                                  className="absolute right-0 mt-1 w-28 bg-white border border-gray-200 rounded shadow-md z-10"
-                                >
-                                  <button className="block w-full text-left px-4 py-3 hover:bg-gray-50">
-                                    View
-                                  </button>
-                                  {trainee.status === "inactive" ? (
-                                    <button
-                                      className="block w-full text-left px-4 py-3 hover:bg-gray-50"
-                                      onClick={() =>
-                                        showEnableConfirmToast(
-                                          trainee.user_email,
-                                          handleTraineeList,
-                                          token,
-                                          "active"
-                                        )
-                                      }
-                                    >
-                                      Enable
-                                    </button>
-                                  ) : (
-                                    <button
-                                      className="block w-full text-left px-4 py-3 hover:bg-gray-50"
-                                      onClick={() =>
-                                        showDisableConfirmToast(
-                                          trainee.user_email,
-                                          handleTraineeList,
-                                          token,
-                                          "inactive"
-                                        )
-                                      }
-                                    >
-                                      Disable
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() =>
-                                      DeleteTraineeToast(
-                                        trainee.user_email,
-                                        handleTraineeList,
-                                        token
-                                      )
-                                    }
-                                    className="block w-full text-left px-4 py-3 hover:bg-gray-50"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="py-4 px-4 text-center text-gray-500"
-                          >
-                            No data found
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
+  {loading ? (
+    // Show 5 loading rows (matching rowsPerPage)
+    Array.from({ length: rowsPerPage }).map((_, index) => (
+      <tr key={index} className="border-b border-gray-200 animate-pulse">
+        <td className="py-2 px-4">
+          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+        </td>
+        <td className="py-2 px-4">
+          <div className="h-4 bg-gray-300 rounded w-24"></div>
+        </td>
+        <td className="py-2 px-4">
+          <div className="h-4 bg-gray-300 rounded w-32"></div>
+        </td>
+        <td className="py-2 px-4">
+          <div className="h-4 bg-gray-300 rounded w-16"></div>
+        </td>
+        <td className="py-2 px-4"></td>
+      </tr>
+    ))
+  ) : filteredTrainees.length > 0 ? (
+    filteredTrainees.map((trainee, index) => (
+      <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
+        <td className="py-2 px-4">
+          <img
+            src={IMAGE_URL + trainee.user_profile_photo}
+            className="w-10 h-10 rounded-full cursor-pointer"
+            alt="profile"
+          />
+        </td>
+        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+          {trainee.user_name}
+        </td>
+        <td className="py-2 px-4 font-semibold text-[#8DC63F]">
+          {trainee.batch_name}
+        </td>
+        <td className="py-2 px-4 font-normal">
+          <div
+            className={`inline-block px-3 py-1 rounded text-sm ${
+              trainee.status === "inactive"
+                ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full"
+                : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"
+            }`}
+          >
+            {trainee.status === "inactive" ? "Disabled" : "Active"}
+          </div>
+        </td>
+        <td className="py-2 px-4 relative">
+          <button
+            onClick={() => toggleDropdown(index)}
+            className="text-gray-500"
+          >
+            <EllipsisVertical size={23} />
+          </button>
+          {openDropdownIndex === index && (
+            <div
+              ref={(el) => (dropdownRefs.current[index] = el)}
+              className="absolute right-0 mt-1 w-28 bg-white border border-gray-200 rounded shadow-md z-10"
+            >
+              <button className="block w-full text-left px-4 py-3 hover:bg-gray-50">
+                View
+              </button>
+              {trainee.status === "inactive" ? (
+                <button
+                  className="block w-full text-left px-4 py-3 hover:bg-gray-50"
+                  onClick={() =>
+                    showEnableConfirmToast(
+                      trainee.user_email,
+                      handleTraineeList,
+                      token,
+                      "active"
+                    )
+                  }
+                >
+                  Enable
+                </button>
+              ) : (
+                <button
+                  className="block w-full text-left px-4 py-3 hover:bg-gray-50"
+                  onClick={() =>
+                    showDisableConfirmToast(
+                      trainee.user_email,
+                      handleTraineeList,
+                      token,
+                      "inactive"
+                    )
+                  }
+                >
+                  Disable
+                </button>
+              )}
+              <button
+                onClick={() =>
+                  DeleteTraineeToast(trainee.user_email, handleTraineeList, token)
+                }
+                className="block w-full text-left px-4 py-3 hover:bg-gray-50"
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+        No data found
+      </td>
+    </tr>
+  )}
+</tbody>
                   </table>
 
-                  {/* Pagination */}
-                  {/* <div className="flex justify-end items-center mt-5 gap-2">
-                    <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] hover:text-white">
-                      <button>
-                        <ChevronLeft size={20} />
-                      </button>
-                    </div>
-                    {[1, 2, 3, 4].map((page) => (
-                      <div
-                        key={page}
-                        className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] hover:text-white"
-                      >
-                        <button>{page}</button>
-                      </div>
-                    ))}
-                    <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] hover:text-white">
-                      <button>
-                        <ChevronRight size={20} />
-                      </button>
-                    </div>
-                  </div> */}
+                  <TablePagination
+                    component="div"
+                    count={count} // total rows, or total from backend
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[5, 10, 25]}
+                  />
                 </div>
               </div>
             </div>

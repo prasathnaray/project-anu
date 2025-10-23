@@ -48,6 +48,7 @@ const getResourcesByModuleIdsRouter = require('./routes/getResourcesByModuleIdsR
 const getTargetedLearningRouter = require('./routes/getTargetedLearningRoute.js');
 const deleteTargetedLearningRouter = require('./routes/deleteTargetedLearningRoute.js');
 const getIndividualTLRouter = require('./routes/getIndividualTLRoute.js');
+const filterBatchRouter = require('./routes/filterBatchRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -91,6 +92,7 @@ app.use('/api/v1/', Authenticate, disableTraineeRoute)
 app.use('/api/v1/', Authenticate, batchCreationRouter);
 app.use('/api/v1/', Authenticate, getBatchesRouter);
 app.use('/api/v1/', Authenticate, associateBatchRouter);
+app.use('/api/v1/', Authenticate, filterBatchRouter);
 app.use('/api/v1/', Authenticate, getInstructorRouter);
 app.use('/api/v1/', Authenticate, dashboardRouter);
 app.use('/api/v1/', Authenticate, deleteCuriculumRouter)

@@ -82,7 +82,12 @@ function Login() {
             setLoading(false); 
           }
    }
-
+   //onKey enter submit
+   const handleKeyPress = (e) => {
+        if (e.key === "Enter") {
+          handleSubmit(e);
+        }
+   };
    ///forgot password input handling
    const [changepassword, setChangePassword] = useState({
         reset_password_mail: ""
@@ -150,6 +155,7 @@ function Login() {
                         placeholder="Email address"
                         value={userData.user_mail}
                         onChange={handleChange}
+                        onKeyDown={handleKeyPress}
                         name="user_mail"
                         className="rounded px-10 py-3 w-full mb-6 focus:outline-none focus:ring-0"
                     />  
@@ -161,6 +167,7 @@ function Login() {
                         placeholder="Password"
                         value={userData.user_password}
                         onChange={handleChange}
+                        onKeyDown={handleKeyPress}
                         name="user_password"
                         className="rounded px-10 py-3 w-full mb-6 focus:outline-none focus:ring-0"
                     />  

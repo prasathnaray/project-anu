@@ -1,5 +1,5 @@
 const {generateBatchID} = require('../utils/idGenerator.js')
-const {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList} = require('../model/Batchm.js')
+const {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, filterBatchm} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
     const {batch_name, batch_start_date, batch_end_date, course_data, curiculum_name} = req.body;
@@ -125,4 +125,17 @@ const InTLListC = async(req, res) => {
                 console.log(err);
         }
 }
-module.exports = {batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC, InTLListC}
+const filterBatchC = async(req, res) => {
+        const requester = req.user;
+        const {batch_name, instructor_name} = req.query;
+        try
+        {
+                const result = await filterBatchm(requester, batch_name, instructor_name);
+                res.status(200).send(result);
+        }
+        catch(err)
+        {
+                res.status(500).send(err);
+        }
+}
+module.exports = {filterBatchC, batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC, InTLListC}

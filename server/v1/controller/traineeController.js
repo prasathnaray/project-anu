@@ -5,8 +5,10 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const TraineeController = async(req, res) => {
         const requester = req.user;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         try {
-                const result = await getTraineesm(requester);
+                const result = await getTraineesm(requester, page, limit);
                 res.status(200).send(result);
         } catch (err) {
                 res.status(500).send({

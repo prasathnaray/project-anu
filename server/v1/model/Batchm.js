@@ -187,4 +187,58 @@ const IndividualtllList = (requester) => {
         })
     })
 }
-module.exports = {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList};
+
+const filterBatchm = (requester, batch_name, instructor_name) => {
+  const isPrivileged = [101].includes(Number(requester.role));
+  if (!isPrivileged) {
+    return Promise.resolve({
+      status: 'Unauthorized',
+      code: 401,
+      message: 'You do not have permission to view trainee profiles'
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    client.query(
+      `
+      WITH role_counts AS (
+        SELECT 
+          b.batch_id, 
+          b.batch_name, 
+          b.batch_start_date, 
+          b.batch_end_date, 
+          ud.user_role, 
+          COUNT(*) AS role_count
+        FROM batch_data b
+        LEFT JOIN batch_people_data bpd 
+          ON b.batch_id = ANY(bpd.batch_id)
+        LEFT JOIN user_data ud 
+          ON bpd.user_id = ud.user_email
+        WHERE 
+          ($1::text IS NULL OR b.batch_name ILIKE '%' || $1::text || '%') AND
+          ($2::text IS NULL OR ud.user_name ILIKE '%' || $2::text || '%')
+        GROUP BY 
+          b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role
+      )
+      SELECT 
+        batch_id, 
+        batch_name, 
+        batch_start_date, 
+        batch_end_date,
+        SUM(role_count) AS total_users,
+        JSON_AGG(
+          JSON_BUILD_OBJECT('role', user_role, 'count', role_count)
+        ) FILTER (WHERE user_role IS NOT NULL) AS role_counts
+      FROM role_counts
+      GROUP BY 
+        batch_id, batch_name, batch_start_date, batch_end_date
+      `,
+      [batch_name || null, instructor_name || null],
+      (err, result) => {
+        if (err) reject(err);
+        else resolve(result.rows);
+      }
+    );
+  });
+};
+module.exports = {filterBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList};
