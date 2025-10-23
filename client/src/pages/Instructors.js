@@ -11,10 +11,26 @@ import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import { Select, MenuItem } from "@mui/material";
+import { Select, MenuItem, TablePagination } from "@mui/material";
 import DeleteInstructorToast from "../utils/deleteInstructorToast";
 
 function Instructors() {
+
+
+  //pagination states and handlers starts here
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [count, setCount] = useState(0); // total number of rows
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  }
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  }
+
+  /// pagination states and handlers ends here
   const [buttonOpen, setButtonOpen] = useState(true);
   const [seeBatches, setSeeBatches] = useState({});
   const [instructors, setInstructors] = useState([]);
@@ -35,15 +51,22 @@ function Instructors() {
       [index]: !prev[index],
     }));
   };
+ //loading effect
 
+  const [loading, setLoading] = useState(false);
   // fetch instructors data
-  const getData = async () => {
+  const getData = async (page, limit) => {
     try {
-      const result = await GetIntructorsAPI(token);
-      setInstructors(result.data);
+      setLoading(true);
+      const result = await GetIntructorsAPI(token,  page + 1, limit);
+      setInstructors(result.data || []);
       setFilteredUsers(result.data); // initialize filtered list
+      setCount(result.data[0]?.total_count || 0);
     } catch (err) {
       console.log(err);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -65,8 +88,8 @@ function Instructors() {
   };
 
   useEffect(() => {
-    getData();
-  }, []);
+    getData(page, rowsPerPage);
+  }, [page, rowsPerPage]);
 
   const decoded = jwtDecode(token);
   if (!decoded.role) {
@@ -161,156 +184,132 @@ function Instructors() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {filteredUsers.length > 0 ? (
-                      filteredUsers.map((instructor, index) => (
-                        <tr key={index} className="text-sm text-gray-700">
-                          <td className="border-b-2">
-                            <img
-                              src={IMAGE_URL + instructor.user_profile_photo}
-                              className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                            />
-                          </td>
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            {instructor.user_name}
-                          </td>
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2 ">
-                            {instructor.batch_names.length > 0 ? (
-                              <div className="flex justify-between items-center gap-2 w-full">
-                                <div className="flex flex-col gap-1">
-                                  {seeBatches[index] ? (
-                                    <div className="flex flex-wrap gap-1 transition-all ease-in-out duration-300">
-                                      {instructor.batch_names.map((id, i) => (
-                                        <span key={i} className="inline-block">
-                                          {id}
-                                          {i <
-                                            instructor.batch_names.length - 1 &&
-                                            ","}
-                                        </span>
-                                      ))}
+                   <tbody>
+                        {loading ? (
+                          // Show 5 skeleton rows or as many as rowsPerPage
+                          Array.from({ length: rowsPerPage }).map((_, index) => (
+                            <tr key={index} className="border-b border-gray-200 animate-pulse">
+                              <td className="py-2 px-4">
+                                <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                              </td>
+                              <td className="py-2 px-4">
+                                <div className="h-4 bg-gray-300 rounded w-24"></div>
+                              </td>
+                              <td className="py-2 px-4">
+                                <div className="h-4 bg-gray-300 rounded w-32"></div>
+                              </td>
+                              <td className="py-2 px-4">
+                                <div className="h-4 bg-gray-300 rounded w-16"></div>
+                              </td>
+                              <td className="py-2 px-4"></td>
+                            </tr>
+                          ))
+                        ) : filteredUsers.length > 0 ? (
+                          filteredUsers.map((instructor, index) => (
+                            <tr key={index} className="text-sm text-gray-700 border-b border-gray-200 hover:bg-gray-50 shadow-sm">
+                              <td className="py-2 px-4">
+                                <img
+                                  src={IMAGE_URL + instructor.user_profile_photo}
+                                  className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                                  alt="profile"
+                                />
+                              </td>
+                              <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                {instructor.user_name}
+                              </td>
+                              <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                {instructor.batch_names.length > 0 ? (
+                                  <div className="flex justify-between items-center gap-2 w-full">
+                                    <div className="flex flex-col gap-1">
+                                      {seeBatches[index] ? (
+                                        <div className="flex flex-wrap gap-1">
+                                          {instructor.batch_names.map((id, i) => (
+                                            <span key={i} className="inline-block">
+                                              {id}
+                                              {i < instructor.batch_names.length - 1 && ","}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div>{instructor.batch_names[0]}</div>
+                                      )}
                                     </div>
-                                  ) : (
-                                    <div>{instructor.batch_names[0]}</div>
-                                  )}
-                                </div>
-                                <button
-                                  onClick={() => handleBatchOpen(index)}
-                                  className="shrink-0 text-gray-500"
-                                >
-                                  {seeBatches[index] ? (
-                                    <ChevronLeft size={20} />
-                                  ) : (
-                                    <ChevronRight size={20} />
-                                  )}
-                                </button>
-                              </div>
-                            ) : (
-                              <div>{instructor.batch_id[0]}</div>
-                            )}
-                          </td>
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <div
-                              className={`inline-block px-3 py-1 rounded text-sm ${
-                                instructor.status === "inactive"
-                                  ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full"
-                                  : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"
-                              }`}
-                            >
-                              {instructor.status === "inactive" && (
-                                <div>Disabled</div>
-                              )}
-                              {instructor.status === "active" && (
-                                <div>Active</div>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            <div className="relative py-2 px-4 text-[#8DC63F]">
-                              <Select
-                                displayEmpty
-                                variant="standard"
-                                disableUnderline
-                                IconComponent={() => null}
-                                className="text-sm text-[#8DC63F] bg-transparent cursor-pointer"
-                                renderValue={() => (
-                                  <button className="text-gray-500">
-                                    <EllipsisVertical size={23} />
-                                  </button>
+                                    <button
+                                      onClick={() => handleBatchOpen(index)}
+                                      className="shrink-0 text-gray-500"
+                                    >
+                                      {seeBatches[index] ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div>-</div>
                                 )}
-                                MenuProps={{
-                                  anchorOrigin: {
-                                    vertical: "bottom",
-                                    horizontal: "left",
-                                  },
-                                  transformOrigin: {
-                                    vertical: "top",
-                                    horizontal: "left",
-                                  },
-                                  PaperProps: {
-                                    style: {
-                                      marginTop: 8,
-                                    },
-                                  },
-                                }}
-                              >
-                                <MenuItem value="view">View</MenuItem>
-                                <MenuItem value="edit">Edit</MenuItem>
-                                <MenuItem
-                                  value="delete"
-                                  onClick={() => {
-                                    DeleteInstructorToast(
-                                      instructor.user_email,
-                                      getData,
-                                      token
-                                    );
+                              </td>
+                              <td className="py-2 px-4 font-normal">
+                                <div
+                                  className={`inline-block px-3 py-1 rounded text-sm ${
+                                    instructor.status === "inactive"
+                                      ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full"
+                                      : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"
+                                  }`}
+                                >
+                                  {instructor.status === "inactive" ? "Disabled" : "Active"}
+                                </div>
+                              </td>
+                              <td className="py-2 px-4 relative">
+                                <Select
+                                  displayEmpty
+                                  variant="standard"
+                                  disableUnderline
+                                  IconComponent={() => null}
+                                  className="text-sm text-[#8DC63F] bg-transparent cursor-pointer"
+                                  renderValue={() => (
+                                    <button className="text-gray-500">
+                                      <EllipsisVertical size={23} />
+                                    </button>
+                                  )}
+                                  MenuProps={{
+                                    anchorOrigin: { vertical: "bottom", horizontal: "left" },
+                                    transformOrigin: { vertical: "top", horizontal: "left" },
+                                    PaperProps: { style: { marginTop: 8 } },
                                   }}
                                 >
-                                  Delete
-                                </MenuItem>
-                                <MenuItem value="disable">Disable</MenuItem>
-                              </Select>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="py-4 px-4 text-center text-gray-500"
-                        >
-                          No data found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                                  <MenuItem value="view">View</MenuItem>
+                                  <MenuItem value="edit">Edit</MenuItem>
+                                  <MenuItem
+                                    value="delete"
+                                    onClick={() => {
+                                      DeleteInstructorToast(instructor.user_email, getData, token);
+                                    }}
+                                  >
+                                    Delete
+                                  </MenuItem>
+                                  <MenuItem value="disable">Disable</MenuItem>
+                                </Select>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                              No data found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
 
-                {/* Pagination */}
-                {/* <div className="flex justify-end items-center mt-5 gap-2">
-                  <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
-                    <button>
-                      <ChevronLeft size={20} />
-                    </button>
-                  </div>
-                  <div className="border px-2 rounded border-gray-400 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
-                    <button>1</button>
-                  </div>
-                  <div className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
-                    <button>2</button>
-                  </div>
-                  <div className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
-                    <button>3</button>
-                  </div>
-                  <div className="border px-2 border-gray-400 rounded text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
-                    <button>4</button>
-                  </div>
-                  <div className="px-2 pt-1 text-sm hover:bg-[#8DC63F] transition-all ease-in-out hover:text-white">
-                    <button>
-                      <ChevronRight size={20} />
-                    </button>
-                  </div>
-                </div> */}
+                </table>
+                <div className="mt-3">
+                  <TablePagination
+                    component="div"
+                    count={count} // total rows, or total from backend
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[5, 10, 25]}
+                  />
+                </div>
               </div>
             </div>
           </div>

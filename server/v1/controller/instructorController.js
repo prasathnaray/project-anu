@@ -1,10 +1,12 @@
 const {getInstructorsm, deleteInstructorsm} = require('../model/instructorm');
 
 const getInstructorData = async(req, res) => {
-    const requester = req.user
+    const requester = req.user;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     try
     {
-        const result = await getInstructorsm(requester);
+        const result = await getInstructorsm(requester, page, limit);
         res.status(200).send(result.rows);
     }
     catch(err)
