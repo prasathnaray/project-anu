@@ -23,6 +23,7 @@ import Chapters from '../pages/Chapters';
 import Module from '../pages/Module';
 import Resource from '../pages/Resource';
 import Schedules from '../pages/Schedules';
+import TraineeIndividual from '../pages/TraineeIndividual';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -49,6 +50,7 @@ function RoutesPath() {
                             <Route path="/module/:chapter_id/:course_id" element={<Module />} />
                             <Route path="/resource/:module_id" element={<Resource />} />
                             <Route path="/schedules" element={<Schedules />} />
+                            <Route path="/trainee/:people_id" element={<TraineeIndividual />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

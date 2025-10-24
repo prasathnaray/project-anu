@@ -198,6 +198,7 @@ const readNotification = async(id) => {
               {currentPath === "/instructors" && <div>Instructors</div>}
               {currentPath === "/trainees" && <div>Trainees</div>}
               {currentPath === "/vrspace" && <div>Realtime</div>}
+              {currentPath.startsWith("/trainee") && <div>Trainee Details</div>}
             </div>
           </div>
           <div className="flex md:order-2">
