@@ -19,8 +19,14 @@ function TraineeIndividual() {
                 </div>
                 <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
                             <div className='bg-gray-100'>
-                                    <div className="">
-
+                                    <div className="grid grid-cols-2 gap-1 mx-2">
+                                              <div className="col-span-1 p-4 bg-white shadow mt-4">
+                                                       <div>My Progress</div>
+                                                        
+                                              </div>
+                                              <div className="col-span-1 p-4 bg-white shadow mt-4">
+                                                      
+                                              </div>
                                     </div>
                             </div>
                 </div>
