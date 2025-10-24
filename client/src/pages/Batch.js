@@ -101,8 +101,8 @@ function Batch()  {
         const [openBatch, setOpenBatch] = useState(false);
         const [startDate, setStartDate] = useState(null);
         const [endDate, setEndDate] = useState(null);
-        const [page, setPage] = React.useState(2);
-        const [rowsPerPage, setRowsPerPage] = React.useState(2);
+        const [page, setPage] = React.useState(0);
+        const [rowsPerPage, setRowsPerPage] = React.useState(5);
         const [rowCount, setRowCount] = useState(0);
         const [corList, setCorList] = useState({});
         const [openTargetedLearning, setTargetedLearning] = React.useState(false);
@@ -287,18 +287,24 @@ function Batch()  {
              const [filteredUsers, setFilteredUsers] = useState([])
 
         //
-        const BatchesData = async(token) => {
+        const [loading, setLoading] = useState(false);
+        const BatchesData = async(token, page, limit) => {
                         //e.preventDefault()
                         try
                         {
-                                const result = await GetBatchesAPI(token);
-                                setListBatch(result.data.rows);
-                                setRowCount(result.data.rowCount);
+                                setLoading(true);
+                                const result = await GetBatchesAPI(token, page + 1, limit);
+                                setListBatch(result.data.rows || []);
+                                setRowCount(result.data?.rows[0]?.total_count || 0);
                                 setFilteredUsers(result.data.rows)
                         }
                         catch(err)
                         {
                                 console.log(err)
+                        }
+                        finally
+                        {
+                                setLoading(false);
                         }
         }
 
@@ -317,8 +323,8 @@ function Batch()  {
         };
 
         useEffect(() => {
-                BatchesData(token)
-        }, [])
+                BatchesData(token, page, rowsPerPage);
+        }, [page, rowsPerPage])
         const handleSubmit  = async(e) => {
                 e.preventDefault();
                 const token = localStorage.getItem("user_token");
@@ -694,7 +700,7 @@ function Batch()  {
 
                                                         {/* </tbody> */}
                                                 </table>
-                                                {/* <div className="flex justify-end items-center mt-6 gap-10">
+                                                <div className="flex justify-end items-center mt-6 gap-10">
                                                         <TablePagination 
                                                                 component="div"
                                                                 count={rowCount}
@@ -702,8 +708,9 @@ function Batch()  {
                                                                 onPageChange={handleChangePage}
                                                                 rowsPerPage={rowsPerPage}
                                                                 onRowsPerPageChange={handleChangeRowsPerPage}
+                                                                rowsPerPageOptions={[5, 10, 25]}
                                                         />
-                                                </div> */}
+                                                </div> 
                                             </div>
                                 </div>
                         </div>

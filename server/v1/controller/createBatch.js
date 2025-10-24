@@ -15,9 +15,11 @@ const batchCreation = async(req, res) =>{
 }
 const getBatchData= async(req,res) => {
         const requester = req.user;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         try 
         {
-                const result = await getBatchm(requester);
+                const result = await getBatchm(requester, page, limit);
                 res.status(200).send(result);
         }
         catch(err)

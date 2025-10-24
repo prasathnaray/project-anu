@@ -1,11 +1,12 @@
 import axios from "axios";
 import APP_URL from './config';
-function GetBatchesAPI(token){
+function GetBatchesAPI(token, page, limit){
     const result = axios.get(APP_URL+'/api/v1/get-batches', 
         {
             headers: {
                 'Authorization': `Bearer ${token}`
-            }
+            },
+            params: {page, limit}
         }
     );
     return result;
