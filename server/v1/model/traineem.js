@@ -143,30 +143,34 @@ const indDatauuid = (requester, people_id) => {
         }
         client.query(`
             WITH user_info AS (
-            SELECT user_email
-            FROM user_data
-            WHERE people_id = $1
-        ),
-        pdt AS (
-            SELECT resourse_id AS rid, user_id, is_completed
-            FROM progress_data
-            WHERE user_id = (SELECT user_email FROM user_info)
-        )
-        SELECT 
-            c.course_id, 
-            c.course_name, 
-            c.curiculum_id, 
-            ch.chapter_id, 
-            ch.chapter_name, 
-            md.module_id, 
-            md.module_name, 
-            rd.resource_name, 
-            pdt.is_completed
-        FROM course_data c
-        LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
-        LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id
-        LEFT JOIN resource_data rd ON md.module_id = rd.module_id
-        LEFT JOIN pdt ON pdt.rid = rd.resource_id;
+    SELECT user_email, user_name, user_role, user_profile_photo
+    FROM user_data
+    WHERE people_id = $1
+),
+pdt AS (
+    SELECT resourse_id AS rid, user_id, is_completed
+    FROM progress_data
+    WHERE user_id IN (SELECT user_email FROM user_info)
+)
+SELECT 
+    ui.user_name,
+    ui.user_profile_photo,
+    ui.user_role,
+    c.course_id, 
+    c.course_name, 
+    c.curiculum_id, 
+    ch.chapter_id, 
+    ch.chapter_name, 
+    md.module_id, 
+    md.module_name, 
+    rd.resource_name, 
+    pdt.is_completed
+FROM user_info ui
+CROSS JOIN course_data c
+LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
+LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id
+JOIN resource_data rd ON md.module_id = rd.module_id
+LEFT JOIN pdt ON pdt.rid = rd.resource_id;
         `, [people_id], (err, result) => {
                 if(err)
                 {
