@@ -4,6 +4,7 @@ import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import IMAGE_URL from "../API/imageUrl";
 import TraineeProfileAPI from '../API/TraineeProfileAPI';
+import HalfDonut from '../charts/ResourceCompletion';
 function TraineeIndividual() {
     const navigate = useNavigate();
     const { people_id } = useParams();
@@ -83,8 +84,12 @@ function TraineeIndividual() {
                                                        </div>    
                                               </div>
                                               <div className="col-span-3 p-4 bg-white shadow mt-4">
-                                                      
-                                              </div>
+                                                                <div className="text-gray-600 text-lg">Resources statistics</div>
+                                                                <div className="flex justify-between items-center m-4">
+                                                                                <div className=""><HalfDonut dataa={individualTraineeProfile}/></div>
+                                                                                {/* <div>sfh</div> */}
+                                                                </div>
+                                              </div>    
                                     </div>
                             </div>
                 </div>
