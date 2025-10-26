@@ -24,6 +24,7 @@ import Module from '../pages/Module';
 import Resource from '../pages/Resource';
 import Schedules from '../pages/Schedules';
 import TraineeIndividual from '../pages/TraineeIndividual';
+import IndividualInstructors from '../pages/IndividualInstructors';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -51,6 +52,7 @@ function RoutesPath() {
                             <Route path="/resource/:module_id" element={<Resource />} />
                             <Route path="/schedules" element={<Schedules />} />
                             <Route path="/trainee/:people_id" element={<TraineeIndividual />} />
+                            <Route path="/instructor/:people_id" element={<IndividualInstructors />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

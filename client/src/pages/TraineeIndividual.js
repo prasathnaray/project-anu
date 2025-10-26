@@ -1,11 +1,12 @@
 import React from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import IMAGE_URL from "../API/imageUrl";
 import TraineeProfileAPI from '../API/TraineeProfileAPI';
 import HalfDonut from '../charts/ResourceCompletion';
 import StreakHeatmap from '../charts/StreaksChart';
+import { jwtDecode } from 'jwt-decode';
 
 function TraineeIndividual() {
   const navigate = useNavigate();
@@ -54,6 +55,14 @@ function TraineeIndividual() {
     resources_completed: data.filter(item => item.is_completed === true).length
   };
 
+        let token = localStorage.getItem('user_token');
+        if (!token) {
+                        return <Navigate to="/" replace />;
+        }
+        const decoded = jwtDecode(token);
+        if (decoded.role != 101 && decoded.role != 102) {
+                        return <Navigate to="/" replace />;
+        }
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
