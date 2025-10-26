@@ -5,6 +5,7 @@ import SideBar from '../components/sideBar';
 import IMAGE_URL from "../API/imageUrl";
 import TraineeProfileAPI from '../API/TraineeProfileAPI';
 import HalfDonut from '../charts/ResourceCompletion';
+import StreakHeatmap from '../charts/StreaksChart';
 function TraineeIndividual() {
     const navigate = useNavigate();
     const { people_id } = useParams();
@@ -85,11 +86,13 @@ function TraineeIndividual() {
                                               </div>
                                               <div className="col-span-3 p-4 bg-white shadow mt-4">
                                                                 <div className="text-gray-600 text-lg">Resources statistics</div>
-                                                                <div className="flex justify-between items-center m-4">
-                                                                                <div className=""><HalfDonut dataa={individualTraineeProfile}/></div>
-                                                                                {/* <div>sfh</div> */}
+                                                                <div className="grid grid-cols-2 gap-2">
+                                                                                <div className="p-12"><HalfDonut dataa={individualTraineeProfile}/></div>
                                                                 </div>
-                                              </div>    
+                                              </div> 
+                                    </div>
+                                    <div className="p-4 bg-white shadow mt-4 mx-7">
+                                          <div className=""><StreakHeatmap data={individualTraineeProfile}/></div>
                                     </div>
                             </div>
                 </div>

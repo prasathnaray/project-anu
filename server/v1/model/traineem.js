@@ -148,7 +148,7 @@ const indDatauuid = (requester, people_id) => {
     WHERE people_id = $1
 ),
 pdt AS (
-    SELECT resourse_id AS rid, user_id, is_completed
+    SELECT resourse_id AS rid, user_id, is_completed, updated_at
     FROM progress_data
     WHERE user_id IN (SELECT user_email FROM user_info)
 )
@@ -164,7 +164,8 @@ SELECT
     md.module_id, 
     md.module_name, 
     rd.resource_name, 
-    pdt.is_completed
+    pdt.is_completed,
+    pdt.updated_at
 FROM user_info ui
 CROSS JOIN course_data c
 LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
