@@ -27,8 +27,8 @@ export default function HalfDonut({ dataa }) {
   return (
     <Box
       sx={{
-        width: 220,
-        height: 140,
+        width: 280,
+        height: 180,
         position: "relative",
         display: "flex",
         justifyContent: "center",
@@ -39,31 +39,32 @@ export default function HalfDonut({ dataa }) {
         series={[
           {
             data,
-            innerRadius: 50,
-            outerRadius: 80,
-            cornerRadius: 2,
+            innerRadius: 65,
+            outerRadius: 105,
+            cornerRadius: 3,
           },
         ]}
         colors={["#8DC63F", "#e0e0e0"]}
-        width={220}
-        height={190}
+        width={280}
+        height={240}
       />
 
       {/* Center Label */}
       <Box
         sx={{
           position: "absolute",
-          top: "40%",
-          left: "15%",
+          top: "47%",
+          left: "35%",
+          transform: "translate(-50%, -50%)",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
         }}
       >
-        <Typography variant="h6" fontWeight="bold" color="#8DC63F">
+        <Typography variant="h5" fontWeight="bold" color="#8DC63F">
           {percentage}%
         </Typography>
-        <Typography variant="caption" color="textSecondary">
+        <Typography variant="body2" color="textSecondary">
           Completed
         </Typography>
       </Box>
