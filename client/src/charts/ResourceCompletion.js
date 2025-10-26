@@ -3,9 +3,11 @@ import { PieChart } from "@mui/x-charts/PieChart";
 import { Box, Typography } from "@mui/material";
 
 export default function HalfDonut({ dataa }) {
-  // ✅ Calculate completion from your API data
-  const total = dataa.length;
-  const completed = dataa.filter((item) => item.is_completed === true).length;
+  // ✅ Ensure dataa is always an array
+  const safeData = Array.isArray(dataa) ? dataa : [];
+
+  const total = safeData.length;
+  const completed = safeData.filter((item) => item?.is_completed === true).length;
 
   if (total === 0) {
     return (
@@ -17,7 +19,7 @@ export default function HalfDonut({ dataa }) {
 
   const remaining = total - completed;
 
-  const data = [
+  const chartData = [
     { id: 0, value: completed, label: "Completed" },
     { id: 1, value: remaining, label: "Remaining" },
   ];
@@ -38,7 +40,7 @@ export default function HalfDonut({ dataa }) {
       <PieChart
         series={[
           {
-            data,
+            data: chartData,
             innerRadius: 65,
             outerRadius: 105,
             cornerRadius: 3,

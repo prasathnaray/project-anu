@@ -118,7 +118,7 @@ const induuidController = async(req, res) => {
         try
         {
                 const result = await indDatauuid(requester, people_id);
-                res.status(200).send(result.rows);
+                res.status(200).send(result);
         }
         catch(err)
         {

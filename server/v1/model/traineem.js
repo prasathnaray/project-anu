@@ -130,58 +130,155 @@ const indData = (requester, user_mail) => {
         })
 })
 }
+// const indDatauuid = (requester, people_id) => {
+//     return new Promise((resolve, reject) => {
+//         const isPrivileged = [101, 102, 103].includes(Number(requester.role));
+//         if(!isPrivileged)
+//         {
+//             return resolve({
+//                   status: 'Unauthorized',
+//                   code: 401, 
+//                   message: 'You do not have permission to view profiles'
+//             })
+//         }
+//         client.query(`
+//             WITH user_info AS (
+//     SELECT user_email, user_name, user_role, user_profile_photo
+//     FROM user_data
+//     WHERE people_id = $1
+// ),
+// pdt AS (
+//     SELECT resourse_id AS rid, user_id, is_completed, updated_at
+//     FROM progress_data
+//     WHERE user_id IN (SELECT user_email FROM user_info)
+// )
+// SELECT 
+//     ui.user_name,
+//     ui.user_profile_photo,
+//     ui.user_role,
+//     c.course_id, 
+//     c.course_name, 
+//     c.curiculum_id, 
+//     ch.chapter_id, 
+//     ch.chapter_name, 
+//     md.module_id, 
+//     md.module_name, 
+//     rd.resource_name, 
+//     pdt.is_completed,
+//     pdt.updated_at
+// FROM user_info ui
+// CROSS JOIN course_data c
+// LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
+// LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id
+// JOIN resource_data rd ON md.module_id = rd.module_id
+// LEFT JOIN pdt ON pdt.rid = rd.resource_id;
+//         `, [people_id], (err, result) => {
+//                 if(err)
+//                 {
+//                    return reject(err)
+//                 }
+//                 else
+//                 {
+//                     return resolve(result);
+//                 }
+//         })
+//     })
+// }
+
+
 const indDatauuid = (requester, people_id) => {
-    return new Promise((resolve, reject) => {
-        const isPrivileged = [101, 102, 103].includes(Number(requester.role));
-        if(!isPrivileged)
-        {
-            return resolve({
-                  status: 'Unauthorized',
-                  code: 401, 
-                  message: 'You do not have permission to view profiles'
-            })
-        }
-        client.query(`
-            WITH user_info AS (
-    SELECT user_email, user_name, user_role, user_profile_photo
-    FROM user_data
-    WHERE people_id = $1
-),
-pdt AS (
-    SELECT resourse_id AS rid, user_id, is_completed, updated_at
-    FROM progress_data
-    WHERE user_id IN (SELECT user_email FROM user_info)
-)
-SELECT 
-    ui.user_name,
-    ui.user_profile_photo,
-    ui.user_role,
-    c.course_id, 
-    c.course_name, 
-    c.curiculum_id, 
-    ch.chapter_id, 
-    ch.chapter_name, 
-    md.module_id, 
-    md.module_name, 
-    rd.resource_name, 
-    pdt.is_completed,
-    pdt.updated_at
-FROM user_info ui
-CROSS JOIN course_data c
-LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
-LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id
-JOIN resource_data rd ON md.module_id = rd.module_id
-LEFT JOIN pdt ON pdt.rid = rd.resource_id;
-        `, [people_id], (err, result) => {
-                if(err)
-                {
-                   return reject(err)
-                }
-                else
-                {
-                    return resolve(result);
-                }
-        })
-    })
-}
+  return new Promise((resolve, reject) => {
+    const isPrivileged = [101, 102, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to view profiles',
+      });
+    }
+
+    // Query 1 — progress + user info
+    const userProgressQuery = `
+      WITH user_info AS (
+          SELECT user_email, user_name, user_role, user_profile_photo
+          FROM user_data
+          WHERE people_id = $1
+      ),
+      pdt AS (
+          SELECT resourse_id AS rid, user_id, is_completed, updated_at
+          FROM progress_data
+          WHERE user_id IN (SELECT user_email FROM user_info)
+      )
+      SELECT 
+          ui.user_name,
+          ui.user_profile_photo,
+          ui.user_role,
+          c.course_id, 
+          c.course_name, 
+          c.curiculum_id, 
+          ch.chapter_id, 
+          ch.chapter_name, 
+          md.module_id, 
+          md.module_name, 
+          rd.resource_name, 
+          pdt.is_completed,
+          pdt.updated_at
+      FROM user_info ui
+      CROSS JOIN course_data c
+      LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
+      LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id
+      JOIN resource_data rd ON md.module_id = rd.module_id
+      LEFT JOIN pdt ON pdt.rid = rd.resource_id;
+    `;
+
+    // Query 2 — instructor + batch info
+    const instructorQuery = `
+      SELECT 
+          bd.batch_id,
+          bd.batch_name,
+          COUNT(DISTINCT CASE WHEN ud.user_role = '102' THEN ud.user_email END) AS instructor_count,
+          ARRAY_AGG(DISTINCT ud.user_name) FILTER (WHERE ud.user_role = '102' AND ud.user_name IS NOT NULL) AS instructors
+      FROM batch_data bd
+      JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+      JOIN user_data ud ON ud.user_email = bpd.user_id
+      WHERE bd.batch_id IN (
+          SELECT UNNEST(bpd.batch_id)
+          FROM user_data ud
+          JOIN batch_people_data bpd ON bpd.user_id = ud.user_email
+          WHERE ud.people_id = $1
+      )
+      GROUP BY bd.batch_id, bd.batch_name;
+    `;
+
+    // Run both queries concurrently
+    Promise.all([
+      new Promise((res, rej) =>
+        client.query(userProgressQuery, [people_id], (err, result) =>
+          err ? rej(err) : res(result.rows)
+        )
+      ),
+      new Promise((res, rej) =>
+        client.query(instructorQuery, [people_id], (err, result) =>
+          err ? rej(err) : res(result.rows)
+        )
+      ),
+    ])
+      .then(([progressData, instructorData]) => {
+        resolve({
+          status: 'Success',
+          code: 200,
+          data: progressData, 
+          instructors: instructorData, // 👈 separate key for instructor data
+        });
+      })
+      .catch((err) => {
+        reject({
+          status: 'Error',
+          code: 500,
+          message: 'Database query failed',
+          error: err,
+        });
+      });
+  });
+};
 module.exports = {traineem, getTraineesm, disableTraineem, deleteTraineem, indData, indDatauuid};
