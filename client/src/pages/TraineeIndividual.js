@@ -129,11 +129,11 @@ function TraineeIndividual() {
                         <div className="border shadow mt-4 mx-7">
                                         <table className="w-full text-left border-collapse">
                                                 <thead>
-                                                <tr className="border-b border-gray-300 bg-gray-100">
-                                                        <th className="py-2 px-4 text-[#8DC63F]">Batch Name</th>
-                                                        <th className="py-2 px-4 text-[#8DC63F]">Instructor Count</th>
-                                                        <th className="py-2 px-4 text-[#8DC63F]">Instructors</th>
-                                                </tr>
+                                                        <tr className="border-b border-gray-300 bg-gray-100">
+                                                                <th className="py-2 px-4 text-[#8DC63F]">Batch Name</th>
+                                                                <th className="py-2 px-4 text-[#8DC63F]">Instructor Count</th>
+                                                                <th className="py-2 px-4 text-[#8DC63F]">Instructors</th>
+                                                        </tr>
                                                 </thead>
                                                 <tbody>
                                                 {(individualTraineeProfile.instructors || []).map((batch, idx) => (
