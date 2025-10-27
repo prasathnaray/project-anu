@@ -1,6 +1,14 @@
 const crypto = require('crypto');
 const path = require('path')
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
+let bcrypt;
+try {
+  // Try native bcrypt first (for desktop/server environments)
+  bcrypt = require('bcrypt');
+} catch (err) {
+  console.warn('⚠️ Native bcrypt not available. Falling back to bcryptjs.');
+  bcrypt = require('bcryptjs');
+}
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const algorithm = 'aes-256-cbc';
 const key = crypto.scryptSync(process.env.SECRET_KEY, 'salt', 32);
