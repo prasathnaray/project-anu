@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body
+{
+  background: 0;
+  font-family: "DM Sans", serif;
+  font-optical-sizing: auto;
+  /* font-weight: 700; */
+  font-style: normal;
+}
+.toastify__toast--error {
+  background-color: #e63946 !important;
+  color: white;
+}
+.Toastify__zoom-enter {
+  animation: Toastify__zoomIn 0.2s ease forwards !important;
+}
+
+.Toastify__zoom-exit {
+  animation: Toastify__zoomOut 0.2s ease forwards !important;
+}
+/* Add this to your global CSS file */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.react-datepicker-wrapper {
+  @apply w-full;
+}
+.react-datepicker-popper {
+  z-index: 50 !important;
+  position: absolute !important;
+}
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+  100% { transform: translateX(0); }
+}
+.shake-label .MuiInputLabel-root {
+  animation: shake 0.4s ease-in-out 0.3s;
+  color: red;
+}
+.contentt {
+  animation: fade-in 0.7s;
+}
