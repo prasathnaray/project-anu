@@ -50,6 +50,7 @@ const deleteTargetedLearningRouter = require('./routes/deleteTargetedLearningRou
 const getIndividualTLRouter = require('./routes/getIndividualTLRoute.js');
 const filterBatchRouter = require('./routes/filterBatchRoute.js');
 const induuidRouter = require('./routes/induuidRoute.js');
+const IndBatchProfileRouter = require('./routes/IndBatchProfileRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -150,3 +151,6 @@ app.use('/api/v1', Authenticate, getIndividualTLRouter);
 
 //trainee by people_id
 app.use('/api/v1', Authenticate, induuidRouter);
+
+//batch profile 
+app.use('/api/v1', Authenticate, IndBatchProfileRouter);

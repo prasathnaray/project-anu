@@ -278,4 +278,30 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
     );
   });
 };
-module.exports = {filterBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList};
+const individualBatchStats = (requester, batch_id) => {
+    const isPrivileged = [101].includes(Number(requester.role));
+    if (!isPrivileged) {
+        return Promise.resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to view trainee profiles'
+        });
+    }
+    return new Promise((resolve, reject) => {
+        client.query(`
+            WITH user_info AS (
+                    SELECT user_role, user_email FROM user_data GROUP BY user_role, user_email
+            )
+            SELECT * FROM batch_data bd JOIN batch_people_data bpd ON bd.batch_id=ANY(bpd.batch_id) JOIN user_info ui ON bpd.user_id = ui.user_email WHERE bd.batch_id=$1
+        `, [batch_id],  (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else {
+                resolve(result)
+            }
+        })
+    })
+}
+module.exports = {filterBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, individualBatchStats};
