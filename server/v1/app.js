@@ -1,5 +1,7 @@
 const express = require('express');
 const app = express();
+//cookies
+const cookieParser = require('cookie-parser')
 //db
 const client = require('./utils/conn');
 //Auth
@@ -62,7 +64,11 @@ const createTraineeRouter = require('./routes/createtraineeRoute');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.use(cors());
+app.use(cors({
+    origin: ["http://localhost:3000", "http://10.42.9.57:3000"],
+    credentials: true,
+}));
+app.use(cookieParser());
 app.listen('4004', (err) => {
     if(err)
     {

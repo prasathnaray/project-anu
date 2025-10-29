@@ -30,8 +30,8 @@ function AdminDashboard(){
     const handleDashboardApi = async() => {
         try
         {   
-            const token = localStorage.getItem('user_token');
-            const result = await getDashboardAPI(token);
+            //const token = localStorage.getItem('user_token');
+            const result = await getDashboardAPI();
             setDashboardData(result.data);
         }
         catch(err)
@@ -134,7 +134,7 @@ function AdminDashboard(){
 
             <div className="border border-t-1 border-r-0 border-l-0 border-b-0 p-4">
               <div className="grid grid-cols-3 gap-4">
-                <div className="border p-2 rounded shadow-md">
+                <div className="border p-2 rounded shadow-md cursor-pointer" onClick={() => navigate('/trainees')}>
                   <span className="font-semibold px-2">Trainees (in total)</span>
                   <div className="flex justify-between items-center px-2 pt-5">
                     <div className="text-[#8DC63F]">
@@ -145,7 +145,7 @@ function AdminDashboard(){
                     </div>
                   </div>
                 </div>
-                <div className="border p-2 shadow-md">
+                <div className="border p-2 shadow-md cursor-pointer" onClick={() => navigate('/instructors')}>
                   <span className="font-semibold">Instructors (in total)</span>
                   <div className="flex justify-between items-center px-2 pt-5">
                     <div className="text-[#8DC63F]">
@@ -156,7 +156,7 @@ function AdminDashboard(){
                     </div>
                   </div>
                 </div>
-                <div className="border p-2 shadow-md">
+                <div className="border p-2 shadow-md cursor-pointer" onClick={() => navigate('/batch')}>
                   <span className="font-semibold">Batches (in total)</span>
                   <div className="flex justify-between items-center px-2 pt-5">
                     <div className="text-[#8DC63F]">

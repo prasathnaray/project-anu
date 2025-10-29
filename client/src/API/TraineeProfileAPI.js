@@ -1,13 +1,8 @@
-import axios from 'axios';
-import APP_URL from './config';
-function TraineeProfileAPI(token, people_id){
-    const result = axios.get(APP_URL+'/api/v1/trainee/'+people_id,
-        {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        }       
-);    
-return result;
+// import axios from 'axios';
+// import APP_URL from './config';
+import api from './api';
+function TraineeProfileAPI(people_id){
+    const result = api.get('/api/v1/trainee/'+people_id,);    
+    return result;
 }
 export default TraineeProfileAPI;

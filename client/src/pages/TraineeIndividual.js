@@ -23,8 +23,8 @@ function TraineeIndividual() {
   // ✅ API call
   const handleApiCall = async (people_id) => {
     try {
-      const token = localStorage.getItem('user_token');
-      const response = await TraineeProfileAPI(token, people_id);
+      // const token = localStorage.getItem('user_token');
+      const response = await TraineeProfileAPI(people_id);
       setIndividualTraineeProfile(response.data);
     } catch (error) {
       console.error('Error fetching trainee profile:', error);

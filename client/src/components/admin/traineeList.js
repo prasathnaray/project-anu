@@ -38,7 +38,7 @@ function TraineeList() {
   const handleTraineeList = async (page, limit) => {
     try {
       setLoading(true)
-      const response = await TraineeListAPI(token, page + 1, limit);
+      const response = await TraineeListAPI(page + 1, limit);
       setTraineeList(response.data.rows || []);
       setCount(response.data.rows[0]?.total_count || 0);
     } catch (error) {

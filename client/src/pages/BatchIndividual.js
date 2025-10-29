@@ -7,6 +7,7 @@ import { ArrowLeftIcon } from 'lucide-react';
 import BasicPie from '../charts/PieChart';
 import TraineeInsRatio from '../charts/TraineeInsRatio';
 import BatchProfileAPI from '../API/BatchProfileAPI';
+import getMonthYear from '../utils/DateChange';
 // import useParams  from 'react-router-dom';
 function BatchIndividual() {
   const data = useParams();
@@ -38,7 +39,11 @@ function BatchIndividual() {
 
     const traineeCount = batchProfileData.filter(user => user.user_role === "103").length;
     const instructorCount = batchProfileData.filter(user => user.user_role === "102").length
-    console.log(batchProfileData);
+
+    const batchName = [...new Set(batchProfileData.map(batch_name => batch_name.batch_name).filter(Boolean))][0];
+    const batchStarted = [...new Set(batchProfileData.map(batch_start_date => batch_start_date.batch_start_date).filter(Boolean))][0];
+    const batchEnded = [...new Set(batchProfileData.map(batch_start_date => batch_start_date.batch_end_date).filter(Boolean))][0];
+    console.log(batchName);
   return (
     <div className={`flex flex-col min-h-screen`}>
             <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -65,14 +70,32 @@ function BatchIndividual() {
                                         </div> */}
                                         <div className="grid grid-cols-3 gap-3 m-3">
                                                 <div className="col-span-2 bg-white">
+                                                        <div className="p-2 flex justify-between items-center">
+                                                                <div className="text-xl">Batch Info</div>
+                                                                <div><button className="bg-[#8DC63F] p-1 text-white rounded px-2">Edit</button></div>
+                                                        </div>
+                                                        <div className="flex justify-between items-center gap-6 mx-10">
+                                                                <div className="mt-8">
+                                                                        <div className="text-sm">Name</div>
+                                                                        <div className="font-semibold">{batchName}</div>
+                                                                </div>
+                                                                <div className="mt-8">
+                                                                        <div className="text-sm">Starting date</div>
+                                                                        <div className="font-semibold">{getMonthYear(batchStarted)}</div>
+                                                                </div>
+                                                                <div className="mt-8">
+                                                                        <div className="text-sm">Ending on</div>
+                                                                        <div className="font-semibold">{getMonthYear(batchEnded)}</div>
+                                                                </div>
+                                                           {/* <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>      */}
+                                                        </div>
+                                                </div>
+                                                <div className="col-span-1 bg-white">
                                                         <div className="p-2">Instructor vs Trainee Ratio</div>
                                                         <div>
                                                            <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
                                                         </div>
                                                 </div>
-                                                {/* <div className="col-span-1 bg-white">
-                                                        <div>Hello</div>
-                                                </div> */}
                                         </div>
                                     </div>
                             </div>
