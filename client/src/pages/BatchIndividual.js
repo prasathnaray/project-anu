@@ -5,6 +5,8 @@ import SideBar from '../components/sideBar';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import { ArrowLeftIcon } from 'lucide-react';
 import BasicPie from '../charts/PieChart';
+import TraineeInsRatio from '../charts/TraineeInsRatio';
+import BatchProfileAPI from '../API/BatchProfileAPI';
 // import useParams  from 'react-router-dom';
 function BatchIndividual() {
   const data = useParams();
@@ -16,6 +18,27 @@ function BatchIndividual() {
     };
     const navigate = useNavigate();
     console.log(batch_id)
+
+    const [batchProfileData, setBatchProfileData] = React.useState([])
+    const handleIndBatchAPICall = async(batch_id) => {
+        try
+        {
+                let token = localStorage.getItem('user_token')
+                const result = await BatchProfileAPI(token, batch_id);
+                setBatchProfileData(result.data);
+        }
+        catch(err)
+        {
+                console.log(err.message)
+        }
+    }
+    React.useEffect(() => {
+        handleIndBatchAPICall(batch_id)
+    }, [])
+
+    const traineeCount = batchProfileData.filter(user => user.user_role === "103").length;
+    const instructorCount = batchProfileData.filter(user => user.user_role === "102").length
+    console.log(batchProfileData);
   return (
     <div className={`flex flex-col min-h-screen`}>
             <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -44,12 +67,12 @@ function BatchIndividual() {
                                                 <div className="col-span-2 bg-white">
                                                         <div className="p-2">Instructor vs Trainee Ratio</div>
                                                         <div>
-                                                                
+                                                           <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
                                                         </div>
                                                 </div>
-                                                <div className="col-span-1 bg-white">
+                                                {/* <div className="col-span-1 bg-white">
                                                         <div>Hello</div>
-                                                </div>
+                                                </div> */}
                                         </div>
                                     </div>
                             </div>
