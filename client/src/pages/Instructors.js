@@ -9,14 +9,14 @@ import {
 } from "lucide-react";
 import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { Select, MenuItem, TablePagination } from "@mui/material";
 import DeleteInstructorToast from "../utils/deleteInstructorToast";
 
 function Instructors() {
 
-
+  const navigate = useNavigate();
   //pagination states and handlers starts here
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -215,7 +215,7 @@ function Instructors() {
                                 />
                               </td>
                               <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                {instructor.user_name}
+                                <button onClick={() => navigate(`/instructor/${instructor.people_id}`)} className="cursor-pointer">{instructor.user_name}</button>
                               </td>
                               <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                 {instructor.batch_names.length > 0 ? (

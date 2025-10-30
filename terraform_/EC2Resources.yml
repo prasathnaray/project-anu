@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+      Ec2Resource:
+            Type: AWS::EC2::Instance
+            Properties: 
+                  ImageId: ami-087d1c9a513324697
+                  InstanceType: t2.micro
+                  KeyName: MyNewKeyPair

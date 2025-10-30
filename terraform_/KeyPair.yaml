@@ -1,0 +1,10 @@
+Resources: 
+    KeyPair:
+      Type: AWS::EC2::KeyPair
+      Properties:
+          KeyName: MyNewKeyPair
+          KeyType: rsa
+          Tags:
+              - Key: Environment
+                Value: Dev
+
