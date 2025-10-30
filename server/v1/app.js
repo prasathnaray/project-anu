@@ -65,7 +65,7 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: "https://project-anu.vercel.app/",
+    origin: "https://project-anu.vercel.app",
     credentials: true,
 }));
 app.use(cookieParser());
