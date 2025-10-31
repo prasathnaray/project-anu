@@ -21,13 +21,18 @@ function TraineeIndividual() {
   });
 
   // ✅ API call
+  let [loading, setLoading] = React.useState(false)
   const handleApiCall = async (people_id) => {
     try {
+      setLoading(true)
       // const token = localStorage.getItem('user_token');
       const response = await TraineeProfileAPI(people_id);
       setIndividualTraineeProfile(response.data);
     } catch (error) {
       console.error('Error fetching trainee profile:', error);
+    }
+    finally {
+      setLoading(false)
     }
   };
 
@@ -36,13 +41,13 @@ function TraineeIndividual() {
   }, [people_id]);
 
   // ✅ Loading guard
-  if (!individualTraineeProfile?.data?.length) {
-    return (
-      <div className="flex items-center justify-center h-screen text-gray-500">
-        Loading profile...
-      </div>
-    );
-  }
+  // if (!individualTraineeProfile?.data?.length) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen text-gray-500">
+  //       Loading profile...
+  //     </div>
+  //   );
+  // }
 
   // ✅ Safe computed values using optional chaining
   const data = individualTraineeProfile.data;
@@ -88,19 +93,42 @@ function TraineeIndividual() {
                 <div>User Profile</div>
               </div>
             </div>
+            <div className="p-2 flex justify-between items-center border-b bg-white">
+              <button className="text-sm cursor-pointer ">Completed Modules</button>
+            </div>
 
             {/* Profile Section */}
             <div className="grid grid-cols-4 gap-3 mx-7">
               {/* Left Card */}
               <div className="col-span-1 p-4 bg-white shadow mt-4 border-t-2 border-[#8DC63F]">
                 <div className="flex justify-center items-center mt-10">
-                  <img
-                    src={IMAGE_URL + `${counts.img}`}
-                    alt="Profile"
-                    className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer"
-                  />
+
+                  {loading==true? (
+                        <>
+                          <div className="w-5 h-5 border-4 border-[#8DC63F] border-t-transparent rounded-full animate-spin"></div>
+                        </>
+                  ) : (
+                    <>
+                      <img
+                          src={IMAGE_URL + `${counts.img}`}
+                          alt="Profile"
+                          className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer"
+                      />
+                      </>
+                  )}
+                  
                 </div>
-                <div className="text-center text-lg">{counts.name}</div>
+                <div className="text-center text-lg">
+                  {loading==true?(
+                    <>
+                        <div className="text-gray-300">Loading</div>
+                    </>
+                  ):(
+                    <>
+                        {counts.name}
+                    </>
+                  )}
+                </div>
                 <div className="text-center mt-2 text-gray-500">{counts.desig}</div>
 
                 <div className="border-t mt-6 pt-1 mb-2">
