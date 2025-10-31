@@ -126,37 +126,28 @@ app.use('/api/v1', Authenticate, tagCourseRouter);
 app.use('/api/v1', Authenticate, getGendersRoute);
 app.use('/api/v1', Authenticate, requestCourseRouter);
 //module creation
-
 app.use('/api/v1', Authenticate, createModuleRouter);
 app.use('/api/v1', Authenticate, getModuleRouter);
 // new module creation
 app.use('/api/v1', Authenticate, NewModuleRouter);
 //sub-module
 app.use('/api/v1', Authenticate, subModuleRouter);
-
 //mark complete 
 app.use('/api/v1', Authenticate, moduleCompleteUserRouter);
-
 //chapter
 app.use('/api/v1', Authenticate, getChapterRouter);
-
 //resource 
 app.use('/api/v1', Authenticate, createResourceRouter);
 app.use('/api/v1', Authenticate, getResourcesRouter);
-
 app.use('/api/v1', Authenticate, getResourcesByModuleIdsRouter)
-
 //user stats
 app.use('/api/v1', Authenticate, UserStatsRouter);
-
 //targeted Learning 
 app.use('/api/v1', Authenticate, createTargetedLearningRouter);
 app.use('/api/v1', Authenticate, getTargetedLearningRouter);
 app.use('/api/v1', Authenticate, deleteTargetedLearningRouter);
 app.use('/api/v1', Authenticate, getIndividualTLRouter);
-
 //trainee by people_id
 app.use('/api/v1', Authenticate, induuidRouter);
-
 //batch profile 
 app.use('/api/v1', Authenticate, IndBatchProfileRouter);

@@ -608,7 +608,7 @@ function Batch()  {
                         className={`${
           buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
         } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
-                        <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+                        {/* <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                                 <button onClick={() => setBatchCus(true)} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
                                   <LayoutDashboard size={15} /> 
                                   <span className="text-[13px]">Batch List</span>
@@ -617,6 +617,33 @@ function Batch()  {
                                   <SlidersHorizontal size={15} className="text-gray-600" />
                                   <span className="text-[13px]">Targeted Learning</span>
                                 </button>
+                        </div> */}
+                        <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+                        {/* ✅ Batch List Button */}
+                        <button
+                        onClick={() => setBatchCus(true)}
+                        className={`flex justify-between gap-2 items-center px-2 py-[2px] rounded cursor-pointer font-semibold transition-all ease-in-out duration-300
+                        ${batchCus
+                                ? 'bg-[#8DC63F] text-white hover:rounded-full'
+                                : 'text-gray-600 hover:bg-gray-100 hover:rounded-full'
+                        }`}
+                        >
+                        <LayoutDashboard size={15} />
+                        <span className="text-[13px]">Batch List</span>
+                        </button>
+
+                        {/* ✅ Targeted Learning Button */}
+                        <button
+                        onClick={() => setBatchCus(false)}
+                        className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out
+                        ${!batchCus
+                                ? 'bg-[#8DC63F] text-white hover:rounded-full'
+                                : 'text-gray-600 hover:bg-gray-100 hover:rounded-full'
+                        }`}
+                        >
+                        <SlidersHorizontal size={15} />
+                        <span className="text-[13px]">Targeted Learning</span>
+                        </button>
                         </div>
                         {batchCus==true ? (
                                 <div className="">
@@ -649,7 +676,7 @@ function Batch()  {
                                                                         {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
                                                                 </tr>
                                                         </thead>
-                                                                  <tbody>
+                                                                  {/* <tbody>
                                                                                 {filteredUsers.length > 0 ? (
                                                                                 filteredUsers.map((listBatch, index) => (
                                                                                 <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
@@ -678,12 +705,7 @@ function Batch()  {
                                                                                                                         ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                                                                 `} 
                                                                                                                 >
-                                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button> */}
                                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
-                                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
-                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
-                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button> */}
-
                                                                                                                 </div>
                                                                                                         )}
                                                                                          </th>
@@ -696,9 +718,73 @@ function Batch()  {
                                                                                         </td>
                                                                                 </tr>
                                                                                 )}
-                                                                </tbody>
+                                                                  </tbody> */}
 
-                                                        {/* </tbody> */}
+                                                                  <tbody>
+                                                                        {loading ? (
+                                                                        // 🔄 LOADING STATE
+                                                                        <tr>
+                                                                        <td colSpan={6} className="py-8 text-center">
+                                                                                <div className="flex justify-center items-center gap-2">
+                                                                                <div className="w-5 h-5 border-4 border-[#8DC63F] border-t-transparent rounded-full animate-spin"></div>
+                                                                                <span className="text-gray-600 font-medium">Loading batches...</span>
+                                                                                </div>
+                                                                        </td>
+                                                                        </tr>
+                                                                        ) : filteredUsers.length > 0 ? (
+                                                                        // ✅ DATA STATE
+                                                                        filteredUsers.map((listBatch, index) => (
+                                                                        <tr
+                                                                                key={index}
+                                                                                className="border-b border-gray-200 hover:bg-gray-50 shadow-sm"
+                                                                        >
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                <a href={`/batch/${listBatch.batch_id}`}>{listBatch.batch_name}</a>
+                                                                                </td>
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                {getMonthYear(listBatch.batch_start_date)}
+                                                                                </td>
+                                                                                <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                                {getMonthYear(listBatch.batch_end_date)}
+                                                                                </td>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
+                                                                                </th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                                                                {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count ?? 0}
+                                                                                </th>
+                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
+                                                                                <button onClick={() => toggleDropdown(index)}>
+                                                                                <EllipsisVertical size={24} />
+                                                                                </button>
+                                                                                {openDropdownIndex === index && (
+                                                                                <div
+                                                                                ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                transition-all ease-in-out duration-500 origin-top-right
+                                                                                ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
+                                                                                >
+                                                                                <button
+                                                                                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
+                                                                                        onClick={() => deleteSubmit(listBatch.batch_id)}
+                                                                                >
+                                                                                        Delete
+                                                                                </button>
+                                                                                </div>
+                                                                                )}
+                                                                                </th>
+                                                                        </tr>
+                                                                        ))
+                                                                        ) : (
+                                                                        // 🚫 NO DATA STATE
+                                                                        <tr>
+                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                                No data found
+                                                                        </td>
+                                                                        </tr>
+                                                                        )}
+                                                                        </tbody>
+
                                                 </table>
                                                 <div className="flex justify-end items-center mt-6 gap-10">
                                                         <TablePagination 
