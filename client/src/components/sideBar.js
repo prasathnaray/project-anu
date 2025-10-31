@@ -87,22 +87,168 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                   })
               }
               {tokdata.role == 101 && 
+              // <>
+              //   <li className={`${data==="/dashboard"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/dashboard")}  className={` ${data==="/dashboard" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><LayoutDashboard size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Dashboard</div></button></li>
+              //   <li className={`${data==="/batch" || data.startsWith("/batch/") ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/batch")} className={` ${data==="/batch" || data.startsWith('/batch/') ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Users size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Batch</div></button></li>
+              //   <li className={`${data==="/instructors"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/instructors")}  className={`${data==="/instructors" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><ClipboardPenLine size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></button></li>
+              //   <li className={`${data==="/trainees" || data.startsWith('/trainee') ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/trainees")}  className={`${data==="/trainees" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><GraduationCap size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></button></li>
+              //   <li className={`${data==="/schedules"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/schedules")}  className={`${data==="/schedules"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Calendar size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Schedules</div></button></li>
+              //   <li className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/course")}  className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'text-white flex gap-5 ': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></button></li>
+              //   <li className={`${data==="/vrspace"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/vrspace")}  className={`${data==="/vrspace"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><WirelessCloudAccessIcon size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Streams</div></button></li>
+              //   <li
+              //     className={`fixed bottom-0 left-0 flex items-center ${
+              //       buttonOpen ? 'justify-center' : 'justify-center'
+              //     } mb-2`}
+              //   >
+              //     <div
+              //       className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
+              //         buttonOpen ? 'text-sm opacity-100 mb-2' : 'opacity-0 w-0 px-0'
+              //       }`}
+              //     >
+              //       v1.0.0
+              //     </div>
+              //     {!buttonOpen && (
+              //       <div
+              //         className="text-sm text-gray-400 transition-all duration-300 opacity-100 text-center p-2"
+              //         title="v1.0.0"
+              //       >
+              //         v1.0.0
+              //       </div>
+              //     )}
+              //   </li>
+              // </>
+
               <>
-                <li className={`${data==="/dashboard"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/dashboard")}  className={` ${data==="/dashboard" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><LayoutDashboard size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Dashboard</div></button></li>
-                <li className={`${data==="/batch" || data.startsWith("/batch/") ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/batch")} className={` ${data==="/batch" || data.startsWith('/batch/') ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Users size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Batch</div></button></li>
-                <li className={`${data==="/instructors"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/instructors")}  className={`${data==="/instructors" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><ClipboardPenLine size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Instructors</div></button></li>
-                <li className={`${data==="/trainees" || data.startsWith('/trainee') ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/trainees")}  className={`${data==="/trainees" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><GraduationCap size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Trainees</div></button></li>
-                <li className={`${data==="/schedules"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/schedules")}  className={`${data==="/schedules"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Calendar size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Schedules</div></button></li>
-                <li className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/course")}  className={`${data==="/course" || data.startsWith('/chapters/') || data.startsWith('/module/') || data.startsWith('/resource/') ? 'text-white flex gap-5 ': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></button></li>
-                <li className={`${data==="/vrspace"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover: text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><button onClick={() => navigate("/vrspace")}  className={`${data==="/vrspace"?'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><WirelessCloudAccessIcon size={20} /><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Streams</div></button></li>
+                <li  className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                    onClick={() => navigate("/dashboard")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/dashboard"
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <LayoutDashboard size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Dashboard</div>
+                  </button>
+                </li>
+
+                {/* 👥 Batch */}
+                <li className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")} 
+                    onClick={() => navigate("/batch")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/batch" || data.startsWith("/batch/")
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <Users size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Batch</div>
+                  </button>
+                </li>
+
+                {/* 🧑‍🏫 Instructors */}
+                <li className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")} 
+                    onClick={() => navigate("/instructors")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/instructors"
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <ClipboardPenLine size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Instructors</div>
+                  </button>
+                </li>
+
+                {/* 🎓 Trainees */}
+                <li className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                    onClick={() => navigate("/trainees")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/trainees" || data.startsWith("/trainee")
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <GraduationCap size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Trainees</div>
+                  </button>
+                </li>
+
+                {/* 📅 Schedules */}
+                <li  className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                    onClick={() => navigate("/schedules")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/schedules"
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <Calendar size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Schedules</div>
+                  </button>
+                </li>
+
+                {/* 📘 Courses */}
+                <li className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                    onClick={() => navigate("/course")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/course" ||
+                        data.startsWith("/chapters/") ||
+                        data.startsWith("/module/") ||
+                        data.startsWith("/resource/")
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <Notebook size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Courses</div>
+                  </button>
+                </li>
+
+                {/* 🌐 VR Space / Streams */}
+                <li className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")} 
+                    onClick={() => navigate("/vrspace")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
+                      ${
+                        data === "/vrspace"
+                          ? "bg-[#8DC63F] text-white"
+                          : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      }`}
+                  >
+                    <WirelessCloudAccessIcon size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Streams</div>
+                  </button>
+                </li>
+
+                {/* 🔖 Version Label */}
                 <li
                   className={`fixed bottom-0 left-0 flex items-center ${
-                    buttonOpen ? 'justify-center' : 'justify-center'
+                    buttonOpen ? "justify-center" : "justify-center"
                   } mb-2`}
                 >
                   <div
                     className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
-                      buttonOpen ? 'text-sm opacity-100 mb-2' : 'opacity-0 w-0 px-0'
+                      buttonOpen ? "text-sm opacity-100 mb-2" : "opacity-0 w-0 px-0"
                     }`}
                   >
                     v1.0.0
