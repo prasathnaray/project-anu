@@ -36,7 +36,13 @@ function AdminDashboard(){
         }
         catch(err)
         {
-            console.log(err)
+            //console.log(err)
+            if(err?.data?.status == 401)
+            {
+              navigate('/');
+              return;
+            }
+            setDashboardData([]);
         }
     }
     useEffect(() => {
@@ -46,6 +52,7 @@ function AdminDashboard(){
     console.log(dashboardData)
         // if (loading) return <p>Loading notifications...</p>;
 
+        //DISABLE RIGHT cliCK
     return (
   <div className="flex flex-col min-h-screen">
     <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">

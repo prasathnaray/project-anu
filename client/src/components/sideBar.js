@@ -246,21 +246,21 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     buttonOpen ? "justify-center" : "justify-center"
                   } mb-2`}
                 >
-                  <div
+                  {/* <div
                     className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
                       buttonOpen ? "text-sm opacity-100 mb-2" : "opacity-0 w-0 px-0"
                     }`}
                   >
                     v1.0.0
-                  </div>
-                  {!buttonOpen && (
+                  </div> */}
+                  {/* {!buttonOpen && (
                     <div
                       className="text-sm text-gray-400 transition-all duration-300 opacity-100 text-center p-2"
                       title="v1.0.0"
                     >
                       v1.0.0
                     </div>
-                  )}
+                  )} */}
                 </li>
               </>
               }
