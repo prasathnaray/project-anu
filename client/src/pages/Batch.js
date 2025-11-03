@@ -175,8 +175,6 @@ function Batch()  {
                                 instructor_name_filter: "",     
                 })
         }
-
-
         //filter batch api calls
         const filterBatchCall = async(e) => {
                 e.preventDefault();
@@ -187,7 +185,7 @@ function Batch()  {
                                                 icon: false,
                                                 closeButton: CustomCloseButton,
                                         });
-                                return; // Stop execution
+                                return;
                 }
                 try
                 {

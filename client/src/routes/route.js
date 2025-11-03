@@ -54,7 +54,7 @@ function RoutesPath() {
                             <Route path="/schedules" element={<Schedules />} />
                             <Route path="/trainee/:people_id" element={<TraineeIndividual />} />
                             <Route path="/instructor/:people_id" element={<IndividualInstructors />} />
-                            <Route path="/volumes" element={<VolumeList />} />
+                            <Route path="/volume-management" element={<VolumeList />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
