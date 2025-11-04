@@ -3,7 +3,7 @@ import NavBar from '../components/navBar'
 import SideBar from '../components/sideBar'
 import { jwtDecode } from 'jwt-decode'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { Cross, CrossIcon } from 'lucide-react'
+import { Cross, CrossIcon, X } from 'lucide-react'
 import UploadVol from '../components/Instructors/UploadVol'
 
 function VolumeList() {
@@ -11,7 +11,7 @@ function VolumeList() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const [openUploadVol, setOpenUploadVol] = React.useState(false);
   const handleClose = () => {
-    setOpenUploadVol(true);
+    setOpenUploadVol(!openUploadVol);
   }
   let decoded = jwtDecode(localStorage.getItem('user_token'));
   const handleButtonOpen = () => {
@@ -48,15 +48,18 @@ function VolumeList() {
                   </div>
               </div>
           </div>
+          {/* upload volume lists */}
           <UploadVol isVisible={openUploadVol} onClose={handleClose}>
                   <>
-                      <div className="text-md">
-
+                      <div className="flex justify-end items-center">
+                              <button className="text-red-400 hover:bg-red-100 hover:rounded p-1 transition-all" onClick={handleClose}><X size={20}/></button>
+                      </div>
+                      <div>
+                        
                       </div>
                   </>
           </UploadVol>
     </div>
   )
 }
-
 export default VolumeList
