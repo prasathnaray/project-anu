@@ -56,18 +56,13 @@ const createCoursem = (course_name, curiculum_id, requester) => {
 }
 const getCoursem = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPriviledged = [101, 99, 103, 102].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: 'You do not have permission to access this course data.'
-            })
-        }
-        client.query(`
+        const role = Number(requester.role);
 
-            SELECT 
+        // Role-based query logic
+        let query = "";
+        if (role == 101) {
+            query = `
+                SELECT 
     cd.course_id,
     cd.course_name,
     bd.batch_name, 
@@ -75,22 +70,52 @@ const getCoursem = (requester) => {
     bd.batch_end_date,
     ca.access_status 
 FROM batch_data bd
-JOIN course_data cd 
+RIGHT JOIN course_data cd 
     ON bd.course_data @> to_jsonb(cd.course_id::text)
-JOIN course_availability ca 
-    ON cd.course_id::text = trim(both '"' from ca.course_id::text); 
-            `, (err, result) => {
-            if(err)
-            {
-                return reject(err)
-            }
-            else
-            {
+RIGHT JOIN course_availability ca 
+    ON trim(both '"' from cd.course_id::text) = trim(both '"' from ca.course_id::text)
+WHERE ca.access_status = true;
+            `;
+        } else if (role === 99) {
+            // Super Admin Query
+            query = `
+                SELECT 
+                    * 
+                FROM course_data;
+            `;
+        } else if ([103, 102].includes(role)) {
+            query = `
+                SELECT 
+    cd.course_id,
+    cd.course_name,
+    bd.batch_name, 
+    bd.batch_start_date,
+    bd.batch_end_date,
+    ca.access_status 
+FROM batch_data bd
+RIGHT JOIN course_data cd 
+    ON bd.course_data @> to_jsonb(cd.course_id::text)
+RIGHT JOIN course_availability ca 
+    ON trim(both '"' from cd.course_id::text) = trim(both '"' from ca.course_id::text)
+WHERE ca.access_status = true;
+            `;
+        } else {
+            // Unauthorized
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this course data.'
+            });
+        }
+        client.query(query, (err, result) => {
+            if (err) {
+                return reject(err);
+            } else {
                 return resolve(result);
             }
-        })
-    })
-}
+        });
+    });
+};
 const getCoursesByCurm = (curiculum_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99, 101].includes(Number(requester.role));

@@ -26,6 +26,7 @@ import Schedules from '../pages/Schedules';
 import TraineeIndividual from '../pages/TraineeIndividual';
 import IndividualInstructors from '../pages/IndividualInstructors';
 import VolumeList from '../pages/VolumeList';
+import RequestRaised from '../pages/RequestRaised';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -55,6 +56,7 @@ function RoutesPath() {
                             <Route path="/trainee/:people_id" element={<TraineeIndividual />} />
                             <Route path="/instructor/:people_id" element={<IndividualInstructors />} />
                             <Route path="/volume-management" element={<VolumeList />} />
+                            <Route path="/request-raised" element={<RequestRaised />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>

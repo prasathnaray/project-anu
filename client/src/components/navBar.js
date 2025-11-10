@@ -103,7 +103,7 @@ function NavBar() {
 // };
 const fetchCount = async () => {
   try {
-    const [courseRes, traineeRes] = await Promise.all([
+    const [courseRes, traineeRes, volumeRes] = await Promise.all([
       supabase
         .from("course_availability")
         .select("course_id, access_status, is_read", { count: "exact" })
@@ -113,15 +113,21 @@ const fetchCount = async () => {
       supabase
         .from("targeted_learning")
         .select("tar_name, target_learning_id", { count: "exact" })
-        .contains("trainee_id", [tokenRes.user_mail])
+        .contains("trainee_id", [tokenRes.user_mail]),
+
+      supabase
+        .from("volumes")
+        .select("added_by, status", {count: "exact"})
+        .eq("approver_id", tokenRes.user_mail)
+        .is("status", false)
       ]);
     console.log(traineeRes)
-    const total = (courseRes.count ?? 0) + (traineeRes.count ?? 0);
-    const allData = [
+    const total = (courseRes.count ?? 0) + (traineeRes.count ?? 0) + (volumeRes.count ?? 0);
+    const allData = [ 
       ...(courseRes.data?.map(d => ({ ...d, type: "course" })) || []),
       ...(traineeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
+      ...(volumeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
     ];
-
     setCount(total);
     setNotify(allData);
   } catch (err) {
@@ -176,9 +182,28 @@ const readNotification = async(id) => {
         }
       )
       .subscribe();
+
+      const volumeChannel = supabase
+    .channel("volumes")
+    .on(
+      "postgres_changes",
+      { event: "INSERT", schema: "public", table: "volumes" },
+      async (payload) => {
+        // optional: if only certain roles should see this
+        if ([101, 102, 103].includes(Number(tokenRes.role))) {
+          setNotify((prev) => [
+            { ...payload.new, type: "volume" },
+            ...prev,
+          ]);
+          setCount((prev) => prev + 1);
+        }
+      }
+    )
+    .subscribe();
       return () => {
         supabase.removeChannel(channel);
         supabase.removeChannel(traineeChannel);
+        supabase.removeChannel(volumeChannel);
       };
   }, []);
 

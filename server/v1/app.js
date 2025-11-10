@@ -59,8 +59,6 @@ const Authenticate = require('./Auth/Authenticate');
 const cors = require('cors');
 const createTraineeRouter = require('./routes/createtraineeRoute');
 
-
-
 //multer 
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });

@@ -823,8 +823,7 @@ function Course() {
                             <button onClick={() => navigate(`/chapters/${data?.course_id}`)}>{data?.course_name}</button>
                           </td>
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                              {data?.batch_name}
-
+                                  {data?.batch_name ? data.batch_name : 'Not Associated'}
                           </td>
                           <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
                             {data?.access_status === true ? (
