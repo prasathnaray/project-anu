@@ -36,7 +36,6 @@ function IndividualInstructors() {
                     <div className="bg-gray-100 h-screen">
                               <div></div>
                     </div>
-
                   </div>
           </div>
     </div>

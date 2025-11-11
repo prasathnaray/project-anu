@@ -156,7 +156,7 @@ React.useEffect(() => {
                                                                                       <td className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">{participantInfo.id}</td>
                                                                                       <td className="py-2 px-4 text-[#8DC63F]">{participantInfo.userId}</td>
                                                                                       <td>
-                                                                                        <button className="block w-full text-left px-4 py-2 hover:bg-gray-50"><a href="http://10.42.14.21:3000/video" data-lity><EyeIcon size={20} /></a></button>
+                                                                                        <button className="block w-full text-left px-4 py-2 hover:bg-gray-50"><a href="http://localhost:3000/video" data-lity><EyeIcon size={20} /></a></button>
                                                                                       </td>
                                                                                     </tr>
                                                                                   )
