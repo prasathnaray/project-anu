@@ -27,6 +27,7 @@ import TraineeIndividual from '../pages/TraineeIndividual';
 import IndividualInstructors from '../pages/IndividualInstructors';
 import VolumeList from '../pages/VolumeList';
 import RequestRaised from '../pages/RequestRaised';
+import VideoMedica from '../pages/VideoMedica';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -57,6 +58,7 @@ function RoutesPath() {
                             {/* <Route path="/instructor/:people_id" element={<IndividualInstructors />} /> */}
                             <Route path="/volume-management" element={<VolumeList />} />
                             <Route path="/request-raised" element={<RequestRaised />} />
+                            <Route path="/demo-video" element={<VideoMedica />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
