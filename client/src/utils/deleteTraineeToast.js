@@ -14,7 +14,7 @@ const DeleteTraineeToast = (user_mail, onSuccess, token) => {
           <button
             onClick={async () => {
               try {
-                const res = await DeleteTraineeAPI(token, user_mail)
+                await DeleteTraineeAPI(token, user_mail)
                 toast.success("Trainee deleted successfully");
                 onSuccess?.();
               } catch (err) {

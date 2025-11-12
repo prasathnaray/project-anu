@@ -13,7 +13,7 @@ const DeleteToast = (batch_id, onSuccess, token) => {
           <button
             onClick={async () => {
               try {
-                const res = await axios.delete(`${APP_URL}/api/v1/delete-batch/${batch_id}`, {
+                await axios.delete(`${APP_URL}/api/v1/delete-batch/${batch_id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }

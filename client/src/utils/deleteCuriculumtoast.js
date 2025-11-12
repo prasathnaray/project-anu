@@ -13,7 +13,7 @@ const DeleteCuriculumToast = (curiculum_id, onSuccess, token) => {
           <button
             onClick={async () => {
               try {
-                const res = await DeleteCurAPI(token, curiculum_id)
+                await DeleteCurAPI(token, curiculum_id)
                 toast.success("Curiculum deleted successfully");
                 onSuccess?.();
               } catch (err) {

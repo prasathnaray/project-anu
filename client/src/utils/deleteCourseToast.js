@@ -11,7 +11,7 @@ const DeleteCourseToast = (course_id, onSuccess, token) => {
           <button
             onClick={async () => {
               try {
-                const res = await DeleteCourseAPI(token, course_id)
+                await DeleteCourseAPI(token, course_id)
                 toast.success("Course deleted successfully");
                 onSuccess?.();
               } catch (err) {

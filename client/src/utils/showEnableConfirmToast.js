@@ -13,7 +13,7 @@ const showEnableConfirmToast = (email, onSuccess, token, statusUpdate) => {
           <button
             onClick={async () => {
               try {
-                const res = await axios.patch(`${APP_URL}/api/v1/disable-trainee/${email}/${statusUpdate}`, {}, {
+                await axios.patch(`${APP_URL}/api/v1/disable-trainee/${email}/${statusUpdate}`, {}, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
