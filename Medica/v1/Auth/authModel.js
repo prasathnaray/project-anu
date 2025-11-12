@@ -22,7 +22,7 @@ const LoginModel = (user_mail, user_password) => {
                 }
                 let role = user.user_role;
                 let token_data = role + '' + user_mail;
-                const accessToken = jwt.sign({user_mail,role}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '15m'})
+                const accessToken = jwt.sign({user_mail,role}, process.env.ACCESS_TOKEN_SECRET)
                 resolve({ accessToken: accessToken, id: user_mail, role: role, status: 'Login Authenticated', code: 200});
             })
     })
