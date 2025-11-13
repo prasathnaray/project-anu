@@ -209,12 +209,12 @@ function Instructors() {
                           filteredUsers.map((instructor, index) => (
                             <tr key={index} className="text-sm text-gray-700 border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                               <td className="py-2 px-4">
-                                {/* <img
+                                <img
                                   src={IMAGE_URL + instructor.user_profile_photo}
                                   className="w-10 h-10 rounded-full object-cover cursor-pointer"
                                   alt="profile"
-                                /> */}
-                                    <UserRound size={20} className="text-[#8DC63F]" />
+                                />
+                                    {/* <UserRound size={20} className="text-[#8DC63F]" /> */}
                               </td>
                               <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                 <button className="cursor-pointer">{instructor.user_name}</button>

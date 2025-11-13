@@ -143,7 +143,7 @@ React.useEffect(() => {
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                            {/* {Array.isArray(participantInfo)
+                                                                            {Array.isArray(participantInfo)
                                                                                 ? participantInfo.map((stream, index) => (
                                                                                     <tr key={index}>
                                                                                       <td>{stream.id}</td>
@@ -160,15 +160,7 @@ React.useEffect(() => {
                                                                                       </td>
                                                                                     </tr>
                                                                                   )
-                                                                                : null}     */}
-
-                                                                                <tr className="border-b border-gray-300 shadow-sm text-sm">
-                                                                                      <td className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">Test Device 1</td>
-                                                                                      <td className="py-2 px-4 text-[#8DC63F]">MRSIMVR001-TRAIN</td>
-                                                                                      <td>
-                                                                                        <button className="block w-full text-left px-4 py-2 hover:bg-gray-50"><a href="http://localhost:3000/demo-video" data-lity><EyeIcon size={20} /></a></button>
-                                                                                      </td>
-                                                                                  </tr>
+                                                                                : null}
                                                                     </tbody>
                                                         </table>
                                             </div>
@@ -177,9 +169,9 @@ React.useEffect(() => {
                   </div>
                 )}
         </div>
-        {/* <div id="ivs-player" style={{ display: "none" }}>
+        <div id="ivs-player" style={{ display: "none" }}>
               <IvsSubscriber onParticipantUpdate={setParticipantInfo} />
-        </div>   */}
+        </div>  
     </div>
   )
 }

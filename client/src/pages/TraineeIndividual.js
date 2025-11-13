@@ -141,12 +141,12 @@ function TraineeIndividual() {
                       {loading ? (
                         <div className="w-5 h-5 border-4 border-[#8DC63F] border-t-transparent rounded-full animate-spin"></div>
                       ) : (
-                        // <img
-                        //   src={IMAGE_URL + `${counts.img}`}
-                        //   alt="Profile"
-                        //   className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer transition-all duration-300 hover:scale-105"
-                        // />
-                          <UserRound size={20} className="text-[#8DC63F]" />
+                        <img
+                          src={IMAGE_URL + `${counts.img}`}
+                          alt="Profile"
+                          className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer transition-all duration-300 hover:scale-105"
+                        />
+                          // <UserRound size={20} className="text-[#8DC63F]" />
                       )}
                     </div>
                     <div className="text-center text-lg">

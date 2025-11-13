@@ -190,13 +190,13 @@ function TraineeList() {
     filteredTrainees.map((trainee, index) => (
       <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
         <td className="py-2 px-4">
-          {/* <img
+          <img
             src={IMAGE_URL + trainee.user_profile_photo}
             className="w-10 h-10 rounded-full cursor-pointer"
             alt="profile"
             onError={(e) => (e.currentTarget.src = "/default-profile.png")}
-          /> */}
-          <UserRound size={20} className="text-[#8DC63F]" />
+          />
+          {/* <UserRound size={20} className="text-[#8DC63F]" /> */}
         </td>
         <td className="py-2 px-4 text-[#8DC63F] font-semibold">
           <button onClick={() => navigate(`/trainee/${trainee.people_id}`)}>{trainee.user_name}</button>
