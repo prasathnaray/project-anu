@@ -39,8 +39,14 @@ function RequestRaised() {
                                 </span>
                               </div>
                               <div className="mt-3 mx-2">
-                                    <div className=" bg-white">
-                                            <div>As</div>
+                                    <div className="bg-white">
+                                            <div className="px-3 py-1 text-lg text-gray-500">10 Request Pending</div>
+                                            <div className="p-2">
+                                                  <div className="border flex justify-between items-center px-2">
+                                                        <div className="">Sjfh</div>
+                                                        <div className="text-sm m-3 border rounded-lg border-green-400 p-2">Approved</div>
+                                                  </div>
+                                            </div>
                                     </div>
                               </div>
                         </div>
@@ -49,5 +55,4 @@ function RequestRaised() {
     </div>
   )
 }
-
 export default RequestRaised

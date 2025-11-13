@@ -117,16 +117,29 @@ const fetchCount = async () => {
 
       supabase
         .from("volumes")
-        .select("added_by, status", {count: "exact"})
+        .select(`added_by, status`, {count: "exact"})
         .eq("approver_id", tokenRes.user_mail)
         .is("status", false)
       ]);
+      let volumeWithNames = [];
+      if (volumeRes.data?.length) {
+        const addedByEmails = volumeRes.data.map((v) => v.added_by);
+        const { data: users } = await supabase
+          .from("user_data")
+          .select("user_email, user_name")
+          .in("user_email", addedByEmails);
+
+        volumeWithNames = volumeRes.data.map((v) => ({
+          ...v,
+          user_data: users.find((u) => u.user_email === v.added_by)
+        }));
+      }
     console.log(traineeRes)
     const total = (courseRes.count ?? 0) + (traineeRes.count ?? 0) + (volumeRes.count ?? 0);
     const allData = [ 
       ...(courseRes.data?.map(d => ({ ...d, type: "course" })) || []),
       ...(traineeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
-      ...(volumeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
+      ...(volumeWithNames.map(d => ({ ...d, type: "volumes" })) || []),
     ];
     setCount(total);
     setNotify(allData);
@@ -299,7 +312,12 @@ const readNotification = async(id) => {
                               >
                                 <div className="flex justify-between items-center">
                                   <div className="text-black text-xs">
-                                      {n.course_id ? 'Course has been added': `${n.tar_name} Targeted Learning has been initiated`} 
+                                      {n.course_id && 'Course has been added'} 
+                                      {n.tar_name && 'Targeted Learning has been initiated'}
+                                      {n.type === "volumes" &&
+                                          (n.user_data?.user_name
+                                            ? `${n.user_data.user_name} Uploaded a volume`
+                                            : `${n.added_by} Uploaded a volume`)}
                                   </div>
                                   <button onClick={() => {readNotification(n.course_id)}}>
                                   <IconButton
