@@ -38,7 +38,7 @@ const getUploadedVolume = (requester) => {
                 message: 'You do not have permission to view uploaded volumes',
             });
         }
-        const query = `SELECT * FROM volumes ORDER BY id DESC;`;
+        const query = `SELECT * FROM volumes ORDER BY created_at DESC;`;
         client.query(query, (err, result) => {
             if (err) {
                 return reject(err);
@@ -52,4 +52,4 @@ const getUploadedVolume = (requester) => {
         });
     });
 };
-module.exports = { svUploadModel, getUploadedVolume };
+module.exports = {svUploadModel, getUploadedVolume};

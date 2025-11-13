@@ -311,7 +311,7 @@ const readNotification = async(id) => {
                                 className="px-4 py-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
                               >
                                 <div className="flex justify-between items-center">
-                                  <div className="text-black text-xs">
+                                  <div className="text-black text-sm">
                                       {n.course_id && 'Course has been added'} 
                                       {n.tar_name && 'Targeted Learning has been initiated'}
                                       {n.type === "volumes" &&
@@ -319,6 +319,7 @@ const readNotification = async(id) => {
                                             ? `${n.user_data.user_name} Uploaded a volume`
                                             : `${n.added_by} Uploaded a volume`)}
                                   </div>
+                                  <div><button className="bg-gray-100 p-1 px-2 text-sm rounded-md text-gray-500" onClick={() => navigate('/request-raised')}>View</button></div>
                                   <button onClick={() => {readNotification(n.course_id)}}>
                                   <IconButton
                                     aria-label="delete"

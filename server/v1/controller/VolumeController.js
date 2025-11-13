@@ -48,14 +48,16 @@ const VolumeController = async(req, res) => {
 }
 
 const getVolumeDataC = async(req, res) => {
+    const requester = req.user;
     try
     {
         const result = await getUploadedVolume(requester)
-        res.status(200).send(result);
+        res.status(200).send(result.data);
     }
     catch(err)
     {
+        console.log(err)
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController}
+module.exports = {VolumeController, getVolumeDataC}
