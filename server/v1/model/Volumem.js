@@ -38,8 +38,8 @@ const getUploadedVolume = (requester) => {
                 message: 'You do not have permission to view uploaded volumes',
             });
         }
-        const query = `SELECT * FROM volumes ORDER BY created_at DESC;`;
-        client.query(query, (err, result) => {
+        const query = `SELECT * FROM volumes WHERE status=$1 ORDER BY created_at DESC;`;
+        client.query(query, [false], (err, result) => {
             if (err) {
                 return reject(err);
             } else {
@@ -52,4 +52,27 @@ const getUploadedVolume = (requester) => {
         });
     });
 };
-module.exports = {svUploadModel, getUploadedVolume};
+const VolumeApprovalModel = (requester, status_approval) => {
+    const isPrivileged = [101, 102].includes(Number(requester.role))
+    if(!isPrivileged)
+    {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view uploaded volumes',
+            });
+    }
+    return new Promise((resolve, reject) => {
+        client.query('update volumes SET status=$1', [status_approval], (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else
+            {
+                resolve(result)
+            }
+        })
+    })
+}
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel};

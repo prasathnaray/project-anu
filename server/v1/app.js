@@ -54,7 +54,8 @@ const filterBatchRouter = require('./routes/filterBatchRoute.js');
 const induuidRouter = require('./routes/induuidRoute.js');
 const IndBatchProfileRouter = require('./routes/IndBatchProfileRoute.js');
 const svUploadRouter = require('./routes/svUploadRouter.js');
-const getVolumeDataRouter = require('./routes/getVolumeDataRoute.js')
+const getVolumeDataRouter = require('./routes/getVolumeDataRoute.js');
+const VolumeApprovalRouter = require('./routes/VolumeApprovalRoute.js')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -154,4 +155,5 @@ app.use('/api/v1', Authenticate, IndBatchProfileRouter);
 
 //volume upload 
 app.use('/api/v1', Authenticate, svUploadRouter);
-app.use('/api/v1', Authenticate, getVolumeDataRouter)
+app.use('/api/v1', Authenticate, getVolumeDataRouter);
+app.use('/api/v1', Authenticate, VolumeApprovalRouter)

@@ -1,5 +1,5 @@
 const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel} = require("../model/Volumem");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const VolumeController = async(req, res) => {
@@ -60,4 +60,18 @@ const getVolumeDataC = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController, getVolumeDataC}
+const volumeApprovalC = async(req, res) => {
+    const requester = req.user;
+    const status_approval = req.params.status_approval;
+    try
+    {
+        await VolumeApprovalModel(requester, status_approval)
+        res.status(200).send("Updated Successfully");
+    }
+    catch(err)
+    {
+        console.
+        res.status(500).send(err)
+    }
+} 
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC}
