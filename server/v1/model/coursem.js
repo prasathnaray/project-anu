@@ -31,7 +31,7 @@ const coursem = (requester) => {
         });
     })
 }
-const createCoursem = (course_name, curiculum_id, requester) => {
+const createCertificatem = (certificate_name, curiculum_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99].includes(Number(requester.role));
         if(!isPriviledged)
@@ -42,7 +42,7 @@ const createCoursem = (course_name, curiculum_id, requester) => {
                 message: 'You do not have permission to access this course data.'
             })
         }
-        client.query('INSERT INTO course_data(course_name, curiculum_id) VALUES($1, $2)', [course_name, curiculum_id], (err, result) => {
+        client.query('INSERT INTO certification_data(certificate_name, curiculum_id) VALUES($1, $2)', [certificate_name, curiculum_id], (err, result) => {
                 if(err)
                 {
                     return reject(err);
@@ -63,18 +63,18 @@ const getCoursem = (requester) => {
         if (role == 101) {
             query = `
                 SELECT 
-    cd.course_id,
-    cd.course_name,
-    bd.batch_name, 
-    bd.batch_start_date,
-    bd.batch_end_date,
-    ca.access_status 
-FROM batch_data bd
-RIGHT JOIN course_data cd 
-    ON bd.course_data @> to_jsonb(cd.course_id::text)
-RIGHT JOIN course_availability ca 
-    ON trim(both '"' from cd.course_id::text) = trim(both '"' from ca.course_id::text)
-WHERE ca.access_status = true;
+                    cd.course_id,
+                    cd.course_name,
+                    bd.batch_name, 
+                    bd.batch_start_date,
+                    bd.batch_end_date,
+                    ca.access_status 
+                FROM batch_data bd
+                RIGHT JOIN course_data cd 
+                    ON bd.course_data @> to_jsonb(cd.course_id::text)
+                RIGHT JOIN course_availability ca 
+                    ON trim(both '"' from cd.course_id::text) = trim(both '"' from ca.course_id::text)
+                WHERE ca.access_status = true;
             `;
         } else if (role === 99) {
             // Super Admin Query
@@ -204,4 +204,4 @@ const requestCoursem = async(course_id, requester) => {
         )
     })
 }
-module.exports = {coursem, createCoursem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem, requestCoursem};
+module.exports = {coursem, createCertificatem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem, requestCoursem};

@@ -471,7 +471,6 @@ import {
   TextField,
 } from "@mui/material";
 import GetCuriculumAPI from "../API/getCuriculumAPI";
-import CreateCourseAPI from "../API/createCourseAPI";
 import { toast } from "react-toastify";
 import CustomCloseButton from "../utils/CustomCloseButton";
 import GetCoursesAPI from "../API/GetCoursesAPI";
@@ -481,7 +480,7 @@ import GetAdminsAPI from "../API/getAdminsAPI";
 import TagCourseAPI from "../API/TagCourseAPI";
 import { ClipLoader } from "react-spinners";
 import CourseCustomisation from "../components/CourseCustomisation";
-
+import CreateCertificateAPI from "../API/createCertificateAPI";
 function Course() {
   // Sidebar toggle
   const [openCourse, setOpenCourse] = useState(false);
@@ -492,8 +491,8 @@ function Course() {
   const navigate = useNavigate()
   console.log(changeState);
   const [curiculumList, setCuriculumList] = useState([]);
-  const [courseData, setCourseData] = useState({
-    course_name: "",
+  const [certificateData, setCertificateData] = useState({
+    certificate_name: "",
     curiculum_id: "",
   });
   const [adminData, setAdminData] = useState([]);
@@ -506,10 +505,10 @@ function Course() {
   const [filteredCourses, setFilteredCourses] = useState([]); // 🔍 for search
   const [searchItem, setSearchItem] = useState("");
 
-  const handleCourse = (e) => {
+  const handleCertificate = (e) => {
     const { name, value } = e.target;
-    setCourseData({
-      ...courseData,
+    setCertificateData({
+      ...certificateData,
       [name]: value,
     });
   };
@@ -534,8 +533,8 @@ function Course() {
 
   const handleClose = () => {
     setOpenCourse(false);
-    setCourseData({
-      course_name: "",
+    setCertificateData({
+      certificate_name: "",
       curiculum_id: "",
     });
     setTagCourseForm({
@@ -556,14 +555,14 @@ function Course() {
     }
   };
 
-  const CreatCourse = async () => {
+  const CreatCertificate = async () => {
     try {
       const token = localStorage.getItem("user_token");
-      const response = await CreateCourseAPI(token, courseData);
+      const response = await CreateCertificateAPI(token, certificateData);
       if (response) {
-        toast.success("Course Created", {
+        toast.success("Certificate Created", {
           autoClose: 3000,
-          toastId: "course-inserted",
+          toastId: "cert-inserted",
           icon: false,
           closeButton: CustomCloseButton,
         });
@@ -729,7 +728,7 @@ function Course() {
           } flex-grow`}
         >
           <div className="bg-gray-100 h-screen pt-12">
-            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Course</span></div>
+            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Certifications</span></div>
             {/* <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                 <button onClick={handleChangeState} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
                   <LayoutDashboard size={15} /> 
@@ -748,11 +747,11 @@ function Course() {
               }`}
             >
               <div className="mt-5 font-semibold text-xl text-gray-600">
-                Course
+                Certifications
               </div>
               <div className="mt-5 bg-white rounded px-8 py-10">
                 <div className="font-semibold text-xl text-gray-500">
-                  All courses
+                  All certifications
                 </div>
                 <div className="grid grid-cols-2 items-center my-5">
                   <div>
@@ -903,7 +902,7 @@ function Course() {
       <AddCourse isVisible={openCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
-            <div>Add Course</div>
+            <div>Add Certificate</div>
             <div>
               <button
                 onClick={handleClose}
@@ -920,10 +919,10 @@ function Course() {
                 variant="outlined"
                 size="small"
                 id="outlined-basic"
-                label="Course Name"
-                onChange={handleCourse}
-                name="course_name"
-                value={courseData.course_name}
+                label="Certificate Name"
+                onChange={handleCertificate}
+                name="certificate_name"
+                value={certificateData.certificate_name}
               />
             </div>
             <div>
@@ -935,8 +934,8 @@ function Course() {
                   labelId="batch-select-label"
                   name="curiculum_id"
                   label="Select curiculum"
-                  onChange={handleCourse}
-                  value={courseData.curiculum_id}
+                  onChange={handleCertificate}
+                  value={certificateData.curiculum_id}
                 >
                   {Array.isArray(curiculumList) &&
                   curiculumList.length > 0 ? (
@@ -958,7 +957,7 @@ function Course() {
           <div className="flex justify-end item-center mt-5">
             <button
               className="bg-[#8DC63F] px-3 py-2 text-white"
-              onClick={CreatCourse}
+              onClick={CreatCertificate}
             >
               Save
             </button>

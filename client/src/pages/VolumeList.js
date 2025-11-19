@@ -11,9 +11,21 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
-
 function VolumeList() {
   const navigate = useNavigate();
+  // ADD THESE AT THE TOP
+const fileInputRef = React.useRef(null);
+const [fileName, setFileName] = useState("");
+
+const handleClick = () => fileInputRef.current.click();
+
+const handleFileSelect = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setFormData({ ...formData, file });
+    setFileName(file.name);
+  }
+};
   const [buttonOpen, setButtonOpen] = useState(true);
   const [openUploadVol, setOpenUploadVol] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -24,15 +36,22 @@ function VolumeList() {
     volume_ga: '',
     file: null,
   });
-
   let decoded = jwtDecode(localStorage.getItem('user_token'));
   if (decoded.role != 102 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
-
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
-  const handleClose = () => setOpenUploadVol(!openUploadVol);
-
+  const handleClose = () => {
+    setOpenUploadVol(!openUploadVol);
+    setFormData({
+      volume_name: '',
+      volume_type: '',
+      volume_fetal_presentation: '',
+      volume_ga: '',
+      file: null,
+    });
+    setFileName("");
+  }
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'file') {
@@ -41,7 +60,6 @@ function VolumeList() {
       setFormData({ ...formData, [name]: value });
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -50,10 +68,8 @@ function VolumeList() {
       toast.error('Please fill all fields and select a file.');
       return;
     }
-
     try {
       setLoading(true);
-
       const token = localStorage.getItem('user_token');
       const data = new FormData();
       data.append('volume_name', volume_name);
@@ -61,9 +77,7 @@ function VolumeList() {
       data.append('volume_fetal_presentation', volume_fetal_presentation);
       data.append('volume_ga', volume_ga);
       data.append('file', file);
-
       const response = await VolumeUploadAPI(token, data);
-
       if (response.status === 200 || response.status === 201) {
         toast.success('Volume uploaded successfully!');
         setOpenUploadVol(false);
@@ -90,10 +104,8 @@ function VolumeList() {
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
         <NavBar />
       </div>
-
       <div className="flex flex-grow pt-12">
         <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
-
         <div
           className={`${
             buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'
@@ -109,7 +121,6 @@ function VolumeList() {
               <div>Volume Management</div>
             </div>
           </div>
-
           <div className="m-5 bg-white border-b">
             <div className="flex justify-end items-center p-4">
               <button
@@ -119,8 +130,6 @@ function VolumeList() {
                 Upload Volume
               </button>
             </div>
-
-            {/* --- Static Template Table (No Data Logic) --- */}
             <div className="m-5 bg-white border rounded shadow-sm">
               <table className="min-w-full text-left">
                 <thead className="bg-gray-100 text-sm text-gray-600 border-b">
@@ -213,7 +222,7 @@ function VolumeList() {
               />
             </div>
 
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <TextField
                 fullWidth
                 variant="outlined"
@@ -222,7 +231,29 @@ function VolumeList() {
                 name="file"
                 onChange={handleChange}
               />
-            </div>
+            </div> */}
+
+            <div className="mt-4">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  style={{ display: 'none' }}
+                  name="file"
+                />
+                <TextField
+                  label="Upload File"
+                  variant="outlined"
+                  value={fileName}
+                  fullWidth
+                  size="small" sx={{ minHeight: '35px' }}
+                  onClick={handleClick}
+                  InputProps={{
+                    readOnly: true,
+                    style: { cursor: "pointer" }
+                  }}
+                />
+              </div>
 
             <div className="mt-4 flex justify-end items-center">
               <button

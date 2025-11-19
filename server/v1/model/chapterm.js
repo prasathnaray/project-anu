@@ -148,7 +148,7 @@ const getChapterModel = (course_id, requester) => {
             `;
             params = [course_id, requester.user_mail]; // user comes from JWT decode
         } 
-        else if (role === 101) {
+        else if (role === 101 || role === 99) {
             // 👨‍🏫 Tutor/Admin view (cumulative stats)
             query = `
                 WITH module_completion AS (

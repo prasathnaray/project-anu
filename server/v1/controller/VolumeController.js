@@ -1,5 +1,5 @@
 const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel} = require("../model/Volumem");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const VolumeController = async(req, res) => {
@@ -63,9 +63,10 @@ const getVolumeDataC = async(req, res) => {
 const volumeApprovalC = async(req, res) => {
     const requester = req.user;
     const status_approval = req.params.status_approval;
+    const volume_id = req.params.volume_id;
     try
     {
-        await VolumeApprovalModel(requester, status_approval)
+        await VolumeApprovalModel(requester, status_approval, volume_id)
         res.status(200).send("Updated Successfully");
     }
     catch(err)
@@ -73,5 +74,17 @@ const volumeApprovalC = async(req, res) => {
         console.
         res.status(500).send(err)
     }
-} 
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC}
+}
+const getVolumeInstructorViewController = async(req, res) => {
+    const requester = req.user;
+    try
+    {
+        const result = await getVolumeInstructorViewModel(requester);
+        res.status(200).send(result);
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController}

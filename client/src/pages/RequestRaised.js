@@ -26,12 +26,15 @@ function RequestRaised() {
         console.log(err)
       }
   }
-  const handleApproval = async() => {
+  const handleApproval = async(status, volume_id) => {
       try
       {
             let token = localStorage.getItem('user_token')
-            await VolumeApprovalAPI(token, true)
-            handleVolumeDataApi()
+            let response = await VolumeApprovalAPI(token, status, volume_id);
+            if(response)
+            {
+              return handleVolumeDataApi()
+            }
       }
       catch(err)
       {
@@ -52,10 +55,8 @@ function RequestRaised() {
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
         <NavBar />
       </div>
-
       <div className="flex flex-grow pt-12">
         <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
-
         <div
           className={`${
             buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
@@ -74,9 +75,8 @@ function RequestRaised() {
             <div className="mt-3 mx-2">
               <div className="bg-white">
                 <div className="px-3 py-1 text-lg text-gray-500">
-                  {volumeList.length} Request(s) Pending
+                  {volumeList.length} Requests Raised
                 </div>
-
                 {/* Render list safely */}
                 <div className="p-2">
                   {Array.isArray(volumeList) && volumeList.length > 0 ? (
@@ -85,12 +85,15 @@ function RequestRaised() {
                         key={index}
                         className="border flex justify-between items-center px-2 mb-2"
                       >
-                        <div>{item.volume_name}</div>
-
+                        <div>
+                          <div className="font-semibold text-xl py-2">{item.volume_name}</div>
+                          <div className="text-sm py-2">Requested by: {item.user_name}</div>
+                        </div>
                         <div className="text-sm m-3">
-                          {volumeList.status ? 'Approved' : 
+                          {item.status ? <div className="text-green-700">Approved</div> : 
                             <div className="flex justify-between items-center">
-                                  <button className="bg-[#8DC63F] p-2 font-semibold rounded-md text-white" onClick={() => handleApproval}>Approve</button>
+                                  <button className="bg-red-600 p-2 font-semibold rounded-md text-white mr-2" onClick={() => handleApproval(false, item.volume_id)}>Reject</button>
+                                  <button className="bg-[#8DC63F] p-2 font-semibold rounded-md text-white" onClick={() => handleApproval(true, item.volume_id)}>Approve</button>
                             </div>}
                         </div>
                       </div>
@@ -101,7 +104,6 @@ function RequestRaised() {
                     </div>
                   )}
                 </div>
-
               </div>
             </div>
           </div>

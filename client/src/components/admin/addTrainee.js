@@ -166,19 +166,26 @@ function AddTrainee() {
     return <Navigate to="/dashboard" replace />;
   }
   return (
-    <div className="flex">
-        <div>
-            <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>
+    <div className={`flex flex-col min-h-screen`}>
+        <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
+            <NavBar />
+            {/* <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/> */}
         </div>
-          <div className={`${
-                    buttonOpen === true
-                    ? "ms-[221px] flex-grow"
-                    : "ms-[85.5px] flex-grow"
-                    } `}>
+        <div className="flex flex-grow">
+              <div>
+                  <SideBar
+                    handleButtonOpen={handleButtonOpen}
+                    buttonOpen={buttonOpen}
+                  />
+              </div>
+                       <div 
+                       className={`${
+            buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
+          } flex-grow`}>
                     <div>                 
                           <NavBar />
             </div>
-            <div className="bg-gray-100 h-screen overflow-y-auto">
+            <div className="bg-gray-100 h-screen">
                   <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                             <div className="text-gray-500 lg:mt-5 mt-1">{data.people.charAt(0).toUpperCase() + data.people.slice(1)} / Add new {data.people}</div>
                             <div className="mt-5 font-semibold text-xl text-gray-600 flex justify-between items-center">
@@ -282,6 +289,8 @@ function AddTrainee() {
                   </div>
             </div>
         </div>
+        </div>
+ 
     </div>
   )
 }
