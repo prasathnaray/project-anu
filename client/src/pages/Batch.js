@@ -1490,7 +1490,6 @@ function Batch()  {
                         <button className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white" onClick={handleSubmit}>Save</button>
                     </div>
                 </CreateBatch>
-
                 <FilterBatch isVisible={openFilter} onClose={handleCloseFilter}>
                                 <>
                                       <div className="flex justify-between items-center">
