@@ -37,6 +37,7 @@ import DeleteTargetedLearningAPI from "../API/DeleteTargetedLearningAPI";
 import TLToast from "../utils/TLToast";
 import FilterBatch from "../components/admin/FilterBatch";
 import filterBatchAPI from "../API/filterBatchAPI";
+import GetCertificateByCurAPI from "../API/GetCertificateByCurAPI";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -383,8 +384,9 @@ function Batch()  {
                 try
                 {
                         const token = localStorage.getItem('user_token');
-                        const result = await GetCoursesByCuriculumAPI(token, curiculum_id)
-                        setCorList(result.result)
+                        const result = await GetCertificateByCurAPI(token, curiculum_id);
+                        //console.log(result.data);
+                        setCorList(result.data.result)
                 }
                 catch(err)
                 {
@@ -1409,11 +1411,11 @@ function Batch()  {
                                          Array.isArray(selectedIds) ? (
                                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                                         {selectedIds.map((id) => {
-                                                        const course = corList.find((c) => c.course_id === id);
+                                                        const course = corList.find((c) => c.certificate_id === id);
                                                         return (
                                                         <Chip
                                                                 key={id}
-                                                                label={course ? course.course_name : id}
+                                                                label={course ? course.certificate_name : id}
                                                                 sx={{ borderRadius: "4px" }}
                                                         />
                                                         );
@@ -1424,8 +1426,8 @@ function Batch()  {
                               >
                                         {Array.isArray(corList) && corList.length > 0 ? (
                                                 corList.map((data, index) => (
-                                                        <MenuItem key={index} value={data?.course_id}>
-                                                        {data?.course_name}
+                                                        <MenuItem key={index} value={data?.certificate_id}>
+                                                        {data?.certificate_name}
                                                         </MenuItem>
                                                 ))
                                         ) : (
