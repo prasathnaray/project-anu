@@ -779,7 +779,7 @@ function Course() {
                   <thead>
                     <tr className="border-b border-gray-300 shadow-sm">
                       <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">
-                        <div>Course Name</div>
+                        <div>Certification Name</div>
                         <button>
                           <ArrowUpWideNarrow size={20} />
                         </button>
@@ -794,7 +794,7 @@ function Course() {
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
                         <div className="flex items-center gap-2">
-                          <span>Course availability</span>
+                          <span>Certificate availability</span>
                           <button>
                             <ArrowUpWideNarrow size={20} />
                           </button>
@@ -860,7 +860,7 @@ function Course() {
                                 ).role == 99 && (
                                     <button
                                       className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
-                                      onClick={() => handleDelete(data.course_id)}
+                                      onClick={() => handleDelete(data.certificate_id)}
                                     >
                                       Delete
                                     </button>

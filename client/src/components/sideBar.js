@@ -59,7 +59,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               {tokdata.role == 99 && 
               <>
                   <li className={`${data==="/curriculum"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/curriculum" className={`${data==="/curriculum" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><BookCheck size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Curriculum</div></a></li>
-                  <li className={`${data==="/course"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/course" className={`${data==="/course" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
+                  <li className={`${data==="/certificate"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/certificate" className={`${data==="/certificate" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
               </>
               }
               {tokdata.role == 103 && 

@@ -150,7 +150,7 @@ const deleteCoursem = (course_id, requester) => {
                 message: "You don't have a permission"
             })
         }
-        client.query('DELETE FROM course_data WHERE course_id=$1', [course_id], (err, result) => {
+        client.query('DELETE FROM certification_data WHERE certificate_id=$1', [course_id], (err, result) => {
             if(err)
             {
                 return reject(err)

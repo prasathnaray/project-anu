@@ -146,7 +146,7 @@ React.useEffect(() => {
                                 <div className="bg-gray-100 h-screen pt-12">
                                     <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px] hover:underline hover:underline-offset-4"><a href={`/course`}>Course</a></span> / <List size={15}/> <a href={`${localStorage.getItem('last_page_visited')}`} className="text-[15px] hover:underline hover:underline-offset-4">Chapters</a></div>
                                     <div className={`${buttonOpen ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
-                                            <div className="mt-5 font-semibold text-xl text-gray-600">Associated Chapters</div>
+                                            <div className="mt-5 font-semibold text-xl text-gray-600">Learning Modules</div>
                                             <div className="mt-5 bg-white rounded px-8 py-10">
                                                         {decoded.role == 99 && (
                                                                   <div className="font-semibold">
