@@ -75,8 +75,8 @@ const courseDeletionController = async(req, res) => {
 }
 const tagCourseController = async(req, res) => {
     const requester = req.user;
-    const {user_id, course_id} = req.body;
-    if(!user_id || !course_id){
+    const {user_id, certificate_id} = req.body;
+    if(!user_id || !certificate_id){
         return res.status(403).json({
             code: 403,
             status: 'Field should not be empty'
@@ -84,7 +84,7 @@ const tagCourseController = async(req, res) => {
     }
     try
     {
-        const result = await tagCoursem(user_id, course_id, requester);
+        const result = await tagCoursem(user_id, certificate_id, requester);
         res.status(200).send(result);
     }
     catch(err)

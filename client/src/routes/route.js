@@ -43,7 +43,7 @@ function RoutesPath() {
                             <Route path="/instructors" element={<Instructors />} />
                             <Route path="/:people/add" element={<Instructors />} />
                             <Route path="/batch" element={<Batch />} />
-                            <Route path="/course" element={<Course />}/>
+                            <Route path="/certificate" element={<Course />}/>
                             <Route path="/course/add" element={<AddCourse />} />
                             <Route path="/curriculum" element={<Curiculum />} />
                             <Route path="/batch/:batch_id" element={<BatchIndividual />} />

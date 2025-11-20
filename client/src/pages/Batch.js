@@ -238,13 +238,13 @@ function Batch()  {
                 batch_start_date: startDate, 
                 batch_end_date: endDate,
                 curiculum_name: '',
-                course_data: [],
+                certification_data: [],
         });
         //
         const [listBatch, setListBatch] = useState([]);
         const handleChange = (e) => {
         const { name, value } = e.target;
-                if (name === "course_data") {
+                if (name === "certification_data") {
                         setBatchData({
                         ...batchData,
                         // [name]: typeof value === "string" ? value.split(",") : value,
@@ -329,7 +329,7 @@ function Batch()  {
                 const token = localStorage.getItem("user_token");
                 try
                 {
-                        if(!batchData.batch_name || !batchData.batch_start_date || !batchData.batch_end_date || !batchData.curiculum_name || !batchData.course_data)
+                        if(!batchData.batch_name || !batchData.batch_start_date || !batchData.batch_end_date || !batchData.curiculum_name || !batchData.certification_data)
                         {
                                 toast.error("please fill all the fields" , {
                                         autoClose: 3000,
@@ -1389,8 +1389,8 @@ function Batch()  {
                                 label="Select Course"
                                 className=""
                                 onChange={handleChange}
-                                name="course_data"
-                                value={batchData?.course_data || []}
+                                name="certification_data"
+                                value={batchData?.certification_data || []}
                                  MenuProps={{
                                         disablePortal: false, // ← force to portal
                                         anchorOrigin: {

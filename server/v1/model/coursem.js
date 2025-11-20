@@ -63,17 +63,17 @@ const getCoursem = (requester) => {
         if (role == 101) {
             query = `
                 SELECT 
-                    cd.course_id,
-                    cd.course_name,
+                    cd.certificate_id,
+                    cd.certificate_name,
                     bd.batch_name, 
                     bd.batch_start_date,
                     bd.batch_end_date,
                     ca.access_status 
                 FROM batch_data bd
-                RIGHT JOIN course_data cd 
-                    ON bd.course_data @> to_jsonb(cd.course_id::text)
+                RIGHT JOIN certification_data cd 
+                    ON bd.certification_data @> to_jsonb(cd.certificate_id::text)
                 RIGHT JOIN course_availability ca 
-                    ON trim(both '"' from cd.course_id::text) = trim(both '"' from ca.course_id::text)
+                    ON trim(both '"' from cd.certificate_id::text) = trim(both '"' from ca.certificate_id::text)
                 WHERE ca.access_status = true;
             `;
         } else if (role === 99) {
@@ -81,7 +81,7 @@ const getCoursem = (requester) => {
             query = `
                 SELECT 
                     * 
-                FROM course_data;
+                FROM certification_data;
             `;
         } else if ([103, 102].includes(role)) {
             query = `
@@ -163,7 +163,7 @@ const deleteCoursem = (course_id, requester) => {
     })
 }
 
-const tagCoursem = async(user_id, course_id, requester) => {
+const tagCoursem = async(user_id, certificate_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99].includes(Number(requester.role));
         if(!isPriviledged)
@@ -178,7 +178,7 @@ const tagCoursem = async(user_id, course_id, requester) => {
         .from('course_availability')
         .insert({
             user_id: user_id,
-            course_id: course_id,
+            certificate_id: certificate_id,
         })
     )
     })

@@ -207,10 +207,10 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 <li className="mb-1 mt-2">
                   <button
                     onMouseDown={(e) => ripple.create(e, "dark", "circle")}
-                    onClick={() => navigate("/course")}
+                    onClick={() => navigate("/certificate")}
                     className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
                       ${
-                        data === "/course" ||
+                        data === "/certificate" ||
                         data.startsWith("/chapters/") ||
                         data.startsWith("/module/") ||
                         data.startsWith("/resource/")
@@ -219,7 +219,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       }`}
                   >
                     <Notebook size={20} />
-                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Courses</div>
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certification</div>
                   </button>
                 </li>
 

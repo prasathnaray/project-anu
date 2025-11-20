@@ -2,10 +2,10 @@ const {generateBatchID} = require('../utils/idGenerator.js')
 const {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, filterBatchm, individualBatchStats} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
-    const {batch_name, batch_start_date, batch_end_date, course_data, curiculum_name} = req.body;
+    const {batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name} = req.body;
     try
     {
-            const result = await createBatchm(batch_name, batch_start_date, batch_end_date, JSON.stringify(course_data), curiculum_name, requester);
+            const result = await createBatchm(batch_name, batch_start_date, batch_end_date, JSON.stringify(certification_data), curiculum_name, requester);
             res.status(200).send(result);
     }
     catch(err)

@@ -1,5 +1,5 @@
 const client = require('../utils/conn.js');
-const createBatchm = (batch_name, batch_start_date, batch_end_date, course_data, curiculum_name, requester) => {
+const createBatchm = (batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name, requester) => {
         return new Promise((resolve, reject) => {
                 const isPrivileged = [101].includes(Number(requester.role));
                 if(!isPrivileged) {
@@ -9,7 +9,7 @@ const createBatchm = (batch_name, batch_start_date, batch_end_date, course_data,
                         message: 'You do not have permission to access this course data.'
                     });
                 }
-                client.query('INSERT INTO batch_data(batch_name, batch_start_date, batch_end_date, course_data, curiculum_id) VALUES($1, $2, $3, $4, $5)', [batch_name, batch_start_date, batch_end_date, course_data, curiculum_name], (err, result) => {
+                client.query('INSERT INTO batch_data(batch_name, batch_start_date, batch_end_date, certification_data, curiculum_id) VALUES($1, $2, $3, $4, $5)', [batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name], (err, result) => {
                     if(err)
                     {
                         return reject(err)

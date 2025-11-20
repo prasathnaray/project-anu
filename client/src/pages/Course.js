@@ -498,7 +498,7 @@ function Course() {
   const [adminData, setAdminData] = useState([]);
   const [tagCourseState, setTagCourseState] = useState({
     user_id: "",
-    course_id: "",
+    certificate_id: "",
   });
 
   const [courseList, setCourseList] = useState([]);
@@ -539,7 +539,7 @@ function Course() {
     });
     setTagCourseForm({
       user_id: "",
-      course_id: "",
+      certificate_id: "",
     });
     setTagCourse(false);
   };
@@ -614,7 +614,7 @@ function Course() {
   const [tagCourse, setTagCourse] = useState(false);
   const [tagCourseForm, setTagCourseForm] = useState({
     user_id: "",
-    course_id: "",
+    certificate_id: "",
   });
   const handleCourseTag = (e) => {
     const { name, value } = e.target;
@@ -819,7 +819,7 @@ function Course() {
                           key={index}
                         >
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <button onClick={() => navigate(`/chapters/${data?.course_id}`)}>{data?.course_name}</button>
+                            <button onClick={() => navigate(`/chapters/${data?.certificate_id}`)}>{data?.certificate_name || data?.course_name}</button>
                           </td>
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
                                   {data?.batch_name ? data.batch_name : 'Not Associated'}
@@ -894,11 +894,9 @@ function Course() {
                 </table>
               </div>
             </div>
-            
           </div>
         </div>
       </div>
-      {/* Add Course Modal */}
       <AddCourse isVisible={openCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -964,8 +962,6 @@ function Course() {
           </div>
         </>
       </AddCourse>
-
-      {/* Tag Course Modal */}
       <TagCourse isVisible={tagCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -1011,15 +1007,15 @@ function Course() {
                 </InputLabel>
                 <Select
                   labelId="course-select-label"
-                  name="course_id"
-                  label="Select course"
+                  name="certificate_id"
+                  label="Select certificate"
                   onChange={handleCourseTag}
-                  value={tagCourseForm.course_id}
+                  value={tagCourseForm.certificate_id}
                 >
                   {Array.isArray(courseList) && courseList.length > 0 ? (
                     courseList.map((data, index) => (
-                      <MenuItem key={index} value={data?.course_id}>
-                        {data?.course_name}
+                      <MenuItem key={index} value={data?.certificate_id}>
+                        {data?.certificate_name}
                       </MenuItem>
                     ))
                   ) : (
