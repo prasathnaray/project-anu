@@ -65,6 +65,8 @@ const createTraineeRouter = require('./routes/createtraineeRoute');
 
 //multer 
 const multer = require('multer');
+const CreateLearningModuleRouter = require('./routes/CreateLearningModuleRoute.js');
+const GetLearningModuleByIdRouter = require('./routes/GetLearningModuleByIdRoute.js');
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
@@ -163,3 +165,7 @@ app.use('/api/v1', Authenticate, VolumeApprovalRouter)
 //certification by curiculum
 app.use('/api/v1', Authenticate, getCertByCuriculumRouter);
 app.use('/api/v1', Authenticate, GetCertificationDetailsByIdRouter);
+
+//creating learning module
+app.use('/api/v1', Authenticate, CreateLearningModuleRouter);
+app.use('/api/v1', Authenticate, GetLearningModuleByIdRouter);
