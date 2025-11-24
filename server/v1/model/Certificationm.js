@@ -22,4 +22,27 @@ const getCertByCurm = (curiculum_id, requester) => {
         })
     })
 }
-module.exports = {getCertByCurm}
+const getCertDetailsByIdm = (certification_id, requester) => {
+    return new Promise((resolve, reject) => {
+        const isPriviledged = [99, 101].includes(Number(requester.role));
+        if(!isPriviledged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: "You don't have a persmission"
+            })
+        }
+        client.query('SELECT * FROM certification_data WHERE certificate_id=$1',[certification_id], (err, result) => {    
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result.rows)
+            }
+        })
+    })
+}
+module.exports = {getCertByCurm, getCertDetailsByIdm}

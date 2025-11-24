@@ -819,7 +819,7 @@ function Course() {
                           key={index}
                         >
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <button onClick={() => navigate(`/chapters/${data?.certificate_id}`)}>{data?.certificate_name || data?.course_name}</button>
+                            <button onClick={() => navigate(`/cert-course/${data?.certificate_id}`)}>{data?.certificate_name || data?.course_name}</button>
                           </td>
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
                                   {data?.batch_name ? data.batch_name : 'Not Associated'}

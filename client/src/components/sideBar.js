@@ -213,6 +213,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                         data === "/certificate" ||
                         data.startsWith("/chapters/") ||
                         data.startsWith("/module/") ||
+                        data.startsWith("/cert-course/")||
                         data.startsWith("/resource/")
                           ? "bg-[#8DC63F] text-white"
                           : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
@@ -222,7 +223,6 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certification</div>
                   </button>
                 </li>
-
                 {/* 🌐 VR Space / Streams */}
                 <li className="mb-1 mt-2">
                   <button
