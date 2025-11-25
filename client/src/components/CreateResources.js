@@ -2,14 +2,58 @@ import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/mater
 import { X } from 'lucide-react';
 import React from 'react'
 import { twMerge } from "tailwind-merge";
+import CreateResourceApi from '../API/createResourcesAPI';
+import { toast } from "react-toastify";
+import CustomCloseButton from "../utils/CustomCloseButton";
+
 function CreateResources({isVisible,  onClose, learningModuleId}) {
     const [shake, setShake] = React.useState(false);
-    if (!isVisible) return null;
+    const [createResource, setCreateResource] = React.useState({
+            learning_module_id: "", 
+            resource_type: "", 
+            topic : "", 
+            resource_name:""
+        });
+        const handleChange = (e) => {
+            const {name, value} = e.target;
+            setCreateResource({
+              ...createResource, 
+              [name]: value
+            });
+        }
+        //console.log(createResource);
+        let handleCreateResource = async (e) => {
+    e.preventDefault();
+    try {
+        const token = localStorage.getItem("user_token");
+        let response = await CreateResourceApi(token, createResource);
+
+        console.log(response);
+
+        if (response?.status === 200) {
+            toast.success("Created Successfully!", {
+                closeButton: CustomCloseButton ,
+            });
+            onClose(); // close modal after creating
+        } else {
+            toast.error("Failed to create resource!", {
+                closeButton: <CustomCloseButton />,
+            });
+        }
+    } catch (err) {
+        console.log(err);
+        toast.error("Something went wrong!", {
+            closeButton: <CustomCloseButton />,
+        });
+    }
+};
+       if (!isVisible) return null; 
     const handleWrapperClick = () => {
                 setShake(true);
                 setTimeout(() => setShake(false), 500); // Reset after animation duration
     };
     // console.log(learningModuleId);
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-xs flex justify-center items-center z-50"
@@ -39,6 +83,8 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                     <Select
                                         label="Unit Name"
                                         // value={resourceType}
+                                        onChange={handleChange}
+                                        name="learning_module_id"
                                         // onChange={(e) => setResourceType(e.target.value)}
                                     >
                                         <MenuItem value={learningModuleId.learning_module_id}>{learningModuleId.unit_name}</MenuItem>
@@ -51,6 +97,8 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                     <InputLabel>Resource Type</InputLabel>
                                     <Select
                                         label="Resource Type"
+                                        onChange={handleChange}
+                                        name="resource_type"
                                         // value={resourceType}
                                         // onChange={(e) => setResourceType(e.target.value)}
                                     >
@@ -64,6 +112,8 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                     <InputLabel>Select Topic</InputLabel>
                                     <Select
                                         label="Select Topic"
+                                        onChange={handleChange}
+                                        name="topic"
                                         // value={courseName}
                                         // onChange={(e) => {
                                         // setCourseName(e.target.value);
@@ -84,6 +134,8 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                         fullWidth
                                         size="small"
                                         label="Resource Name"
+                                        onChange={handleChange}
+                                        name="resource_name"
                                         //value={resourceName}
                                         //onChange={(e) => setResourceName(e.target.value)}
                                     />
@@ -92,6 +144,7 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                 <div className="mt-5 flex justify-end items-center gap-3">
                         <button
                             className={`px-3 py-2 text-white rounded bg-[#8DC63F] cursor-pointer}`}
+                            onClick={handleCreateResource}
                         >
                             Create
                         </button>          
