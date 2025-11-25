@@ -3,7 +3,7 @@ const { Learningm, getLearningByidm } = require("../model/Learningm");
 const createLearningController = async (req, res) => {
     const requester = req.user;
     const { certificate_id, course_name, module_name, unit_name } = req.body;
-    if (!certificate_id || !course_name || !module_name) {
+    if (!certificate_id || !course_name) {
         return res.status(400).json({
             code: 400,
             status: "Validation Error",

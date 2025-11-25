@@ -200,7 +200,6 @@ const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
         })
     })
 }
-
 const IndividualtllList = (requester) => {
     const isPrivileged = [103].includes(Number(requester.role));
     if(!isPrivileged)
@@ -278,6 +277,7 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
     );
   });
 };
+
 const individualBatchStats = (requester, batch_id) => {
     const isPrivileged = [101].includes(Number(requester.role));
     if (!isPrivileged) {

@@ -3,9 +3,6 @@ import { twMerge } from "tailwind-merge";
 function CreateBatch({isVisible,  onClose, children}){
     const [shake, setShake] = useState(false);
     if (!isVisible) return null;
-    // const handleClose = (e) => {
-    //     if(e.target.id === 'wrapper') onClose();
-    // }
     const handleWrapperClick = () => {
                 setShake(true);
                 setTimeout(() => setShake(false), 500); // Reset after animation duration

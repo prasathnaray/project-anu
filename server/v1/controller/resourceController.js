@@ -1,15 +1,15 @@
 const {resourcem, getResourcesModel, getResourcesByModuleIds} = require('../model/resourcem');
 const CreateResourceController = async (req, res) => {
     const requester = req.user;
-    const{module_id, resource_name} = req.body;
-    if (!module_id || module_id.trim() === "") {
+    const{learning_module_id, resource_type, topic, resource_name} = req.body;
+    if (!learning_module_id || learning_module_id.trim() === "") {
         return res.status(400).json({
             status: "Bad Request",
             code: 400,
-            message: "module_id should not be empty"
+            message: "learning id should not be empty"
         });
     }
-    if (!resource_name || resource_name.trim() === "") {
+    if (!resource_type || resource_type.trim() === "") {
         return res.status(400).json({
             status: "Bad Request",
             code: 400,
@@ -18,8 +18,11 @@ const CreateResourceController = async (req, res) => {
     }
     try 
     {
-        const result = await resourcem(module_id, resource_name, requester);
-        res.status(200).json(result);
+        await resourcem(learning_module_id, resource_type, topic, resource_name, requester);
+        res.status(200).json({
+            status: "Created Successfully",
+            code: 200
+        });
     }
     catch(err)
     {

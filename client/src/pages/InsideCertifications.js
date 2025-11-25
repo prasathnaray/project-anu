@@ -1,15 +1,11 @@
-// -----------------------------------------------------------
-// InsideCertifications.js (Final Version with Units Included)
-// -----------------------------------------------------------
-
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import NavBar from "../components/navBar";
 import { jwtDecode } from "jwt-decode";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import SideBar from "../components/sideBar";
 import {
   ArrowUpWideNarrow,
-  EllipsisVertical,
+  ChevronDown,
   LayoutDashboard,
   ListTodo,
   Plus,
@@ -19,91 +15,50 @@ import LearningModule from "../components/superadmin/LearningModule";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 import GetCertificateDataByIdAPI from "../API/GetCertificateDataByIdAPI";
 import CreateLearningModuleAPI from "../API/CreateLearningModuleAPI";
+import GetLearningModuleByIdAPI from "../API/GetLearningModuleByIdAPI";
 import { toast } from "react-toastify";
 import CustomCloseButton from "../utils/CustomCloseButton";
-import GetLearningModuleByIdAPI from "../API/GetLearningModuleByIdAPI";
-import { ClipLoader } from "react-spinners";
-import { set } from "date-fns";
+import CreateResources from "../components/CreateResources";
+
 function InsideCertifications() {
   const navigate = useNavigate();
-  let token = localStorage.getItem("user_token");
+  const token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
-
-  const [buttonOpen, setButtonOpen] = React.useState(true);
-  const [createLearningModule, setCreateLearningModule] = React.useState(false);
-
-  const handleClose = () => {
-    setCreateLearningModule(false);
-    setCertificateName("");
-    setCourseName("");
-    setModuleName("");
-    setUnitName("");
-  }
-  const handleButtonOpen = () => setButtonOpen(!buttonOpen);
 
   const { certificate_id } = useParams();
 
-  const [certificateName, setCertificateName] = React.useState("");
-  const [courseName, setCourseName] = React.useState("");
-  const [moduleName, setModuleName] = React.useState("");
-  const [unitName, setUnitName] = React.useState("");
-  const [learningModules, setLearningModules] = React.useState([]);
-  const [openDropdownIndex, setOpenDropdownIndex] = React.useState(null);
-  const dropdownRefs = React.useRef([]);
-  const toggleDropdown = (index) => {
-    setOpenDropdownIndex(openDropdownIndex === index ? null : index);
-  };
-  const getLearningModules = async () => {
-    try {
-      let token = localStorage.getItem("user_token");
-      const response = await GetLearningModuleByIdAPI(token, certificate_id);
+  const [buttonOpen, setButtonOpen] = useState(true);
+  const [createLearningModule, setCreateLearningModule] = useState(false);
+  const [selectedModuleId, setSelectedModuleId] = useState({});
+  const [certificateName, setCertificateName] = useState("");
+  const [courseName, setCourseName] = useState("");
+  const [moduleName, setModuleName] = useState("");
+  const [unitName, setUnitName] = useState("");
 
-      if (response.data && Array.isArray(response.data)) {
-        setLearningModules(response.data);
-      } else {
-        setLearningModules([]);
-      }
-    } catch (err) {
-      console.log("Error fetching learning modules:", err);
-      setLearningModules([]);
-    }
-  };
-  const [certificateData, setCertificateData] = React.useState([]);
-  const isCreateDisabled = !certificateName || !courseName || !moduleName;
+  const [certificateData, setCertificateData] = useState([]);
+  const [learningModules, setLearningModules] = useState([]);
 
-  const getCertData = async () => {
-    try {
-      let token = localStorage.getItem("user_token");
-      const response = await GetCertificateDataByIdAPI(token, certificate_id);
-      setCertificateData(response.data);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  // EXPAND ROW STATE
+  const [openRes, setOpenRes] = useState(null);
+  const [expandedRow, setExpandedRow] = useState(null);
+  const toggleExpand = (index) =>
+    setExpandedRow(expandedRow === index ? null : index);
 
-  React.useEffect(() => {
-    getCertData();
-    getLearningModules();
-  }, []);
-
-  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103) {
-    return <Navigate to="/" replace />;
-  }
-
+  // COURSE LISTS
   const btcCourses = ["First Trimester", "Second Trimester", "Third Trimester"];
+  const ufcCourses = [
+    "Principles of ultrasound",
+    "Probe Movements",
+    "Knobology",
+    "Morphology",
+  ];
 
-  // -----------------------------
-  // MODULES UNDER SECOND TRIMESTER
-  // -----------------------------
   const secondTrimesterModules = [
     "6-Step Approach",
     "Biometry",
     "20 + 2 Planes",
   ];
 
-  // -----------------------------
-  // UNITS UNDER MODULES
-  // -----------------------------
   const unitMap = {
     "6-Step Approach": [
       "Presentation, Number of Fetus, Cardiac Activity",
@@ -122,22 +77,46 @@ function InsideCertifications() {
       "Sweep 2",
     ],
   };
+
+  const isCreateDisabled =
+    certificateName === "BTC"
+      ? !certificateName || !courseName || !moduleName
+      : certificateName === "UFC"
+      ? !certificateName || !courseName
+      : true;
+
+  const handleClose = () => {
+    setCreateLearningModule(false);
+    setCertificateName("");
+    setCourseName("");
+    setModuleName("");
+    setUnitName("");
+    setOpenRes(false);
+  };
+
+  const fetchCertificates = async () => {
+    try {
+      const response = await GetCertificateDataByIdAPI(token, certificate_id);
+      setCertificateData(response.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const fetchLearningModules = async () => {
+    try {
+      const response = await GetLearningModuleByIdAPI(token, certificate_id);
+      setLearningModules(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const handleCreateLearning = async () => {
-    // ---------- FRONT-END VALIDATION ----------
-    if (!certificateName) {
-      alert("Please select a certification");
+    if (!certificateName || !courseName) {
+      alert("Please select required fields.");
       return;
     }
-    if (!courseName) {
-      alert("Please select a course");
-      return;
-    }
-    if (!moduleName) {
-      alert("Please select a module");
-      return;
-    }
-    // unitName is optional so we don’t validate it
-    // -------------------------------------------
 
     const moduleData = {
       certificate_id,
@@ -147,9 +126,7 @@ function InsideCertifications() {
     };
 
     try {
-      let token = localStorage.getItem("user_token");
       const response = await CreateLearningModuleAPI(token, moduleData);
-
       if (response.data.code === 200) {
         toast.success("Learning Module Created", {
           autoClose: 3000,
@@ -158,12 +135,7 @@ function InsideCertifications() {
           closeButton: CustomCloseButton,
         });
         handleClose();
-        // Reset all fields
-        setCertificateName("");
-        setCourseName("");
-        setModuleName("");
-        setUnitName("");
-        getLearningModules();
+        fetchLearningModules();
       }
     } catch (err) {
       console.log(err);
@@ -176,37 +148,45 @@ function InsideCertifications() {
     }
   };
 
+  useEffect(() => {
+    fetchCertificates();
+    fetchLearningModules();
+  }, []);
+
+  if (decoded.role != 101 && decoded.role != 102) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
-      {/* NAV BAR */}
+      {/* NAVBAR */}
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
         <NavBar />
       </div>
 
-      {/* MAIN LAYOUT */}
+      {/* MAIN BODY */}
       <div className="flex flex-grow pt-12">
-        <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
+        <SideBar handleButtonOpen={() => setButtonOpen(!buttonOpen)} buttonOpen={buttonOpen} />
 
-        <div
-          className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow`}
-        >
+        <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow`}>
           <div className="bg-gray-100 h-screen">
-            {/* Breadcrumb */}
+            
+            {/*Breadcrumb*/}
             <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
               <LayoutDashboard size={15} /> Dashboard /
               <ListTodo size={15} />
-              <span className="text-[15px] hover:underline hover:underline-offset-4">
+              <span className="text-[15px] hover:underline cursor-pointer">
                 <button onClick={() => navigate("/request-raised")}>
                   Learning Modules
                 </button>
               </span>
             </div>
 
-            {/* Header + Create */}
+            {/* HEADER */}
             <div className="mt-5">
               <div className="bg-white p-5 rounded shadow-lg mx-5">
                 <div className="flex items-center justify-between">
-                  <h1 className="text-xl font-semibold mb-4 text-gray-500">
+                  <h1 className="text-xl font-semibold text-gray-500">
                     Learning Modules
                   </h1>
                   <button
@@ -217,105 +197,105 @@ function InsideCertifications() {
                   </button>
                 </div>
 
+                {/*TABLE*/}
                 <div className="mt-10">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-gray-300 shadow-sm">
-                        <th className="py-2 px-4 text-[#8DC63F]">
-                          <div className="flex items-center gap-2">
-                            <span>Course Name</span>
-                            <button>
-                              <ArrowUpWideNarrow size={20} />
-                            </button>
-                          </div>
-                        </th>
-
-                        <th className="py-2 px-4 text-[#8DC63F]">
-                          <div className="flex items-center gap-2">
-                            <span>Module Name</span>
-                            <button>
-                              <ArrowUpWideNarrow size={20} />
-                            </button>
-                          </div>
-                        </th>
-
-                        <th className="py-2 px-4 text-[#8DC63F]">
-                          <div className="flex items-center gap-2">
-                            <span>Unit Name</span>
-                            <button>
-                              <ArrowUpWideNarrow size={20} />
-                            </button>
-                          </div>
-                        </th>
-
-                        <th className="py-2 px-4 text-[#8DC63F]">
-                          <div className="flex items-center gap-2">
-                            <span>Action</span>
-                            <button>
-                              <ArrowUpWideNarrow size={20} />
-                            </button>
-                          </div>
-                        </th>
+                        {["Course Name", "Module Name", "Unit Name", "Action"].map(
+                          (name, i) => (
+                            <th key={i} className="py-2 px-4 text-[#8DC63F]">
+                              <div className="flex items-center gap-2">
+                                <span>{name}</span>
+                                <ArrowUpWideNarrow size={20} />
+                              </div>
+                            </th>
+                          )
+                        )}
                       </tr>
                     </thead>
+
                     <tbody>
-                      {Array.isArray(learningModules) &&
-                      learningModules.length > 0 ? (
+                      {learningModules.length > 0 ? (
                         learningModules.map((data, index) => (
-                          <tr className="text-sm text-gray-700" key={index}>
-                            <td className="py-2 px-4 font-semibold border-b-2 text-[#8DC63F]">
-                              {data.course_name}
-                            </td>
+                          <React.Fragment key={index}>
+                            {/* MAIN ROW */}
+                            <tr className="text-sm text-gray-700">
+                              <td className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                {data.course_name}
+                              </td>
 
-                            <td className="py-2 px-4 font-semibold border-b-2 text-[#8DC63F]">
-                              {data.module_name}
-                            </td>
+                              <td className="py-2 px-4 font-semibold text-[#8DC63F]">
+                                {data.module_name || "—"}
+                              </td>
 
-                            <td className="py-2 px-4 font-medium border-b-2 text-gray-600">
-                              {data.unit_name || "—"}
-                            </td>
+                              <td className="py-2 px-4 text-gray-600">
+                                {data.unit_name || "—"}
+                              </td>
 
-                            <td className="py-2 px-4 font-semibold border-b-2 relative">
-                              <button onClick={() => toggleDropdown(index)}>
-                                <EllipsisVertical size={24} />
-                              </button>
-
-                              {openDropdownIndex === index && (
-                                <div
-                                  ref={(el) =>
-                                    (dropdownRefs.current[index] = el)
-                                  }
-                                  className="absolute right-0 mt-1 w-28 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right"
+                              <td className="py-2 px-4 relative">
+                                <button
+                                  onClick={() => toggleExpand(index)}
+                                  className="text-[#8DC63F]"
                                 >
-                                  <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold">
-                                    View
-                                  </button>
-
-                                  {jwtDecode(localStorage.getItem("user_token"))
-                                    .role == 99 && (
-                                    <button
-                                      className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold"
-                                      //onClick={() => handleLearningDelete(data.learning_id)}
-                                    >
-                                      Delete
-                                    </button>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
+                                  <ChevronDown
+                                    size={24}
+                                    className={`transition-transform ${
+                                      expandedRow === index ? "rotate-180" : ""
+                                    }`}
+                                  />
+                                </button>
+                              </td>
+                            </tr>
+                            {expandedRow === index && (
+                              <tr className="bg-gray-50">
+                                <td colSpan={4} className="p-4 border-b">
+                                  <div className="ml-4 border rounded-lg p-4 bg-white shadow-sm">
+                                    <div className="font-semibold mb-2 text-gray-600 flex justify-between items-center">
+                                          <div>Resources</div>
+                                          <button onClick={() => {setSelectedModuleId({learning_module_id: data.learning_module_id, module_name: data.module_name, unit_name: data.unit_name}); setOpenRes(true)}}><Plus /></button>
+                                    </div>
+                                    <table className="w-full text-sm">
+                                      <thead>
+                                        <tr className="border-b">
+                                          <th className="py-2 px-2 text-left">
+                                            Type
+                                          </th>
+                                          <th className="py-2 px-2 text-left">
+                                             Number of Trainees Completed
+                                          </th>
+                                          <th className="py-2 px-2 text-left">
+                                             Total Count of Resources
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="py-2 px-2">Learning Resources</td>
+                                          <td className="py-2 px-2">100 / 143</td>
+                                          <td className="py-2 px-2 text-blue-600 cursor-pointer">
+                                            78
+                                          </td>
+                                        </tr>
+                                        <tr>
+                                          <td className="py-2 px-2">Practice</td>
+                                          <td className="py-2 px-2">37 / 143</td>
+                                          <td className="py-2 px-2 text-blue-600 cursor-pointer">
+                                            4
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ))
                       ) : (
                         <tr>
-                          <td
-                            colSpan={4}
-                            className="py-4 text-center text-gray-500"
-                          >
-                            <ClipLoader
-                              color="#8DC63F"
-                              size={24}
-                              cssOverride={{ borderWidth: "4px" }}
-                            />
+                          <td colSpan={4} className="py-4 text-center text-gray-500">
+                            No Data to Show
                           </td>
                         </tr>
                       )}
@@ -327,20 +307,14 @@ function InsideCertifications() {
           </div>
         </div>
       </div>
-
-      {/* MODAL */}
       <LearningModule isVisible={createLearningModule} onClose={handleClose}>
-        {/* Modal Header */}
         <div className="flex justify-between items-center mb-4">
           <div>Create Learning Modules</div>
           <button onClick={handleClose} className="text-red-500">
             <X size={20} />
           </button>
         </div>
-
-        {/* FORM */}
         <div className="mt-5 grid grid-cols-1 gap-4">
-          {/* CERTIFICATION */}
           <FormControl fullWidth size="small">
             <InputLabel>Select Certification</InputLabel>
             <Select
@@ -361,6 +335,63 @@ function InsideCertifications() {
             </Select>
           </FormControl>
           {certificateName === "BTC" && (
+            <>
+              <FormControl fullWidth size="small">
+                <InputLabel>Select Course</InputLabel>
+                <Select
+                  label="Select Course"
+                  value={courseName}
+                  onChange={(e) => {
+                    setCourseName(e.target.value);
+                    setModuleName("");
+                    setUnitName("");
+                  }}
+                >
+                  {btcCourses.map((c, i) => (
+                    <MenuItem key={i} value={c}>
+                      {c}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {courseName === "Second Trimester" && (
+                <FormControl fullWidth size="small">
+                  <InputLabel>Select Module</InputLabel>
+                  <Select
+                    label="Select Module"
+                    value={moduleName}
+                    onChange={(e) => {
+                      setModuleName(e.target.value);
+                      setUnitName("");
+                    }}
+                  >
+                    {secondTrimesterModules.map((m, i) => (
+                      <MenuItem key={i} value={m}>
+                        {m}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+              {moduleName && (
+                <FormControl fullWidth size="small">
+                  <InputLabel>Select Unit</InputLabel>
+                  <Select
+                    label="Select Unit"
+                    value={unitName}
+                    onChange={(e) => setUnitName(e.target.value)}
+                  >
+                    {unitMap[moduleName]?.map((u, i) => (
+                      <MenuItem key={i} value={u}>
+                        {u}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+            </>
+          )}
+          {certificateName === "UFC" && (
             <FormControl fullWidth size="small">
               <InputLabel>Select Course</InputLabel>
               <Select
@@ -368,48 +399,11 @@ function InsideCertifications() {
                 value={courseName}
                 onChange={(e) => {
                   setCourseName(e.target.value);
-                  setModuleName("");
-                  setUnitName("");
                 }}
               >
-                {btcCourses.map((c, i) => (
+                {ufcCourses.map((c, i) => (
                   <MenuItem key={i} value={c}>
                     {c}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-          {courseName === "Second Trimester" && (
-            <FormControl fullWidth size="small">
-              <InputLabel>Select Module</InputLabel>
-              <Select
-                label="Select Module"
-                value={moduleName}
-                onChange={(e) => {
-                  setModuleName(e.target.value);
-                  setUnitName("");
-                }}
-              >
-                {secondTrimesterModules.map((m, i) => (
-                  <MenuItem key={i} value={m}>
-                    {m}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-          {moduleName && (
-            <FormControl fullWidth size="small">
-              <InputLabel>Select Unit</InputLabel>
-              <Select
-                label="Select Unit"
-                value={unitName}
-                onChange={(e) => setUnitName(e.target.value)}
-              >
-                {unitMap[moduleName]?.map((u, i) => (
-                  <MenuItem key={i} value={u}>
-                    {u}
                   </MenuItem>
                 ))}
               </Select>
@@ -421,17 +415,19 @@ function InsideCertifications() {
             disabled={isCreateDisabled}
             onClick={handleCreateLearning}
             className={`px-3 py-2 text-white rounded 
-                ${
-                  isCreateDisabled
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-[#8DC63F] cursor-pointer"
-                }`}
+              ${
+                isCreateDisabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-[#8DC63F] cursor-pointer"
+              }`}
           >
             Create
           </button>
         </div>
       </LearningModule>
+      <CreateResources isVisible={openRes} onClose={handleClose} learningModuleId={selectedModuleId}/>
     </div>
   );
 }
+
 export default InsideCertifications;

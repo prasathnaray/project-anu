@@ -1,5 +1,5 @@
 const client = require('../utils/conn');
-const resourcem = (module_id, resource_name, requester) => {
+const resourcem = (learning_module_id, resource_type, topic, resource_name, requester) => {
     return new Promise((resolve, reject) => {
             const isPrivileged = [99, 101].includes(Number(requester.role))
             if(!isPrivileged)
@@ -10,7 +10,7 @@ const resourcem = (module_id, resource_name, requester) => {
                     message: 'You do not have permission to access this profile.'
                 })
             }
-            client.query('INSERT INTO resource_data(module_id, resource_name) VALUES($1, $2)', [module_id, resource_name], (err, result) => {
+            client.query('INSERT INTO resource_data(learning_module_id, resource_type, resource_topic, resource_name) VALUES($1, $2, $3, $4)', [learning_module_id, resource_type, topic, resource_name], (err, result) => {
                     if(err)
                     {
                         return reject(err)
