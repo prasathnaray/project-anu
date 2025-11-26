@@ -250,16 +250,8 @@ function TraineeIndividual() {
                 </div>
               </>
             ) : (
-              // <div className="p-6 bg-white shadow mx-7 mt-4 rounded text-gray-700 transition-all duration-500">
-              //   <h2 className="text-lg font-semibold mb-2 text-[#8DC63F]">
-              //     Completed Modules
-              //   </h2>
-              //   <p>Display your completed modules or achievements here...</p>
-              // </div>
                    <TraineeCompletionTable ApiData={individualTraineeProfile}/>
             )}
-
-            {/* Instructors Associated - FIX: Properly render the nested structure */}
           </div>
         </div>
       </div>

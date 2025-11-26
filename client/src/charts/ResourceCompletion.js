@@ -6,8 +6,12 @@ export default function HalfDonut({ dataa }) {
   // ✅ Ensure dataa is always an array
   const safeData = Array.isArray(dataa) ? dataa : [];
 
-  const total = safeData.length;
-  const completed = safeData.filter((item) => item?.is_completed === true).length;
+  // const total = safeData.length;
+  const resourceItems = safeData.filter(
+        (item) => item?.resource_id && item?.resource_name
+  );
+  const total = resourceItems.length;
+  const completed = resourceItems.filter((item) => item?.is_completed === true).length;
 
   if (total === 0) {
     return (
