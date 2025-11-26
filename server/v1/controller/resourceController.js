@@ -30,10 +30,10 @@ const CreateResourceController = async (req, res) => {
     }
 }
 const getResourcesController = async (req, res) => {
-    const {module_id} = req.query
+    const {learning_module_id} = req.query
     try
     {
-        const result = await getResourcesModel(req.user, module_id);
+        const result = await getResourcesModel(req.user, learning_module_id);
         res.status(200).json(result.rows);
     }
     catch(err)

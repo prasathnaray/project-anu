@@ -83,15 +83,19 @@ const getResourcesModel = (requester, module_id) => {
       // Admin view: aggregate for all users
       query = `
         SELECT 
-          rd.resource_id, 
-          rd.resource_name, 
-          rd.module_id, 
-          COUNT(pd.user_id) AS trainee_completed
+            rd.resource_id,
+            rd.resource_name,
+            rd.learning_module_id,
+            COUNT(pd.user_id) AS trainee_completed,
+            COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource
         FROM resource_data rd
         LEFT JOIN progress_data pd 
-          ON rd.resource_id = pd.resourse_id
-        WHERE rd.module_id = $1
-        GROUP BY rd.resource_id, rd.resource_name, rd.module_id
+            ON rd.resource_id = pd.resourse_id
+        WHERE rd.learning_module_id = $1
+        GROUP BY 
+        rd.resource_id,
+        rd.resource_name,
+        rd.learning_module_id;
       `;
       params = [module_id];
     }
