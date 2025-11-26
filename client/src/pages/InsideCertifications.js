@@ -326,8 +326,6 @@ function InsideCertifications() {
                                           <Plus />
                                         </button>
                                       </div>
-
-                                      {/* resource summary table */}
                                       <table className="w-full text-sm">
                                         <thead>
                                           <tr className="border-b">
@@ -335,9 +333,7 @@ function InsideCertifications() {
                                             <th className="py-2 px-2 text-left">Number of Trainees Completed</th>
                                           </tr>
                                         </thead>
-
                                         <tbody>
-                                          {/* while loading */}
                                           {resourcesEntry.loading ? (
                                             <tr>
                                               <td colSpan={3} className="py-4 px-2 text-center text-gray-500">
@@ -350,56 +346,7 @@ function InsideCertifications() {
                                                 Failed to load resources
                                               </td>
                                             </tr>
-                                          ) : (
-                                            // If you have structured resource types in API, map them.
-                                            // For now, we display aggregated counts based on the API response structure.
-                                          //   (() => {
-                                          //     const resList = Array.isArray(resourcesEntry.data) ? resourcesEntry.data : [];
-                                          //     // Example aggregation: count by resource_type (if present). Otherwise show totals.
-                                          //     const totalResources = resList.length;
-                                          //     // count completed mock: if resource object has trainee_completed or progress counts, sum them
-                                          //     // We'll attempt to derive numbers conservatively:
-                                          //     let learningResourcesCount = 0;
-                                          //     let practiceCount = 0;
-                                          //     let learningCompleted = 0;
-                                          //     let practiceCompleted = 0;
-
-                                          //     resList.forEach((r) => {
-                                          //       const type = (r.resource_type || "").toLowerCase();
-                                          //       if (type.includes("practice")) {
-                                          //         practiceCount += 1;
-                                          //         practiceCompleted += Number(r.trainee_completed || 0);
-                                          //       } else {
-                                          //         learningResourcesCount += 1;
-                                          //         learningCompleted += Number(r.trainee_completed || 0);
-                                          //       }
-                                          //     });
-
-                                          //     // fallback when there are no typed resources
-                                          //     if (resList.length === 0) {
-                                          //       return (
-                                          //         <tr>
-                                          //           <td colSpan={3} className="py-4 px-2 text-center text-gray-500">
-                                          //             No resources found for this module.
-                                          //           </td>
-                                          //         </tr>
-                                          //       );
-                                          //     }
-
-                                          //     return (
-                                          //       <>
-                                          //         <tr>
-                                          //           <td className="py-2 px-2">Learning Resources</td>
-                                          //           <td className="py-2 px-2">{learningCompleted}</td>
-                                          //         </tr>
-                                          //         <tr>
-                                          //           <td className="py-2 px-2">Practice</td>
-                                          //           <td className="py-2 px-2">{practiceCompleted}</td>
-                                          //         </tr>
-                                          //       </>
-                                          //     );
-                                          //   })()
-                                          
+                                          ) : (                                          
                                           resourcesEntry.data.length > 0 ? (
                                             resourcesEntry.data.map((res, i) => (
                                               <tr key={i} className="border-b">
