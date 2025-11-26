@@ -109,23 +109,25 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                     </Select>
                                 </FormControl>
                                 <FormControl fullWidth size="small">
-                                    <InputLabel>Select Topic</InputLabel>
-                                    <Select
+                                    {/* <InputLabel>Select Topic</InputLabel> */}
+                                    {/* <Select
                                         label="Select Topic"
                                         onChange={handleChange}
                                         name="topic"
-                                        // value={courseName}
-                                        // onChange={(e) => {
-                                        // setCourseName(e.target.value);
-                                        // }}
-                                    >
-                                        {/* {ufcCourses.map((c, i) => ( */}
+                                        >
                                         <MenuItem key={'das'} value="ad">
-                                            {/* {c} */}
                                             sf
                                         </MenuItem>
-                                         {/* ))} */}
-                                    </Select>
+                                    </Select> */}
+                                    <TextField
+                                        fullWidth
+                                        size="small"
+                                        label="Resource Topic"
+                                        onChange={handleChange}
+                                        name="topic"
+                                        //value={resourceName}
+                                        //onChange={(e) => setResourceName(e.target.value)}
+                                    />
                                 </FormControl>
                 </div>
                 <div className="mt-5">

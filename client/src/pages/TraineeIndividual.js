@@ -67,7 +67,7 @@ function TraineeIndividual() {
       "103"
         ? "Trainee"
         : "Instructor",
-    total_courses_enrolled: new Set(data.map((item) => item.course_id)),
+    total_courses_enrolled: new Set(data.map((item) => item.certificate_id)),
     total_chapters_associated: new Set(
       data.map((chapter) => chapter.chapter_id).filter((id) => id !== null)
     ),
@@ -163,20 +163,20 @@ function TraineeIndividual() {
                     <div className="border-t mt-6 pt-1 mb-2">
                       <div className="flex justify-between items-center pt-2">
                         <div className="text-gray-600 font-semibold">
-                          Total courses enrolled
+                          Total Certificates enrolled
                         </div>
                         <div>{counts.total_courses_enrolled.size}</div>
                       </div>
                     </div>
 
-                    <div className="border-t mt-6 pt-1 mb-2">
+                    {/* <div className="border-t mt-6 pt-1 mb-2">
                       <div className="flex justify-between items-center pt-2">
                         <div className="text-gray-600 font-semibold">
                           Total chapter access
                         </div>
                         <div>{counts.total_chapters_associated.size}</div>
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="border-t mt-6 pt-2 mb-2">
                       <div className="flex justify-between items-center pt-2">

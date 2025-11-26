@@ -330,7 +330,7 @@ function InsideCertifications() {
                                       <table className="w-full text-sm">
                                         <thead>
                                           <tr className="border-b">
-                                            <th className="py-2 px-2 text-left">Type</th>
+                                            <th className="py-2 px-2 text-left">Resource Name</th>
                                             <th className="py-2 px-2 text-left">Number of Trainees Completed</th>
                                           </tr>
                                         </thead>
