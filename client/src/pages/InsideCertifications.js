@@ -282,7 +282,7 @@ function InsideCertifications() {
                         ))}
                       </tr>
                     </thead>
-
+                    
                     <tbody>
                       {learningModules.length > 0 ? (
                         learningModules.map((data, index) => {
