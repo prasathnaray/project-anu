@@ -52,7 +52,7 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                 setShake(true);
                 setTimeout(() => setShake(false), 500); // Reset after animation duration
     };
-    // console.log(learningModuleId);
+    console.log(learningModuleId);
 
   return (
     <div
@@ -87,7 +87,7 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                         name="learning_module_id"
                                         // onChange={(e) => setResourceType(e.target.value)}
                                     >
-                                        <MenuItem value={learningModuleId.learning_module_id}>{learningModuleId.unit_name}</MenuItem>
+                                        <MenuItem value={learningModuleId.learning_module_id}>{learningModuleId?.unit_name || learningModuleId?.course_name}</MenuItem>
                                     </Select>
                                 </FormControl>
                 </div>

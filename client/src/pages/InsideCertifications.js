@@ -282,7 +282,7 @@ function InsideCertifications() {
                         ))}
                       </tr>
                     </thead>
-                    
+
                     <tbody>
                       {learningModules.length > 0 ? (
                         learningModules.map((data, index) => {
@@ -318,6 +318,7 @@ function InsideCertifications() {
                                           onClick={() =>
                                             openCreateResourcesModal({
                                               learning_module_id: moduleId,
+                                              course_name: data.course_name,
                                               module_name: data.module_name,
                                               unit_name: data.unit_name,
                                             })

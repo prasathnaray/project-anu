@@ -199,38 +199,46 @@ const indDatauuid = (requester, people_id) => {
 
     // Query 1 — progress + user info
     const userProgressQuery = `
-      WITH user_info AS (
-          SELECT user_email, user_name, user_role, user_profile_photo
-          FROM user_data
-          WHERE people_id = $1
-      ),
-      pdt AS (
-          SELECT resourse_id AS rid, user_id, is_completed, updated_at
-          FROM progress_data
-          WHERE user_id IN (SELECT user_email FROM user_info)
-      )
-      SELECT 
-          ui.user_name,
-          ui.user_profile_photo,
-          ui.user_role,
-          c.course_id, 
-          c.course_name, 
-          c.curiculum_id, 
-          ch.chapter_id, 
-          ch.chapter_name, 
-          md.module_id, 
-          md.module_name, 
-          rd.resource_name, 
-          pdt.is_completed,
-          pdt.updated_at
-      FROM user_info ui
-      CROSS JOIN course_data c
-      LEFT JOIN chapter_data ch ON c.course_id = ch.course_id
-      LEFT JOIN module_data md ON ch.chapter_id = md.chapter_id
-      JOIN resource_data rd ON md.module_id = rd.module_id
-      LEFT JOIN pdt ON pdt.rid = rd.resource_id;
-    `;
+    WITH user_info AS (
+    SELECT 
+        user_email, 
+        user_name, 
+        user_role, 
+        user_profile_photo
+    FROM user_data
+    WHERE people_id = $1
+),
 
+pdt AS (
+    SELECT 
+        resourse_id AS rid, 
+        user_id, 
+        is_completed, 
+        updated_at
+    FROM progress_data
+    WHERE user_id IN (SELECT user_email FROM user_info)
+)
+
+SELECT 
+    ui.user_name,
+    ui.user_profile_photo,
+    ui.user_role,
+    lm.certificate_id,
+    lm.course_name,
+    lm.module_name,
+    lm.unit_name,
+    lm.learning_module_id,
+    rd.resource_id,
+    rd.resource_name,
+    pdt.is_completed,
+    pdt.updated_at
+FROM user_info ui
+CROSS JOIN learning_module lm
+LEFT JOIN resource_data rd 
+    ON lm.learning_module_id = rd.learning_module_id
+LEFT JOIN pdt 
+    ON pdt.rid = rd.resource_id;`
+    
     // Query 2 — instructor + batch info
     const instructorQuery = `
       SELECT 
