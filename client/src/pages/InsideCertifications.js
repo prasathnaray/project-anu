@@ -3,6 +3,7 @@ import NavBar from "../components/navBar";
 import {jwtDecode} from "jwt-decode";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import SideBar from "../components/sideBar";
+import { ClipLoader } from "react-spinners";
 import {
   ArrowUpWideNarrow,
   ChevronDown,
@@ -271,18 +272,31 @@ function InsideCertifications() {
                 <div className="mt-10">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-gray-300 shadow-sm">
-                        {["Course Name", "Module Name", "Unit Name", "Action"].map((name, i) => (
-                          <th key={i} className="py-2 px-4 text-[#8DC63F]">
-                            <div className="flex items-center gap-2">
-                              <span>{name}</span>
-                              <ArrowUpWideNarrow size={20} />
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
+                      {certificateData[0]?.certificate_name ==="BTC" && (
+                            <tr className="border-b border-gray-300 shadow-sm">
+                                  {["Course Name", "Module Name", "Unit Name", "Action"].map((name, i) => (
+                                    <th key={i} className="py-2 px-4 text-[#8DC63F]">
+                                      <div className="flex items-center gap-2">
+                                        <span>{name}</span>
+                                        <ArrowUpWideNarrow size={20} />
+                                      </div>
+                                    </th>
+                                  ))}
+                            </tr>
+                      )}
+                      {certificateData[0]?.certificate_name === "UFC" && (
+                          <tr className="border-b border-gray-300 shadow-sm">
+                                  {["Course Name", "Action"].map((name, i) => (
+                                    <th key={i} className="py-2 px-4 text-[#8DC63F]">
+                                      <div className="flex items-center gap-2">
+                                        <span>{name}</span>
+                                        <ArrowUpWideNarrow size={20} />
+                                      </div>
+                                    </th>
+                                  ))}
+                            </tr>
+                      )}
                     </thead>
-
                     <tbody>
                       {learningModules.length > 0 ? (
                         learningModules.map((data, index) => {
@@ -293,8 +307,13 @@ function InsideCertifications() {
                             <React.Fragment key={moduleId || index}>
                               <tr className="text-sm text-gray-700">
                                 <td className="py-2 px-4 font-semibold text-[#8DC63F]">{data.course_name}</td>
-                                <td className="py-2 px-4 font-semibold text-[#8DC63F]">{data.module_name || "—"}</td>
-                                <td className="py-2 px-4 text-gray-600">{data.unit_name || "—"}</td>
+                                {certificateData[0]?.certificate_name === "UFC" ? null : (
+                                  <>  
+                                         <td className="py-2 px-4 font-semibold text-[#8DC63F]">{data.module_name || "—"}</td>
+                                         <td className="py-2 px-4 text-gray-600">{data.unit_name || "—"}</td>
+                                  </>
+                                )}
+                                
                                 <td className="py-2 px-4 relative">
                                   <button
                                     onClick={() => toggleExpand(index, moduleId)}
@@ -338,7 +357,7 @@ function InsideCertifications() {
                                           {resourcesEntry.loading ? (
                                             <tr>
                                               <td colSpan={3} className="py-4 px-2 text-center text-gray-500">
-                                                Loading resources...
+                                                    <ClipLoader size={30} color={"#8DC63F"} />
                                               </td>
                                             </tr>
                                           ) : resourcesEntry.error ? (
