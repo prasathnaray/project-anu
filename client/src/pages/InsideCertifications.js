@@ -48,7 +48,6 @@ function InsideCertifications() {
   // data
   const [certificateData, setCertificateData] = useState([]);
   const [learningModules, setLearningModules] = useState([]);
-
   // expand / resources per module
   const [expandedRow, setExpandedRow] = useState(null);
   const [resourceMap, setResourceMap] = useState({}); // { [learning_module_id]: { loading, error, data } }
@@ -231,8 +230,35 @@ function InsideCertifications() {
     fetchLearningModules();
   }, [fetchCertificates, fetchLearningModules]);
 
+  //const uniqueCourses = [...new Set(learningModules.map(m => m.course_name))];
+  // useEffect(() => {
+  // if (learningModules.length > 0 && !courseName) {
+  //     const uniqueCourses = [...new Set(learningModules.map(m => m.course_name))];
+  //     setCourseName(uniqueCourses[0]);  // Automatically selects the first unique course
+  //   }
+  // }, [learningModules]);
+
+  // useEffect(() => {
+  // if (learningModules.length > 0 && !courseName) {
+  //     const uniqueModules = [...new Set(learningModules.map(m => m.module_name))];
+  //     setModuleName(uniqueModules[0]);  // Automatically selects the first unique course
+  //   }
+  // }, [learningModules]);
+
+  useEffect(() => {
+  if (courseName) {
+    const filteredModules = [
+      ...new Set(
+        learningModules
+          .filter(m => m.course_name === courseName)
+          .map(m => m.module_name)
+      ),
+    ];
+    setModuleName(filteredModules[0] || "");
+  }
+}, [courseName, learningModules]);
   // auth guard: if no token or invalid role, redirect
-  if (!token || !decoded || (decoded.role != 101 && decoded.role != 102)) {
+  if (!token || !decoded || (decoded.role != 101 && decoded.role != 102 && decoded.role != 99)) {
     return <Navigate to="/" replace />;
   }
 
@@ -260,6 +286,46 @@ function InsideCertifications() {
 
             {/* Header */}
             <div className="mt-5">
+              <div className="p-5 grid grid-cols-5 gap-5">
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select Course</InputLabel>
+                      <Select
+                        label="Select Course"
+                        value={courseName}
+                        onChange={(e) => {
+                          setCourseName(e.target.value);
+                          setModuleName("");
+                          setUnitName("");
+                        }}
+                      >
+                        {[...new Set(learningModules.map(m => m.course_name))].map((course, i) => (
+                          <MenuItem key={i} value={course}>
+                            {course}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select Module</InputLabel>
+                      <Select
+                        label="Select Module"
+                        value={moduleName}
+                        onChange={(e) => {
+                          setModuleName(e.target.value);
+                        }}
+                      >
+                        {[...new Set(
+                            learningModules
+                              .filter(m => m.course_name === courseName)   // ⭐ FILTER HERE
+                              .map(m => m.module_name)
+                          )].map((module, i) => (
+                            <MenuItem key={i} value={module}>
+                              {module}
+                            </MenuItem>
+                          ))}
+                      </Select>
+                    </FormControl>
+              </div>
               <div className="bg-white p-5 rounded shadow-lg mx-5">
                 <div className="flex items-center justify-between">
                   <h1 className="text-xl font-semibold text-gray-500">Learning Modules</h1>
@@ -267,8 +333,6 @@ function InsideCertifications() {
                     <Plus size={20} />
                   </button>
                 </div>
-
-                {/* TABLE */}
                 <div className="mt-10">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -302,7 +366,6 @@ function InsideCertifications() {
                         learningModules.map((data, index) => {
                           const moduleId = data.learning_module_id;
                           const resourcesEntry = resourceMap[moduleId] || { loading: false, error: null, data: [] };
-
                           return (
                             <React.Fragment key={moduleId || index}>
                               <tr className="text-sm text-gray-700">
@@ -313,7 +376,6 @@ function InsideCertifications() {
                                          <td className="py-2 px-4 text-gray-600">{data.unit_name || "—"}</td>
                                   </>
                                 )}
-                                
                                 <td className="py-2 px-4 relative">
                                   <button
                                     onClick={() => toggleExpand(index, moduleId)}
@@ -350,6 +412,7 @@ function InsideCertifications() {
                                         <thead>
                                           <tr className="border-b">
                                             <th className="py-2 px-2 text-left">Resource Name</th>
+                                            <th className="py-2 px-2 text-left">Resource Topic</th>
                                             <th className="py-2 px-2 text-left">Number of Trainees Completed</th>
                                           </tr>
                                         </thead>
@@ -371,6 +434,7 @@ function InsideCertifications() {
                                             resourcesEntry.data.map((res, i) => (
                                               <tr key={i} className="border-b">
                                                 <td className="py-2 px-2">{res.resource_name || "—"}</td>
+                                                <td className="py-2 px-2">{res.resource_namee || "—"}</td>
                                                 <td className="py-2 px-2">{res.trainee_completed || 0}</td>
                                               </tr>
                                             ))
