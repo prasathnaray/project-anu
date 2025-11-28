@@ -858,8 +858,8 @@ const filteredRows = learningModules.filter(row => {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-gray-300 shadow-sm">
-                        <th className="py-2 px-4 text-[#8DC63F]">Course Name</th>
-                        <th className="py-2 px-4 text-[#8DC63F]">Module Name</th>
+                        {/* <th className="py-2 px-4 text-[#8DC63F]">Course Name</th>
+                        <th className="py-2 px-4 text-[#8DC63F]">Module Name</th> */}
                         <th className="py-2 px-4 text-[#8DC63F]">Unit Name</th>
                         <th className="py-2 px-4 text-[#8DC63F]">Action</th>
                       </tr>
@@ -964,8 +964,8 @@ const filteredRows = learningModules.filter(row => {
     return (
       <React.Fragment key={moduleId}>
         <tr className="text-sm text-gray-700">
-          <td className="py-2 px-4 font-semibold text-[#8DC63F]">{row.course_name}</td>
-          <td className="py-2 px-4 text-gray-700">{row.module_name}</td>
+          {/* <td className="py-2 px-4 font-semibold text-[#8DC63F]">{row.course_name}</td>
+          <td className="py-2 px-4 text-gray-700">{row.module_name}</td> */}
           <td className="py-2 px-4 text-gray-600">{row.unit_name}</td>
 
           <td className="py-2 px-4">
@@ -1030,11 +1030,11 @@ const filteredRows = learningModules.filter(row => {
                                     </div>
                                   </td>
                                 </tr>
-        )}
-      </React.Fragment>
-    );
-  })
-)}
+                                )}
+                              </React.Fragment>
+                            );
+                          })
+                        )}
                     </tbody>
                   </table>
                 </div>
@@ -1077,7 +1077,7 @@ const filteredRows = learningModules.filter(row => {
         {/* BTC → Course, Module, Unit based on API */}
         {certificateName === "BTC" && (
           <>
-            <FormControl fullWidth size="small" className="mb-4">
+            <FormControl fullWidth size="small" className="mb-4 mt-2">
               <InputLabel>Select Course</InputLabel>
               <Select
                 label="Select Course"
@@ -1095,7 +1095,6 @@ const filteredRows = learningModules.filter(row => {
                 ))}
               </Select>
             </FormControl>
-
             <FormControl fullWidth size="small" className="mb-4">
               <InputLabel>Select Module</InputLabel>
               <Select
