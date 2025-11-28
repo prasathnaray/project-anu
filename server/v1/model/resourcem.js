@@ -85,6 +85,7 @@ const getResourcesModel = (requester, module_id) => {
         SELECT 
             rd.resource_id,
             rd.resource_name,
+            rd.resource_type,
             rd.learning_module_id,
             COUNT(pd.user_id) AS trainee_completed,
             COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource
@@ -95,6 +96,7 @@ const getResourcesModel = (requester, module_id) => {
         GROUP BY 
         rd.resource_id,
         rd.resource_name,
+        rd.resource_type,
         rd.learning_module_id;
       `;
       params = [module_id];

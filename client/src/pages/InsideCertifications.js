@@ -630,6 +630,7 @@ function InsideCertifications() {
   const [courseName, setCourseName] = useState("");
   const [moduleName, setModuleName] = useState("");
   const [unitName, setUnitName] = useState("");
+  const [expandedResource, setExpandedResource] = useState(null);
   // Data states
   const [certificateData, setCertificateData] = useState([]);
   const [learningModules, setLearningModules] = useState([]);
@@ -975,22 +976,29 @@ const filteredRows = learningModules.filter(row => {
           </td>
         </tr>
 
-        {expandedRow === index && (
+                                {/* {expandedRow === index && (
           <tr className="bg-gray-50">
                                   <td colSpan={4} className="p-4 border-b">
                                     <div className="border rounded-lg p-4 bg-white shadow-sm">
                                       <div className="flex justify-between mb-3">
                                         <span className="font-semibold text-gray-600">Resources</span>
                                         <button
-                                          onClick={() =>
-                                            setOpenRes(true) ||
+                                          onClick={() =>{
+                                            // setOpenRes(true) ||
+                                            // setSelectedModule({
+                                            //   learning_module_id: moduleId,
+                                            //   course_name: row.course_name,
+                                            //   module_name: row.module_name,
+                                            //   unit_name: row.unit_name,
+                                            // })
                                             setSelectedModule({
                                               learning_module_id: moduleId,
                                               course_name: row.course_name,
                                               module_name: row.module_name,
                                               unit_name: row.unit_name,
-                                            })
-                                          }
+                                            });
+                                            setOpenRes(true);
+                                          }}
                                         >
                                           <Plus />
                                         </button>
@@ -999,6 +1007,7 @@ const filteredRows = learningModules.filter(row => {
                                         <thead>
                                           <tr className="border-b">
                                             <th className="py-2 px-2">Resource Name</th>
+                                            <th className="py-2 px-2">Resoruce Type</th>
                                             <th className="py-2 px-2">Trainees Completed</th>
                                           </tr>
                                         </thead>
@@ -1021,6 +1030,7 @@ const filteredRows = learningModules.filter(row => {
                                             entry.data.map((res, i) => (
                                               <tr className="border-b" key={i}>
                                                 <td className="py-2 px-2">{res.resource_name}</td>
+                                                <td className="py-2 px-2">{res.resource_type}</td>
                                                 <td className="py-2 px-2">{res.trainee_completed}</td>
                                               </tr>
                                             ))
@@ -1030,7 +1040,130 @@ const filteredRows = learningModules.filter(row => {
                                     </div>
                                   </td>
                                 </tr>
-                                )}
+                                )}  */}
+                                {expandedRow === index && (
+  <tr className="bg-gray-50">
+    <td colSpan={4} className="p-4 border-b">
+      <div className="border rounded-lg p-4 bg-white shadow-sm">
+        <div className="flex justify-between mb-3">
+          <span className="font-semibold text-gray-600">Resources</span>
+          <button
+            onClick={() => {
+              setSelectedModule({
+                learning_module_id: moduleId,
+                course_name: row.course_name,
+                module_name: row.module_name,
+                unit_name: row.unit_name,
+              });
+              setOpenRes(true);
+            }}
+            className="text-[#8DC63F] hover:text-[#7ab52f]"
+          >
+            <Plus />
+          </button>
+        </div>
+
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              <th className="py-3 px-4 text-left text-[#8DC63F]">Resource Type</th>
+              <th className="py-3 px-4 text-left text-[#8DC63F]">Total Topics</th>
+              <th className="py-3 px-4 text-left text-[#8DC63F]">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {entry.loading ? (
+              <tr>
+                <td colSpan={3} className="py-4 text-center">
+                  <ClipLoader size={30} />
+                </td>
+              </tr>
+            ) : entry.error ? (
+              <tr>
+                <td colSpan={3} className="py-4 text-center text-red-500">
+                  Failed to Load
+                </td>
+              </tr>
+            ) : entry.data.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="py-4 text-center text-gray-500">
+                  No Resources Found
+                </td>
+              </tr>
+            ) : (
+              (() => {
+                // Group resources by resource_type
+                const groupedByType = entry.data.reduce((acc, res) => {
+                  if (!acc[res.resource_type]) {
+                    acc[res.resource_type] = [];
+                  }
+                  acc[res.resource_type].push(res);
+                  return acc;
+                }, {});
+
+                return Object.entries(groupedByType).map(([type, items]) => (
+                  <React.Fragment key={type}>
+                    <tr className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4 font-medium text-gray-800">{type}</td>
+                      <td className="py-3 px-4 text-gray-700">{items.length}</td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => {
+                            const key = `${moduleId}-${type}`;
+                            setExpandedResource(expandedResource === key ? null : key);
+                          }}
+                          className="text-[#8DC63F] hover:text-[#7ab52f]"
+                        >
+                          <ChevronDown 
+                            size={22} 
+                            className={`transition-transform ${
+                              expandedResource === `${moduleId}-${type}` ? "rotate-180" : ""
+                            }`} 
+                          />
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedResource === `${moduleId}-${type}` && (
+                      <tr>
+                        <td colSpan={3} className="p-0">
+                          <div className="bg-gray-50 p-4">
+                            <table className="w-full text-sm bg-white rounded shadow-sm">
+                              <thead>
+                                <tr className="border-b bg-gray-100">
+                                  <th className="py-2 px-4 text-left text-gray-600">Topic Name</th>
+                                  <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {items.map((item) => (
+                                  <tr 
+                                    key={item.resource_id} 
+                                    className="border-b last:border-0 hover:bg-gray-50"
+                                  >
+                                    <td className="py-2 px-4 text-gray-800">
+                                      {item.resource_name}
+                                    </td>
+                                    <td className="py-2 px-4 text-gray-700">
+                                      {item.trainee_completed} / {item.total_resource}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ));
+              })()
+            )}
+          </tbody>
+        </table>
+      </div>
+    </td>
+  </tr>
+)}
                               </React.Fragment>
                             );
                           })
