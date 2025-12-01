@@ -146,7 +146,6 @@ function TraineeIndividual() {
                           alt="Profile"
                           className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer transition-all duration-300 hover:scale-105"
                         />
-                          // <UserRound size={20} className="text-[#8DC63F]" />
                       )}
                     </div>
                     <div className="text-center text-lg">
@@ -168,16 +167,6 @@ function TraineeIndividual() {
                         <div>{counts.total_courses_enrolled.size}</div>
                       </div>
                     </div>
-
-                    {/* <div className="border-t mt-6 pt-1 mb-2">
-                      <div className="flex justify-between items-center pt-2">
-                        <div className="text-gray-600 font-semibold">
-                          Total chapter access
-                        </div>
-                        <div>{counts.total_chapters_associated.size}</div>
-                      </div>
-                    </div> */}
-
                     <div className="border-t mt-6 pt-2 mb-2">
                       <div className="flex justify-between items-center pt-2">
                         <div className="text-gray-600 font-semibold">
@@ -187,8 +176,6 @@ function TraineeIndividual() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Right Side: Charts */}
                   <div className="col-span-3 p-4 bg-white shadow mt-4 transition-all duration-500">
                     <div className="text-gray-600 text-lg mb-3 flex justify-between items-center">
                       <div>Resources Statistics</div>
@@ -242,8 +229,6 @@ function TraineeIndividual() {
                     </div>
                   </div>
                 </div>
-
-                {/* Submissions */}
                 <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
                   <div className="mb-2 text-lg text-gray-600">Submissions</div>
                   <StreakHeatmap data={individualTraineeProfile.data} />

@@ -239,7 +239,6 @@ LEFT JOIN resource_data rd
 LEFT JOIN pdt 
     ON pdt.rid = rd.resource_id;`
     
-    // Query 2 — instructor + batch info
     const instructorQuery = `
       SELECT 
           bd.batch_id,
@@ -257,8 +256,6 @@ LEFT JOIN pdt
       )
       GROUP BY bd.batch_id, bd.batch_name;
     `;
-
-    // Run both queries concurrently
     Promise.all([
       new Promise((res, rej) =>
         client.query(userProgressQuery, [people_id], (err, result) =>
@@ -276,7 +273,7 @@ LEFT JOIN pdt
           status: 'Success',
           code: 200,
           data: progressData, 
-          instructors: instructorData, // 👈 separate key for instructor data
+          instructors: instructorData,
         });
       })
       .catch((err) => {

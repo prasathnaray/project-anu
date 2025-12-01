@@ -85,6 +85,8 @@ const getResourcesModel = (requester, module_id) => {
         SELECT 
             rd.resource_id,
             rd.resource_name,
+            rd.resource_topic,
+            rd.created_at,
             rd.resource_type,
             rd.learning_module_id,
             COUNT(pd.user_id) AS trainee_completed,
@@ -97,7 +99,10 @@ const getResourcesModel = (requester, module_id) => {
         rd.resource_id,
         rd.resource_name,
         rd.resource_type,
-        rd.learning_module_id;
+        rd.learning_module_id,
+        rd.resource_topic,
+        rd.created_at
+        ORDER BY rd.created_at ASC
       `;
       params = [module_id];
     }
