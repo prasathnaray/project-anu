@@ -63,7 +63,7 @@ const getResourcesModel = (requester, module_id) => {
 
     if (requester.role == 103) {
       // Individual user progress
-      query = `
+      query = `  
         SELECT 
           rd.resource_id,
           rd.resource_name,

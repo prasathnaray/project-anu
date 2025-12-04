@@ -24,7 +24,7 @@ const LoginModel = (user_mail, user_password) => {
                 // let token_data = role + '' + user_mail;
                 const accessToken = jwt.sign({user_mail,role}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '20m'})
                 const refreshToken = jwt.sign({ user_mail, role }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-                resolve({ accessToken: accessToken, refreshToken: refreshToken, id: user_mail, role: role, status: 'Login Authenticated', code: 200});
+                resolve({ accessToken: accessToken, refreshToken: refreshToken, id: user_mail, role: role, status: 'Login Authenticated', name: user.user_name, code: 200});
             })
     })
 }

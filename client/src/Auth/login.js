@@ -67,6 +67,7 @@ function Login() {
             if (response.data.code === 200) {
               const token = response.data.accessToken;
               localStorage.setItem('user_token', token);
+              sessionStorage.setItem('user_name', response.data.name);
               navigate('/dashboard');
             }
           } catch (err) {
