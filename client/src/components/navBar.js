@@ -232,9 +232,8 @@ const readNotification = async(id) => {
               {currentPath === "/profile" && <div>Profile</div>}
               {currentPath === "/settings" && <div>Settings</div>}
               {currentPath === "/course" && <div>Courses</div>}
-              {currentPath === "/batch" && <div>Course</div>}
               {currentPath === "/instructors" && <div>Instructors</div>}
-              {/* {currentPath === "/trainees" && <div>Trainees</div>} */}
+              {currentPath === "/batch" && <div>Batch</div>}
               {currentPath === "/vrspace" && <div>Realtime</div>}
               {currentPath.startsWith("/trainee") && <div>Trainee Details</div>}
             </div>

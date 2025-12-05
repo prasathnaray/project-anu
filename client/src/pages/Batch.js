@@ -671,7 +671,7 @@ function Batch()  {
                                                                         <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Batch Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Start date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                        {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>)}
                                                                         <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                         {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
                                                                 </tr>
@@ -747,9 +747,11 @@ function Batch()  {
                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                                                                 {getMonthYear(listBatch.batch_end_date)}
                                                                                 </td>
+                                                                                {decoded.role == 99 || decoded.role == 101 && (
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
+                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
                                                                                 </th>
+                                                                                )} 
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                 {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count ?? 0}
                                                                                 </th>

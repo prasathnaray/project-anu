@@ -21,66 +21,163 @@ const createBatchm = (batch_name, batch_start_date, batch_end_date, certificatio
                 })
         })
 }
+// const getBatchm = (requester, page, limit) => {
+//     const isPrivileged = [101, 102].includes(Number(requester.role));
+//     if(!isPrivileged) {
+//         return resolve({
+//             status: 'Unauthorized',
+//             code: 401,
+//             message: 'You do not have permission to access this course data.'
+//         });
+//     }
+//     const offset = (page - 1) * limit;
+//     return new Promise((resolve, reject) => {
+//         const query = `
+//         WITH role_counts AS (
+//   SELECT 
+//     b.batch_id,
+//     b.batch_name,
+//     b.batch_start_date,
+//     b.batch_end_date,
+//     ud.user_role,
+//     COUNT(*) AS role_count
+//   FROM 
+//     batch_data b
+//     LEFT JOIN batch_people_data bpd ON b.batch_id = ANY(bpd.batch_id)
+//     LEFT JOIN user_data ud ON bpd.user_id = ud.user_email
+//   GROUP BY 
+//     b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role
+// ),
+// batch_summary AS (
+//   SELECT
+//     COUNT(*) OVER() AS total_count,
+//     batch_id,
+//     batch_name,
+//     batch_start_date,
+//     batch_end_date,
+//     SUM(role_count) AS total_users,
+//     JSON_AGG(
+//       JSON_BUILD_OBJECT('role', user_role, 'count', role_count)
+//     ) FILTER (WHERE user_role IS NOT NULL) AS role_counts
+//   FROM 
+//     role_counts
+//   GROUP BY 
+//     batch_id, batch_name, batch_start_date, batch_end_date
+// )
+// SELECT *
+// FROM batch_summary
+// ORDER BY batch_name ASC
+// LIMIT $1 OFFSET $2;
+//         `;
+//         client.query(query, [limit, offset], (err, result) => {
+//             if(err)
+//             {
+//                 reject(err)
+//             }
+//             else
+//             {
+//                 resolve(result)
+//             }
+//         })
+//     })
+// }
 const getBatchm = (requester, page, limit) => {
-    const isPrivileged = [101, 102].includes(Number(requester.role));
-    if(!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to access this course data.'
-        });
-    }
+  return new Promise((resolve, reject) => {
+
+    const isAdmin = Number(requester.role) === 101; 
     const offset = (page - 1) * limit;
-    return new Promise((resolve, reject) => {
-        const query = `
+    let query;
+    let params;
+
+    if (isAdmin) {
+      query = `
         WITH role_counts AS (
-  SELECT 
-    b.batch_id,
-    b.batch_name,
-    b.batch_start_date,
-    b.batch_end_date,
-    ud.user_role,
-    COUNT(*) AS role_count
-  FROM 
-    batch_data b
-    LEFT JOIN batch_people_data bpd ON b.batch_id = ANY(bpd.batch_id)
-    LEFT JOIN user_data ud ON bpd.user_id = ud.user_email
-  GROUP BY 
-    b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role
-),
-batch_summary AS (
-  SELECT
-    COUNT(*) OVER() AS total_count,
-    batch_id,
-    batch_name,
-    batch_start_date,
-    batch_end_date,
-    SUM(role_count) AS total_users,
-    JSON_AGG(
-      JSON_BUILD_OBJECT('role', user_role, 'count', role_count)
-    ) FILTER (WHERE user_role IS NOT NULL) AS role_counts
-  FROM 
-    role_counts
-  GROUP BY 
-    batch_id, batch_name, batch_start_date, batch_end_date
-)
-SELECT *
-FROM batch_summary
-ORDER BY batch_name ASC
-LIMIT $1 OFFSET $2;
-        `;
-        client.query(query, [limit, offset], (err, result) => {
-            if(err)
-            {
-                reject(err)
-            }
-            else
-            {
-                resolve(result)
-            }
-        })
-    })
-}
+          SELECT 
+            b.batch_id,
+            b.batch_name,
+            b.batch_start_date,
+            b.batch_end_date,
+            ud.user_role,
+            COUNT(*) AS role_count
+          FROM 
+            batch_data b
+            LEFT JOIN batch_people_data bpd ON b.batch_id = ANY(bpd.batch_id)
+            LEFT JOIN user_data ud ON bpd.user_id = ud.user_email
+          GROUP BY 
+            b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role
+        ),
+        batch_summary AS (
+          SELECT
+            COUNT(*) OVER() AS total_count,
+            batch_id,
+            batch_name,
+            batch_start_date,
+            batch_end_date,
+            SUM(role_count) AS total_users,
+            JSON_AGG(JSON_BUILD_OBJECT('role', user_role, 'count', role_count))
+              FILTER (WHERE user_role IS NOT NULL) AS role_counts
+          FROM role_counts
+          GROUP BY batch_id, batch_name, batch_start_date, batch_end_date
+        )
+        SELECT * 
+        FROM batch_summary
+        ORDER BY batch_name ASC
+        LIMIT $1 OFFSET $2;
+      `;
+      params = [limit, offset];
+
+    } else {
+      query = `
+        WITH instructor_batches AS (
+            SELECT UNNEST(batch_id) AS batch_id
+            FROM batch_people_data
+            WHERE user_id = $3
+        ),
+        role_counts AS (
+            SELECT
+                bd.batch_id,
+                bd.batch_name,
+                bd.batch_start_date,
+                bd.batch_end_date,
+                ud.user_role,
+                COUNT(*) AS role_count
+            FROM 
+                batch_data bd
+                LEFT JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+                LEFT JOIN user_data ud ON bpd.user_id = ud.user_email
+            WHERE 
+                bd.batch_id IN (SELECT batch_id FROM instructor_batches)
+            GROUP BY 
+                bd.batch_id, bd.batch_name, bd.batch_start_date, bd.batch_end_date, ud.user_role
+        ),
+
+        batch_summary AS (
+            SELECT
+                COUNT(*) OVER() AS total_count,
+                batch_id,
+                batch_name,
+                batch_start_date,
+                batch_end_date,
+                JSON_AGG(JSON_BUILD_OBJECT('role', user_role, 'count', role_count))
+                    FILTER (WHERE user_role IS NOT NULL) AS role_counts
+            FROM role_counts
+            GROUP BY batch_id, batch_name, batch_start_date, batch_end_date
+        )
+        SELECT *
+        FROM batch_summary
+        ORDER BY batch_name ASC
+        LIMIT $1 OFFSET $2;
+      `;
+      params = [limit, offset, requester.user_mail];
+    }
+
+    client.query(query, params, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 const associateBatchm = (requester, batch_id, user_id) => {
     const isPrivileged = [101,  102].includes(Number(requester.role));
     if(!isPrivileged)

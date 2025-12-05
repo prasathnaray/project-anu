@@ -19,5 +19,4 @@ const PrivateRoute = () => {
     return <Navigate to="/" replace />;
   }
 };
-
 export default PrivateRoute;
