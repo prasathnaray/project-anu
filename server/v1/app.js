@@ -58,6 +58,7 @@ const getVolumeDataRouter = require('./routes/getVolumeDataRoute.js');
 const VolumeApprovalRouter = require('./routes/VolumeApprovalRoute.js');
 const getCertByCuriculumRouter = require('./routes/getCertByCurRoute.js');
 const GetCertificationDetailsByIdRouter = require('./routes/GetCertificationDetailsByIdRoute.js');
+const updateInstructorRouter = require('./routes/updateInstructorRoute.js')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -156,6 +157,8 @@ app.use('/api/v1', Authenticate, getIndividualTLRouter);
 app.use('/api/v1', Authenticate, induuidRouter);
 //batch profile 
 app.use('/api/v1', Authenticate, IndBatchProfileRouter);
+//batch update for instructor
+app.use('/api/v1', Authenticate, updateInstructorRouter);
 
 //volume upload 
 app.use('/api/v1', Authenticate, svUploadRouter);

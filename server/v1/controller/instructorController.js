@@ -1,4 +1,4 @@
-const {getInstructorsm, deleteInstructorsm} = require('../model/instructorm');
+const {getInstructorsm, deleteInstructorsm, updateInstructorsm} = require('../model/instructorm');
 
 const getInstructorData = async(req, res) => {
     const requester = req.user;
@@ -31,4 +31,22 @@ const instructorController = async(req, res) => {
         res.status(500).send(err);
     }
 }
-module.exports = {getInstructorData, instructorController};
+const updateInstructorController = async(req, res) => {
+    const requester = req.user;
+    const batch_id = req.body.batch_id;
+    const user_id = req.body.user_id;
+    try
+    {
+        const result = await updateInstructorsm(requester, batch_id, user_id);
+        res.status(200).json({
+                affectedRows: result.rowCount,  
+                status: `${result.rowCount==0? 'Data not available': 'updated successfully'}`
+        });
+    }
+
+    catch(err)
+    {
+        res.status(500).send(err);
+    }
+}
+module.exports = {getInstructorData, instructorController, updateInstructorController};

@@ -46,4 +46,28 @@ const deleteInstructorsm = (requester, user_mail) => {
         })
     })
 }
-module.exports = {getInstructorsm, deleteInstructorsm};
+const updateInstructorsm = (requester, batch_id, user_id) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101].includes(Number(requester.role))
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this profile.'
+            })
+        }
+        const pgArray = `{${batch_id.join(",")}}`;
+        client.query('update batch_people_data set batch_id = $1 where user_id=$2', [pgArray, user_id], (err, result) => {
+                if(err)
+                {
+                    return reject(err.message)
+                }
+                else
+                {
+                    return resolve(result);
+                }
+        })
+    })
+}
+module.exports = {getInstructorsm, deleteInstructorsm, updateInstructorsm};
