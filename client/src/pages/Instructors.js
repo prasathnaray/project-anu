@@ -202,8 +202,6 @@ function Instructors() {
         console.log(err)
       }
   }
-  // console.log(instructorDataUpdate)
-  // Check authentication
   const decoded = jwtDecode(token);
   if (!decoded.role) {
     return <Navigate to="/" replace />;
