@@ -766,24 +766,29 @@ function Batch()  {
                                                                                 transition-all ease-in-out duration-500 origin-top-right
                                                                                 ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
                                                                                 >
-                                                                                <button
-                                                                                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
-                                                                                        onClick={() => deleteSubmit(listBatch.batch_id)}
-                                                                                >
-                                                                                        Delete
-                                                                                </button>
+                                                                                        <button
+                                                                                                className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
+                                                                                                onClick={() => deleteSubmit(listBatch.batch_id)}
+                                                                                        >
+                                                                                                Delete
+                                                                                        </button>
+                                                                                        <button
+                                                                                                className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
+                                                                                                //onClick={() => deleteSubmit(listBatch.batch_id)}
+                                                                                        >
+                                                                                                Edit
+                                                                                        </button>
                                                                                 </div>
                                                                                 )}
                                                                                 </th>
                                                                         </tr>
                                                                         ))
                                                                         ) : (
-                                                                        // 🚫 NO DATA STATE
-                                                                        <tr>
-                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
-                                                                                No data found
-                                                                        </td>
-                                                                        </tr>
+                                                                                <tr>
+                                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                                                No data found
+                                                                                        </td>
+                                                                                </tr>
                                                                         )}
                                                                         </tbody>
 
