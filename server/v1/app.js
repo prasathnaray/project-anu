@@ -58,7 +58,8 @@ const getVolumeDataRouter = require('./routes/getVolumeDataRoute.js');
 const VolumeApprovalRouter = require('./routes/VolumeApprovalRoute.js');
 const getCertByCuriculumRouter = require('./routes/getCertByCurRoute.js');
 const GetCertificationDetailsByIdRouter = require('./routes/GetCertificationDetailsByIdRoute.js');
-const updateInstructorRouter = require('./routes/updateInstructorRoute.js')
+const updateInstructorRouter = require('./routes/updateInstructorRoute.js');
+const updateBatchRouter = require('./routes/updateBatchRouter.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -172,3 +173,5 @@ app.use('/api/v1', Authenticate, GetCertificationDetailsByIdRouter);
 //creating learning module
 app.use('/api/v1', Authenticate, CreateLearningModuleRouter);
 app.use('/api/v1', Authenticate, GetLearningModuleByIdRouter);
+//batch update route
+app.use('/api/v1', Authenticate, updateBatchRouter);

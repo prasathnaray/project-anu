@@ -39,6 +39,9 @@ import FilterBatch from "../components/admin/FilterBatch";
 import filterBatchAPI from "../API/filterBatchAPI";
 import GetCertificateByCurAPI from "../API/GetCertificateByCurAPI";
 import EditBatch from "../components/EditBatchTime";
+import UpdateBatchAPI from "../API/UpdateBatchAPI.js";
+import { ClipLoader } from "react-spinners";
+
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -265,6 +268,7 @@ function Batch()  {
         };
          console.log(batchData);
          //edit batch
+        const [loading, setLoading] = useState(false);
         const [selectedBatchData, setSelectedBatchData] = useState(null);
         const [editBatch, setEditBatch] = useState(false);
         const [newBatchEdit, setNewBatchEdit] = useState({
@@ -275,6 +279,7 @@ function Batch()  {
         const handleEditBatch = () => {
                 setEditBatch(!editBatch);
                 setNewBatchEdit({
+                        batch_id:'',
                         new_batch_name: '',
                         new_start_date: null,
                         new_end_date: null
@@ -287,6 +292,45 @@ function Batch()  {
                         [name]: value,
                 });
         };
+        const handleUpdateAPICall = async() => {
+                try
+                {
+                        if(!newBatchEdit.new_batch_name || !newBatchEdit.new_start_date || !newBatchEdit.new_end_date)
+                        {
+                                toast.error("please fill all the fields" , {
+                                        autoClose: 3000,
+                                        toastId: 'input-missing',
+                                        icon: false,
+                                        closeButton: CustomCloseButton,
+                                });
+                        }
+                        else{
+                                setLoading(true);
+                                //const token = localStorage.getItem('user_token');
+                                const response = await UpdateBatchAPI(newBatchEdit);
+                                if(response)
+                                {
+                                        toast.success("Batch Updated" , {
+                                                autoClose: 3000,
+                                                toastId: 'success-batch-updated',
+                                                icon: false,
+                                                closeButton: CustomCloseButton,
+                                        });
+                                        handleEditBatch();
+                                        BatchesData(token, page, rowsPerPage);
+                                }
+                        }
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+                finally
+                {
+                        setLoading(false);
+                }
+        }
+        console.log(newBatchEdit);
           const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
           const dropdownRefs = useRef({});  
           const toggleDropdown = (index) => {
@@ -311,7 +355,7 @@ function Batch()  {
              const [filteredUsers, setFilteredUsers] = useState([])
 
         //
-        const [loading, setLoading] = useState(false);
+        
         const BatchesData = async(token, page, limit) => {
                         //e.preventDefault()
                         try
@@ -802,6 +846,7 @@ function Batch()  {
                                                                                                 onClick={()=> {
                                                                                                         setSelectedBatchData(listBatch);
                                                                                                         setNewBatchEdit({
+                                                                                                                batch_id: listBatch.batch_id,
                                                                                                                 new_batch_name: listBatch.batch_name,
                                                                                                                 new_start_date: listBatch.batch_start_date,
                                                                                                                 new_end_date: listBatch.batch_end_date
@@ -1376,7 +1421,7 @@ function Batch()  {
                                 name="curiculum_name"
                                 value={batchData?.curiculum_name}
                                 MenuProps={{
-                                        disablePortal: false, // ← force to portal
+                                        disablePortal: false,
                                         anchorOrigin: {
                                         vertical: "bottom",
                                         horizontal: "left"
@@ -1387,7 +1432,7 @@ function Batch()  {
                                         },
                                         PaperProps: {
                                         style: {
-                                                zIndex: 1300 // must be higher than modal
+                                                zIndex: 1300
                                         }
                                         }
                                 }}
@@ -1556,7 +1601,26 @@ function Batch()  {
                 <EditBatch isVisible={editBatch} onClose={handleEditBatch}>
                     <div className="flex justify-end items-center gap-2">
                                 <button className="text-red-500 hover:bg-red-50 px-2 py-1 rounded" onClick={handleEditBatch}>Close</button>
-                                <button className="text-white bg-[#8DC63F] px-2 py-1 rounded">Update</button>
+                                {/* <button className="text-white bg-[#8DC63F] px-2 py-1 rounded" onClick={handleUpdateAPICall}>Update</button> */}
+                                <button
+                                        className={
+                                                loading
+                                                ? "bg-gray-300 text-gray-500 font-semibold rounded px-5 py-2 transition-all ease-in-out"
+                                                : "bg-[#8DC63F] text-white rounded px-2 py-1 transition-all ease-in-out"
+                                        }
+                                        onClick={handleUpdateAPICall}
+                                        disabled={loading}
+                                        >
+                                        {loading ? (
+                                                <div className="flex items-center gap-2">
+                                                        <ClipLoader size={20} cssOverride={{ borderWidth: "4px" }} />
+                                                        <span>Updating</span>
+                                                </div>
+                                        ) : (
+                                                "Update"
+                                        )}
+                                </button>
+
                     </div>
                     <div className="mt-5">
                         <TextField

@@ -401,4 +401,25 @@ const individualBatchStats = (requester, batch_id) => {
         })
     })
 }
-module.exports = {filterBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, individualBatchStats};
+const updateBatchm = (requester, batch_id, new_batch_name, new_start_date, new_end_date) => {
+    const isPrivileged = [101, 99].includes(Number(requester.role));
+    if (!isPrivileged) {
+            return Promise.resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            });
+    }
+    return new Promise((resolve, reject) => {
+        client.query('UPDATE batch_data SET batch_name=$1, batch_start_date=$2, batch_end_date=$3 WHERE batch_id=$4', [new_batch_name, new_start_date, new_end_date, batch_id], (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else {
+                resolve(result)
+            }
+        })
+    })
+}
+module.exports = {filterBatchm, updateBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, individualBatchStats};

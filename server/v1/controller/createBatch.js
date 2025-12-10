@@ -1,5 +1,5 @@
 const {generateBatchID} = require('../utils/idGenerator.js')
-const {createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, filterBatchm, individualBatchStats} = require('../model/Batchm.js')
+const {updateBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, filterBatchm, individualBatchStats} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
     const {batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name} = req.body;
@@ -154,4 +154,20 @@ const individualBatchC = async(req, res) => {
                 res.status(500).send(err)
         }
 }
-module.exports = {filterBatchC, individualBatchC, batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC, InTLListC}
+const updateBatchC = async(req, res) => {
+        const requester = req.user;
+        const {batch_id, new_batch_name, new_start_date, new_end_date} = req.body;
+        try
+        {       
+                await updateBatchm(requester, batch_id, new_batch_name, new_start_date, new_end_date)
+                res.status(200).json({
+                        status: 'Batch updated successfully',
+                        code: 200
+                });
+        }
+        catch(err)
+        {
+                res.status(500).send(err)
+        }
+}
+module.exports = {updateBatchC, filterBatchC, individualBatchC, batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC, InTLListC}
