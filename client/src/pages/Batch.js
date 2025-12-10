@@ -38,6 +38,7 @@ import TLToast from "../utils/TLToast";
 import FilterBatch from "../components/admin/FilterBatch";
 import filterBatchAPI from "../API/filterBatchAPI";
 import GetCertificateByCurAPI from "../API/GetCertificateByCurAPI";
+import EditBatch from "../components/EditBatchTime";
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
     <input
@@ -176,6 +177,7 @@ function Batch()  {
                                 instructor_name_filter: "",     
                 })
         }
+        
         //filter batch api calls
         const filterBatchCall = async(e) => {
                 e.preventDefault();
@@ -262,6 +264,29 @@ function Batch()  {
                 }
         };
          console.log(batchData);
+         //edit batch
+        const [selectedBatchData, setSelectedBatchData] = useState(null);
+        const [editBatch, setEditBatch] = useState(false);
+        const [newBatchEdit, setNewBatchEdit] = useState({
+                new_batch_name: '',
+                new_start_date: null,
+                new_end_date: null,
+        })
+        const handleEditBatch = () => {
+                setEditBatch(!editBatch);
+                setNewBatchEdit({
+                        new_batch_name: '',
+                        new_start_date: null,
+                        new_end_date: null
+                });
+        }
+        const handleChangee = (e) => {
+        const { name, value } = e.target;
+                setNewBatchEdit({
+                        ...newBatchEdit,
+                        [name]: value,
+                });
+        };
           const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
           const dropdownRefs = useRef({});  
           const toggleDropdown = (index) => {
@@ -774,7 +799,15 @@ function Batch()  {
                                                                                         </button>
                                                                                         <button
                                                                                                 className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
-                                                                                                //onClick={() => deleteSubmit(listBatch.batch_id)}
+                                                                                                onClick={()=> {
+                                                                                                        setSelectedBatchData(listBatch);
+                                                                                                        setNewBatchEdit({
+                                                                                                                new_batch_name: listBatch.batch_name,
+                                                                                                                new_start_date: listBatch.batch_start_date,
+                                                                                                                new_end_date: listBatch.batch_end_date
+                                                                                                        });
+                                                                                                        setEditBatch(true)
+                                                                                                }}
                                                                                         >
                                                                                                 Edit
                                                                                         </button>
@@ -974,18 +1007,7 @@ function Batch()  {
                             </FormControl>
                         </div> 
                         <div className="mt-5 grid grid-cols-2 items-center gap-6">
-                                {/* <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        size="small"
-                                        sx={{ minHeight: "35px"}}
-                                        id="outlined-basic"
-                                        label="Course"
-                                        onChange={handleTChange}
-                                        name="course_id"
-                                        value={targetedLearning?.course_id}
-                                /> */}
-                                <FormControl
+                            <FormControl
                               fullWidth
                               variant="outlined"
                               size="small"
@@ -1531,6 +1553,71 @@ function Batch()  {
                                       </div>
                                 </>
                 </FilterBatch>
+                <EditBatch isVisible={editBatch} onClose={handleEditBatch}>
+                    <div className="flex justify-end items-center gap-2">
+                                <button className="text-red-500 hover:bg-red-50 px-2 py-1 rounded" onClick={handleEditBatch}>Close</button>
+                                <button className="text-white bg-[#8DC63F] px-2 py-1 rounded">Update</button>
+                    </div>
+                    <div className="mt-5">
+                        <TextField
+                                fullWidth
+                                variant="outlined"
+                                size="small"
+                                sx={{ minHeight: "35px" }}
+                                id="outlined-basic"
+                                label="Batch name"
+                                name="new_batch_name"
+                                onChange={handleChangee}
+                                value={newBatchEdit.new_batch_name}
+                        />
+                    </div>
+                    <div className="flex items-center gap-5 mt-5">
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DatePicker
+                                        label="Start Date"
+                                        value={
+                                        newBatchEdit.new_start_date
+                                                ? dayjs(newBatchEdit.new_start_date)
+                                                : null
+                                        }
+                                        onChange={(date) => {
+                                                setEndDate(date);
+                                                setNewBatchEdit(prev => ({ ...prev, new_start_date: date }));
+                                        }}
+                                        slotProps={{
+                                        textField: {
+                                                fullWidth: true,
+                                                variant: "outlined",
+                                                size: "small",
+                                                sx: { minHeight: "35px" },
+                                        },
+                                        }}
+                                        />
+                              </LocalizationProvider>
+                              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                        <DatePicker
+                                        label="End Date"
+                                        value={
+                                        newBatchEdit.new_end_date
+                                                ? dayjs(newBatchEdit.new_end_date)
+                                                : null
+                                        }
+                                        onChange={(date) => {
+                                                setEndDate(date);
+                                                setNewBatchEdit(prev => ({ ...prev, new_end_date: date }));
+                                        }}
+                                        slotProps={{
+                                        textField: {
+                                                fullWidth: true,
+                                                variant: "outlined",
+                                                size: "small",
+                                                sx: { minHeight: "35px" },
+                                        },
+                                        }}
+                                        />
+                              </LocalizationProvider>
+                    </div>
+                </EditBatch>
     </div>
     )
 }
