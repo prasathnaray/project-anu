@@ -1,4 +1,4 @@
-const { createModuleModel , getModuleModel, subModuleModel, completionModel, createNewModuleModel} = require('../model/modulem.js');
+const { createModuleModel , getModuleModel, subModuleModel, completionModel, createNewModuleModel, calcTestScoreModel} = require('../model/modulem.js');
 const CreateModule = async (req, res) => {
     const requester = req.user;
     const { course_id, chapter_name } = req.body;
@@ -78,6 +78,7 @@ const completeModule = async (req, res) => {
         res.status(500).send(err)
     }
 }
+// controller
 const ModuleNewController = async (req, res) => {
     const requester = req.user;
     const { chapter_id, module_name } = req.body;  
@@ -105,4 +106,25 @@ const ModuleNewController = async (req, res) => {
         res.status(500).send(err);
     }
 }
-module.exports = {CreateModule, GetModule, subModuleController, completeModule, ModuleNewController};
+const calcTestScoreController = async (req, res) => {
+    const requester = req.user;
+    const {r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation} = req.body;
+    if(!r_id || r_id.trim() === "" || !plane_identification || plane_identification.trim() === "" || !image_optimization || image_optimization.trim() === "" || !measurement || measurement.trim() === "" || !diagnostic_interpretation || diagnostic_interpretation.trim() === "")
+    {
+        return res.status(400).json({
+            status: "Bad Request",
+            code: 400,
+            message: "All fields are required and should not be empty"
+        });
+    }
+    try {
+        const result = await calcTestScoreModel(requester, r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation);
+        res.status(200).send({
+            status: "Success",
+            code: 200
+        });
+    } catch (err) {
+        res.status(500).send(err);
+    }
+} 
+module.exports = {CreateModule, GetModule, subModuleController, completeModule, ModuleNewController, calcTestScoreController};

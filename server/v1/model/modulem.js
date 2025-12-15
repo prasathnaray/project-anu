@@ -288,6 +288,7 @@ const getSubModuleModel = (requester) => {
 }
 const completionModel = (is_completed, r_id, requester) => {
     return new Promise((resolve, reject) => {
+        //test
             const isPrivileged = [103].includes(Number(requester.role))
             if(!isPrivileged)
             {
@@ -309,6 +310,8 @@ const completionModel = (is_completed, r_id, requester) => {
             })
     })
 }
+
+// model
 const createNewModuleModel = (module_name, chapter_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [101].includes(Number(requester.role))
@@ -332,4 +335,27 @@ const createNewModuleModel = (module_name, chapter_id, requester) => {
         })
     })
 }
-module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel, createNewModuleModel}
+const calcTestScoreModel = (requester, r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation) => {
+    return new Promise((resolve, reject) => { 
+        const isPrivileged = [101,103].includes(Number(requester.role))
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this profile.'
+            })
+        }
+        client.query('INSERT INTO course_test_data(r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation, user_id) VALUES($1, $2, $3, $4, $5, $6)', [r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation, requester.user_mail], (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else 
+            {
+                resolve(result)
+            }
+        })
+    });
+}
+module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel, createNewModuleModel, calcTestScoreModel}
