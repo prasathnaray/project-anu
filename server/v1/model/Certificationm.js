@@ -1,7 +1,7 @@
 const client = require('../utils/conn');
 const getCertByCurm = (curiculum_id, requester) => {
     return new Promise((resolve, reject) => {
-        const isPriviledged = [99, 101].includes(Number(requester.role));
+        const isPriviledged = [99, 101, 102].includes(Number(requester.role));
         if(!isPriviledged)
         {
             return resolve({

@@ -11,6 +11,7 @@ import UsersA from "./DashboardComponents/UsersA";
 import CourseA from "./DashboardComponents/CourseA";
 import BatchA from "./DashboardComponents/BatchA";
 import { useNavigate } from "react-router-dom";
+import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
 // import { useNotifications } from '../../Hooks/useNotification';
 function AdminDashboard(){
     // const { notifications, loading } = useNotifications();
@@ -176,7 +177,26 @@ function AdminDashboard(){
                 </div>
               </div>
             </div>
-            <div className="my-2 mx-5 text-lg" style={{ fontWeight: 'bold', color: '#4B5563' }}>Gender Population</div>
+            <div className="flex justify-between items-center" style={{ fontWeight: 'bold', color: '#4B5563' }}>
+                <div className="my-2 mx-5 text-lg">Test Completion Rate</div>
+                <div className="mx-5">
+                  <FormControl variant="outlined" size="small" sx={{ minWidth: 160 }}>
+                    {/* <InputLabel id="test-completion-label">Period</InputLabel> */}
+                    <Select
+                      labelId="test-completion-label"
+                      id="test-completion-select"
+                      // value={period}
+                      // label="Period"
+                      // onChange={handlePeriodChange}
+                    >
+                      <MenuItem value="today">Today</MenuItem>
+                      <MenuItem value="week">This Week</MenuItem>
+                      <MenuItem value="month">This Month</MenuItem>
+                      <MenuItem value="all">All Time</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+            </div>
             <div className="flex justify-center items-center">
               <div className="ms-5">
                  <BasicPie />

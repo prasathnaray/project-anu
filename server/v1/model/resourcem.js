@@ -49,7 +49,7 @@ const resourcem = (learning_module_id, resource_type, topic, resource_name, requ
 
 const getResourcesModel = (requester, module_id) => {
   return new Promise((resolve, reject) => {
-    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    const isPrivileged = [99, 101, 103, 102].includes(Number(requester.role));
     if (!isPrivileged) {
       return resolve({
         status: 'Unauthorized',
@@ -106,7 +106,6 @@ const getResourcesModel = (requester, module_id) => {
       `;
       params = [module_id];
     }
-
     client.query(query, params, (err, result) => {
       if (err) return reject(err);
       resolve(result);

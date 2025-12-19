@@ -238,7 +238,7 @@ const createTargetedLearning = (requester, tar_name, curiculum_id, certificate_i
      const safeResourceIds = Array.isArray(resources_id) && resources_id.length > 0 ? resources_id : null;
      const traineeIds = Array.isArray(trainee_id) && trainee_id.length > 0 ? trainee_id : null;
     return new Promise((resolve, reject) => {
-        client.query('INSERT INTO targeted_learning(tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)', [tar_name, curiculum_id, certificate_id, learning_module_id, safeResourceIds, start_date, end_date, resource_type, traineeIds], (err, result) => {
+        client.query('INSERT INTO targeted_learning(tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id, created_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [tar_name, curiculum_id, certificate_id, learning_module_id, safeResourceIds, start_date, end_date, resource_type, traineeIds, requester.user_mail], (err, result) => {
             if(err)
             {
                 return reject(err)

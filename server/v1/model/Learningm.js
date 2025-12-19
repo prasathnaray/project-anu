@@ -25,7 +25,7 @@ const Learningm = (certificate_id, course_name, module_name, unit_name, requeste
 
 const getLearningByidm = (certificate_id, requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [99, 101].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
         if(!isPrivileged)
         {
             return resolve({
@@ -48,7 +48,7 @@ const getLearningByidm = (certificate_id, requester) => {
 }
 const getResourceBylmandrt = (requester, r_type, learning_module_id) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [99, 101].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
         if(!isPrivileged)
         {
             return resolve({
