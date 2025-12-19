@@ -1,4 +1,4 @@
-const { Learningm, getLearningByidm } = require("../model/Learningm");
+const { Learningm, getLearningByidm, getResourceBylmandrt } = require("../model/Learningm");
 
 const createLearningController = async (req, res) => {
     const requester = req.user;
@@ -34,4 +34,16 @@ const getLearningByIdController = async (req, res) => {
         res.status(500).send(err);
     }
 };
-module.exports = { createLearningController, getLearningByIdController};
+const getResourceBylmandrtController = async (req, res) => {
+    const requester = req.user;
+    const { r_type, learning_module_id } = req.query;
+    try {
+        const result = await getResourceBylmandrt(requester, r_type, learning_module_id);
+        res.status(200).send(result);
+    }
+    catch (err) {
+        res.status(500).send(err);
+        console.log(err);
+    }
+};
+module.exports = {createLearningController, getLearningByIdController, getResourceBylmandrtController };

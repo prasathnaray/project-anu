@@ -56,11 +56,11 @@ const deleteBatchc = async(req, res) => {
 
 }
 const createTargetedLearningC = async(req, res) => {
-        const {tar_name, course_id, trainee_id, curiculum_id, chapter_id, module_id, resources_id, start_date, end_date} = req.body;
+        const {tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id} = req.body;
         const requester = req.user;
         try
         {
-                if(!tar_name || !curiculum_id || !chapter_id || !module_id || !resources_id || !start_date || !end_date || !course_id || !trainee_id)
+                if(!tar_name || !curiculum_id || !certificate_id || !learning_module_id || !resources_id || !start_date || !end_date || !resource_type || !trainee_id)
                 {
                         res.status(400).json({
                                 code:400,
@@ -69,7 +69,7 @@ const createTargetedLearningC = async(req, res) => {
                 }
                 else
                 {
-                        const result = await createTargetedLearning(requester, tar_name, curiculum_id, chapter_id, module_id, resources_id, start_date, end_date, course_id, trainee_id)
+                        const result = await createTargetedLearning(requester, tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id)
                         res.status(200).json({
                                 code: 200,
                                 status: "Targeted learning created successfully"

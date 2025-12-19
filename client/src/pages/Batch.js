@@ -41,6 +41,8 @@ import GetCertificateByCurAPI from "../API/GetCertificateByCurAPI";
 import EditBatch from "../components/EditBatchTime";
 import UpdateBatchAPI from "../API/UpdateBatchAPI.js";
 import { ClipLoader } from "react-spinners";
+import GetLearningModuleByIdAPI from "../API/GetLearningModuleByIdAPI.js";
+import getResourceBylmandrtAPI from "../API/getResourceBylmandrtAPI.js";
 
 const CustomDateInput = React.forwardRef(({ value, onClick, onChange }, ref) => (
   <div className="relative w-full mt-5">
@@ -464,12 +466,12 @@ function Batch()  {
                 }
         }
         const [chapterData, setChapterData] = React.useState([]);
-        const getChaptersByCorData = async(course_id) => {
+        const getLMByCerData = async(course_id) => {
                 if(!course_id) return;
                 try
                 {
                         const token = localStorage.getItem("user_token");
-                        const response  = await getChapterAPI(token, course_id);
+                        const response  = await GetLearningModuleByIdAPI(token, course_id);
                         setChapterData(response.data);
                 }
                 catch(err)
@@ -498,8 +500,21 @@ function Batch()  {
                 try
                 {
                         const token = localStorage.getItem('user_token');
-                        const response = await GetResourcesModuleIdsAPI(token, module_id);
+                        const response = await getResourceAPI(token, module_id);
                         setResourceList(response.data);
+                }
+                catch(err)
+                {
+                        console.log(err)
+                }
+        }
+        const [resListData, setresListData] = React.useState([])
+        const getResourcewlmandrt = async(learning_module_id, r_type) => {
+                try
+                {
+                        const token = localStorage.getItem('user_token');
+                        const response = await getResourceBylmandrtAPI(token, learning_module_id, r_type);
+                        setresListData(response.data);
                 }
                 catch(err)
                 {
@@ -516,9 +531,10 @@ function Batch()  {
                 const [targetedLearning, setTargetedLearningState] = React.useState({
                         tar_name: "",
                         curiculum_id: "",
-                        course_id: "",
-                        chapter_id: "",
-                        module_id: [],
+                        certificate_id: "",
+                        learning_module_id: "",
+                        // module_id: [],
+                        resource_type: "",
                         resources_id: [],
                         trainee_id: [],
                         start_date: "",
@@ -541,25 +557,30 @@ function Batch()  {
                                 if (name === "curiculum_id" && value) {
                                         getCourseByCurData(value);
                                 }
-                                if (name === "course_id" && value) {
-                                      getChaptersByCorData(value);  
+                                if (name === "certificate_id" && value) { 
+                                      getLMByCerData(value);
                                 }
-                                if(name === "chapter_id" && value)
+                                if(name === "learning_module_id" && value)
                                 {
-                                     getModulesbyChapter(value);
+                                     getResourceByModule(value)
+                                     //getModulesbyChapter(value);
                                 }
-                                if(name === "module_id" && value)
+                                if(name === "resource_type" && value)
                                 {
-                                //      getResourceByModule(value)    
-                                        getResourceByModule(value);
+                                        getResourcewlmandrt(targetedLearning.learning_module_id, value)
                                 }
+                                // if(name === "resources_id" && value)
+                                // {
+                                            
+                                //        // getResourceAPI(value);
+                                // }
                         }
                 };
                 const postTargetedAPICall = async(e) => {
                         e.preventDefault();
                         try
                         {
-                                if(!targetedLearning.tar_name|| !targetedLearning.curiculum_id || !targetedLearning.course_id || !targetedLearning.chapter_id || !targetedLearning.module_id || !targetedLearning.resources_id || !targetedLearning.trainee_id || !targetedLearning.start_date || !targetedLearning.end_date)
+                                if(!targetedLearning.tar_name|| !targetedLearning.curiculum_id || !targetedLearning.certificate_id || !targetedLearning.learning_module_id || !targetedLearning.resource_type || !targetedLearning.resources_id || !targetedLearning.trainee_id || !targetedLearning.start_date || !targetedLearning.end_date)
                                 {
                                          toast.error("please fill all the fields" , {
                                                         autoClose: 3000,
@@ -634,6 +655,15 @@ function Batch()  {
                 //         console.log(traineeState);
                 // }, [])
                 //console.log(traineeState);
+                // resource type
+                const safeResourceList = Array.isArray(resourceList) ? resourceList : []; 
+                const resourceTypes = Array.from(
+                        new Set(
+                        safeResourceList
+                        .map((r) => r?.resource_type)
+                        .filter(Boolean)
+                        )
+                );
 
 
 
@@ -910,13 +940,13 @@ function Batch()  {
                                                                                                         tarList.map((tarList, index) => (
                                                                                                         <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                                                <a href={`/batch/${tarList.target_learning_id}`}>{tarList.tar_name}</a>
+                                                                                                                        <a href={`/batch/${tarList.target_learning_id}`}>{tarList.tar_name}</a>
                                                                                                                 </td>
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                                                {getMonthYear(tarList.start_date)}
+                                                                                                                        {getMonthYear(tarList.start_date)}
                                                                                                                 </td>
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                                                {getMonthYear(tarList.end_date)}
+                                                                                                                        {getMonthYear(tarList.end_date)}
                                                                                                                 </td>
                                                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                                                 {/* {                       tarList?.role_counts == null ? 0 : tarList?.role_counts[0]?.count} */}
@@ -1051,21 +1081,21 @@ function Batch()  {
                               </Select>
                             </FormControl>
                         </div> 
-                        <div className="mt-5 grid grid-cols-2 items-center gap-6">
+                        <div className="mt-5 grid grid-cols-1 items-center gap-4">
                             <FormControl
                               fullWidth
                               variant="outlined"
                               size="small"
                               sx={{ minHeight: "35px" }}
                             >
-                              <InputLabel id="program-select-label">Select Course</InputLabel>
+                              <InputLabel id="program-select-label">Select Certificate</InputLabel>
                               <Select
                                 labelId="program-select-label"
-                                label="Select Course"
+                                label="Select Certificate"
                                 className=""
                                 onChange={handleTChange}
-                                name="course_id"
-                                value={targetedLearning?.course_id}
+                                name="certificate_id"
+                                value={targetedLearning?.certificate_id}
                                 MenuProps={{
                                         disablePortal: false, // ← force to portal
                                         anchorOrigin: {
@@ -1085,8 +1115,8 @@ function Batch()  {
                               >
                                         {Array.isArray(corList) && corList.length > 0 ? (
                                                 corList.map((data, index) => (
-                                                        <MenuItem key={index} value={data?.course_id}>
-                                                                {data?.course_name}
+                                                        <MenuItem key={index} value={data?.certificate_id}>
+                                                                {data?.certificate_name}
                                                         </MenuItem>
                                                 ))
                                         ) : (
@@ -1094,22 +1124,22 @@ function Batch()  {
                                         )}
                               </Select>
                             </FormControl>
-                                <FormControl
+                           <FormControl
                               fullWidth
                               variant="outlined"
                               size="small"
                               sx={{ minHeight: "35px" }}
                             >
-                              <InputLabel id="program-select-label">Select Chapter</InputLabel>
+                              <InputLabel id="program-select-label">Select Learning Modules</InputLabel>
                               <Select
                                 labelId="program-select-label"
-                                label="Select Chapter"
+                                label="Select Learning Modules"
                                 className=""
                                 onChange={handleTChange}
-                                name="chapter_id"
-                                value={targetedLearning?.chapter_id}
+                                name="learning_module_id"
+                                value={targetedLearning?.learning_module_id}
                                 MenuProps={{
-                                        disablePortal: false, // ← force to portal
+                                        disablePortal: false,
                                         anchorOrigin: {
                                         vertical: "bottom",
                                         horizontal: "left"
@@ -1120,48 +1150,98 @@ function Batch()  {
                                         },
                                         PaperProps: {
                                         style: {
-                                                zIndex: 1300 // must be higher than modal
+                                                zIndex: 1300
                                         }
                                         }
                                 }}
                               >
-                                        {Array.isArray(chapterData) && chapterData.length > 0 ? (
+                                        {/* {Array.isArray(chapterData) && chapterData.length > 0 ? (
                                                 chapterData.map((data, index) => (
-                                                        <MenuItem key={index} value={data?.chapter_id}>
-                                                                {data?.chapter_name}
+                                                        const label = [
+
+                                                        ]
+                                                        <MenuItem key={index} value={data?.learning_module_id}>
+                                                                {data?.course_name}-{data?.module_name}-{data?.unit_name}
                                                         </MenuItem>
                                                 ))
+                                        ) : (
+                                                <MenuItem disabled>No data found</MenuItem>
+                                        )} */}
+                                        {Array.isArray(chapterData) && chapterData.length > 0 ? (
+                                                chapterData.map((data, index) => {
+                                                const label = [
+                                                        data?.course_name,
+                                                        data?.module_name,
+                                                        data?.unit_name,
+                                                ]
+                                                        .filter(Boolean) // removes undefined, null, empty strings
+                                                        .join(" - ");
+
+                                                return (
+                                                <MenuItem key={index} value={data?.learning_module_id}>
+                                                        {label}
+                                                </MenuItem>
+                                                );
+                                        })
                                         ) : (
                                                 <MenuItem disabled>No data found</MenuItem>
                                         )}
                               </Select>
                             </FormControl>
-                                {/* <TextField
-                                        fullWidth
-                                        variant="outlined"
-                                        size="small"
-                                        sx={{ minHeight: "35px"}}
-                                        id="outlined-basic"
-                                        label="Modules"
-                                        onChange={handleTChange}
-                                        value={targetedLearning?.module_id || []}
-                                        name="module_id"
-                                /> */}
-                                <FormControl
+                            </div>
+                            <div className="mt-5">
+                                        <FormControl 
+                                                fullWidth
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{minHeight: "35px"}}
+
+                                        >
+                                              <InputLabel id="program-select-label">Select Resource Type</InputLabel>
+                                              <Select
+                                                labelId="program-select-label"
+                                                label="Select Resource Type"
+                                                name="resource_type"
+                                                onChange={handleTChange}
+                                                value={targetedLearning?.resource_type || ""}
+                                               >
+                                                        {/* {Array.isArray(resourceList) && resourceList.length > 0 ? (
+                                                                resourceList.map((data, index) => (
+                                                                        <MenuItem key={index} value={data?.resource_type}>
+                                                                                {data?.resource_type}
+                                                                        </MenuItem>
+                                                                ))
+                                                        ) : (
+                                                                <MenuItem disabled>No data found</MenuItem>
+                                                        )} */}
+                                                        {resourceTypes.length > 0 ? (
+                                                                resourceTypes.map((type) => (
+                                                                        <MenuItem key={type} value={type}>
+                                                                                {type}
+                                                                        </MenuItem>
+                                                                ))
+                                                        ) : (
+                                                                <MenuItem disabled>No data found</MenuItem>
+                                                        )}
+                                               </Select>
+                                        </FormControl>
+                            </div>
+                            <div className="mt-5">
+                            <FormControl
                               fullWidth
                               variant="outlined"
                               size="small"
                               sx={{ minHeight: "35px" }}
                             >
-                              <InputLabel id="chip-select-label">Select Modules</InputLabel>
+                              <InputLabel id="chip-select-label">Select Resources</InputLabel>
                               <Select
                                 multiple
                                 labelId="chip-select-label"
-                                label="Select Modules"
+                                label="Select Resources"
                                 className=""
                                 onChange={handleTChange}
-                                name="module_id"
-                                value={targetedLearning?.module_id || []}
+                                name="resources_id"
+                                value={targetedLearning?.resources_id || []}
                                  MenuProps={{
                                         disablePortal: false, // ← force to portal
                                         anchorOrigin: {
@@ -1182,11 +1262,12 @@ function Batch()  {
                                          Array.isArray(selectedIds) ? (
                                                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                                         {selectedIds.map((id) => {
-                                                        const module = moduleList.find((m) => m.module_id === id);
+                                                        const module = resListData.find((m) => m.resource_id === id);
+                                                        // const label = resource?.resource_type || resource?.resource_name || id;
                                                         return (
                                                         <Chip
                                                                 key={id}
-                                                                label={module ? module.module_name : id}
+                                                                label={module ? module.resource_name : id}
                                                                 sx={{ borderRadius: "4px" }}
                                                         />
                                                         );
@@ -1195,17 +1276,27 @@ function Batch()  {
                                                 ) : null 
                                 )}
                               >
-                                        {Array.isArray(moduleList) && moduleList.length > 0 ? (
-                                                moduleList.map((data, index) => (
-                                                        <MenuItem key={index} value={data?.module_id}>
-                                                        {data?.module_name}
-                                                        </MenuItem>
-                                                ))
+                                        {Array.isArray(resListData) && resListData.length > 0 ? (
+                                                resListData.map((data, index) => {
+                                                        const label = [
+                                                                data?.resource_name,
+                                                                data?.resource_type,
+                                                                data?.resource_topic,
+                                                        ]
+                                                        .filter(Boolean) // removes undefined, null, empty strings
+                                                        .join("-");
+                                                        return (
+                                                                <MenuItem key={index} value={data?.resource_id}>
+                                                                        {label}
+                                                                </MenuItem>
+                                                        );
+                        })
                                         ) : (
                                                 <MenuItem disabled>No data found</MenuItem>
                                         )}
                               </Select>
                             </FormControl>
+                            </div>
                                 {/* <TextField
                                         fullWidth
                                         variant="outlined"
@@ -1217,7 +1308,7 @@ function Batch()  {
                                         name="resources_id"
                                         value={targetedLearning?.resources_id || []}
                                 /> */}
-                                <FormControl
+                                {/* <FormControl
                               fullWidth
                               variant="outlined"
                               size="small"
@@ -1268,15 +1359,14 @@ function Batch()  {
                                         {Array.isArray(resourceList) && resourceList.length > 0 ? (
                                                 resourceList.map((data, index) => (
                                                         <MenuItem key={index} value={data?.resource_id}>
-                                                        {data?.resource_name}
+                                                                {data?.resource_name}
                                                         </MenuItem>
                                                 ))
                                         ) : (
                                                 <MenuItem disabled>No data found</MenuItem>
                                         )}
                               </Select>
-                            </FormControl>
-                        </div>
+                            </FormControl> */}
                         <div className="mt-5 relative overflow-visible z-[1200]">
                             <FormControl
                                 fullWidth

@@ -46,4 +46,27 @@ const getLearningByidm = (certificate_id, requester) => {
         })
     })
 }
-module.exports = {Learningm, getLearningByidm};
+const getResourceBylmandrt = (requester, r_type, learning_module_id) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101].includes(Number(requester.role));
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: "You don't have a persmission"
+            })
+        }
+        client.query('select * from resource_data where resource_type=$1 AND learning_module_id=$2;',[r_type, learning_module_id], (err, result) => {    
+            if(err)
+            {
+                return reject(err)
+            }
+            else
+            {
+                return resolve(result.rows)
+            }
+        })
+    })
+}
+module.exports = {Learningm, getLearningByidm, getResourceBylmandrt};
