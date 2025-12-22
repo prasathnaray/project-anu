@@ -345,6 +345,32 @@ LEFT JOIN pdt
       )
       GROUP BY bd.batch_id, bd.batch_name;
     `;
+
+    const testDataQuery = `SELECT 
+    rd.resource_id,
+    rd.resource_name,
+    rd.resource_type,
+    ctd.plane_identification,
+    ctd.image_optimization,
+    ctd.measurement,
+    ctd.diagnostic_interpretation,
+    ctd.created_at,
+    lm.learning_module_id,
+    lm.module_name,
+    lm.unit_name,
+    lm.course_name,
+    cd.certificate_name
+FROM user_data ud
+JOIN course_test_data ctd 
+    ON ud.user_email = ctd.user_id
+JOIN resource_data rd 
+    ON rd.resource_id = ctd.r_id
+JOIN learning_module lm 
+    ON lm.learning_module_id = rd.learning_module_id
+JOIN certification_data cd 
+    ON cd.certificate_id = lm.certificate_id
+WHERE ud.people_id = $1
+ORDER BY ctd.created_at DESC;`;
     Promise.all([
       new Promise((res, rej) =>
         client.query(userProgressQuery, [people_id], (err, result) =>
@@ -356,13 +382,19 @@ LEFT JOIN pdt
           err ? rej(err) : res(result.rows)
         )
       ),
+      new Promise((res, rej) => 
+        client.query(testDataQuery, [people_id], (err, result) =>
+          err ? rej(err) : res(result.rows)
+        )
+      )
     ])
-      .then(([progressData, instructorData]) => {
+      .then(([progressData, instructorData, testData]) => {
         resolve({
           status: 'Success',
           code: 200,
           data: progressData, 
           instructors: instructorData,
+          testQuery: testData
         });
       })
       .catch((err) => {

@@ -108,9 +108,19 @@ function AddTrainee() {
       try
       {
           const result = await AddTraineeAPI(tokenData, formData);
-          toast.success(`Trainee enabled successfully`);
+          if(result.status === 200 && roleCode === 103)
+          {
+            toast.success(`Trainee added successfully`);
+            // return <Navigate to="/trainee" replace/> 
+            setRedirect(true)
+          }
+          else
+          {
+              toast.success(`Instructor added successfully`);
+              setRedirect(true)
+          }
           // return <Navigate to="/trainee" replace/> 
-          setRedirect(true)
+          
       } 
       catch(err)
       {
