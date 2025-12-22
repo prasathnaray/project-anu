@@ -611,7 +611,6 @@ function TraineeIndividual() {
                         /* ✅ Pass selectedTestData to the chart component */
                         <TestScoreBarChart testData={selectedTestData} />
                       ) : (
-                        /* ✅ Show "Nothing to Show" message */
                         <div className="flex items-center justify-center h-[320px] text-gray-400 text-lg">
                           Nothing to Show
                         </div>
