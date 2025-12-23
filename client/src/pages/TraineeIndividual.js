@@ -323,6 +323,7 @@ import TraineeCompletionTable from "../components/admin/TraineeCompletionTable";
 import { UserRound } from "lucide-react";
 import TestScoreBarChart from "../charts/TestScoreBarChart";
 import { FormControl, MenuItem, Select } from "@mui/material";
+import TestByCertificateChart from "../charts/TestByCertificateChart";
 
 function TraineeIndividual() {
   const navigate = useNavigate();
@@ -562,19 +563,15 @@ function TraineeIndividual() {
                     </div>
                   </div>
                 </div>
-
-                {/* Submissions Section */}
                 <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
-                  <div className="mb-2 text-lg text-gray-600">Submissions</div>
+                  <div className="mb-2 text-lg text-gray-600">Learning Streaks</div>
                   <StreakHeatmap data={individualTraineeProfile.data} />
                 </div>
-
-                {/* ✅ Score Breakdown Section - UPDATED */}
                 <div className="grid grid-cols-2 mb-2">
                   <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
                     <div className="flex justify-between items-center mb-4">
-                      <div className="mb-2 text-lg text-gray-600">
-                        Score Breakdown
+                      <div className="mb-2 text-md text-gray-600">
+                        Test Score Breakdown
                       </div>
                       <div>
                         {testResources.length > 0 ? (
@@ -588,15 +585,25 @@ function TraineeIndividual() {
                               onChange={(e) => setSelectedTestId(e.target.value)}
                               //displayEmpty
                             >
-                              {testResources.map((test) => (
-                                <MenuItem
+                              {testResources.map((test) => {
+                                const label = [
+                                   test.certificate_name,
+                                   test.course_name,
+                                   test.resource_name,
+                                   test.module_name,
+                                   test.course_name
+                                ]
+                                return (
+                                  <MenuItem
                                   key={test.resource_id}
                                   value={test.resource_id}
                                 >
-                                  {test.resource_name} - {test.module_name} -{" "}
-                                  {test.course_name}
+                                  {/* {test.resource_name} - {test.module_name} -{" "}
+                                  {test.course_name} */}
+                                    {label.filter(Boolean).join(" - ")}
                                 </MenuItem>
-                              ))}
+                                )
+                              })}
                             </Select>
                           </FormControl>
                         ) : (
@@ -608,7 +615,6 @@ function TraineeIndividual() {
                     </div>
                     <div>
                       {testResources.length > 0 ? (
-                        /* ✅ Pass selectedTestData to the chart component */
                         <TestScoreBarChart testData={selectedTestData} />
                       ) : (
                         <div className="flex items-center justify-center h-[320px] text-gray-400 text-lg">
@@ -617,10 +623,20 @@ function TraineeIndividual() {
                       )}
                     </div>
                   </div>
+                  <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
+                        <div className="">
+                            <div className="mb-2 text-lg text-gray-600">
+                                  Test by Certificate Program
+                            </div>
+                            <div className="pt-5">
+                                <TestByCertificateChart testQuery={individualTraineeProfile.testQuery}/>
+                            </div>
+                        </div>
+                  </div>
                 </div>
               </>
             ) : (
-              <TraineeCompletionTable ApiData={individualTraineeProfile} />
+                      <TraineeCompletionTable ApiData={individualTraineeProfile} />
             )}
           </div>
         </div>
@@ -628,5 +644,4 @@ function TraineeIndividual() {
     </div>
   );
 }
-
 export default TraineeIndividual;

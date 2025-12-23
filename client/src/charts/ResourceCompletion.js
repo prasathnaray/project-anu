@@ -60,7 +60,7 @@ export default function HalfDonut({ dataa }) {
         sx={{
           position: "absolute",
           top: "47%",
-          left: "35%",
+          left: "34%",
           transform: "translate(-50%, -50%)",
           display: "flex",
           flexDirection: "column",
@@ -71,7 +71,7 @@ export default function HalfDonut({ dataa }) {
           {percentage}%
         </Typography>
         <Typography variant="body2" color="textSecondary">
-          Completed
+            Learning
         </Typography>
       </Box>
     </Box>
