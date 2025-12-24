@@ -1,4 +1,4 @@
-const { createModuleModel , getModuleModel, subModuleModel, completionModel, createNewModuleModel, calcTestScoreModel} = require('../model/modulem.js');
+const { createModuleModel , getModuleModel, subModuleModel, completionModel, createNewModuleModel, calcTestScoreModel, attemptTestModel} = require('../model/modulem.js');
 const CreateModule = async (req, res) => {
     const requester = req.user;
     const { course_id, chapter_name } = req.body;
@@ -127,4 +127,20 @@ const calcTestScoreController = async (req, res) => {
         res.status(500).send(err);
     }
 } 
-module.exports = {CreateModule, GetModule, subModuleController, completeModule, ModuleNewController, calcTestScoreController};
+const attemptTestCont = async(req, res) => {
+    const requester = req.user;
+    const {r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation} = req.query;
+    try
+    {
+        await attemptTestModel(requester, r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation);
+        res.status(200).send({
+            status: "Success in Re-Attempt",
+            code: 200
+        });
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {CreateModule, GetModule, subModuleController, completeModule, ModuleNewController, calcTestScoreController, attemptTestCont};

@@ -62,6 +62,7 @@ const updateInstructorRouter = require('./routes/updateInstructorRoute.js');
 const updateBatchRouter = require('./routes/updateBatchRouter.js');
 const moduleTestScoresRouter = require('./routes/calTestScoreRoute.js');
 const getResourceBylmandrtRouter = require('./routes/getResourceBylmandrtRoute.js');
+const attemptTestRouter = require('./routes/attemptTestRouter.js')
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -181,4 +182,9 @@ app.use('/api/v1', Authenticate, moduleTestScoresRouter);
 
 //get resource by learning module id and resource type
 app.use('/api/v1', Authenticate, getResourceBylmandrtRouter);
+
+
+//test re attempt 
+
+app.use('/api/v1', Authenticate, attemptTestRouter);
 module.exports = app;

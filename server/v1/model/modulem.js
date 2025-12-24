@@ -358,4 +358,37 @@ const calcTestScoreModel = (requester, r_id, plane_identification, image_optimiz
         })
     });
 }
-module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel, createNewModuleModel, calcTestScoreModel}
+const attemptTestModel = (requester, r_id, plane_identification, image_optimization, measurement, diagnostic_interpretation) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [103].includes(Number(requester.role))
+        if(!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this profile.'
+            })
+        }
+        client.query('UPDATE course_test_data SET image_optimization=$1, plane_identification=$2, measurement=$3, diagnostic_interpretation=$4 WHERE user_id=$5 AND r_id=$6', [plane_identification, image_optimization, measurement, diagnostic_interpretation, requester.user_mail, r_id], (err, result) => {
+            if(err)
+            {
+                reject(err); 
+            }
+            else
+            {
+                // resolve(result);
+                client.query('INSERT INTO test_attempts_logs (r_id, user_id) VALUES ($1, $2)', 
+                        [r_id, requester.user_mail], 
+                        (err2, result2) => {
+                            if(err2) {
+                                reject(err2);
+                            } else {
+                                resolve({ firstResult: result, secondResult: result2 });
+                            }
+                        }
+                );
+            }
+        })
+    })
+}
+module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel, createNewModuleModel, calcTestScoreModel, attemptTestModel}
