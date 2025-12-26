@@ -391,4 +391,5 @@ const attemptTestModel = (requester, r_id, plane_identification, image_optimizat
         })
     })
 }
+
 module.exports = {createModuleModel, getModuleModel, subModuleModel, getSubModuleModel, completionModel, createNewModuleModel, calcTestScoreModel, attemptTestModel}

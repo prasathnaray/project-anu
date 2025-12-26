@@ -324,6 +324,7 @@ import { UserRound } from "lucide-react";
 import TestScoreBarChart from "../charts/TestScoreBarChart";
 import { FormControl, MenuItem, Select } from "@mui/material";
 import TestByCertificateChart from "../charts/TestByCertificateChart";
+import TestReattemptChart from "../charts/TestReattemptChart";
 
 function TraineeIndividual() {
   const navigate = useNavigate();
@@ -634,6 +635,14 @@ function TraineeIndividual() {
                         </div>
                   </div>
                 </div>
+                <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500 mb-2">
+                        <div className="mb-2 text-lg text-gray-600">
+                          Test with Multiple Attempts
+                        </div>
+                        <div className="">
+                            <TestReattemptChart reAttempts={individualTraineeProfile.reAttempts}  testQuery={individualTraineeProfile.testQuery} />
+                        </div>
+                  </div>
               </>
             ) : (
                       <TraineeCompletionTable ApiData={individualTraineeProfile} />

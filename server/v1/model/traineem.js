@@ -371,6 +371,24 @@ JOIN certification_data cd
     ON cd.certificate_id = lm.certificate_id
 WHERE ud.people_id = $1
 ORDER BY ctd.created_at DESC;`;
+
+const testReattempts = `SELECT
+  r.resource_id,
+  r.resource_name,
+  r.resource_type,
+  COUNT(t.r_id) AS attempt_count
+FROM user_data ud
+JOIN test_attempts_logs t
+  ON t.user_id = ud.user_email
+JOIN resource_data r
+  ON r.resource_id = t.r_id
+WHERE ud.people_id = $1
+GROUP BY
+  r.resource_id,
+  r.resource_name,
+  r.resource_type
+HAVING COUNT(t.r_id) > 1
+ORDER BY attempt_count DESC;`
     Promise.all([
       new Promise((res, rej) =>
         client.query(userProgressQuery, [people_id], (err, result) =>
@@ -386,15 +404,21 @@ ORDER BY ctd.created_at DESC;`;
         client.query(testDataQuery, [people_id], (err, result) =>
           err ? rej(err) : res(result.rows)
         )
+      ),
+      new Promise((res, rej) => 
+        client.query(testReattempts, [people_id], (err, result) => {
+            err? rej(err) : res(result.rows)
+        })
       )
     ])
-      .then(([progressData, instructorData, testData]) => {
+      .then(([progressData, instructorData, testData, reAttemptsData]) => {
         resolve({
           status: 'Success',
           code: 200,
           data: progressData, 
           instructors: instructorData,
-          testQuery: testData
+          testQuery: testData,
+          reAttempts: reAttemptsData
         });
       })
       .catch((err) => {
