@@ -50,8 +50,6 @@ export default function TestReattemptChart({
   const testMetaMap = new Map(
     testQuery.map(test => [test.resource_id, test])
   );
-
-  // 🔗 Enrich reAttempts with module & course info
   const enrichedData = reAttempts.map((item) => {
     const meta = testMetaMap.get(item.resource_id) || {};
     return {
@@ -61,8 +59,6 @@ export default function TestReattemptChart({
       course_name: meta.course_name || 'Unknown Course',
     };
   });
-
-  // 📊 Prepare PieChart data
   const chartData = enrichedData.map((item, id) => ({
     id,
     value: Number(item.attempt_count),
@@ -76,7 +72,6 @@ export default function TestReattemptChart({
       </div>
     );
   }
-
   return (
     <PieChart
       series={[
