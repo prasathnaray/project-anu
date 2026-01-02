@@ -133,7 +133,14 @@ function IndividualInstructors() {
                                               </div>
                                               <div className="">
                                                   <div className="text-center">Last Login Activity</div>
-                                                  <div>2025-12-30 09:45:24.298928+00</div>
+                                                  <div className="text-center">
+                                                        {insData?.last_login ? 
+                                                            new Date(insData.last_login).toLocaleString('en-IN', {
+                                                                timeZone: 'Asia/Kolkata'
+                                                            })
+                                                            : 'No login data'
+                                                        }
+                                                  </div>
                                               </div>
                                         </div>
                                   </div>

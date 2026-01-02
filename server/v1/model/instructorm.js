@@ -83,69 +83,81 @@ const instDataAnalysisModel = (requester, people_id) => {
         }
         client.query(`
             WITH instructor AS (
-                SELECT
-                    user_email,
-                    user_name,
-                    user_role,
-                    user_profile_photo
-                FROM user_data
-                WHERE people_id = $1
-            ),
-            instructor_batches AS (
-                SELECT DISTINCT
-                    bd.batch_id,
-                    bd.batch_end_date
-                FROM batch_people_data bpd
-                JOIN instructor i
-                    ON i.user_email = bpd.user_id
-                JOIN batch_data bd
-                    ON bd.batch_id = ANY (bpd.batch_id)
-            ),
-            active_batches AS (
-                SELECT batch_id
-                FROM instructor_batches
-                WHERE batch_end_date IS NULL
-                OR batch_end_date::date >= CURRENT_DATE
-            ),
-            total_trainees AS (
-                SELECT DISTINCT ud.user_email
-                FROM batch_people_data bpd
-                JOIN user_data ud
-                    ON ud.user_email = bpd.user_id
-                WHERE ud.user_role = '103'
-                AND EXISTS (
-                    SELECT 1
-                    FROM instructor_batches ib
-                    WHERE ib.batch_id = ANY (bpd.batch_id)
-                )
-            ),
-            active_trainees AS (
-                SELECT DISTINCT ud.user_email
-                FROM batch_people_data bpd
-                JOIN user_data ud
-                    ON ud.user_email = bpd.user_id
-                WHERE ud.user_role = '103'
-                AND EXISTS (
-                    SELECT 1
-                    FROM active_batches ab
-                    WHERE ab.batch_id = ANY (bpd.batch_id)
-                )
-            )
-            SELECT
-                i.user_name AS instructor_name,
-                i.user_role AS instructor_role,
-                i.user_profile_photo,
-                COUNT(DISTINCT at.user_email) AS active_trainees,
-                COUNT(DISTINCT tt.user_email) AS total_trainees,
-                (SELECT COUNT(*) FROM active_batches)      AS active_batches,
-                (SELECT COUNT(*) FROM instructor_batches)  AS total_batches
-            FROM instructor i
-            LEFT JOIN active_trainees at ON TRUE
-            LEFT JOIN total_trainees tt ON TRUE
-            GROUP BY
-                i.user_name,
-                i.user_role,
-                i.user_profile_photo;
+    SELECT
+        user_email,
+        user_name,
+        user_role,
+        user_profile_photo
+    FROM user_data
+    WHERE people_id = $1
+),
+instructor_last_login AS (
+    SELECT
+        la.user_id,
+        la.logged_at
+    FROM login_activity la
+    JOIN instructor i ON i.user_email = la.user_id
+    ORDER BY la.logged_at DESC
+    LIMIT 1
+),
+instructor_batches AS (
+    SELECT DISTINCT
+        bd.batch_id,
+        bd.batch_end_date
+    FROM batch_people_data bpd
+    JOIN instructor i
+        ON i.user_email = bpd.user_id
+    JOIN batch_data bd
+        ON bd.batch_id = ANY (bpd.batch_id)
+),
+active_batches AS (
+    SELECT batch_id
+    FROM instructor_batches
+    WHERE batch_end_date IS NULL
+    OR batch_end_date::date >= CURRENT_DATE
+),
+total_trainees AS (
+    SELECT DISTINCT ud.user_email
+    FROM batch_people_data bpd
+    JOIN user_data ud
+        ON ud.user_email = bpd.user_id
+    WHERE ud.user_role = '103'
+    AND EXISTS (
+        SELECT 1
+        FROM instructor_batches ib
+        WHERE ib.batch_id = ANY (bpd.batch_id)
+    )
+),
+active_trainees AS (
+    SELECT DISTINCT ud.user_email
+    FROM batch_people_data bpd
+    JOIN user_data ud
+        ON ud.user_email = bpd.user_id
+    WHERE ud.user_role = '103'
+    AND EXISTS (
+        SELECT 1
+        FROM active_batches ab
+        WHERE ab.batch_id = ANY (bpd.batch_id)
+    )
+)
+SELECT
+    i.user_name AS instructor_name,
+    i.user_role AS instructor_role,
+    i.user_profile_photo,
+    COUNT(DISTINCT at.user_email) AS active_trainees,
+    COUNT(DISTINCT tt.user_email) AS total_trainees,
+    (SELECT COUNT(*) FROM active_batches) AS active_batches,
+    (SELECT COUNT(*) FROM instructor_batches) AS total_batches,
+    ill.logged_at AS last_login
+FROM instructor i
+LEFT JOIN active_trainees at ON TRUE
+LEFT JOIN total_trainees tt ON TRUE
+LEFT JOIN instructor_last_login ill ON TRUE
+GROUP BY
+    i.user_name,
+    i.user_role,
+    i.user_profile_photo,
+    ill.logged_at;
         `, [people_id], (err, result) => {
             if(err)
             {
