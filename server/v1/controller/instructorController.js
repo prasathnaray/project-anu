@@ -1,4 +1,4 @@
-const {getInstructorsm, deleteInstructorsm, updateInstructorsm} = require('../model/instructorm');
+const {getInstructorsm, deleteInstructorsm, updateInstructorsm, instDataAnalysisModel} = require('../model/instructorm');
 
 const getInstructorData = async(req, res) => {
     const requester = req.user;
@@ -49,4 +49,17 @@ const updateInstructorController = async(req, res) => {
         res.status(500).send(err);
     }
 }
-module.exports = {getInstructorData, instructorController, updateInstructorController};
+const insDataAnalysisController = async(req, res) => {
+    const requester = req.user;
+    const people_id = req.query.people_id;
+    try
+    {
+        const response = await instDataAnalysisModel(requester, people_id);
+        res.status(200).send(response.rows)
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {getInstructorData, instructorController, updateInstructorController, insDataAnalysisController};

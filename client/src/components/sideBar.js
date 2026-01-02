@@ -124,7 +124,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     onClick={() => navigate("/instructors")}
                     className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
                       ${
-                        data === "/instructors"
+                        data === "/instructors" || data.startsWith('/instructor')
                           ? "bg-[#8DC63F] text-white"
                           : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                       }`}
@@ -197,7 +197,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Streams</div>
                   </button>
                 </li>
-                <li className="mb-1 mt-2">
+                {/* <li className="mb-1 mt-2">
                       <button
                         onMouseDown={(e) => ripple.create(e, "dark", "circle")} 
                         onClick={() => navigate("/reports")}
@@ -211,7 +211,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                         <ChartPie size={20} />
                           <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Reports</div>
                       </button>
-                </li>
+                </li> */}
                 <li
                   className={`fixed bottom-0 left-0 flex items-center ${
                     buttonOpen ? "justify-center" : "justify-center"

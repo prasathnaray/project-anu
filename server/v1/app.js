@@ -62,7 +62,8 @@ const updateInstructorRouter = require('./routes/updateInstructorRoute.js');
 const updateBatchRouter = require('./routes/updateBatchRouter.js');
 const moduleTestScoresRouter = require('./routes/calTestScoreRoute.js');
 const getResourceBylmandrtRouter = require('./routes/getResourceBylmandrtRoute.js');
-const attemptTestRouter = require('./routes/attemptTestRouter.js')
+const attemptTestRouter = require('./routes/attemptTestRouter.js');
+const getInstructorDataAnalysisRoute = require('./routes/getInstructorDataAnalysisRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -75,7 +76,7 @@ const GetLearningModuleByIdRouter = require('./routes/GetLearningModuleByIdRoute
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: ["https://project-anu.vercel.app", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001"],
+    origin: ["https://project-anu.vercel.app", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001", "http://10.42.9.129:4004"],
     credentials: true,
 }));
 app.use(cookieParser());
@@ -182,9 +183,6 @@ app.use('/api/v1', Authenticate, moduleTestScoresRouter);
 
 //get resource by learning module id and resource type
 app.use('/api/v1', Authenticate, getResourceBylmandrtRouter);
-
-
-//test re attempt 
-
+app.use('/api/v1', Authenticate, getInstructorDataAnalysisRoute);
 app.use('/api/v1', Authenticate, attemptTestRouter);
 module.exports = app;

@@ -2,6 +2,7 @@ const client = require('../utils/conn');
 const jwt = require('jsonwebtoken');
 const {comparePasswords} = require('../utils/hash');
 const path = require('path');
+const LoginAttemptModel = require('./LoginAttemptModel');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const LoginModel = (user_mail, user_password) => {
     return new Promise((resolve, reject) => {
@@ -19,6 +20,12 @@ const LoginModel = (user_mail, user_password) => {
                 if(!isMatch)
                 {
                     return resolve({status: "Invalid_Password", code: 401});
+                }
+
+                try {
+                    await LoginAttemptModel(user_mail); // Assuming user_id is the primary key
+                } catch (attemptErr) {
+                    console.error('Failed to log login attempt:', attemptErr);
                 }
                 let role = user.user_role;
                 // let token_data = role + '' + user_mail;

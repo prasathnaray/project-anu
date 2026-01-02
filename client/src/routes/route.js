@@ -57,7 +57,7 @@ function RoutesPath() {
                             <Route path="/resource/:module_id" element={<Resource />} />
                             <Route path="/schedules" element={<Schedules />} />
                             <Route path="/trainee/:people_id" element={<TraineeIndividual />} />
-                            {/* <Route path="/instructor/:people_id" element={<IndividualInstructors />} /> */}
+                            <Route path="/instructor/:people_id" element={<IndividualInstructors />} />
                             <Route path="/volume-management" element={<VolumeList />} />
                             <Route path="/request-raised" element={<RequestRaised />} />
                             <Route path="/demo-video" element={<VideoMedica />} />

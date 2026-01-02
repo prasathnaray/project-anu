@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { Select, MenuItem, TablePagination, FormControl, TextField } from "@mui/material";
 import DeleteInstructorToast from "../utils/deleteInstructorToast";
@@ -20,6 +20,7 @@ import updateInstructorAPI from "../API/UpdateInstructorAPI";
 import CustomCloseButton from "../utils/CustomCloseButton";
 import { toast } from "react-toastify";
 function Instructors() {
+  const navigate = useNavigate()
   // Sidebar state
   const [buttonOpen, setButtonOpen] = useState(true);
 
@@ -336,7 +337,7 @@ function Instructors() {
                             />
                           </td>
                           <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                            <button className="cursor-pointer">
+                            <button className="cursor-pointer" onClick={() => navigate(`/instructor/${instructor.people_id}`)}>
                               {instructor.user_name}
                             </button>
                           </td>
