@@ -71,7 +71,7 @@ const getDashboardDatam = (requester) => {
                         })
             })
             const CourseDataList = new Promise((resolve, reject) => {
-                client.query('SELECT * FROM course_data', (err, result) => {
+                client.query('SELECT * FROM certification_data', (err, result) => {
                     if(err)
                     {
                         return reject(err);

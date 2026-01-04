@@ -76,7 +76,7 @@ const GetLearningModuleByIdRouter = require('./routes/GetLearningModuleByIdRoute
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: ["https://project-anu.vercel.app", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001", "http://10.42.9.129:4004"],
+    origin: ["https://project-anu.vercel.app", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001", "http://10.42.9.129:4004", "http://localhost:8083"], //has some docker port as well
     credentials: true,
 }));
 app.use(cookieParser());

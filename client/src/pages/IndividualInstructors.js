@@ -27,7 +27,10 @@ function IndividualInstructors() {
         }
         catch(err)
         {
-            console.log(err)
+            if (err.response?.status === 401 || err.response?.status === 403) {
+                     localStorage.removeItem('user_token');
+                     window.location.href = '/'; // Redirect to login
+            }
         }
     }
     React.useEffect(() => {

@@ -105,7 +105,7 @@ function AdminDashboard(){
               <span className="text-[13px]">Users</span>
             </button>
 
-            <button
+            {/* <button
               onClick={() => setDashboardState("courses")}
               className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out font-semibold ${
                 dashboardState === "courses"
@@ -114,7 +114,7 @@ function AdminDashboard(){
               }`}
             >
               <span className="text-[13px]">Course</span>
-            </button>
+            </button> */}
 
             {/* <button
               onClick={() => setDashboardState("batches")}
@@ -180,21 +180,17 @@ function AdminDashboard(){
             <div className="flex justify-between items-center" style={{ fontWeight: 'bold', color: '#4B5563' }}>
                 <div className="my-2 mx-5 text-lg">Test Completion Rate</div>
                 <div className="mx-5">
-                  <FormControl variant="outlined" size="small" sx={{ minWidth: 160 }}>
-                    {/* <InputLabel id="test-completion-label">Period</InputLabel> */}
+                  {/* <FormControl variant="outlined" size="small" sx={{ minWidth: 160 }}>
                     <Select
                       labelId="test-completion-label"
                       id="test-completion-select"
-                      // value={period}
-                      // label="Period"
-                      // onChange={handlePeriodChange}
                     >
                       <MenuItem value="today">Today</MenuItem>
                       <MenuItem value="week">This Week</MenuItem>
                       <MenuItem value="month">This Month</MenuItem>
                       <MenuItem value="all">All Time</MenuItem>
                     </Select>
-                  </FormControl>
+                  </FormControl> */}
                 </div>
             </div>
             <div className="flex justify-center items-center">
@@ -220,7 +216,7 @@ function AdminDashboard(){
                   <div className="text-white bg-[#8DC63F] p-2 rounded-full">
                     <Book01Icon size={20} />
                   </div>
-                  <span className="text-lg text-gray-500">All Courses</span>
+                  <span className="text-lg text-gray-500">All Certificate</span>
                 </div>
                 {/* <div className="flex items-center justify-center py-8 text-gray-500">
                       <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
@@ -228,11 +224,11 @@ function AdminDashboard(){
                 {(dashboardData?.CourseDataList || []).map((data, index) => (
                     <div className="border grid grid-cols-4 py-6 px-1 mt-3 gap-4 rounded bg-white">
                           <div className="col-span-2 flex justify-between item-center">
-                                <EllipsisVerticalIcon size={20} className="text-gray-500"/>
-                                <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2"><button onClick={() => navigate(`/chapters/${data.course_id}`)}>View Chapters</button></span>
+                                <EllipsisVerticalIcon size={20} className="text-gray-500"/> 
+                                <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2"><button onClick={() => navigate(`/cert-course/${data.certificate_id}`)}>View Modules</button></span>
                           </div>
                           <div className="col-span-2 flex justify-end items-center gap-4">
-                              <span className="sm:text-sm rounded-full px-2 font-semibold text-gray-500">{data?.course_name}</span>
+                              <span className="sm:text-sm rounded-full px-2 font-semibold text-gray-500">{data?.certificate_name}</span>
                           </div>
                     </div>
                 ))}
