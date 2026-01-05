@@ -182,7 +182,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certification</div>
                   </button>
                 </li>
-                <li className="mb-1 mt-2">
+                {/* <li className="mb-1 mt-2">
                   <button
                     onMouseDown={(e) => ripple.create(e, "dark", "circle")} 
                     onClick={() => navigate("/vrspace")}
@@ -196,7 +196,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     <WirelessCloudAccessIcon size={20} />
                     <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Streams</div>
                   </button>
-                </li>
+                </li> */}
                 {/* <li className="mb-1 mt-2">
                       <button
                         onMouseDown={(e) => ripple.create(e, "dark", "circle")} 

@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId : i-087974cf234e129cd
+      Tags:
+        - Key: Name
+          Value: Project-Anu-ElasticIP-Backend
