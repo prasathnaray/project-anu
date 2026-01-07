@@ -80,7 +80,7 @@ const getVolumeInstructorViewController = async(req, res) => {
     try
     {
         const result = await getVolumeInstructorViewModel(requester);
-        res.status(200).send(result);
+        res.status(200).send(result.rows);
     }
     catch(err)
     {

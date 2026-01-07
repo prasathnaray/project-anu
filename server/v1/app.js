@@ -64,6 +64,7 @@ const moduleTestScoresRouter = require('./routes/calTestScoreRoute.js');
 const getResourceBylmandrtRouter = require('./routes/getResourceBylmandrtRoute.js');
 const attemptTestRouter = require('./routes/attemptTestRouter.js');
 const getInstructorDataAnalysisRoute = require('./routes/getInstructorDataAnalysisRoute.js');
+const getVolumeByInstructorRouter = require('./routes/getVolumeByInstructorRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -185,4 +186,7 @@ app.use('/api/v1', Authenticate, moduleTestScoresRouter);
 app.use('/api/v1', Authenticate, getResourceBylmandrtRouter);
 app.use('/api/v1', Authenticate, getInstructorDataAnalysisRoute);
 app.use('/api/v1', Authenticate, attemptTestRouter);
+
+// volume
+app.use('/api/v1', Authenticate, getVolumeByInstructorRouter);
 module.exports = app;
