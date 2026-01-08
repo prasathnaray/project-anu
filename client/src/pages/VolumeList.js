@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
+import GetVolInsAPI from '../API/GetVolInsAPI';
 function VolumeList() {
   const navigate = useNavigate();
   // ADD THESE AT THE TOP
@@ -36,6 +37,24 @@ const handleFileSelect = (e) => {
     volume_ga: '',
     file: null,
   });
+  const [volumesDatumm, setVolumesDatumm] = useState([]);
+  const handleAPICall = async () => {
+      try
+      {
+        const result = await GetVolInsAPI();
+        console.log(result.data);
+        setVolumesDatumm(result.data);
+      }
+      catch(err)
+      {
+        console.log(err)
+      }
+  }
+
+  React.useEffect(() => {
+    handleAPICall();
+  }, []);
+
   let decoded = jwtDecode(localStorage.getItem('user_token'));
   if (decoded.role != 102 && decoded.role != 103) {
     return <Navigate to="/" replace />;
@@ -141,30 +160,45 @@ const handleFileSelect = (e) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Static sample row for UI layout */}
-                  <tr className="text-sm text-gray-700 border-b">
-                    <td className="py-2 px-4 font-medium text-[#8DC63F]">VOL001</td>
-                    <td className="py-2 px-4 font-medium">Sample Volume</td>
-                    <td className="py-2 px-4">
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
-                        Approved
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 font-medium">
-                      <button className="text-[#8DC63F] hover:underline">View</button>
-                      <button className="ml-3 text-red-500 hover:underline">Delete</button>
-                    </td>
-                  </tr>
-                  {/* Optional loading placeholder */}
-                  {/* <tr>
-                    <td colSpan={4} className="py-4 text-center text-gray-500">
-                      <ClipLoader
-                        color="#8DC63F"
-                        size={24}
-                        cssOverride={{ borderWidth: '4px' }}
-                      />
-                    </td>
-                  </tr> */}
+                  {loading ? (
+                    <tr>
+                      <td colSpan={4} className="py-4 text-center text-gray-500">
+                        <ClipLoader
+                          color="#8DC63F"
+                          size={24}
+                          cssOverride={{ borderWidth: '4px' }}
+                        />
+                      </td>
+                    </tr>
+                  ) : volumesDatumm.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-4 text-center text-gray-500">
+                        No volumes found
+                      </td>
+                    </tr>
+                  ) : (
+                    volumesDatumm.map((volume) => (
+                      <tr key={volume.volume_id} className="text-sm text-gray-700 border-b hover:bg-gray-50">
+                        <td className="py-2 px-4 font-medium text-[#8DC63F]">
+                          {volume.volume_id.slice(0, 8).toUpperCase()}
+                        </td>
+                        <td className="py-2 px-4 font-medium">{volume.volume_name}</td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            volume.status 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {volume.status ? 'Approved' : 'Pending'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4 font-medium">
+                          <button className="text-[#8DC63F] hover:underline">View</button>
+                          <button className="ml-3 text-red-500 hover:underline">Delete</button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
