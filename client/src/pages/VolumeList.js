@@ -3,30 +3,33 @@ import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { jwtDecode } from 'jwt-decode';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { MoreVertical, X } from 'lucide-react';
 import UploadVol from '../components/Instructors/UploadVol';
-import { TextField } from '@mui/material';
+import { TextField, Menu, MenuItem } from '@mui/material';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
+
 function VolumeList() {
   const navigate = useNavigate();
-  // ADD THESE AT THE TOP
-const fileInputRef = React.useRef(null);
-const [fileName, setFileName] = useState("");
+  const fileInputRef = React.useRef(null);
+  const [fileName, setFileName] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedVolume, setSelectedVolume] = useState(null);
 
-const handleClick = () => fileInputRef.current.click();
+  const handleClick = () => fileInputRef.current.click();
 
-const handleFileSelect = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    setFormData({ ...formData, file });
-    setFileName(file.name);
-  }
-};
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ ...formData, file });
+      setFileName(file.name);
+    }
+  };
+
   const [buttonOpen, setButtonOpen] = useState(true);
   const [openUploadVol, setOpenUploadVol] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,18 +41,16 @@ const handleFileSelect = (e) => {
     file: null,
   });
   const [volumesDatumm, setVolumesDatumm] = useState([]);
+
   const handleAPICall = async () => {
-      try
-      {
-        const result = await GetVolInsAPI();
-        console.log(result.data);
-        setVolumesDatumm(result.data);
-      }
-      catch(err)
-      {
-        console.log(err)
-      }
-  }
+    try {
+      const result = await GetVolInsAPI();
+      console.log(result.data);
+      setVolumesDatumm(result.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   React.useEffect(() => {
     handleAPICall();
@@ -59,7 +60,9 @@ const handleFileSelect = (e) => {
   if (decoded.role != 102 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
+
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
+
   const handleClose = () => {
     setOpenUploadVol(!openUploadVol);
     setFormData({
@@ -70,7 +73,8 @@ const handleFileSelect = (e) => {
       file: null,
     });
     setFileName("");
-  }
+  };
+
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'file') {
@@ -79,6 +83,7 @@ const handleFileSelect = (e) => {
       setFormData({ ...formData, [name]: value });
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -107,6 +112,8 @@ const handleFileSelect = (e) => {
           volume_ga: '',
           file: null,
         });
+        setFileName("");
+        handleAPICall(); // Refresh the list
       } else {
         toast.error(response.data?.error || 'Upload failed. Please try again.');
       }
@@ -117,6 +124,24 @@ const handleFileSelect = (e) => {
       setLoading(false);
     }
   };
+
+  const handleMenuOpen = (event, volume) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedVolume(volume);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedVolume(null);
+  };
+
+  const handleRequestConversion = () => {
+    if (selectedVolume) {
+      toast.info(`Requesting conversion for ${selectedVolume.volume_name}`);
+    }
+    handleMenuClose();
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <ToastContainer position="top-right" autoClose={3000} />
@@ -156,7 +181,7 @@ const handleFileSelect = (e) => {
                     <th className="py-2 px-4 font-semibold">Volume ID</th>
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
                     <th className="py-2 px-4 font-semibold">Status</th>
-                    <th className="py-2 px-4 font-semibold">Actions</th>
+                    <th className="py-2 px-4 font-semibold"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,8 +218,12 @@ const handleFileSelect = (e) => {
                           </span>
                         </td>
                         <td className="py-2 px-4 font-medium">
-                          <button className="text-[#8DC63F] hover:underline">View</button>
-                          <button className="ml-3 text-red-500 hover:underline">Delete</button>
+                          <button 
+                            className="text-[#8DC63F] hover:bg-gray-100 rounded p-1"
+                            onClick={(e) => handleMenuOpen(e, volume)}
+                          >
+                            <MoreVertical size={20} />
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -205,6 +234,26 @@ const handleFileSelect = (e) => {
           </div>
         </div>
       </div>
+
+      {/* MUI Menu Component */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        <MenuItem onClick={handleRequestConversion}>
+          Convert
+        </MenuItem>
+      </Menu>
+
       <UploadVol isVisible={openUploadVol} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -256,38 +305,28 @@ const handleFileSelect = (e) => {
               />
             </div>
 
-            {/* <div className="mt-4">
-              <TextField
-                fullWidth
-                variant="outlined"
-                size="small"
-                type="file"
-                name="file"
-                onChange={handleChange}
-              />
-            </div> */}
-
             <div className="mt-4">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  style={{ display: 'none' }}
-                  name="file"
-                />
-                <TextField
-                  label="Upload File"
-                  variant="outlined"
-                  value={fileName}
-                  fullWidth
-                  size="small" sx={{ minHeight: '35px' }}
-                  onClick={handleClick}
-                  InputProps={{
-                    readOnly: true,
-                    style: { cursor: "pointer" }
-                  }}
-                />
-              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+                name="file"
+              />
+              <TextField
+                label="Upload File"
+                variant="outlined"
+                value={fileName}
+                fullWidth
+                size="small"
+                sx={{ minHeight: '35px' }}
+                onClick={handleClick}
+                InputProps={{
+                  readOnly: true,
+                  style: { cursor: "pointer" }
+                }}
+              />
+            </div>
 
             <div className="mt-4 flex justify-end items-center">
               <button

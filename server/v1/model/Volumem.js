@@ -94,4 +94,18 @@ const getVolumeInstructorViewModel = (requester) => {
         });
     });
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel};
+const volumeConversionModel = (requester, volume_id) => {
+    return new Promise((resolve, reject) => {
+        client.query('update volumes SET conversion_status=$1 WHERE volume_id=$2', [true, volume_id], (err, result) => {
+            if(err)
+            {
+                reject(err)
+            }
+            else
+            {
+                resolve(result)
+            }
+        })
+    })
+}
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel};
