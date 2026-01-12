@@ -96,7 +96,7 @@ const getVolumeInstructorViewModel = (requester) => {
 }
 const volumeConversionModel = (requester, volume_id) => {
     return new Promise((resolve, reject) => {
-        client.query('update volumes SET conversion_status=$1 WHERE volume_id=$2', [true, volume_id], (err, result) => {
+        client.query('update volumes SET conversion_process_status=$1 WHERE volume_id=$2', [true, volume_id], (err, result) => {
             if(err)
             {
                 reject(err)

@@ -12,6 +12,8 @@ import axios from 'axios';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
+import volumeConvAPI from '../API/volumeConvAPI';
+import CustomCloseButton from '../utils/CustomCloseButton'
 
 function VolumeList() {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ function VolumeList() {
   const [fileName, setFileName] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedVolume, setSelectedVolume] = useState(null);
+  const [converting, setConverting] = useState(false);
 
   const handleClick = () => fileInputRef.current.click();
 
@@ -135,16 +138,43 @@ function VolumeList() {
     setSelectedVolume(null);
   };
 
-  const handleRequestConversion = () => {
-    if (selectedVolume) {
-      toast.info(`Requesting conversion for ${selectedVolume.volume_name}`);
+  const handleRequestConversion = async () => {
+    if (!selectedVolume) return;
+
+    try {
+      setConverting(true);
+      //toast.info(`Requesting conversion for ${selectedVolume.volume_name}...`);
+      
+      const response = await volumeConvAPI(selectedVolume.volume_id);
+      
+      if (response.status == 200 || response.status == 201) {
+        toast.success(`Conversion Started!`, {
+          autoClose: 3000,
+          toastId: 'convert-success',
+          icon: false,
+          closeButton: CustomCloseButton
+        });
+        handleAPICall(); // Refresh the list to show updated status
+      } else {
+        //toast.error(response.data?.error || 'Conversion failed. Please try again.');
+        toast.error("Conversion failed. Please try again." , {
+              autoClose: 3000,
+              toastId: 'convert-again',
+              icon: false,
+              closeButton: CustomCloseButton
+        });
+      }
+    } catch (err) {
+      console.error('Conversion Error:', err);
+      toast.error(err.response?.data?.error || 'Something went wrong during conversion.');
+    } finally {
+      setConverting(false);
+      handleMenuClose();
     }
-    handleMenuClose();
   };
 
   return (
     <div className="flex flex-col min-h-screen">
-      <ToastContainer position="top-right" autoClose={3000} />
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
         <NavBar />
       </div>
@@ -221,6 +251,7 @@ function VolumeList() {
                           <button 
                             className="text-[#8DC63F] hover:bg-gray-100 rounded p-1"
                             onClick={(e) => handleMenuOpen(e, volume)}
+                            disabled={converting}
                           >
                             <MoreVertical size={20} />
                           </button>
@@ -249,11 +280,16 @@ function VolumeList() {
           horizontal: 'right',
         }}
       >
-        <MenuItem onClick={handleRequestConversion}>
-          Convert
+        <MenuItem 
+          onClick={handleRequestConversion}
+          disabled={converting}
+        >
+          {converting ? 'Converting...' : 'Convert'}
+        </MenuItem>
+        <MenuItem>
+            Edit
         </MenuItem>
       </Menu>
-
       <UploadVol isVisible={openUploadVol} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
