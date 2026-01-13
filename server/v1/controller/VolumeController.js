@@ -88,17 +88,72 @@ const getVolumeInstructorViewController = async(req, res) => {
     }
 }
 
-const updateVolumeConController = async(req, res) => {
-        const requester = req.user;
-        const volume_id = req.params.volume_id;
-        try
-        {
-            await volumeConversionModel(requester, volume_id);
-            res.status(200).send("Conversion status updated");
+// const updateVolumeConController = async(req, res) => {
+//         const requester = req.user;
+//         const volume_id = req.params.volume_id;
+//         try
+//         {
+//             const result = await volumeConversionModel(requester, volume_id);
+//             res.status(200).json({
+//                     success: true,
+//                     volume_id,
+//                     status: "RUNNING",   // ✅ explicitly say this
+//                     message: "Volume conversion started"
+//             });
+//         }
+//         catch(err)
+//         {
+//                 res.status(500).send(err)
+//         }
+// }
+
+///working good so far but needs betterment
+const updateVolumeConController = async (req, res) => {
+    const requester = req.user;
+    const volume_id = req.params.volume_id;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(volume_id)) {
+        return res.status(400).json({
+            success: false,
+            error: "Invalid volume ID format"
+        });
+    }
+    try {
+        const result = await volumeConversionModel(requester, volume_id);
+        if (result.code === 401) {
+            return res.status(401).json({
+                success: false,
+                error: result.message
+            });
         }
-        catch(err)
-        {
-                res.status(500).send(err)
+        if (result.code === 404) {
+            return res.status(404).json({
+                success: false,
+                error: result.message
+            });
         }
-}
+        if (result.code === 409) {
+            return res.status(409).json({
+                success: false,
+                error: result.message,
+                volume_id: volume_id
+            });
+        }
+        res.status(200).json({
+            success: true,
+            volume_id: volume_id,
+            status: "RUNNING",
+            message: "Volume conversion started successfully",
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (err) {
+        console.error('Conversion start error:', err);
+        res.status(500).json({
+            success: false,
+            error: "Internal server error",
+            message: err.message
+        });
+    }
+};
 module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController}
