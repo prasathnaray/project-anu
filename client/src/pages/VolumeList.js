@@ -210,7 +210,8 @@ function VolumeList() {
                   <tr>
                     <th className="py-2 px-4 font-semibold">Volume ID</th>
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
-                    <th className="py-2 px-4 font-semibold">Status</th>
+                    <th className="py-2 px-4 font-semibold">Approval Status</th>
+                    <th className="py-2 px-4 font-semibold">Conversion Status</th>
                     <th className="py-2 px-4 font-semibold"></th>
                   </tr>
                 </thead>
@@ -245,6 +246,15 @@ function VolumeList() {
                               : 'bg-red-100 text-red-700'
                           }`}>
                             {volume.status ? 'Approved' : 'Pending'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            volume.conversion_completion 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-red-100 text-red-700'
+                          }`}>
+                            {volume.conversion_completion ? 'Completed' : 'Pending'}
                           </span>
                         </td>
                         <td className="py-2 px-4 font-medium">
@@ -282,9 +292,10 @@ function VolumeList() {
       >
         <MenuItem 
           onClick={handleRequestConversion}
-          disabled={converting}
+          disabled={converting || selectedVolume?.conversion_completion}
         >
-          {converting ? 'Converting...' : 'Convert'}
+          {/* {converting ? 'Converting...' : 'Convert'} */}
+              {converting ? 'Converting...' : selectedVolume?.conversion_completion ? 'Already Converted' : 'Convert'}
         </MenuItem>
         <MenuItem>
             Edit
