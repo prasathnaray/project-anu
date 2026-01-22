@@ -1,5 +1,5 @@
 const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel} = require("../model/Volumem");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const VolumeController = async(req, res) => {
@@ -168,4 +168,93 @@ const getConvVolumeListController = async(req, res) => {
         res.status(500).send(err);
     }
 }
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController}
+// const volumePlacementController = async(req, res) => {
+//     const requester = req.user;
+//     const {volume_id} = req.body;
+//     const placed_file = req.file;
+//     try
+//     {
+//         if(!placed_file)
+//         {
+//             return res.status(400).send("No file uploaded");
+//         }   
+//         if(placed_file.mimetype !== 'application/json') {
+//             return res.status(400).send("Invalid file format. Only JSON files are allowed.");
+//         }
+//         const fileExtension = placed_file.originalname.split('.').pop().toLowerCase();
+
+//         if(fileExtension !== 'json') {
+//             return res.status(400).send("Invalid file extension. Only .json files are allowed.");
+//         }
+
+//         try {
+//             const fileContent = placed_file.buffer.toString('utf-8');
+//             JSON.parse(fileContent);
+//         } catch(jsonError) {
+//             return res.status(400).send("Invalid JSON content. File contains malformed JSON.");
+//         }
+//         await placedVolumeConversionModel(requester, volume_id, placed_file);
+//         res.status(200).send("Volume Placed Successfully");
+//     }
+//     catch(err)
+//     {
+//         res.status(500).send(err)
+//     }
+// }
+
+
+///improved version with validations
+const volumePlacementController = async(req, res) => {
+    const requester = req.user;
+    const {volume_id} = req.body;
+    const placed_file = req.file;
+    try {
+        if(!placed_file) {
+            return res.status(400).send("No file uploaded");
+        }
+        
+        if(placed_file.mimetype !== 'application/json') {
+            return res.status(400).send("Invalid file format. Only JSON files are allowed.");
+        }
+        
+        const fileExtension = placed_file.originalname.split('.').pop().toLowerCase();
+        if(fileExtension !== 'json') {
+            return res.status(400).send("Invalid file extension. Only .json files are allowed.");
+        }
+        
+        try {
+            const fileContent = placed_file.buffer.toString('utf-8');
+            JSON.parse(fileContent);
+        } catch(jsonError) {
+            return res.status(400).send("Invalid JSON content. File contains malformed JSON.");
+        }
+        
+        const fileName = `volume_placements/${volume_id}_${Date.now()}.json`;
+        const { data, error } = await client.storage
+            .from(process.env.BUCKET_NAME)
+            .upload(fileName, placed_file.buffer, {
+                contentType: 'application/json',
+                upsert: false
+            });
+        
+        if(error) {
+            throw new Error(`Supabase upload failed: ${error.message}`);
+        }
+        
+        const { data: { publicUrl } } = client.storage
+            .from(process.env.BUCKET_NAME)
+            .getPublicUrl(fileName);
+        
+        await placedVolumeConversionModel(requester, volume_id, publicUrl);
+        
+        res.status(200).send({
+            message: "Volume Placed Successfully",
+            fileUrl: publicUrl
+        });
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500).send(err.message || "Internal server error");
+    }
+}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController}

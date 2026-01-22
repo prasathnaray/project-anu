@@ -313,4 +313,26 @@ const getConvertedVolumeList = (requester) => {
         });
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList};
+
+const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
+      return new Promise((resolve, reject) => {
+            const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+            if (!isPrivileged) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'You do not have permission to view converted volumes',
+                });
+            }
+            client.query('INSERT INTO volume_placements (volume_id, placed_url, created_at) VALUES ($1, $2, NOW())', [volume_id, placed_url], (err, result) => {
+                if (err) {
+                    return reject(err);
+                }
+                else
+                {
+                    return resolve(result)
+                }
+            })
+      })
+}
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel};
