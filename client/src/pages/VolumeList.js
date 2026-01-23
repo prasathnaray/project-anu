@@ -60,7 +60,7 @@ function VolumeList() {
   }, []);
 
   let decoded = jwtDecode(localStorage.getItem('user_token'));
-  if (decoded.role != 102 && decoded.role != 103) {
+  if (decoded.role != 102 && decoded.role != 103 && decoded.role !=99) {
     return <Navigate to="/" replace />;
   }
 

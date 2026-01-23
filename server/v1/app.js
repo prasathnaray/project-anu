@@ -67,7 +67,8 @@ const getInstructorDataAnalysisRoute = require('./routes/getInstructorDataAnalys
 const getVolumeByInstructorRouter = require('./routes/getVolumeByInstructorRoute.js');
 const updateVolumeConRouter = require('./routes/UpdateVolumeConRouter.js');
 const getConvVolumeListRouter = require('./routes/getConvVolumeListRoute.js');
-const volumePlacementRouter = require('./routes/volumePlacementRoute.js')
+const volumePlacementRouter = require('./routes/volumePlacementRoute.js');
+const volumeRecordingRouter = require('./routes/volumeRecordingRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -195,4 +196,5 @@ app.use('/api/v1', Authenticate, getVolumeByInstructorRouter);
 app.use('/api/v1', Authenticate, updateVolumeConRouter);
 app.use('/api/v1', Authenticate, getConvVolumeListRouter);
 app.use('/api/v1', Authenticate, volumePlacementRouter);
+app.use('/api/v1', Authenticate, volumeRecordingRouter);   
 module.exports = app;

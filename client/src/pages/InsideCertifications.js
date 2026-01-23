@@ -613,6 +613,13 @@ function InsideCertifications() {
   // Create Resources Modal
   const [openRes, setOpenRes] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
+
+  //attach volume
+  const [attachVolume, setAttachVolume] = useState(false);
+  const handleAttachVolume = () => {
+    setAttachVolume(!attachVolume);
+  }
+
   const ufcCourses = [
     "Principles of ultrasound",
     "Probe Movements",
@@ -737,12 +744,13 @@ const filteredRows = learningModules.filter(row => {
       fetchResourcesForModule(moduleId);
     }
   };
+
   let decoded = null;
   try {
     if (token) decoded = jwtDecode(token);
   } catch (_) {}
 
-  if (decoded.role != 101 && decoded.role != 102) {
+  if (decoded.role != 101 && decoded.role != 102 && decoded.role != 99) {
     return <Navigate to="/" replace />;
   }
   return (
@@ -963,6 +971,9 @@ const filteredRows = learningModules.filter(row => {
                                                                       <tr className="border-b bg-gray-100">
                                                                         <th className="py-2 px-4 text-left text-gray-600">Resource Name</th>
                                                                         <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
+                                                                        {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
+                                                                         <th className="py-2 px-4 text-left text-gray-600">Actions</th>
+                                                                        )}
                                                                       </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -976,6 +987,11 @@ const filteredRows = learningModules.filter(row => {
                                                                           </td>
                                                                           <td className="py-2 px-4 text-gray-700">
                                                                             {item.trainee_completed}
+                                                                          </td>
+                                                                          <td>
+                                                                            {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
+                                                                              <button className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs" onClick={handleAttachVolume}>Attach Volume</button>
+                                                                            )}
                                                                           </td>
                                                                         </tr>
                                                                       ))}
