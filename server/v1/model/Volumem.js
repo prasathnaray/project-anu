@@ -95,6 +95,53 @@ const VolumeApprovalModel = (requester, status_approval, volume_id) => {
 //     });
 // }
 
+// const getVolumeInstructorViewModel = (requester) => {
+//     return new Promise((resolve, reject) => {
+//         // Check authorization first
+//         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        
+//         if (!isPrivileged) {
+//             return resolve({
+//                 status: 'Unauthorized',
+//                 code: 401,
+//                 message: 'You do not have permission to view uploaded volumes',
+//             });
+//         }
+//         const query = `
+//               SELECT 
+//                 v.volume_id,
+//                 v.volume_type,
+//                 v.volume_name,
+//                 v.volume_ga,
+//                 v.volume_fetal_presentation,
+//                 v.status,
+//                 v.volume_file,
+//                 vcl.started_at,
+//                 vcl.conversion_completion,
+//                 vcl.converted_by,
+//                 vcl.completed_at,
+//                 vcl.output_file
+//             FROM public.volumes v
+//             LEFT JOIN public.volume_conv_logs vcl ON v.volume_id = vcl.volume_id
+//             WHERE v.added_by = $1
+//             ORDER BY vcl.completed_at DESC NULLS LAST
+//         `;
+
+//         client.query(query, [requester.user_mail], (err, result) => {
+//             if (err) {
+//                 return reject({
+//                     status: 'Error',
+//                     code: 500,
+//                     message: 'Database query failed',
+//                     error: err
+//                 });
+//             }
+            
+//             return resolve(result);
+//         });
+//     });
+// };
+
 const getVolumeInstructorViewModel = (requester) => {
     return new Promise((resolve, reject) => {
         // Check authorization first
@@ -107,8 +154,12 @@ const getVolumeInstructorViewModel = (requester) => {
                 message: 'You do not have permission to view uploaded volumes',
             });
         }
+
+        const isSuperAdmin = Number(requester.role) === 99;
+        
+        // Build query based on role
         const query = `
-              SELECT 
+            SELECT 
                 v.volume_id,
                 v.volume_type,
                 v.volume_name,
@@ -116,6 +167,8 @@ const getVolumeInstructorViewModel = (requester) => {
                 v.volume_fetal_presentation,
                 v.status,
                 v.volume_file,
+                v.added_by,
+                v.approver_id,
                 vcl.started_at,
                 vcl.conversion_completion,
                 vcl.converted_by,
@@ -123,11 +176,13 @@ const getVolumeInstructorViewModel = (requester) => {
                 vcl.output_file
             FROM public.volumes v
             LEFT JOIN public.volume_conv_logs vcl ON v.volume_id = vcl.volume_id
-            WHERE v.added_by = $1
+            ${isSuperAdmin ? '' : 'WHERE v.added_by = $1'}
             ORDER BY vcl.completed_at DESC NULLS LAST
         `;
 
-        client.query(query, [requester.user_mail], (err, result) => {
+        const queryParams = isSuperAdmin ? [] : [requester.user_mail];
+
+        client.query(query, queryParams, (err, result) => {
             if (err) {
                 return reject({
                     status: 'Error',
