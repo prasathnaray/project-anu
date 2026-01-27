@@ -1344,7 +1344,7 @@ const filteredRows = learningModules.filter(row => {
           labelId="placements-label"
           id="placements"
           //value={placements}
-          label="Placements Associated"
+          label="Shadow Recording"
           //onChange={(e) => setPlacements(e.target.value)}
         >
           {/* {placementsList.map((placement, i) => (
@@ -1362,7 +1362,7 @@ const filteredRows = learningModules.filter(row => {
           labelId="recording-label"
           id="recording"
           //value={recording}
-          label="Recording"
+          label="Step Recording"
           //onChange={(e) => setRecording(e.target.value)}
         >
           {/* {recordingsList.map((rec, i) => (

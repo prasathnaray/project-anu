@@ -446,4 +446,27 @@ const associateVolumeModel = (requester, r_id, volume_id) => {
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel};
+const shadowRecoringDataModel = (requester, volume_id) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        if (!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to upload volume recordings',
+            })
+        }
+        client.query(`SELECT * FROM vol_recordings where recording_type=$1 AND volume_id=$2`,['shadow', volume_id], (err, result) => {
+            if (err)
+            {
+                return reject(err);
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel};
