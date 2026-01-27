@@ -1,5 +1,5 @@
 const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel} = require("../model/Volumem");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const VolumeController = async(req, res) => {
@@ -161,7 +161,7 @@ const getConvVolumeListController = async(req, res) => {
     try
     {
         const response = await getConvertedVolumeList(requester);
-        res.status(200).json(response);
+        res.status(200).json(response.data.rows);
     }
     catch(err)
     {
@@ -398,4 +398,17 @@ const volRecordingC = async(req, res) => {
         });
     }
 };
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, volRecordingC}
+const assocVolumeController = async(req, res) => {
+    const requester = req.user;
+    const {r_id, volume_id} = req.body;
+    try
+    {
+        await associateVolumeModel(requester, r_id, volume_id);
+        res.status(200).send("Associated Successfully");
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, volRecordingC, assocVolumeController}

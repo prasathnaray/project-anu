@@ -354,7 +354,17 @@ const getConvertedVolumeList = (requester) => {
                 message: 'You do not have permission to view converted volumes',
             });
         }
-        const query = `SELECT * FROM volume_conv_logs WHERE conversion_completion=$1 ORDER by completed_at DESC;`;
+        const query = `SELECT 
+                        vcl.*,
+                        v.volume_name
+                        FROM 
+                        volume_conv_logs vcl
+                        INNER JOIN 
+                        volumes v ON vcl.volume_id = v.volume_id
+                        WHERE 
+                        vcl.conversion_completion = $1
+                        ORDER BY 
+                        vcl.completed_at DESC;`;
         client.query(query, [true], (err, result) => {
             if (err) {
                 return reject(err);
@@ -413,4 +423,27 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel};
+const associateVolumeModel = (requester, r_id, volume_id) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        if (!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to upload volume recordings',
+            })
+        }
+        client.query('INSERT INTO asso_volume(r_id, vol_id) VALUES($1, $2)',[r_id, volume_id], (err, result) => {
+            if (err)
+            {
+                return reject(err);
+            }
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel};

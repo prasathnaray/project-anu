@@ -581,6 +581,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  TextField,
 } from "@mui/material";
 import LearningModule from "../components/superadmin/LearningModule";
 import CustomCloseButton from "../utils/CustomCloseButton";
@@ -590,7 +591,8 @@ import GetLearningModuleByIdAPI from "../API/GetLearningModuleByIdAPI";
 import getResourceAPI from "../API/GetResourceAPI";
 import { toast } from "react-toastify";
 import CreateResources from "../components/CreateResources";
-
+import AttachVolume from "../components/AttachVolume";
+import getConvertedVolumeListApi from "../API/GetConvertedVolumeList";
 function InsideCertifications() {
   const navigate = useNavigate();
   const { certificate_id } = useParams();
@@ -613,13 +615,46 @@ function InsideCertifications() {
   // Create Resources Modal
   const [openRes, setOpenRes] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
+  //set volume list 
+  const [volumeList, setVolumeList] = useState([]);
+  const [volumeLoading, setVolumeLoading] = useState(false);
 
   //attach volume
   const [attachVolume, setAttachVolume] = useState(false);
-  const handleAttachVolume = () => {
-    setAttachVolume(!attachVolume);
+  const [resourcesData, setResourcesData] = useState({
+        resource_id: '',
+        resource_name: ''
+  });
+  //for api purposes 
+  // const [] = React.useState({
+  //     resource_id: '',
+  //     volume_id: '',
+  //     shadow_recording: '',
+  //     step_recording: ''
+  // })
+  // Add this function with your other fetch functions (around line 80-100)
+const fetchVolumeList = useCallback(async () => {
+  setVolumeLoading(true);
+  try {
+    const res = await getConvertedVolumeListApi();
+    if (res.data) {
+      setVolumeList(Array.isArray(res.data) ? res.data : []);
+    }
+  } catch (err) {
+    console.error("Error loading volumes:", err);
+    toast.error("Failed to load volumes", {
+      closeButton: CustomCloseButton,
+    });
+  } finally {
+    setVolumeLoading(false);
   }
-
+}, []);
+ const handleAttachVolume = () => {
+    setAttachVolume(!attachVolume);
+    if (!attachVolume) {
+          fetchVolumeList();
+    }
+  }
   const ufcCourses = [
     "Principles of ultrasound",
     "Probe Movements",
@@ -990,7 +1025,13 @@ const filteredRows = learningModules.filter(row => {
                                                                           </td>
                                                                           <td>
                                                                             {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
-                                                                              <button className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs" onClick={handleAttachVolume}>Attach Volume</button>
+                                                                              <button className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs" onClick={() => {
+                                                                                handleAttachVolume();
+                                                                                setResourcesData({
+                                                                                  resource_id: item.resource_id,
+                                                                                  resource_name: item.resource_name
+                                                                                })
+                                                                              }}>Attach Volume</button>
                                                                             )}
                                                                           </td>
                                                                         </tr>
@@ -1246,6 +1287,109 @@ const filteredRows = learningModules.filter(row => {
           }
         }}
       />
+      <AttachVolume isVisible={attachVolume} onClose={() => setAttachVolume(false)}>
+  <div className="flex justify-between items-center mb-4">
+    <div className="text-lg font-semibold">Attach Volume</div>
+    <button onClick={() => setAttachVolume(false)}>
+      <X className="text-red-500" />
+    </button>
+  </div>
+
+  <form onSubmit={handleAttachVolume}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      {/* Resource Name */}
+      <TextField
+        fullWidth
+        size="small"
+        label="Resource Name"
+        value={resourcesData.resource_name}
+        InputProps={{
+          readOnly: true,
+        }}
+      />
+
+      {/* Volume Name */}
+      {/* Volume Name Dropdown */}
+<FormControl fullWidth size="small">
+  <InputLabel id="volume-name-label">Volume Name</InputLabel>
+  <Select
+    labelId="volume-name-label"
+    id="volume-name"
+    //value={attachFormData.volume_id}
+    label="Volume Name"
+    // onChange={(e) => setAttachFormData(prev => ({
+    //   ...prev,
+    //   volume_id: e.target.value
+    // }))}
+    disabled={volumeLoading}
+  >
+    {volumeLoading ? (
+      <MenuItem disabled>Loading...</MenuItem>
+    ) : volumeList.length === 0 ? (
+      <MenuItem disabled>No volumes available</MenuItem>
+    ) : (
+      volumeList.map((volume) => (
+        <MenuItem key={volume.volume_id} value={volume.volume_id}>
+          {volume.volume_name}
+        </MenuItem>
+      ))
+    )}
+  </Select>
+</FormControl>
+
+      {/* Placements Associated */}
+      <FormControl fullWidth size="small">
+        <InputLabel id="placements-label">Shadow Recording</InputLabel>
+        <Select
+          labelId="placements-label"
+          id="placements"
+          //value={placements}
+          label="Placements Associated"
+          //onChange={(e) => setPlacements(e.target.value)}
+        >
+          {/* {placementsList.map((placement, i) => (
+            <MenuItem key={i} value={placement}>
+              {placement}
+            </MenuItem>
+          ))} */}
+        </Select>
+      </FormControl>
+
+      {/* Recording */}
+      <FormControl fullWidth size="small">
+        <InputLabel id="recording-label">Step Recording</InputLabel>
+        <Select
+          labelId="recording-label"
+          id="recording"
+          //value={recording}
+          label="Recording"
+          //onChange={(e) => setRecording(e.target.value)}
+        >
+          {/* {recordingsList.map((rec, i) => (
+            <MenuItem key={i} value={rec}>
+              {rec}
+            </MenuItem>
+          ))} */}
+        </Select>
+      </FormControl>
+    </div>
+
+    {/* Action Buttons */}
+    <div className="flex justify-end gap-3 mt-6">
+      <button
+        className="text-red-500"
+        onClick={() => setAttachVolume(false)}
+      >
+        Cancel
+      </button>
+      <button
+        className="bg-[#8DC63F] text-white px-4 py-1 rounded"
+      >
+        Attach
+      </button>
+    </div>
+  </form>
+</AttachVolume>
     </div>
   );
 }
