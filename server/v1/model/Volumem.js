@@ -402,28 +402,65 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
 }
 const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files) => {
     return new Promise((resolve, reject) => {
+        // Check user permissions
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
-        if (!isPrivileged)
-        {
+        
+        if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
                 message: 'You do not have permission to upload volume recordings',
-            })
+            });
         }
-        client.query('INSERT INTO vol_recordings (volume_id, recording_name, recording_type, rec_files, audio_files) VALUES($1, $2, $3, $4, $5)', [volume_id, recording_name, recording_type, rec_files, audio_files], (err, result) => {
-            if (err)
-            {
-                return reject(err);
+        
+        // Validate inputs
+        if (!volume_id || !recording_name || !recording_type) {
+            return reject(new Error('Missing required fields: volume_id, recording_name, or recording_type'));
+        }
+        
+        if (!Array.isArray(rec_files) || !Array.isArray(audio_files)) {
+            return reject(new Error('rec_files and audio_files must be arrays'));
+        }
+        
+        if (rec_files.length === 0 || audio_files.length === 0) {
+            return reject(new Error('rec_files and audio_files arrays cannot be empty'));
+        }
+        
+        if (rec_files.length !== audio_files.length) {
+            return reject(new Error('rec_files and audio_files must have the same length'));
+        }
+        
+        // Convert arrays to JSON strings for PostgreSQL
+        const recFilesJson = JSON.stringify(rec_files);
+        const audioFilesJson = JSON.stringify(audio_files);
+        
+        // Insert into database
+        const query = `
+            INSERT INTO vol_recordings 
+            (volume_id, recording_name, recording_type, rec_files, audio_files) 
+            VALUES($1, $2, $3, $4, $5) 
+            RETURNING *
+        `;
+        
+        client.query(
+            query, 
+            [volume_id, recording_name, recording_type, recFilesJson, audioFilesJson], 
+            (err, result) => {
+                if (err) {
+                    return reject(err);
+                } else {
+                    return resolve({
+                        status: 'Success',
+                        code: 200,
+                        message: 'Volume recording(s) saved successfully',
+                        data: result.rows[0]
+                    });
+                }
             }
-            else
-            {
-                return resolve(result);
-            }
-        })
-    })
-}
-const associateVolumeModel = (requester, r_id, volume_id) => {
+        );
+    });
+};
+const associateVolumeModel = (requester, r_id, volume_id, shadowrec_id, steprec_id) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
         if (!isPrivileged)
@@ -434,7 +471,7 @@ const associateVolumeModel = (requester, r_id, volume_id) => {
                 message: 'You do not have permission to upload volume recordings',
             })
         }
-        client.query('INSERT INTO asso_volume(r_id, vol_id) VALUES($1, $2)',[r_id, volume_id], (err, result) => {
+        client.query('INSERT INTO asso_volume(r_id, vol_id, shadowrec_id, steprec_id) VALUES($1, $2, $3, $4)',[r_id, volume_id, shadowrec_id, steprec_id], (err, result) => {
             if (err)
             {
                 return reject(err);
@@ -457,7 +494,10 @@ const shadowRecoringDataModel = (requester, volume_id) => {
                 message: 'You do not have permission to upload volume recordings',
             })
         }
-        client.query(`SELECT * FROM vol_recordings where recording_type=$1 AND volume_id=$2`,['shadow', volume_id], (err, result) => {
+        client.query(`SELECT recording_type, recording_name, recording_id, rec_files, audio_files
+                      FROM vol_recordings
+                      WHERE volume_id = $1
+                      GROUP BY recording_type, recording_name, recording_id, rec_files, audio_files;`,[volume_id], (err, result) => {
             if (err)
             {
                 return reject(err);

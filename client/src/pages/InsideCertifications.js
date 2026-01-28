@@ -593,12 +593,16 @@ import { toast } from "react-toastify";
 import CreateResources from "../components/CreateResources";
 import AttachVolume from "../components/AttachVolume";
 import getConvertedVolumeListApi from "../API/GetConvertedVolumeList";
+import GetShadowRecordingsAPI from "../API/GetShadowRecordingsAPI";
+import AssoVolumeAPI from "../API/AssoVolumeAPI";
+
 function InsideCertifications() {
   const navigate = useNavigate();
   const { certificate_id } = useParams();
   let token = localStorage.getItem("user_token");
   const [buttonOpen, setButtonOpen] = useState(true);
   const [createLearningModule, setCreateLearningModule] = useState(false);
+  
   // create form
   const [certificateName, setCertificateName] = useState("");
   const [courseName, setCourseName] = useState("");
@@ -606,15 +610,19 @@ function InsideCertifications() {
   const [unitName, setUnitName] = useState("");
   const [expandedResource, setExpandedResource] = useState(null);
   const [expandedTopic, setExpandedTopic] = useState(null);
+  
   // Data states
   const [certificateData, setCertificateData] = useState([]);
   const [learningModules, setLearningModules] = useState([]);
+  
   // Expand row + resources
   const [expandedRow, setExpandedRow] = useState(null);
   const [resourceMap, setResourceMap] = useState({});
+  
   // Create Resources Modal
   const [openRes, setOpenRes] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
+  
   //set volume list 
   const [volumeList, setVolumeList] = useState([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
@@ -625,42 +633,155 @@ function InsideCertifications() {
         resource_id: '',
         resource_name: ''
   });
+  
   //for api purposes 
-  // const [] = React.useState({
-  //     resource_id: '',
-  //     volume_id: '',
-  //     shadow_recording: '',
-  //     step_recording: ''
-  // })
-  // Add this function with your other fetch functions (around line 80-100)
-const fetchVolumeList = useCallback(async () => {
-  setVolumeLoading(true);
-  try {
-    const res = await getConvertedVolumeListApi();
-    if (res.data) {
-      setVolumeList(Array.isArray(res.data) ? res.data : []);
+  const [attachFormData, setAttachFormData] = useState({
+      resource_id: '',
+      volume_id: '',
+      shadow_recording: '',
+      step_recording: ''
+  });
+  
+  // Shadow recordings state
+  const [shadowRecordings, setShadowRecordings] = useState([]);
+  const [stepRecordings, setStepRecordings] = useState([]);
+  const [recordingsLoading, setRecordingsLoading] = useState(false);
+  const [attachSubmitting, setAttachSubmitting] = useState(false);
+  
+  // Add this function to fetch shadow recordings
+  const fetchShadowRecordings = useCallback(async (volumeId) => {
+    if (!volumeId) return;
+    
+    setRecordingsLoading(true);
+    try {
+      const res = await GetShadowRecordingsAPI(volumeId);
+      if (res.data && Array.isArray(res.data)) {
+        // Filter shadow recordings
+        const shadowRecs = res.data.filter(rec => rec.recording_type === 'shadow');
+        setShadowRecordings(shadowRecs);
+        
+        // Filter step recordings
+        const stepRecs = res.data.filter(rec => rec.recording_type === 'step');
+        setStepRecordings(stepRecs);
+      }
+    } catch (err) {
+      console.error("Error loading recordings:", err);
+      toast.error("Failed to load recordings", {
+        closeButton: CustomCloseButton,
+      });
+      setShadowRecordings([]);
+      setStepRecordings([]);
+    } finally {
+      setRecordingsLoading(false);
     }
-  } catch (err) {
-    console.error("Error loading volumes:", err);
-    toast.error("Failed to load volumes", {
-      closeButton: CustomCloseButton,
-    });
-  } finally {
-    setVolumeLoading(false);
-  }
-}, []);
- const handleAttachVolume = () => {
+  }, [token]);
+
+  // Add this function with your other fetch functions (around line 80-100)
+  const fetchVolumeList = useCallback(async () => {
+    setVolumeLoading(true);
+    try {
+      const res = await getConvertedVolumeListApi();
+      if (res.data) {
+        setVolumeList(Array.isArray(res.data) ? res.data : []);
+      }
+    } catch (err) {
+      console.error("Error loading volumes:", err);
+      toast.error("Failed to load volumes", {
+        closeButton: CustomCloseButton,
+      });
+    } finally {
+      setVolumeLoading(false);
+    }
+  }, []);
+  
+  const handleAttachVolume = () => {
     setAttachVolume(!attachVolume);
     if (!attachVolume) {
-          fetchVolumeList();
+      fetchVolumeList();
+      // Reset form data when opening
+      setAttachFormData({
+        resource_id: '',
+        volume_id: '',
+        shadow_recording: '',
+        step_recording: ''
+      });
+      setShadowRecordings([]);
+      setStepRecordings([]);
     }
-  }
+  };
+  
+  // Handle volume selection change
+  const handleVolumeChange = (volumeId) => {
+    setAttachFormData(prev => ({
+      ...prev,
+      volume_id: volumeId,
+      shadow_recording: '', // Reset shadow recording when volume changes
+      step_recording: '' // Reset step recording when volume changes
+    }));
+    
+    // Fetch recordings for the selected volume
+    if (volumeId) {
+      fetchShadowRecordings(volumeId);
+    } else {
+      setShadowRecordings([]);
+      setStepRecordings([]);
+    }
+  };
+  
+  // Handle attach volume form submission
+  const handleSubmitAttachVolume = async (e) => {
+    e.preventDefault();
+    
+    setAttachSubmitting(true);
+    try {
+      const payload = {
+        requester: decoded?.email || decoded?.username || '', // Get from decoded token
+        r_id: attachFormData.resource_id,
+        volume_id: attachFormData.volume_id,
+        shadowrec_id: attachFormData.shadow_recording,
+        steprec_id: attachFormData.step_recording
+      };
+      
+      const res = await AssoVolumeAPI(payload);
+      
+      if (res.data?.code === 200 || res.status === 200) {
+        toast.success("Volume attached successfully!", {
+          closeButton: CustomCloseButton,
+        });
+        setAttachVolume(false);
+        // Reset form
+        setAttachFormData({
+          resource_id: '',
+          volume_id: '',
+          shadow_recording: '',
+          step_recording: ''
+        });
+        setResourcesData({
+          resource_id: '',
+          resource_name: ''
+        });
+        setShadowRecordings([]);
+        setStepRecordings([]);
+      } else {
+        throw new Error(res.data?.message || "Failed to attach volume");
+      }
+    } catch (err) {
+      console.error("Error attaching volume:", err);
+      toast.error(err.response?.data?.message || err.message || "Failed to attach volume", {
+        closeButton: CustomCloseButton,
+      });
+    } finally {
+      setAttachSubmitting(false);
+    }
+  };
+  
   const ufcCourses = [
     "Principles of ultrasound",
     "Probe Movements",
     "Knobology",
     "Morphology",
   ];
+  
   const fetchCertificates = useCallback(async () => {
     try {
       const res = await GetCertificateDataByIdAPI(token, certificate_id);
@@ -669,6 +790,7 @@ const fetchVolumeList = useCallback(async () => {
       console.error("Error loading certificate details:", err);
     }
   }, [token, certificate_id]);
+  
   const fetchLearningModules = useCallback(async () => {
     try {
       const res = await GetLearningModuleByIdAPI(token, certificate_id);
@@ -707,10 +829,12 @@ const fetchVolumeList = useCallback(async () => {
     },
     [token]
   );
+  
   useEffect(() => {
     fetchCertificates();
     fetchLearningModules();
   }, [fetchCertificates, fetchLearningModules]);
+  
   const courseList = [...new Set(learningModules.map((m) => m.course_name))];
   const moduleList = learningModules
     .filter((m) => m.course_name === courseName)
@@ -720,28 +844,31 @@ const fetchVolumeList = useCallback(async () => {
     .filter((m) => m.course_name === courseName && m.module_name === moduleName)
     .map((m) => m.unit_name)
     .filter((v, i, arr) => arr.indexOf(v) === i);
-useEffect(() => {
-  if (courseName) {
-    const firstModule =
-      learningModules.find(m => m.course_name === courseName)?.module_name || "";
-    setModuleName(prev => prev || firstModule);
-    setUnitName("");
-  } else {
-    setModuleName("");
-    setUnitName("");
-  }
-  setExpandedRow(null);
-}, [courseName, learningModules]);
-useEffect(() => {
-  setExpandedRow(null);
-}, [moduleName]);
-const filteredRows = learningModules.filter(row => {
-  return (
-    (!courseName || row.course_name === courseName) &&
-    (!moduleName || row.module_name === moduleName) &&
-    (!unitName || row.unit_name === unitName)
-  );
-});
+
+  useEffect(() => {
+    if (courseName) {
+      const firstModule =
+        learningModules.find(m => m.course_name === courseName)?.module_name || "";
+      setModuleName(prev => prev || firstModule);
+      setUnitName("");
+    } else {
+      setModuleName("");
+      setUnitName("");
+    }
+    setExpandedRow(null);
+  }, [courseName, learningModules]);
+  
+  useEffect(() => {
+    setExpandedRow(null);
+  }, [moduleName]);
+  
+  const filteredRows = learningModules.filter(row => {
+    return (
+      (!courseName || row.course_name === courseName) &&
+      (!moduleName || row.module_name === moduleName) &&
+      (!unitName || row.unit_name === unitName)
+    );
+  });
 
   const handleCreateLearning = async () => {
     const payload = {
@@ -764,6 +891,7 @@ const filteredRows = learningModules.filter(row => {
       toast.error("Failed to create module");
     }
   };
+  
   const handleCloseCreateModule = () => {
     setCreateLearningModule(false);
     setCertificateName("");
@@ -771,6 +899,7 @@ const filteredRows = learningModules.filter(row => {
     setModuleName("");
     setUnitName("");
   };
+  
   const toggleExpand = async (index, moduleId) => {
     const newIndex = expandedRow === index ? null : index;
     setExpandedRow(newIndex);
@@ -788,6 +917,7 @@ const filteredRows = learningModules.filter(row => {
   if (decoded.role != 101 && decoded.role != 102 && decoded.role != 99) {
     return <Navigate to="/" replace />;
   }
+  
   return (
     <div className="flex flex-col min-h-screen">
       {/* NAVBAR */}
@@ -1025,13 +1155,22 @@ const filteredRows = learningModules.filter(row => {
                                                                           </td>
                                                                           <td>
                                                                             {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
-                                                                              <button className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs" onClick={() => {
-                                                                                handleAttachVolume();
-                                                                                setResourcesData({
-                                                                                  resource_id: item.resource_id,
-                                                                                  resource_name: item.resource_name
-                                                                                })
-                                                                              }}>Attach Volume</button>
+                                                                              <button 
+                                                                                className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs" 
+                                                                                onClick={() => {
+                                                                                  handleAttachVolume();
+                                                                                  setResourcesData({
+                                                                                    resource_id: item.resource_id,
+                                                                                    resource_name: item.resource_name
+                                                                                  });
+                                                                                  setAttachFormData(prev => ({
+                                                                                    ...prev,
+                                                                                    resource_id: item.resource_id
+                                                                                  }));
+                                                                                }}
+                                                                              >
+                                                                                Attach Volume
+                                                                              </button>
                                                                             )}
                                                                           </td>
                                                                         </tr>
@@ -1287,109 +1426,134 @@ const filteredRows = learningModules.filter(row => {
           }
         }}
       />
+      
+      {/* ATTACH VOLUME MODAL */}
       <AttachVolume isVisible={attachVolume} onClose={() => setAttachVolume(false)}>
-  <div className="flex justify-between items-center mb-4">
-    <div className="text-lg font-semibold">Attach Volume</div>
-    <button onClick={() => setAttachVolume(false)}>
-      <X className="text-red-500" />
-    </button>
-  </div>
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-lg font-semibold">Attach Volume</div>
+          <button onClick={() => setAttachVolume(false)}>
+            <X className="text-red-500" />
+          </button>
+        </div>
 
-  <form onSubmit={handleAttachVolume}>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      {/* Resource Name */}
-      <TextField
-        fullWidth
-        size="small"
-        label="Resource Name"
-        value={resourcesData.resource_name}
-        InputProps={{
-          readOnly: true,
-        }}
-      />
+        <form onSubmit={handleSubmitAttachVolume}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Resource Name */}
+            <TextField
+              fullWidth
+              size="small"
+              label="Resource Name"
+              value={resourcesData.resource_name}
+              InputProps={{
+                readOnly: true,
+              }}
+            />
 
-      {/* Volume Name */}
-      {/* Volume Name Dropdown */}
-<FormControl fullWidth size="small">
-  <InputLabel id="volume-name-label">Volume Name</InputLabel>
-  <Select
-    labelId="volume-name-label"
-    id="volume-name"
-    //value={attachFormData.volume_id}
-    label="Volume Name"
-    // onChange={(e) => setAttachFormData(prev => ({
-    //   ...prev,
-    //   volume_id: e.target.value
-    // }))}
-    disabled={volumeLoading}
-  >
-    {volumeLoading ? (
-      <MenuItem disabled>Loading...</MenuItem>
-    ) : volumeList.length === 0 ? (
-      <MenuItem disabled>No volumes available</MenuItem>
-    ) : (
-      volumeList.map((volume) => (
-        <MenuItem key={volume.volume_id} value={volume.volume_id}>
-          {volume.volume_name}
-        </MenuItem>
-      ))
-    )}
-  </Select>
-</FormControl>
+            {/* Volume Name Dropdown */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="volume-name-label">Volume Name</InputLabel>
+              <Select
+                labelId="volume-name-label"
+                id="volume-name"
+                value={attachFormData.volume_id}
+                label="Volume Name"
+                onChange={(e) => handleVolumeChange(e.target.value)}
+                disabled={volumeLoading}
+              >
+                {volumeLoading ? (
+                  <MenuItem disabled>Loading...</MenuItem>
+                ) : volumeList.length === 0 ? (
+                  <MenuItem disabled>No volumes available</MenuItem>
+                ) : (
+                  volumeList.map((volume) => (
+                    <MenuItem key={volume.volume_id} value={volume.volume_id}>
+                      {volume.volume_name}
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+            </FormControl>
 
-      {/* Placements Associated */}
-      <FormControl fullWidth size="small">
-        <InputLabel id="placements-label">Shadow Recording</InputLabel>
-        <Select
-          labelId="placements-label"
-          id="placements"
-          //value={placements}
-          label="Shadow Recording"
-          //onChange={(e) => setPlacements(e.target.value)}
-        >
-          {/* {placementsList.map((placement, i) => (
-            <MenuItem key={i} value={placement}>
-              {placement}
-            </MenuItem>
-          ))} */}
-        </Select>
-      </FormControl>
+            {/* Shadow Recording Dropdown */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="shadow-recording-label">Shadow Recording</InputLabel>
+              <Select
+                labelId="shadow-recording-label"
+                id="shadow-recording"
+                value={attachFormData.shadow_recording}
+                label="Shadow Recording"
+                onChange={(e) => setAttachFormData(prev => ({
+                  ...prev,
+                  shadow_recording: e.target.value
+                }))}
+                disabled={!attachFormData.volume_id || recordingsLoading}
+              >
+                {recordingsLoading ? (
+                  <MenuItem disabled>Loading...</MenuItem>
+                ) : !attachFormData.volume_id ? (
+                  <MenuItem disabled>Select a volume first</MenuItem>
+                ) : shadowRecordings.length === 0 ? (
+                  <MenuItem disabled>No shadow recordings available</MenuItem>
+                ) : (
+                  shadowRecordings.map((recording) => (
+                    <MenuItem key={recording.recording_id} value={recording.recording_id}>
+                      {recording.recording_name}
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+            </FormControl>
 
-      {/* Recording */}
-      <FormControl fullWidth size="small">
-        <InputLabel id="recording-label">Step Recording</InputLabel>
-        <Select
-          labelId="recording-label"
-          id="recording"
-          //value={recording}
-          label="Step Recording"
-          //onChange={(e) => setRecording(e.target.value)}
-        >
-          {/* {recordingsList.map((rec, i) => (
-            <MenuItem key={i} value={rec}>
-              {rec}
-            </MenuItem>
-          ))} */}
-        </Select>
-      </FormControl>
-    </div>
+            {/* Step Recording Dropdown */}
+            <FormControl fullWidth size="small">
+              <InputLabel id="step-recording-label">Step Recording</InputLabel>
+              <Select
+                labelId="step-recording-label"
+                id="step-recording"
+                value={attachFormData.step_recording}
+                label="Step Recording"
+                onChange={(e) => setAttachFormData(prev => ({
+                  ...prev,
+                  step_recording: e.target.value
+                }))}
+                disabled={!attachFormData.volume_id || recordingsLoading}
+              >
+                {recordingsLoading ? (
+                  <MenuItem disabled>Loading...</MenuItem>
+                ) : !attachFormData.volume_id ? (
+                  <MenuItem disabled>Select a volume first</MenuItem>
+                ) : stepRecordings.length === 0 ? (
+                  <MenuItem disabled>No step recordings available</MenuItem>
+                ) : (
+                  stepRecordings.map((recording) => (
+                    <MenuItem key={recording.recording_id} value={recording.recording_id}>
+                      {recording.recording_name}
+                    </MenuItem>
+                  ))
+                )}
+              </Select>
+            </FormControl>
+          </div>
 
-    {/* Action Buttons */}
-    <div className="flex justify-end gap-3 mt-6">
-      <button
-        className="text-red-500"
-        onClick={() => setAttachVolume(false)}
-      >
-        Cancel
-      </button>
-      <button
-        className="bg-[#8DC63F] text-white px-4 py-1 rounded"
-      >
-        Attach
-      </button>
-    </div>
-  </form>
-</AttachVolume>
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              type="button"
+              className="text-red-500"
+              onClick={() => setAttachVolume(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-[#8DC63F] text-white px-4 py-1 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!attachFormData.resource_id || !attachFormData.volume_id || !attachFormData.shadow_recording || attachSubmitting}
+            >
+              {attachSubmitting ? "Attaching..." : "Attach"}
+            </button>
+          </div>
+        </form>
+      </AttachVolume>
     </div>
   );
 }
