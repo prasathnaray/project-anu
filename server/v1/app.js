@@ -71,6 +71,7 @@ const volumePlacementRouter = require('./routes/volumePlacementRoute.js');
 const volumeRecordingRouter = require('./routes/volumeRecordingRoute.js');
 const associateVolumeRouter = require('./routes/associateVolumeRouter.js');
 const GetShadowRecordingRouter = require('./routes/GetShadowRecordingRoute.js');
+const getAssocVolumeRouter = require('./routes/getAssoVolumeRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -204,4 +205,7 @@ app.use('/api/v1', Authenticate, associateVolumeRouter);
 
 //recordings 
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
+
+//associated volume
+app.use('/api/v1/', Authenticate, getAssocVolumeRouter);
 module.exports = app;

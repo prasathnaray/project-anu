@@ -355,16 +355,19 @@ const getConvertedVolumeList = (requester) => {
             });
         }
         const query = `SELECT 
-                        vcl.*,
-                        v.volume_name
-                        FROM 
-                        volume_conv_logs vcl
-                        INNER JOIN 
-                        volumes v ON vcl.volume_id = v.volume_id
-                        WHERE 
-                        vcl.conversion_completion = $1
-                        ORDER BY 
-                        vcl.completed_at DESC;`;
+  vcl.*,
+  v.volume_name,
+  vp.placed_url
+FROM 
+volume_conv_logs vcl
+INNER JOIN 
+volumes v ON vcl.volume_id = v.volume_id
+LEFT JOIN
+volume_placements vp ON vcl.volume_id = vp.volume_id
+WHERE 
+vcl.conversion_completion = $1
+ORDER BY 
+vcl.completed_at DESC;`;
         client.query(query, [true], (err, result) => {
             if (err) {
                 return reject(err);
@@ -509,4 +512,44 @@ const shadowRecoringDataModel = (requester, volume_id) => {
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel};
+const getAssociatedVolumeModel = (requester, r_id) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        if (!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to upload volume recordings',
+            })
+        }
+        client.query(`
+                SELECT 
+                    av.r_id,
+                    av.vol_id,
+                    av.shadowrec_id,
+                    av.steprec_id,
+                    v.volume_name,
+                    rd.resource_id,
+                    rd.resource_name,
+                    rd.created_at
+                FROM asso_volume av
+                JOIN volumes v
+                ON av.vol_id = v.volume_id
+                JOIN resource_data rd
+                ON av.r_id = rd.resource_id
+                WHERE av.r_id = $1;
+            `,[r_id], (err, result) => {
+            if (err)
+            {
+                return reject(err);
+            }
+
+            else
+            {
+                return resolve(result);
+            }
+        })
+    })
+}
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getAssociatedVolumeModel};

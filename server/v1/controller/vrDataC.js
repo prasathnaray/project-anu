@@ -12,7 +12,6 @@ const getVrData = async(req, res) => {
     catch(err)
     {
         res.status(500).send(err)
-        ContentVisibilityAutoStateChangeEvent.l
     }
 }
 const getActivePeopleC = async(req, res) => {
