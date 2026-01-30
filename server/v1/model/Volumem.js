@@ -142,10 +142,67 @@ const VolumeApprovalModel = (requester, status_approval, volume_id) => {
 //     });
 // };
 
+// const getVolumeInstructorViewModel = (requester) => {
+//     return new Promise((resolve, reject) => {
+//         // Check authorization first
+//         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        
+//         if (!isPrivileged) {
+//             return resolve({
+//                 status: 'Unauthorized',
+//                 code: 401,
+//                 message: 'You do not have permission to view uploaded volumes',
+//             });
+//         }
+
+//         const isSuperAdmin = Number(requester.role) === 99;
+        
+//         // Build query based on role
+//         const query = `
+//             SELECT 
+//                 v.volume_id,
+//                 v.volume_type,
+//                 v.volume_name,
+//                 v.volume_ga,
+//                 v.volume_fetal_presentation,
+//                 v.status,
+//                 v.volume_file,
+//                 v.added_by,
+//                 v.approver_id,
+//                 vcl.started_at,
+//                 vcl.conversion_completion,
+//                 vcl.converted_by,
+//                 vcl.completed_at,
+//                 vcl.output_file
+//             FROM public.volumes v
+//             LEFT JOIN public.volume_conv_logs vcl ON v.volume_id = vcl.volume_id
+//             ${isSuperAdmin ? '' : 'WHERE v.added_by = $1'}
+//             ORDER BY vcl.completed_at DESC NULLS LAST
+//         `;
+
+//         const queryParams = isSuperAdmin ? [] : [requester.user_mail];
+
+//         client.query(query, queryParams, (err, result) => {
+//             if (err) {
+//                 return reject({
+//                     status: 'Error',
+//                     code: 500,
+//                     message: 'Database query failed',
+//                     error: err
+//                 });
+//             }
+            
+//             return resolve(result);
+//         });
+//     });
+// };
+
 const getVolumeInstructorViewModel = (requester) => {
     return new Promise((resolve, reject) => {
+        const userRole = Number(requester.role);
+        
         // Check authorization first
-        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102].includes(userRole);
         
         if (!isPrivileged) {
             return resolve({
@@ -155,7 +212,8 @@ const getVolumeInstructorViewModel = (requester) => {
             });
         }
 
-        const isSuperAdmin = Number(requester.role) === 99;
+        // Role 99 and 101 can see all volumes, Role 102 can only see their own
+        const canViewAllVolumes = [99, 101].includes(userRole);
         
         // Build query based on role
         const query = `
@@ -175,12 +233,13 @@ const getVolumeInstructorViewModel = (requester) => {
                 vcl.completed_at,
                 vcl.output_file
             FROM public.volumes v
-            LEFT JOIN public.volume_conv_logs vcl ON v.volume_id = vcl.volume_id
-            ${isSuperAdmin ? '' : 'WHERE v.added_by = $1'}
+            LEFT JOIN public.volume_conv_logs vcl 
+                ON v.volume_id = vcl.volume_id
+            ${!canViewAllVolumes ? 'WHERE v.added_by = $1' : ''}
             ORDER BY vcl.completed_at DESC NULLS LAST
         `;
 
-        const queryParams = isSuperAdmin ? [] : [requester.user_mail];
+        const queryParams = canViewAllVolumes ? [] : [requester.user_mail];
 
         client.query(query, queryParams, (err, result) => {
             if (err) {
@@ -257,7 +316,6 @@ const getVolumeInstructorViewModel = (requester) => {
 //     }
 //   });
 // };
-
 const volumeConversionModel = (requester, volume_id) => {
     return new Promise(async (resolve, reject) => {
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
@@ -270,7 +328,6 @@ const volumeConversionModel = (requester, volume_id) => {
         }
         const startedBy = requester.user_mail;
         try {
-            // Check if volume exists
             const volumeCheck = await client.query(
                 'SELECT volume_id, volume_name FROM volumes WHERE volume_id = $1',
                 [volume_id]
@@ -381,7 +438,6 @@ vcl.completed_at DESC;`;
         });
     })
 }
-
 const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
       return new Promise((resolve, reject) => {
             const isPrivileged = [99, 101, 102].includes(Number(requester.role));

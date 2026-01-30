@@ -1,7 +1,7 @@
 const client = require('../utils/conn')
 const GenderRatio = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 103, 102].includes(Number(requester.role));
         if(!isPrivileged)
         {
             return resolve({
