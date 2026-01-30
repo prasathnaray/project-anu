@@ -532,12 +532,19 @@ const getAssociatedVolumeModel = (requester, r_id) => {
                     v.volume_name,
                     rd.resource_id,
                     rd.resource_name,
-                    rd.created_at
+                    rd.created_at,
+                    vr.recording_id,
+                    vr.recording_name,
+                    vr.recording_type,
+                    vr.rec_files,
+                    vr.audio_files
                 FROM asso_volume av
                 JOIN volumes v
-                ON av.vol_id = v.volume_id
+                    ON av.vol_id = v.volume_id
                 JOIN resource_data rd
-                ON av.r_id = rd.resource_id
+                    ON av.r_id = rd.resource_id
+                LEFT JOIN vol_recordings vr
+                    ON v.volume_id = vr.volume_id
                 WHERE av.r_id = $1;
             `,[r_id], (err, result) => {
             if (err)
