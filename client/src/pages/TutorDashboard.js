@@ -4,11 +4,26 @@ import SideBar from '../components/sideBar';
 import { Download, DownloadIcon, GraduationCap, LayoutDashboard } from 'lucide-react';
 import BasicPie from '../charts/PieChart';
 import VolumeChart from '../charts/VolumeChart';
-
+import getDashboardAPI from '../API/dashboardAPI';
 function TutorDashboard() {
     const [dateTime, setDateTime] = React.useState("");
     const [buttonOpen, setButtonOpen] = React.useState(true);
-
+    const [apiData, setApiData] = React.useState({});
+    
+    const fetchDashboardData = async() => {
+        try
+        {
+            let response = await getDashboardAPI();
+            setApiData(response.data);
+        }
+        catch(err)
+        {
+            console.log(err)
+        }
+    }
+    React.useEffect(() => {
+        fetchDashboardData();
+    }, [])
     const handleButtonOpen = () => {
         setButtonOpen(!buttonOpen);
     };
@@ -44,7 +59,7 @@ function TutorDashboard() {
 
   return () => clearTimeout(timer);
 }, []);
-
+    
     return (
         <div className="flex flex-col min-h-screen">
             <div>
@@ -77,21 +92,21 @@ function TutorDashboard() {
                                    <div className="border shadow-md">
                                                 <div className="p-2 text-md">Trainees (in total)</div>
                                                 <div className="flex justify-between p-2">
-                                                    <div className="text-3xl font-semibold">5</div>
+                                                    <div className="text-3xl font-semibold">{apiData?.totalTrainees || 0}</div>
                                                     <div className="text-[#8DC63F]"><GraduationCap size={40} /></div>
                                                 </div>
                                     </div>
                                    <div className="border shadow-md">
                                                 <div className="p-2 text-md">Batches (in total)</div>
                                                 <div className="flex justify-between p-2">
-                                                    <div className="text-3xl font-semibold">3</div>
+                                                    <div className="text-3xl font-semibold">{apiData?.totalBatches || 0}</div>
                                                     <div className="text-[#8DC63F]"><GraduationCap size={40} /></div>
                                                 </div>
                                    </div>
                                    <div className="border shadow-md">
-                                                <div className="p-2 text-md">Volume Size (in Mb)</div>
+                                                <div className="p-2 text-md">Total volume</div>
                                                 <div className="flex justify-between p-2">
-                                                    <div className="text-3xl font-semibold">75</div>
+                                                    <div className="text-3xl font-semibold">{apiData?.totalVolumes || 0}</div>
                                                     <div className="text-[#8DC63F]"><GraduationCap size={40} /></div>
                                                 </div>
                                    </div>
@@ -100,7 +115,7 @@ function TutorDashboard() {
                         <div className="rounded col-span-1 bg-white p-6 shadow-md">
                               <div className="font-semibold text-gray-500">Volume Stats</div>
                               <div>
-                                    <VolumeChart />
+                                    <VolumeChart APIData={apiData?.volumeSizes || []} />
                               </div>
                         </div>
                     </div>
