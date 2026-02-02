@@ -459,7 +459,69 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
             })
       })
 }
-const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files) => {
+// const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files) => {
+//     return new Promise((resolve, reject) => {
+//         // Check user permissions
+//         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+        
+//         if (!isPrivileged) {
+//             return resolve({
+//                 status: 'Unauthorized',
+//                 code: 401,
+//                 message: 'You do not have permission to upload volume recordings',
+//             });
+//         }
+        
+//         // Validate inputs
+//         if (!volume_id || !recording_name || !recording_type) {
+//             return reject(new Error('Missing required fields: volume_id, recording_name, or recording_type'));
+//         }
+        
+//         if (!Array.isArray(rec_files) || !Array.isArray(audio_files)) {
+//             return reject(new Error('rec_files and audio_files must be arrays'));
+//         }
+        
+//         if (rec_files.length === 0 || audio_files.length === 0) {
+//             return reject(new Error('rec_files and audio_files arrays cannot be empty'));
+//         }
+        
+//         if (rec_files.length !== audio_files.length) {
+//             return reject(new Error('rec_files and audio_files must have the same length'));
+//         }
+        
+//         // Convert arrays to JSON strings for PostgreSQL
+//         const recFilesJson = JSON.stringify(rec_files);
+//         const audioFilesJson = JSON.stringify(audio_files);
+        
+//         // Insert into database
+//         const query = `
+//             INSERT INTO vol_recordings 
+//             (volume_id, recording_name, recording_type, rec_files, audio_files) 
+//             VALUES($1, $2, $3, $4, $5) 
+//             RETURNING *
+//         `;
+        
+//         client.query(
+//             query, 
+//             [volume_id, recording_name, recording_type, recFilesJson, audioFilesJson], 
+//             (err, result) => {
+//                 if (err) {
+//                     return reject(err);
+//                 } else {
+//                     return resolve({
+//                         status: 'Success',
+//                         code: 200,
+//                         message: 'Volume recording(s) saved successfully',
+//                         data: result.rows[0]
+//                     });
+//                 }
+//             }
+//         );
+//     });
+// };
+
+// the above code is commented out and replaced with the following improved version
+const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_file, audio_files) => {
     return new Promise((resolve, reject) => {
         // Check user permissions
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
@@ -477,20 +539,20 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
             return reject(new Error('Missing required fields: volume_id, recording_name, or recording_type'));
         }
         
-        if (!Array.isArray(rec_files) || !Array.isArray(audio_files)) {
-            return reject(new Error('rec_files and audio_files must be arrays'));
+        if (!rec_file || typeof rec_file !== 'string') {
+            return reject(new Error('rec_file must be a non-empty string (single JSON file path)'));
         }
         
-        if (rec_files.length === 0 || audio_files.length === 0) {
-            return reject(new Error('rec_files and audio_files arrays cannot be empty'));
+        if (!Array.isArray(audio_files)) {
+            return reject(new Error('audio_files must be an array'));
         }
         
-        if (rec_files.length !== audio_files.length) {
-            return reject(new Error('rec_files and audio_files must have the same length'));
+        if (audio_files.length === 0) {
+            return reject(new Error('audio_files array cannot be empty'));
         }
         
-        // Convert arrays to JSON strings for PostgreSQL
-        const recFilesJson = JSON.stringify(rec_files);
+        // Wrap single rec_file in array and convert both to JSON strings for PostgreSQL
+        const recFilesJson = JSON.stringify([rec_file]);  // Single file wrapped in array
         const audioFilesJson = JSON.stringify(audio_files);
         
         // Insert into database
@@ -511,7 +573,7 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
                     return resolve({
                         status: 'Success',
                         code: 200,
-                        message: 'Volume recording(s) saved successfully',
+                        message: 'Volume recording saved successfully',
                         data: result.rows[0]
                     });
                 }
@@ -519,6 +581,7 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
         );
     });
 };
+
 const associateVolumeModel = (requester, r_id, volume_id, shadowrec_id, steprec_id) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
