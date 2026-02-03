@@ -1,5 +1,5 @@
 const createNotification  = require('../model/notificationm.js');
-const sendNotification = async (req, res) => {
+const sendNotification = async(req, res) => {
   try {
     const { senderId, receiverId, message, link } = req.body;
     if (!senderId || !receiverId || !message) {
@@ -10,7 +10,6 @@ const sendNotification = async (req, res) => {
       return res.status(500).json({ error: error.message });
     }
     res.status(200).json({ success: true, message: 'Notification sent!' });
-
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

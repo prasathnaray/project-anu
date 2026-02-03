@@ -311,7 +311,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
       </button>
     </li>
 
-    <li className="mb-1 mt-2">
+    {/* <li className="mb-1 mt-2">
       <button
         onMouseDown={(e) => ripple.create(e, "dark", "circle")}
         onClick={() => navigate("/reports")}
@@ -325,7 +325,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
         <ChartPie size={20} />
         <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Reports</div>
       </button>
-    </li>
+    </li> */}
 
     <li className="mb-1 mt-2">
       <button
