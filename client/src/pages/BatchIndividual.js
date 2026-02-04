@@ -1,5 +1,5 @@
 import React from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { ArrowLeft01Icon } from 'hugeicons-react';
@@ -8,6 +8,7 @@ import BasicPie from '../charts/PieChart';
 import TraineeInsRatio from '../charts/TraineeInsRatio';
 import BatchProfileAPI from '../API/BatchProfileAPI';
 import getMonthYear from '../utils/DateChange';
+import { jwtDecode } from 'jwt-decode';
 // import useParams  from 'react-router-dom';
 function BatchIndividual() {
   const data = useParams();
@@ -44,6 +45,11 @@ function BatchIndividual() {
     const batchStarted = [...new Set(batchProfileData.map(batch_start_date => batch_start_date.batch_start_date).filter(Boolean))][0];
     const batchEnded = [...new Set(batchProfileData.map(batch_start_date => batch_start_date.batch_end_date).filter(Boolean))][0];
     console.log(batchName);
+    let token = localStorage.getItem('user_token');
+    const decoded = jwtDecode(token);
+        if (!decoded.role) {
+                return <Navigate to="/" replace />;
+        }
   return (
     <div className={`flex flex-col min-h-screen`}>
             <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -90,12 +96,19 @@ function BatchIndividual() {
                                                            {/* <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>      */}
                                                         </div>
                                                 </div>
+                                                {jwtDecode(localStorage.getItem('user_token')).role == 101 && (
                                                 <div className="col-span-1 bg-white">
                                                         <div className="p-2">Instructor vs Trainee Ratio</div>
-                                                        <div>
-                                                           <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
-                                                        </div>
+                                                        {/* {jwtDecode(localStorage.getItem('user_token')).role == 101 && (
+                                                                <div>
+                                                                        <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
+                                                                </div>
+                                                        )} */}
+                                                        {/* <div>
+                                                                <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
+                                                        </div> */}
                                                 </div>
+                                                )}
                                         </div>
                                     </div>
                             </div>

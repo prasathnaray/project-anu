@@ -376,7 +376,7 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
 };
 
 const individualBatchStats = (requester, batch_id) => {
-    const isPrivileged = [101].includes(Number(requester.role));
+    const isPrivileged = [101, 102].includes(Number(requester.role));
     if (!isPrivileged) {
         return Promise.resolve({
         status: 'Unauthorized',
