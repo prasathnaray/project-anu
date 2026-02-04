@@ -131,7 +131,7 @@ function IndividualInstructors() {
                                                         className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer transition-all duration-300 hover:scale-105"
                                                       />
                                                   </div>
-                                                  <div className="mt-1 text-lg">Akil Senthil</div>
+                                                  <div className="mt-1 text-lg">{insData?.instructor_name}</div>
                                                   <div className="text-sm text-gray-500">Instructor</div>
                                               </div>
                                               <div className="">
