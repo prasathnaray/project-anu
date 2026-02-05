@@ -70,10 +70,6 @@ function BatchIndividual() {
                                         </div>
                                     </div>
                                     <div className="">
-                                        {/* <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
-                                                <div className="mt-5 font-semibold text-xl text-gray-600">Batches</div>
-
-                                        </div> */}
                                         <div className="grid grid-cols-3 gap-3 m-3">
                                                 <div className="col-span-2 bg-white">
                                                         <div className="p-2 flex justify-between items-center">
