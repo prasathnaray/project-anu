@@ -17,3 +17,4 @@ const queriesm = (requester) => {
             })
       })
 }
+module.exports = { queriesm };

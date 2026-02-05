@@ -1058,7 +1058,7 @@ function InsideCertifications() {
                                         <thead>
                                           <tr className="border-b bg-gray-50">
                                             <th className="py-3 px-4 text-left text-[#8DC63F]">Resource Type</th>
-                                            <th className="py-3 px-4 text-left text-[#8DC63F]">Trainees Completed</th>
+                                            <th className="py-3 px-4 text-left text-[#8DC63F]">Trainees Attempted</th>
                                             <th className="py-3 px-4 text-left text-[#8DC63F]">Actions</th>
                                           </tr>
                                         </thead>
