@@ -114,7 +114,8 @@ const getResourcesModel = (requester, module_id) => {
     rd.learning_module_id,
     COUNT(DISTINCT pd.user_id) AS trainee_completed,
     COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource,
-    STRING_AGG(ud.user_name, ', ') AS completed_by_names
+    STRING_AGG(ud.user_name, ', ') AS completed_by_names,
+    STRING_AGG(ud.people_id::text, ', ') AS completed_by_ids
 FROM resource_data rd
 LEFT JOIN progress_data pd 
     ON rd.resource_id = pd.resourse_id

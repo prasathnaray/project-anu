@@ -1005,76 +1005,106 @@ function InsideCertifications() {
       </AttachVolume>
 
       {/* COMPLETION POPUP */}
-      {showCompletionPopup && selectedResourceForPopup && (
+        {showCompletionPopup && selectedResourceForPopup && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
           onClick={closeCompletionPopup}
         >
           <div 
-            className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all"
+            className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 transform transition-all"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex justify-between items-start mb-4 pb-4 border-b">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
                   {selectedResourceForPopup.resource_name}
                 </h3>
-                <span className="text-xs px-2 py-1 bg-[#8DC63F] bg-opacity-20 text-[#8DC63F] rounded-full">
-                  {selectedResourceForPopup.resource_type}
-                </span>
+                <div className="flex gap-3 items-center">
+                  <span className="text-sm px-3 py-1 bg-[#8DC63F] bg-opacity-20 text-[#8DC63F] rounded-full font-medium">
+                    {selectedResourceForPopup.resource_type}
+                  </span>
+                  {selectedResourceForPopup.resource_topic && (
+                    <span className="text-sm text-gray-600">
+                      Topic: <span className="font-medium text-gray-800">{selectedResourceForPopup.resource_topic}</span>
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={closeCompletionPopup}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors ml-4"
               >
-                <X size={20} />
+                <X size={24} />
               </button>
             </div>
             
-            {/* Topic if available */}
-            {selectedResourceForPopup.resource_topic && (
-              <div className="mb-4 pb-4 border-b">
-                <span className="text-sm text-gray-600">Topic: </span>
-                <span className="text-sm font-medium text-gray-800">
-                  {selectedResourceForPopup.resource_topic}
-                </span>
-              </div>
-            )}
-            
-            {/* Completion Info */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-10 h-10 rounded-full bg-[#8DC63F] flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {selectedResourceForPopup.trainee_completed}
-                  </span>
-                </div>
-                <h4 className="text-sm font-semibold text-gray-700">
-                  {selectedResourceForPopup.trainee_completed === 1 ? 'Trainee Completed' : 'Trainees Completed'}
-                </h4>
-              </div>
-              
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {selectedResourceForPopup.completed_by_names.split(', ').map((name, index) => (
-                  <div 
-                    key={index}
-                    className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-transparent rounded-lg border-l-4 border-[#8DC63F] hover:shadow-md transition-shadow"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#8DC63F] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
-                      {name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-gray-800 font-medium">{name}</span>
-                  </div>
-                ))}
+            {/* Table */}
+            <div className="mb-4">
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-100 border-b">
+                      <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Trainee Name</th>
+                      <th className="py-3 px-4 text-center text-sm font-semibold text-gray-700">Status</th>
+                      <th className="py-3 px-4 text-center text-sm font-semibold text-gray-700">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="max-h-80 overflow-y-auto">
+                    {(() => {
+                      const names = selectedResourceForPopup.completed_by_names.split(', ');
+                      const peopleIds = selectedResourceForPopup.completed_by_ids 
+                        ? selectedResourceForPopup.completed_by_ids.split(', ') 
+                        : [];
+                      
+                      return names.map((name, index) => {
+                        const peopleId = peopleIds[index] || 'N/A';
+                        
+                        return (
+                          <tr 
+                            key={index}
+                            className="border-b last:border-b-0 hover:bg-green-50 transition-colors"
+                          >
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-[#8DC63F] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                  {name.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="text-gray-800 font-medium">{name}</span>
+                              </div>
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                ✓ Completed
+                              </span>
+                            </td>
+                            <td className="py-2 px-4 text-center">
+                              <button
+                                onClick={() => {
+                                  // Redirect to user details page with people_id
+                                  navigate(`/trainee/${peopleId}`);
+                                  closeCompletionPopup();
+                                }}
+                                className="px-3 py-1.5 bg-[#8DC63F] text-white text-xs rounded-lg hover:bg-[#7ab52f] transition-colors font-medium"
+                                disabled={peopleId === 'N/A'}
+                              >
+                                View Profile
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-6 pt-4 border-t text-center">
+            <div className="flex justify-end gap-3 pt-4 border-t">
               <button
                 onClick={closeCompletionPopup}
-                className="px-6 py-2 bg-[#8DC63F] text-white rounded-lg hover:bg-[#7ab52f] transition-colors"
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Close
               </button>
