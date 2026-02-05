@@ -1053,7 +1053,6 @@ function InsideCertifications() {
                                           <Plus />
                                         </button>
                                       </div>
-
                                       <table className="w-full text-sm">
                                         <thead>
                                           <tr className="border-b bg-gray-50">
