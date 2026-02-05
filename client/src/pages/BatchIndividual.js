@@ -104,9 +104,9 @@ function BatchIndividual() {
                                                                         <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
                                                                 </div>
                                                         )} */}
-                                                        {/* <div>
+                                                        <div>
                                                                 <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
-                                                        </div> */}
+                                                        </div>
                                                 </div>
                                                 )}
                                         </div>
