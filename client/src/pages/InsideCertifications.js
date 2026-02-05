@@ -1,568 +1,3 @@
-// //--------------------------------------------------------the above code is working good incase of any issue in the code which is written below comment it out and use the above code--------------------------------------------------------
-// import React, {useEffect, useState, useCallback} from "react";
-// import NavBar from "../components/navBar";
-// import {jwtDecode} from "jwt-decode"; // ← changed to default import
-// import { Navigate, useNavigate, useParams } from "react-router-dom";
-// import SideBar from "../components/sideBar";
-// import { ClipLoader } from "react-spinners";
-// import {
-//   ChevronDown,
-//   LayoutDashboard,
-//   ListTodo,
-//   Plus,
-//   X,
-// } from "lucide-react";
-// import {
-//   FormControl,
-//   InputLabel,
-//   MenuItem,
-//   Select,
-// } from "@mui/material";
-// import LearningModule from "../components/superadmin/LearningModule";
-// import CustomCloseButton from "../utils/CustomCloseButton";
-// import GetCertificateDataByIdAPI from "../API/GetCertificateDataByIdAPI";
-// import CreateLearningModuleAPI from "../API/CreateLearningModuleAPI";
-// import GetLearningModuleByIdAPI from "../API/GetLearningModuleByIdAPI";
-// import getResourceAPI from "../API/GetResourceAPI";
-// import { toast } from "react-toastify";
-// import CreateResources from "../components/CreateResources";
-
-// function InsideCertifications() {
-//   const navigate = useNavigate();
-//   const { certificate_id } = useParams();
-//   let token = localStorage.getItem("user_token");
-//   const [buttonOpen, setButtonOpen] = useState(true);
-//   const [createLearningModule, setCreateLearningModule] = useState(false);
-//   // create form
-//   const [certificateName, setCertificateName] = useState("");
-//   const [courseName, setCourseName] = useState("");
-//   const [moduleName, setModuleName] = useState("");
-//   const [unitName, setUnitName] = useState("");
-//   const [expandedResource, setExpandedResource] = useState(null);
-//   // Data states
-//   const [certificateData, setCertificateData] = useState([]);
-//   const [learningModules, setLearningModules] = useState([]);
-//   // Expand row + resources
-//   const [expandedRow, setExpandedRow] = useState(null);
-//   const [resourceMap, setResourceMap] = useState({});
-//   // Create Resources Modal
-//   const [openRes, setOpenRes] = useState(false);
-//   const [selectedModule, setSelectedModule] = useState(null);
-//   const ufcCourses = [
-//     "Principles of ultrasound",
-//     "Probe Movements",
-//     "Knobology",
-//     "Morphology",
-//   ];
-//   const fetchCertificates = useCallback(async () => {
-//     try {
-//       const res = await GetCertificateDataByIdAPI(token, certificate_id);
-//       setCertificateData(res.data || []);
-//     } catch (err) {
-//       console.error("Error loading certificate details:", err);
-//     }
-//   }, [token, certificate_id]);
-//   const fetchLearningModules = useCallback(async () => {
-//     try {
-//       const res = await GetLearningModuleByIdAPI(token, certificate_id);
-//       setLearningModules(Array.isArray(res.data) ? res.data : []);
-//     } catch (err) {
-//       console.error("Error loading modules:", err);
-//     }
-//   }, [token, certificate_id]);
-
-//   const fetchResourcesForModule = useCallback(
-//     async (moduleId) => {
-//       if (!moduleId) return;
-//       setResourceMap((p) => ({
-//         ...p,
-//         [moduleId]: { loading: true, error: null, data: [] },
-//       }));
-//       try {
-//         const res = await getResourceAPI(token, moduleId);
-//         setResourceMap((p) => ({
-//           ...p,
-//           [moduleId]: {
-//             loading: false,
-//             error: null,
-//             data: res.data || [],
-//           },
-//         }));
-//       } catch (err) {
-//         setResourceMap((p) => ({
-//           ...p,
-//           [moduleId]: { loading: false, error: true, data: [] },
-//         }));
-//         toast.error("Failed to load resources", {
-//           closeButton: CustomCloseButton,
-//         });
-//       }
-//     },
-//     [token]
-//   );
-//   useEffect(() => {
-//     fetchCertificates();
-//     fetchLearningModules();
-//   }, [fetchCertificates, fetchLearningModules]);
-//   const courseList = [...new Set(learningModules.map((m) => m.course_name))];
-//   const moduleList = learningModules
-//     .filter((m) => m.course_name === courseName)
-//     .map((m) => m.module_name)
-//     .filter((v, i, arr) => arr.indexOf(v) === i);
-//   const unitList = learningModules
-//     .filter((m) => m.course_name === courseName && m.module_name === moduleName)
-//     .map((m) => m.unit_name)
-//     .filter((v, i, arr) => arr.indexOf(v) === i);
-// useEffect(() => {
-//   if (courseName) {
-//     const firstModule =
-//       learningModules.find(m => m.course_name === courseName)?.module_name || "";
-//     setModuleName(prev => prev || firstModule);
-//     setUnitName("");
-//   } else {
-//     setModuleName("");
-//     setUnitName("");
-//   }
-//   setExpandedRow(null);
-// }, [courseName, learningModules]);
-// useEffect(() => {
-//   setExpandedRow(null);
-// }, [moduleName]);
-// const filteredRows = learningModules.filter(row => {
-//   return (
-//     (!courseName || row.course_name === courseName) &&
-//     (!moduleName || row.module_name === moduleName) &&
-//     (!unitName || row.unit_name === unitName)
-//   );
-// });
-
-//   const handleCreateLearning = async () => {
-//     const payload = {
-//       certificate_id,
-//       course_name: courseName,
-//       module_name: moduleName,
-//       unit_name: unitName,
-//     };
-//     try {
-//       const res = await CreateLearningModuleAPI(token, payload);
-
-//       if (res.data?.code === 200) {
-//         toast.success("Learning Module Created");
-//         handleCloseCreateModule();
-//         fetchLearningModules();
-//       } else {
-//         throw new Error();
-//       }
-//     } catch (err) {
-//       toast.error("Failed to create module");
-//     }
-//   };
-//   const handleCloseCreateModule = () => {
-//     setCreateLearningModule(false);
-//     setCertificateName("");
-//     setCourseName("");
-//     setModuleName("");
-//     setUnitName("");
-//   };
-//   const toggleExpand = async (index, moduleId) => {
-//     const newIndex = expandedRow === index ? null : index;
-//     setExpandedRow(newIndex);
-
-//     if (newIndex !== null) {
-//       fetchResourcesForModule(moduleId);
-//     }
-//   };
-//   let decoded = null;
-//   try {
-//     if (token) decoded = jwtDecode(token);
-//   } catch (_) {}
-
-//   if (decoded.role != 101 && decoded.role != 102) {
-//     return <Navigate to="/" replace />;
-//   }
-//   return (
-//     <div className="flex flex-col min-h-screen">
-//       {/* NAVBAR */}
-//       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
-//         <NavBar />
-//       </div>
-
-//       {/* MAIN */}
-//       <div className="flex flex-grow pt-12">
-//         <SideBar handleButtonOpen={() => setButtonOpen(!buttonOpen)} buttonOpen={buttonOpen} />
-
-//         <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow`}>
-//           <div className="bg-gray-100 min-h-screen">
-//             {/* Breadcrumb */}
-//             <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
-//               <LayoutDashboard size={15} /> Dashboard /
-//               <ListTodo size={15} />
-//               <span className="text-[15px] hover:underline cursor-pointer">
-//                 <button onClick={() => navigate("/request-raised")}>Learning Modules</button>
-//               </span>
-//             </div>
-
-//             {/* FILTERS ABOVE TABLE */}
-//             <div className="mt-5 px-5">
-//               <div className="p-5 grid grid-cols-5 gap-5 bg-white shadow rounded">
-//                 <FormControl fullWidth size="small">
-//                   <InputLabel>Select Course</InputLabel>
-//                   <Select
-//                     label="Select Course"
-//                     value={courseName}
-//                     onChange={(e) => {
-//                       setCourseName(e.target.value);
-//                       setModuleName("");
-//                       setUnitName("");
-//                     }}
-//                   >
-//                     {courseList.map((course, i) => (
-//                       <MenuItem key={i} value={course}>
-//                         {course}
-//                       </MenuItem>
-//                     ))}
-//                   </Select>
-//                 </FormControl>
-
-//                 <FormControl fullWidth size="small">
-//                   <InputLabel>Select Module</InputLabel>
-//                   <Select
-//                     label="Select Module"
-//                     value={moduleName}
-//                     onChange={(e) => {
-//                       setModuleName(e.target.value);
-//                       setUnitName("");
-//                     }}
-//                   >
-//                     {moduleList.map((m, i) => (
-//                       <MenuItem key={i} value={m}>
-//                         {m}
-//                       </MenuItem>
-//                     ))}
-//                   </Select>
-//                 </FormControl>
-
-//                 <FormControl fullWidth size="small">
-//                   <InputLabel>Select Unit</InputLabel>
-//                   <Select label="Select Unit" value={unitName} onChange={(e) => setUnitName(e.target.value)}>
-//                     {unitList.map((u, i) => (
-//                       <MenuItem key={i} value={u}>
-//                         {u}
-//                       </MenuItem>
-//                     ))}
-//                   </Select>
-//                 </FormControl>
-//               </div>
-
-//               {/* TABLE */}
-//               <div className="bg-white p-5 rounded shadow-lg mt-5">
-//                 <div className="flex items-center justify-between">
-//                   <h1 className="text-xl font-semibold text-gray-500">Learning Modules</h1>
-//                   <button className="text-gray-600" onClick={() => setCreateLearningModule(true)}>
-//                     <Plus size={20} />
-//                   </button>
-//                 </div>
-
-//                 <div className="mt-6">
-//                   <table className="w-full text-left border-collapse">
-//                     <thead>
-//                       <tr className="border-b border-gray-300 shadow-sm">
-//                         {/* <th className="py-2 px-4 text-[#8DC63F]">Course Name</th>
-//                         <th className="py-2 px-4 text-[#8DC63F]">Module Name</th> */}
-//                         <th className="py-2 px-4 text-[#8DC63F]">Name</th>
-//                         <th className="py-2 px-4 text-[#8DC63F]">Action</th>
-//                       </tr>
-//                     </thead>
-
-//                     <tbody>
-//                       {filteredRows.length === 0 ? (
-//   <tr>
-//     <td colSpan={4} className="py-4 text-center text-gray-500">
-//       No Data to Show
-//     </td>
-//   </tr>
-// ) : (
-//   filteredRows.map((row, index) => {
-//     const moduleId = row.learning_module_id;
-//     const entry = resourceMap[moduleId] || { loading: false, error: null, data: [] };
-
-//     return (
-//       <React.Fragment key={moduleId}>
-//         <tr className="text-sm text-gray-700">
-//           {/* <td className="py-2 px-4 font-semibold text-[#8DC63F]">{row.course_name}</td>
-//           <td className="py-2 px-4 text-gray-700">{row.module_name}</td> */}
-//           <td className="py-2 px-4 text-gray-600">{row.unit_name || row.course_name}</td>
-
-//           <td className="py-2 px-4">
-//             <button onClick={() => toggleExpand(index, moduleId)} className="text-[#8DC63F]">
-//               <ChevronDown size={22} className={`transition-transform ${expandedRow === index ? "rotate-180" : ""}`} />
-//             </button>
-//           </td>
-//         </tr>
-//                                 {expandedRow === index && (
-//   <tr className="bg-gray-50">
-//     <td colSpan={4} className="p-4 border-b">
-//       <div className="border rounded-lg p-4 bg-white shadow-sm">
-//         <div className="flex justify-between mb-3">
-//           <span className="font-semibold text-gray-600">Resources</span>
-//           <button
-//             onClick={() => {
-//               setSelectedModule({
-//                 learning_module_id: moduleId,
-//                 course_name: row.course_name,
-//                 module_name: row.module_name,
-//                 unit_name: row.unit_name,
-//               });
-//               setOpenRes(true);
-//             }}
-//             className="text-[#8DC63F] hover:text-[#7ab52f]"
-//           >
-//             <Plus />
-//           </button>
-//         </div>
-
-//         <table className="w-full text-sm">
-//           <thead>
-//             <tr className="border-b bg-gray-50">
-//               <th className="py-3 px-4 text-left text-[#8DC63F]">Resource Type</th>
-//               <th className="py-3 px-4 text-left text-[#8DC63F]">Total Sub-Topics</th>
-//               <th className="py-3 px-4 text-left text-[#8DC63F]">Actions</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {entry.loading ? (
-//               <tr>
-//                 <td colSpan={3} className="py-4 text-center">
-//                   <ClipLoader size={30} />
-//                 </td>
-//               </tr>
-//             ) : entry.error ? (
-//               <tr>
-//                 <td colSpan={3} className="py-4 text-center text-red-500">
-//                   Failed to Load
-//                 </td>
-//               </tr>
-//             ) : entry.data.length === 0 ? (
-//               <tr>
-//                 <td colSpan={3} className="py-4 text-center text-gray-500">
-//                   No Resources Found
-//                 </td>
-//               </tr>
-//             ) : (
-//               (() => {
-//                 // Group resources by resource_type
-//                 const groupedByType = entry.data.reduce((acc, res) => {
-//                   if (!acc[res.resource_type]) {
-//                     acc[res.resource_type] = [];
-//                   }
-//                   acc[res.resource_type].push(res);
-//                   return acc;
-//                 }, {});
-
-//                 return Object.entries(groupedByType).map(([type, items]) => (
-//                   <React.Fragment key={type}>
-//                     <tr className="border-b hover:bg-gray-50">
-//                       <td className="py-3 px-4 font-medium text-gray-800">{type}</td>
-//                       <td className="py-3 px-4 text-gray-700">{items.length}</td>
-//                       <td className="py-3 px-4">
-//                         <button
-//                           onClick={() => {
-//                             const key = `${moduleId}-${type}`;
-//                             setExpandedResource(expandedResource === key ? null : key);
-//                           }}
-//                           className="text-[#8DC63F] hover:text-[#7ab52f]"
-//                         >
-//                           <ChevronDown 
-//                             size={22} 
-//                             className={`transition-transform ${
-//                               expandedResource === `${moduleId}-${type}` ? "rotate-180" : ""
-//                             }`} 
-//                           />
-//                         </button>
-//                       </td>
-//                     </tr>
-//                     {expandedResource === `${moduleId}-${type}` && (
-//                       <tr>
-//                         <td colSpan={3} className="p-0">
-//                           <div className="bg-gray-50 p-4">
-//                             <table className="w-full text-sm bg-white rounded shadow-sm">
-//                               <thead>
-//                                 <tr className="border-b bg-gray-100">
-//                                   <th className="py-2 px-4 text-left text-gray-600">Topic Name</th>
-//                                   <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
-//                                 </tr>
-//                               </thead>
-//                               <tbody>
-//                                 {items.map((item) => (
-//                                   <tr 
-//                                     key={item.resource_id} 
-//                                     className="border-b last:border-0 hover:bg-gray-50"
-//                                   >
-//                                     <td className="py-2 px-4 text-gray-800">
-//                                       {item.resource_name}
-//                                     </td>
-//                                     <td className="py-2 px-4 text-gray-700">
-//                                       {item.trainee_completed}
-//                                     </td>
-//                                   </tr>
-//                                 ))}
-//                               </tbody>
-//                             </table>
-//                           </div>
-//                         </td>
-//                       </tr>
-//                     )}
-//                   </React.Fragment>
-//                 ));
-//               })()
-//             )}
-//           </tbody>
-//         </table>
-//       </div>
-//     </td>
-//   </tr>
-// )}
-//                               </React.Fragment>
-//                             );
-//                           })
-//                         )}
-//                     </tbody>
-//                   </table>
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* CREATE LEARNING MODULE MODAL */}
-//       <LearningModule isVisible={createLearningModule} onClose={handleCloseCreateModule}>
-//         <div className="flex justify-between items-center mb-4">
-//           <div className="text-lg font-semibold">Create Learning Module</div>
-//           <button onClick={handleCloseCreateModule} className="text-red-500">
-//             <X size={20} />
-//           </button>
-//         </div>
-
-//         {/* Certification Name */}
-//         <FormControl fullWidth size="small" className="mb-4">
-//           <InputLabel>Select Certification</InputLabel>
-//           <Select
-//             label="Select Certification"
-//             value={certificateName}
-//             onChange={(e) => {
-//               setCertificateName(e.target.value);
-//               setCourseName("");
-//               setModuleName("");
-//               setUnitName("");
-//             }}
-//           >
-//             {certificateData.map((d, i) => (
-//               <MenuItem key={i} value={d.certificate_name}>
-//                 {d.certificate_name}
-//               </MenuItem>
-//             ))}
-//           </Select>
-//         </FormControl>
-
-//         {/* BTC → Course, Module, Unit based on API */}
-//         {certificateName === "BTC" && (
-//           <>
-//             <FormControl fullWidth size="small" className="mb-4 mt-2">
-//               <InputLabel>Select Course</InputLabel>
-//               <Select
-//                 label="Select Course"
-//                 value={courseName}
-//                 onChange={(e) => {
-//                   setCourseName(e.target.value);
-//                   setModuleName("");
-//                   setUnitName("");
-//                 }}
-//               >
-//                 {["First Trimester", "Second Trimester", "Third Trimester"].map((c, i) => (
-//                   <MenuItem key={i} value={c}>
-//                     {c}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-//             <FormControl fullWidth size="small" className="mb-4">
-//               <InputLabel>Select Module</InputLabel>
-//               <Select
-//                 label="Select Module"
-//                 value={moduleName}
-//                 onChange={(e) => {
-//                   setModuleName(e.target.value);
-//                   setUnitName("");
-//                 }}
-//               >
-//                 {moduleList.map((m, i) => (
-//                   <MenuItem key={i} value={m}>
-//                     {m}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-
-//             <FormControl fullWidth size="small" className="mb-4">
-//               <InputLabel>Select Unit</InputLabel>
-//               <Select label="Select Unit" value={unitName} onChange={(e) => setUnitName(e.target.value)}>
-//                 {unitList.map((u, i) => (
-//                   <MenuItem key={i} value={u}>
-//                     {u}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-//           </>
-//         )}
-
-//         {/* UFC = Only course selection */}
-//         {certificateName === "UFC" && (
-//           <FormControl fullWidth size="small" className="mb-4">
-//             <InputLabel>Select Course</InputLabel>
-//             <Select label="Select Course" value={courseName} onChange={(e) => setCourseName(e.target.value)}>
-//               {ufcCourses.map((c, i) => (
-//                 <MenuItem key={i} value={c}>
-//                   {c}
-//                 </MenuItem>
-//               ))}
-//             </Select>
-//           </FormControl>
-//         )}
-
-//         <div className="flex justify-end mt-6">
-//           <button
-//             disabled={!certificateName || !courseName || (certificateName === "BTC" && (!moduleName || !unitName))}
-//             onClick={handleCreateLearning}
-//             className="px-4 py-2 bg-[#8DC63F] text-white rounded"
-//           >
-//             Create
-//           </button>
-//         </div>
-//       </LearningModule>
-
-//       {/* CREATE RESOURCES MODAL */}
-//       <CreateResources
-//         isVisible={openRes}
-//         onClose={() => {
-//           setOpenRes(false);
-//           setSelectedModule(null);
-//         }}
-//         learningModuleId={selectedModule}
-//         onCreated={() => {
-//           if (selectedModule?.learning_module_id) {
-//             fetchResourcesForModule(selectedModule.learning_module_id);
-//           }
-//         }}
-//       />
-//     </div>
-//   );
-// }
-
-// export default InsideCertifications;
-
-// //--------------------------------------------------------the above code is working good incase of any issue in the code which is written below comment it out and use the above code--------------------------------------------------------
 import React, {useEffect, useState, useCallback} from "react";
 import NavBar from "../components/navBar";
 import {jwtDecode} from "jwt-decode";
@@ -623,6 +58,10 @@ function InsideCertifications() {
   const [openRes, setOpenRes] = useState(false);
   const [selectedModule, setSelectedModule] = useState(null);
   
+  // Completion Popup States
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
+  const [selectedResourceForPopup, setSelectedResourceForPopup] = useState(null);
+  
   //set volume list 
   const [volumeList, setVolumeList] = useState([]);
   const [volumeLoading, setVolumeLoading] = useState(false);
@@ -648,7 +87,14 @@ function InsideCertifications() {
   const [recordingsLoading, setRecordingsLoading] = useState(false);
   const [attachSubmitting, setAttachSubmitting] = useState(false);
   
-  // Add this function to fetch shadow recordings
+  const ufcCourses = [
+    "Principles of ultrasound",
+    "Probe Movements",
+    "Knobology",
+    "Morphology",
+  ];
+
+  // Fetch shadow recordings
   const fetchShadowRecordings = useCallback(async (volumeId) => {
     if (!volumeId) return;
     
@@ -656,11 +102,9 @@ function InsideCertifications() {
     try {
       const res = await GetShadowRecordingsAPI(volumeId);
       if (res.data && Array.isArray(res.data)) {
-        // Filter shadow recordings
         const shadowRecs = res.data.filter(rec => rec.recording_type === 'shadow');
         setShadowRecordings(shadowRecs);
         
-        // Filter step recordings
         const stepRecs = res.data.filter(rec => rec.recording_type === 'step');
         setStepRecordings(stepRecs);
       }
@@ -674,9 +118,9 @@ function InsideCertifications() {
     } finally {
       setRecordingsLoading(false);
     }
-  }, [token]);
+  }, []);
 
-  // Add this function with your other fetch functions (around line 80-100)
+  // Fetch volume list
   const fetchVolumeList = useCallback(async () => {
     setVolumeLoading(true);
     try {
@@ -698,7 +142,6 @@ function InsideCertifications() {
     setAttachVolume(!attachVolume);
     if (!attachVolume) {
       fetchVolumeList();
-      // Reset form data when opening
       setAttachFormData({
         resource_id: '',
         volume_id: '',
@@ -715,11 +158,10 @@ function InsideCertifications() {
     setAttachFormData(prev => ({
       ...prev,
       volume_id: volumeId,
-      shadow_recording: '', // Reset shadow recording when volume changes
-      step_recording: '' // Reset step recording when volume changes
+      shadow_recording: '',
+      step_recording: ''
     }));
     
-    // Fetch recordings for the selected volume
     if (volumeId) {
       fetchShadowRecordings(volumeId);
     } else {
@@ -734,8 +176,9 @@ function InsideCertifications() {
     
     setAttachSubmitting(true);
     try {
+      const decoded = jwtDecode(token);
       const payload = {
-        requester: decoded?.email || decoded?.username || '', // Get from decoded token
+        requester: decoded?.email || decoded?.username || '',
         r_id: attachFormData.resource_id,
         volume_id: attachFormData.volume_id,
         shadowrec_id: attachFormData.shadow_recording,
@@ -749,7 +192,6 @@ function InsideCertifications() {
           closeButton: CustomCloseButton,
         });
         setAttachVolume(false);
-        // Reset form
         setAttachFormData({
           resource_id: '',
           volume_id: '',
@@ -774,13 +216,6 @@ function InsideCertifications() {
       setAttachSubmitting(false);
     }
   };
-  
-  const ufcCourses = [
-    "Principles of ultrasound",
-    "Probe Movements",
-    "Knobology",
-    "Morphology",
-  ];
   
   const fetchCertificates = useCallback(async () => {
     try {
@@ -907,6 +342,20 @@ function InsideCertifications() {
     if (newIndex !== null) {
       fetchResourcesForModule(moduleId);
     }
+  };
+
+  // Handle resource click for popup
+  const handleResourceClick = (item) => {
+    if (item.completed_by_names && item.trainee_completed > 0) {
+      setSelectedResourceForPopup(item);
+      setShowCompletionPopup(true);
+    }
+  };
+
+  // Close completion popup
+  const closeCompletionPopup = () => {
+    setShowCompletionPopup(false);
+    setSelectedResourceForPopup(null);
   };
 
   let decoded = null;
@@ -1082,7 +531,6 @@ function InsideCertifications() {
                                             </tr>
                                           ) : (
                                             (() => {
-                                              // Group resources by resource_type
                                               const groupedByType = entry.data.reduce((acc, res) => {
                                                 if (!acc[res.resource_type]) {
                                                   acc[res.resource_type] = [];
@@ -1092,7 +540,6 @@ function InsideCertifications() {
                                               }, {});
 
                                               return Object.entries(groupedByType).map(([type, items]) => {
-                                                // Calculate total completed for this resource type
                                                 const totalCompleted = items.reduce((sum, item) => 
                                                   sum + parseInt(item.trainee_completed || 0), 0
                                                 );
@@ -1124,18 +571,16 @@ function InsideCertifications() {
                                                         <td colSpan={3} className="p-0">
                                                           <div className="bg-gray-50 p-4">
                                                             {(() => {
-                                                              // Check if ANY item has a resource_topic
                                                               const hasTopics = items.some(item => item.resource_topic && item.resource_topic.trim() !== "");
                                                               
                                                               if (!hasTopics) {
-                                                                // No topics - show resources directly
                                                                 return (
                                                                   <table className="w-full bg-white rounded shadow-sm">
                                                                     <thead>
                                                                       <tr className="border-b bg-gray-100">
                                                                         <th className="py-2 px-4 text-left text-gray-600">Resource Name</th>
                                                                         <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
-                                                                        {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
+                                                                        {decoded.role == 99 && (
                                                                          <th className="py-2 px-4 text-left text-gray-600">Actions</th>
                                                                         )}
                                                                       </tr>
@@ -1144,19 +589,27 @@ function InsideCertifications() {
                                                                       {items.map((item) => (
                                                                         <tr 
                                                                           key={item.resource_id} 
-                                                                          className="border-b last:border-0 hover:bg-gray-50"
+                                                                          className={`border-b last:border-0 hover:bg-gray-50 ${
+                                                                            item.completed_by_names ? 'cursor-pointer' : ''
+                                                                          }`}
+                                                                          onClick={() => handleResourceClick(item)}
                                                                         >
                                                                           <td className="py-2 px-4 text-gray-800">
                                                                             {item.resource_name}
                                                                           </td>
-                                                                          <td className="py-2 px-4 text-gray-700">
-                                                                            {item.trainee_completed}
+                                                                          <td className="py-2 px-4">
+                                                                            <span className={`${
+                                                                              item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                            }`}>
+                                                                              {item.trainee_completed}
+                                                                            </span>
                                                                           </td>
                                                                           <td>
-                                                                            {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
+                                                                            {decoded.role == 99 && (
                                                                               <button 
-                                                                                className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs" 
-                                                                                onClick={() => {
+                                                                                className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs hover:bg-[#7ab52f]" 
+                                                                                onClick={(e) => {
+                                                                                  e.stopPropagation();
                                                                                   handleAttachVolume();
                                                                                   setResourcesData({
                                                                                     resource_id: item.resource_id,
@@ -1179,7 +632,6 @@ function InsideCertifications() {
                                                                 );
                                                               }
                                                               
-                                                              // Has topics - show topic grouping
                                                               return (
                                                                 <table className="w-full bg-white rounded shadow-sm">
                                                                   <thead>
@@ -1191,7 +643,6 @@ function InsideCertifications() {
                                                                   </thead>
                                                                   <tbody>
                                                                     {(() => {
-                                                                      // Group by resource_topic
                                                                       const groupedByTopic = items.reduce((acc, item) => {
                                                                         const topic = item.resource_topic && item.resource_topic.trim() !== "" 
                                                                           ? item.resource_topic 
@@ -1252,13 +703,20 @@ function InsideCertifications() {
                                                                                         {topicItems.map((item) => (
                                                                                           <tr 
                                                                                             key={item.resource_id} 
-                                                                                            className="border-b last:border-0 hover:bg-gray-50"
+                                                                                            className={`border-b last:border-0 hover:bg-gray-50 ${
+                                                                                              item.completed_by_names ? 'cursor-pointer' : ''
+                                                                                            }`}
+                                                                                            onClick={() => handleResourceClick(item)}
                                                                                           >
                                                                                             <td className="py-2 px-4 text-gray-800 text-sm">
                                                                                               {item.resource_name}
                                                                                             </td>
-                                                                                            <td className="py-2 px-4 text-gray-700 text-sm">
-                                                                                              {item.trainee_completed}
+                                                                                            <td className="py-2 px-4 text-sm">
+                                                                                              <span className={`${
+                                                                                                item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                                              }`}>
+                                                                                                {item.trainee_completed}
+                                                                                              </span>
                                                                                             </td>
                                                                                           </tr>
                                                                                         ))}
@@ -1313,7 +771,6 @@ function InsideCertifications() {
           </button>
         </div>
 
-        {/* Certification Name */}
         <FormControl fullWidth size="small" className="mb-4">
           <InputLabel>Select Certification</InputLabel>
           <Select
@@ -1334,7 +791,6 @@ function InsideCertifications() {
           </Select>
         </FormControl>
 
-        {/* BTC → Course, Module, Unit based on API */}
         {certificateName === "BTC" && (
           <>
             <FormControl fullWidth size="small" className="mb-4 mt-2">
@@ -1386,7 +842,6 @@ function InsideCertifications() {
           </>
         )}
 
-        {/* UFC = Only course selection */}
         {certificateName === "UFC" && (
           <FormControl fullWidth size="small" className="mb-4">
             <InputLabel>Select Course</InputLabel>
@@ -1404,7 +859,7 @@ function InsideCertifications() {
           <button
             disabled={!certificateName || !courseName || (certificateName === "BTC" && (!moduleName || !unitName))}
             onClick={handleCreateLearning}
-            className="px-4 py-2 bg-[#8DC63F] text-white rounded"
+            className="px-4 py-2 bg-[#8DC63F] text-white rounded disabled:opacity-50"
           >
             Create
           </button>
@@ -1437,7 +892,6 @@ function InsideCertifications() {
 
         <form onSubmit={handleSubmitAttachVolume}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {/* Resource Name */}
             <TextField
               fullWidth
               size="small"
@@ -1448,7 +902,6 @@ function InsideCertifications() {
               }}
             />
 
-            {/* Volume Name Dropdown */}
             <FormControl fullWidth size="small">
               <InputLabel id="volume-name-label">Volume Name</InputLabel>
               <Select
@@ -1473,7 +926,6 @@ function InsideCertifications() {
               </Select>
             </FormControl>
 
-            {/* Shadow Recording Dropdown */}
             <FormControl fullWidth size="small">
               <InputLabel id="shadow-recording-label">Shadow Recording</InputLabel>
               <Select
@@ -1503,7 +955,6 @@ function InsideCertifications() {
               </Select>
             </FormControl>
 
-            {/* Step Recording Dropdown */}
             <FormControl fullWidth size="small">
               <InputLabel id="step-recording-label">Step Recording</InputLabel>
               <Select
@@ -1534,7 +985,6 @@ function InsideCertifications() {
             </FormControl>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
@@ -1553,6 +1003,85 @@ function InsideCertifications() {
           </div>
         </form>
       </AttachVolume>
+
+      {/* COMPLETION POPUP */}
+      {showCompletionPopup && selectedResourceForPopup && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={closeCompletionPopup}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-800 mb-1">
+                  {selectedResourceForPopup.resource_name}
+                </h3>
+                <span className="text-xs px-2 py-1 bg-[#8DC63F] bg-opacity-20 text-[#8DC63F] rounded-full">
+                  {selectedResourceForPopup.resource_type}
+                </span>
+              </div>
+              <button
+                onClick={closeCompletionPopup}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {/* Topic if available */}
+            {selectedResourceForPopup.resource_topic && (
+              <div className="mb-4 pb-4 border-b">
+                <span className="text-sm text-gray-600">Topic: </span>
+                <span className="text-sm font-medium text-gray-800">
+                  {selectedResourceForPopup.resource_topic}
+                </span>
+              </div>
+            )}
+            
+            {/* Completion Info */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-10 h-10 rounded-full bg-[#8DC63F] flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">
+                    {selectedResourceForPopup.trainee_completed}
+                  </span>
+                </div>
+                <h4 className="text-sm font-semibold text-gray-700">
+                  {selectedResourceForPopup.trainee_completed === 1 ? 'Trainee Completed' : 'Trainees Completed'}
+                </h4>
+              </div>
+              
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {selectedResourceForPopup.completed_by_names.split(', ').map((name, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-transparent rounded-lg border-l-4 border-[#8DC63F] hover:shadow-md transition-shadow"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#8DC63F] text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-gray-800 font-medium">{name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-6 pt-4 border-t text-center">
+              <button
+                onClick={closeCompletionPopup}
+                className="px-6 py-2 bg-[#8DC63F] text-white rounded-lg hover:bg-[#7ab52f] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

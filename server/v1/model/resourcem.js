@@ -81,29 +81,54 @@ const getResourcesModel = (requester, module_id) => {
       params = [module_id, requester.user_mail];
     } else {
       // Admin view: aggregate for all users
-      query = `
-        SELECT 
-            rd.resource_id,
-            rd.resource_name,
-            rd.resource_topic,
-            rd.created_at,
-            rd.resource_type,
-            rd.learning_module_id,
-            COUNT(pd.user_id) AS trainee_completed,
-            COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource
-        FROM resource_data rd
-        LEFT JOIN progress_data pd 
-            ON rd.resource_id = pd.resourse_id
-        WHERE rd.learning_module_id = $1
-        GROUP BY 
-        rd.resource_id,
-        rd.resource_name,
-        rd.resource_type,
-        rd.learning_module_id,
-        rd.resource_topic,
-        rd.created_at
-        ORDER BY rd.created_at ASC
-      `;
+      // query = `
+      //   SELECT 
+      //       rd.resource_id,
+      //       rd.resource_name,
+      //       rd.resource_topic,
+      //       rd.created_at,
+      //       rd.resource_type,
+      //       rd.learning_module_id,
+      //       pd.user_id AS attempted_user,
+      //       COUNT(pd.user_id) AS trainee_completed,
+      //       COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource
+      //   FROM resource_data rd
+      //   LEFT JOIN progress_data pd 
+      //       ON rd.resource_id = pd.resourse_id
+      //   WHERE rd.learning_module_id = $1
+      //   GROUP BY 
+      //   rd.resource_id,
+      //   rd.resource_name,
+      //   rd.resource_type,
+      //   rd.learning_module_id,
+      //   rd.resource_topic,
+      //   rd.created_at
+      //   ORDER BY rd.created_at ASC
+      // `;
+      query = `SELECT 
+    rd.resource_id,
+    rd.resource_name,
+    rd.resource_topic,
+    rd.created_at,
+    rd.resource_type,
+    rd.learning_module_id,
+    COUNT(DISTINCT pd.user_id) AS trainee_completed,
+    COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource,
+    STRING_AGG(ud.user_name, ', ') AS completed_by_names
+FROM resource_data rd
+LEFT JOIN progress_data pd 
+    ON rd.resource_id = pd.resourse_id
+LEFT JOIN user_data ud 
+    ON pd.user_id = ud.user_email
+WHERE rd.learning_module_id = $1
+GROUP BY 
+    rd.resource_id,
+    rd.resource_name,
+    rd.resource_type,
+    rd.learning_module_id,
+    rd.resource_topic,
+    rd.created_at
+ORDER BY rd.created_at ASC`;
       params = [module_id];
     }
     client.query(query, params, (err, result) => {
