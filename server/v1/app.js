@@ -188,12 +188,10 @@ app.use('/api/v1', Authenticate, GetLearningModuleByIdRouter);
 //batch update route
 app.use('/api/v1', Authenticate, updateBatchRouter);
 app.use('/api/v1', Authenticate, moduleTestScoresRouter);
-
 //get resource by learning module id and resource type
 app.use('/api/v1', Authenticate, getResourceBylmandrtRouter);
 app.use('/api/v1', Authenticate, getInstructorDataAnalysisRoute);
 app.use('/api/v1', Authenticate, attemptTestRouter);
-
 // volume
 app.use('/api/v1', Authenticate, getVolumeByInstructorRouter);
 app.use('/api/v1', Authenticate, updateVolumeConRouter);
@@ -201,11 +199,8 @@ app.use('/api/v1', Authenticate, getConvVolumeListRouter);
 app.use('/api/v1', Authenticate, volumePlacementRouter);
 app.use('/api/v1', Authenticate, volumeRecordingRouter);
 app.use('/api/v1', Authenticate, associateVolumeRouter);
-
-
 //recordings 
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
-
 //associated volume  
 app.use('/api/v1/', Authenticate, getAssocVolumeRouter);
 module.exports = app;
