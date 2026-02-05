@@ -97,17 +97,17 @@ function BatchIndividual() {
                                                         </div>
                                                 </div>
                                                 {jwtDecode(localStorage.getItem('user_token')).role == 101 && (
-                                                <div className="col-span-1 bg-white">
-                                                        <div className="p-2">Instructor vs Trainee Ratio</div>
-                                                        {/* {jwtDecode(localStorage.getItem('user_token')).role == 101 && (
+                                                        <div className="col-span-1 bg-white">
+                                                                <div className="p-2">Instructor vs Trainee Ratio</div>
+                                                                {/* {jwtDecode(localStorage.getItem('user_token')).role == 101 && (
+                                                                        <div>
+                                                                                <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
+                                                                        </div>
+                                                                )} */}
                                                                 <div>
                                                                         <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
                                                                 </div>
-                                                        )} */}
-                                                        <div>
-                                                                <TraineeInsRatio trainee={traineeCount} instructor={instructorCount}/>     
                                                         </div>
-                                                </div>
                                                 )}
                                         </div>
                                     </div>
