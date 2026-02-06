@@ -1038,7 +1038,6 @@ function InsideCertifications() {
                 <X size={24} />
               </button>
             </div>
-            
             {/* Table */}
             <div className="mb-4">
               <div className="border rounded-lg overflow-hidden">

@@ -1,3 +1,3 @@
-//const APP_URL = 'http://ec2-13-234-162-93.ap-south-1.compute.amazonaws.com:4004';
-const APP_URL = 'http://10.42.248.106:4004'
+const APP_URL = 'https://d32a-103-158-43-37.ngrok-free.app';
+//const APP_URL = 'http://10.42.248.106:4004'
 export default APP_URL;
