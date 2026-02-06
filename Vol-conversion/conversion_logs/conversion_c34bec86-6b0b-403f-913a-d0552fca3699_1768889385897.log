@@ -1,0 +1,39 @@
+[2026-01-20T06:09:45.902Z] Starting conversion for volume: c34bec86-6b0b-403f-913a-d0552fca3699
+Storage path: volumes/FL - I0000051.vol
+Local file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\c34bec86-6b0b-403f-913a-d0552fca3699_FL - I0000051.vol
+Name: Test 4
+[STDERR] When loading module  "CropVolume" , the dependency "ResampleScalarVectorDWIVolume" failed to be loaded.
+
+[STDOUT] qSlicerMarkupsModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDOUT] qSlicerSequencesModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDERR] Traceback (most recent call last):
+
+[STDERR]   File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/ValveAnnulusAnalysis.py", line 115, in initializeHeartValveLib
+    HeartValveLib.setup(usPresetsScenePath)
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 22, in setup
+    registerCustomLayouts()
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 132, in registerCustomLayouts
+
+[STDERR]     layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(CardiacFourUpViewLayoutId, customLayout)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDERR] Traceback (most recent call last):
+
+[STDERR]   File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 57, in onStartupCompleted
+    VirtualCathLabLogic.addViewLayouts()
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 654, in addViewLayouts
+
+[STDERR]     layoutLogic = layoutManager.layoutLogic()
+
+[STDERR]                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDERR] Traceback (most recent call last):
+
+[STDERR]   File "<string>", line 5, in <module>
+  File "<string>", line 169, in <module>
+FileNotFoundError: [Errno 2] No such file or directory: 'D:\\Vol to nrrd\\conversion_kretz_log.txt'
+

@@ -1,0 +1,25 @@
+=== Kretz conversion started at 2026-02-05 15:23:20 ===
+[2026-02-05 15:23:20] Script starting...
+[2026-02-05 15:23:20] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
+[2026-02-05 15:23:20] Volume ID: d59a06a6-de1c-4c7f-87f3-bc509d788bd8
+[2026-02-05 15:23:20] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.vol
+[2026-02-05 15:23:20] Volume name: abc
+[2026-02-05 15:23:20] Available Kretz-related modules: ['kretzfilereader']
+[2026-02-05 15:23:20] ✅ Kretz file reader modules found
+[2026-02-05 15:23:20] Input file size: 12853438 bytes
+[2026-02-05 15:23:20] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
+[2026-02-05 15:23:20] Attempting to load Kretz VOL file...
+[2026-02-05 15:23:24] ✅ Successfully loaded: abc
+[2026-02-05 15:23:24] Node class: vtkMRMLScalarVolumeNode
+[2026-02-05 15:23:24] Image dimensions: (360, 244, 230)
+[2026-02-05 15:23:24] Saving as NIFTI...
+[2026-02-05 15:23:24] Cleaned up volume node
+[2026-02-05 15:23:24] ✅ NIFTI saved locally: 20203552 bytes
+[2026-02-05 15:23:24] 📤 Starting upload to Supabase...
+[2026-02-05 15:23:24] Initializing Supabase client...
+[2026-02-05 15:23:24] Uploading to Supabase: converted_vol_files/d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
+[2026-02-05 15:23:36] ✅ Upload successful: converted_vol_files/d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
+[2026-02-05 15:23:36] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
+[2026-02-05 15:23:36] File size: 20203552 bytes (19730.03 KB, 19.27 MB)
+[2026-02-05 15:23:36] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
+[2026-02-05 15:23:36] Script completed: True

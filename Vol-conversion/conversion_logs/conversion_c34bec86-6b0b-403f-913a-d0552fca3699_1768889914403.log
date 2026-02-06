@@ -1,0 +1,64 @@
+[2026-01-20T06:18:34.409Z] Starting conversion for volume: c34bec86-6b0b-403f-913a-d0552fca3699
+Storage path: volumes/FL - I0000051.vol
+Local file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\c34bec86-6b0b-403f-913a-d0552fca3699_FL - I0000051.vol
+Name: Test 4
+[STDERR] When loading module  "CropVolume" , the dependency "ResampleScalarVectorDWIVolume" failed to be loaded.
+
+[STDOUT] qSlicerMarkupsModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDOUT] qSlicerSequencesModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDERR] Traceback (most recent call last):
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/ValveAnnulusAnalysis.py", line 115, in initializeHeartValveLib
+
+[STDERR]     HeartValveLib.setup(usPresetsScenePath)
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 22, in setup
+    registerCustomLayouts()
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 132, in registerCustomLayouts
+    layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(CardiacFourUpViewLayoutId, customLayout)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDERR] Traceback (most recent call last):
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 57, in onStartupCompleted
+
+[STDERR]     VirtualCathLabLogic.addViewLayouts()
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 654, in addViewLayouts
+    layoutLogic = layoutManager.layoutLogic()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDOUT] [2026-01-20 11:48:37] Script starting...
+
+[STDOUT] [2026-01-20 11:48:37] === Kretz VOL to NIFTI Conversion ===
+[2026-01-20 11:48:37] Volume ID: c34bec86-6b0b-403f-913a-d0552fca3699
+[2026-01-20 11:48:37] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\c34bec86-6b0b-403f-913a-d0552fca3699_FL - I0000051.vol
+[2026-01-20 11:48:37] Volume name: Test 4
+
+[STDOUT] [2026-01-20 11:48:37] Available Kretz-related modules: ['kretzfilereader']
+
+[STDOUT] [2026-01-20 11:48:37] ✅ Kretz file reader modules foun
+[STDOUT] [2026-01-20 11:48:37] Input file size: 32626016 bytes
+
+[STDOUT] [2026-01-20 11:48:37] ✅ Created output folde
+[STDOUT] [2026-01-20 11:48:37] Output will be: C:\Users\igrs\project-anu\Vol-conversion\nifti_output\c34bec86-6b0b-403f-913a-d0552fca3699_c34bec86-6b0b-403f-913a-d0552fca3699_FL - I0000051.nii
+
+[STDOUT] [2026-01-20 11:48:37] Attempting to load Kretz VOL file...
+
+[STDOUT] "GE Kretz ultrasound volume" Reader has successfully read the file "C:\\Users\\igrs\\project-anu\\Vol-conversion\\temp_downloads\\c34bec86-6b0b-403f-913a-d0552fca3699_FL - I0000051.vol" "[5.72s]"
+
+[STDOUT] [2026-01-20 11:48:42] ✅ Successfully loaded: Test 
+[STDOUT] [2026-01-20 11:48:42] Node class: vtkMRMLScalarVolumeNode
+
+[STDOUT] [2026-01-20 11:48:42] Image dimensions: (317, 252, 212)
+
+[STDOUT] [2026-01-20 11:48:42] Saving as NIFTI...
+
+[STDOUT] [2026-01-20 11:48:43] ✅ SUCCESS: Saved 16935760 byte
+[STDOUT] [2026-01-20 11:48:43] Cleaned up volume node
+
+[STDOUT] CONVERSION_RESULT:{"success": true, "output_path": "C:\\Users\\igrs\\project-anu\\Vol-conversion\\nifti_output\\c34bec86-6b0b-403f-913a-d0552fca3699_c34bec86-6b0b-403f-913a-d0552fca3699_FL - I0000051.nii", "output_size": 16935760, "volume_id": "c34bec86-6b0b-403f-913a-d0552fca3699"}
+
+[STDOUT] [2026-01-20 11:48:43] Script completed: True
+
+[2026-01-20T06:18:43.477Z] Process exited with code: 0

@@ -1,0 +1,63 @@
+[2026-01-20T07:12:23.732Z] Starting conversion for volume: d48725d6-fb82-4439-9dd1-d141191f959d
+Storage path: volumes/FL - I0000005.vol
+Local file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\d48725d6-fb82-4439-9dd1-d141191f959d_FL - I0000005.vol
+Name: test 28
+[STDERR] When loading module  "CropVolume" , the dependency "ResampleScalarVectorDWIVolume" failed to be loaded.
+
+[STDOUT] qSlicerMarkupsModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDOUT] qSlicerSequencesModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDERR] Traceback (most recent call last):
+
+[STDERR]   File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/ValveAnnulusAnalysis.py", line 115, in initializeHeartValveLib
+    HeartValveLib.setup(usPresetsScenePath)
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 22, in setup
+    registerCustomLayouts()
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 132, in registerCustomLayouts
+    layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(CardiacFourUpViewLayoutId, customLayout)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDERR] Traceback (most recent call last):
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 57, in onStartupCompleted
+
+[STDERR]     VirtualCathLabLogic.addViewLayouts()
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 654, in addViewLayouts
+    layoutLogic = layoutManager.layoutLogic()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDOUT] [2026-01-20 12:42:26] Script starting...
+
+[STDOUT] [2026-01-20 12:42:26] === Kretz VOL to NIFTI Conversion ===
+[2026-01-20 12:42:26] Volume ID: d48725d6-fb82-4439-9dd1-d141191f959d
+[2026-01-20 12:42:26] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\d48725d6-fb82-4439-9dd1-d141191f959d_FL - I0000005.vol
+
+[STDOUT] [2026-01-20 12:42:26] Volume name: test 28
+
+[STDOUT] [2026-01-20 12:42:26] Available Kretz-related modules: ['kretzfilereader']
+
+[STDOUT] [2026-01-20 12:42:26] ✅ Kretz file reader modules foun[2026-01-20 12:42:26] Input file size: 31598854 bytes
+
+[STDOUT] [2026-01-20 12:42:26] Output will be: C:\Users\igrs\project-anu\Vol-conversion\nifti_output\d48725d6-fb82-4439-9dd1-d141191f959d_d48725d6-fb82-4439-9dd1-d141191f959d_FL - I0000005.nii
+
+[STDOUT] [2026-01-20 12:42:26] Attempting to load Kretz VOL file...
+
+[STDOUT] "GE Kretz ultrasound volume" Reader has successfully read the file "C:\\Users\\igrs\\project-anu\\Vol-conversion\\temp_downloads\\d48725d6-fb82-4439-9dd1-d141191f959d_FL - I0000005.vol" "[6.22s]"
+
+[STDOUT] [2026-01-20 12:42:32] ✅ Successfully loaded: test 2
+[STDOUT] [2026-01-20 12:42:32] Node class: vtkMRMLScalarVolumeNode
+
+[STDOUT] [2026-01-20 12:42:32] Image dimensions: (298, 271, 216)
+
+[STDOUT] [2026-01-20 12:42:32] Saving as NIFTI...
+
+[STDOUT] [2026-01-20 12:42:32] ✅ SUCCESS: Saved 17444080 byte
+[STDOUT] [2026-01-20 12:42:32] Cleaned up volume node
+
+[STDOUT] CONVERSION_RESULT:{"success": true, "output_path": "C:\\Users\\igrs\\project-anu\\Vol-conversion\\nifti_output\\d48725d6-fb82-4439-9dd1-d141191f959d_d48725d6-fb82-4439-9dd1-d141191f959d_FL - I0000005.nii", "output_size": 17444080, "volume_id": "d48725d6-fb82-4439-9dd1-d141191f959d"}
+
+[STDOUT] [2026-01-20 12:42:32] Script completed: True
+
+[2026-01-20T07:12:33.261Z] Process exited with code: 0
