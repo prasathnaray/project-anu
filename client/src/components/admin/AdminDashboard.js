@@ -178,7 +178,7 @@ function AdminDashboard(){
               </div>
             </div>
             <div className="flex justify-between items-center" style={{ fontWeight: 'bold', color: '#4B5563' }}>
-                <div className="my-2 mx-5 text-lg">Test Completion Rate</div>
+                <div className="my-2 mx-5 text-lg">Gender Ratio</div>
                 <div className="mx-5">
                   {/* <FormControl variant="outlined" size="small" sx={{ minWidth: 160 }}>
                     <Select

@@ -1,25 +1,25 @@
-=== Kretz conversion started at 2026-02-05 15:23:20 ===
-[2026-02-05 15:23:20] Script starting...
-[2026-02-05 15:23:20] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
-[2026-02-05 15:23:20] Volume ID: d59a06a6-de1c-4c7f-87f3-bc509d788bd8
-[2026-02-05 15:23:20] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.vol
-[2026-02-05 15:23:20] Volume name: abc
-[2026-02-05 15:23:20] Available Kretz-related modules: ['kretzfilereader']
-[2026-02-05 15:23:20] ✅ Kretz file reader modules found
-[2026-02-05 15:23:20] Input file size: 12853438 bytes
-[2026-02-05 15:23:20] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
-[2026-02-05 15:23:20] Attempting to load Kretz VOL file...
-[2026-02-05 15:23:24] ✅ Successfully loaded: abc
-[2026-02-05 15:23:24] Node class: vtkMRMLScalarVolumeNode
-[2026-02-05 15:23:24] Image dimensions: (360, 244, 230)
-[2026-02-05 15:23:24] Saving as NIFTI...
-[2026-02-05 15:23:24] Cleaned up volume node
-[2026-02-05 15:23:24] ✅ NIFTI saved locally: 20203552 bytes
-[2026-02-05 15:23:24] 📤 Starting upload to Supabase...
-[2026-02-05 15:23:24] Initializing Supabase client...
-[2026-02-05 15:23:24] Uploading to Supabase: converted_vol_files/d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
-[2026-02-05 15:23:36] ✅ Upload successful: converted_vol_files/d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
-[2026-02-05 15:23:36] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
-[2026-02-05 15:23:36] File size: 20203552 bytes (19730.03 KB, 19.27 MB)
-[2026-02-05 15:23:36] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d59a06a6-de1c-4c7f-87f3-bc509d788bd8_d59a06a6-de1c-4c7f-87f3-bc509d788bd8_AC_I0000087.nii
-[2026-02-05 15:23:36] Script completed: True
+=== Kretz conversion started at 2026-02-06 13:23:38 ===
+[2026-02-06 13:23:38] Script starting...
+[2026-02-06 13:23:38] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
+[2026-02-06 13:23:38] Volume ID: bb0b0e8a-b2d7-4e95-9d41-2092143ef02d
+[2026-02-06 13:23:38] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_FL_I0000064.vol
+[2026-02-06 13:23:38] Volume name: Test33
+[2026-02-06 13:23:38] Available Kretz-related modules: ['kretzfilereader']
+[2026-02-06 13:23:38] ✅ Kretz file reader modules found
+[2026-02-06 13:23:38] Input file size: 20781517 bytes
+[2026-02-06 13:23:38] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_FL_I0000064.nii
+[2026-02-06 13:23:38] Attempting to load Kretz VOL file...
+[2026-02-06 13:23:43] ✅ Successfully loaded: Test33
+[2026-02-06 13:23:43] Node class: vtkMRMLScalarVolumeNode
+[2026-02-06 13:23:43] Image dimensions: (260, 263, 173)
+[2026-02-06 13:23:43] Saving as NIFTI...
+[2026-02-06 13:23:43] Cleaned up volume node
+[2026-02-06 13:23:43] ✅ NIFTI saved locally: 11830092 bytes
+[2026-02-06 13:23:43] 📤 Starting upload to Supabase...
+[2026-02-06 13:23:43] Initializing Supabase client...
+[2026-02-06 13:23:44] Uploading to Supabase: converted_vol_files/bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_FL_I0000064.nii
+[2026-02-06 13:23:50] ✅ Upload successful: converted_vol_files/bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_FL_I0000064.nii
+[2026-02-06 13:23:50] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_FL_I0000064.nii
+[2026-02-06 13:23:50] File size: 11830092 bytes (11552.82 KB, 11.28 MB)
+[2026-02-06 13:23:50] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_bb0b0e8a-b2d7-4e95-9d41-2092143ef02d_FL_I0000064.nii
+[2026-02-06 13:23:50] Script completed: True
