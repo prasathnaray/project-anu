@@ -30,6 +30,7 @@ import RequestRaised from '../pages/RequestRaised';
 import VideoMedica from '../pages/VideoMedica';
 import InsideCertifications from '../pages/InsideCertifications';
 import Reports from '../pages/Reports';
+import Academics from '../pages/Academics';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -63,6 +64,7 @@ function RoutesPath() {
                             <Route path="/demo-video" element={<VideoMedica />} />
                             <Route path="/cert-course/:certificate_id" element={<InsideCertifications />} />
                             <Route path="/reports" element={<Reports />} />
+                            <Route path="/academics" element={<Academics />} />
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
