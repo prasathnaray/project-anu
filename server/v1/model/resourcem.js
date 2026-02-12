@@ -162,4 +162,21 @@ const getResourcesByModuleIds = (requester, moduleIds) => {
            })
     })
 }
+const mindsparkm = () => {
+      return new Promise((resolve, reject) => {
+         client.query('', (err, result) => {
+             if(err)
+             {
+                  //correct or not
+                  //user chose option
+                  //current option
+
+             }  
+             else
+             {
+
+             }
+         })
+      })
+}
 module.exports = {resourcem, getResourcesModel, getResourcesByModuleIds}

@@ -72,6 +72,9 @@ const volumeRecordingRouter = require('./routes/volumeRecordingRoute.js');
 const associateVolumeRouter = require('./routes/associateVolumeRouter.js');
 const GetShadowRecordingRouter = require('./routes/GetShadowRecordingRoute.js');
 const getAssocVolumeRouter = require('./routes/getAssoVolumeRoute.js');
+//
+const createscanCentersRouter = require('./routes/createScanCentersRoute.js');
+const mindSparkRouter = require('./routes/mindSparkRoute.js');
 const Authenticate = require('./Auth/Authenticate');
 //enabling cors
 const cors = require('cors');
@@ -203,4 +206,9 @@ app.use('/api/v1', Authenticate, associateVolumeRouter);
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
 //associated volume  
 app.use('/api/v1/', Authenticate, getAssocVolumeRouter);
+//scan centers
+app.use('/api/v1/', Authenticate, createscanCentersRouter);
+
+//mind spark
+app.use('/api/v1/', Authenticate, mindSparkRouter);
 module.exports = app;
