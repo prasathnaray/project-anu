@@ -1,6 +1,6 @@
 // controllers/scanCenterController.js
 const { createScancentrem } = require("../model/scancentrem");
-
+const {mindsparkm} = require('../model/resourcem');
 const createScanCenterC = async(req, res) => {
     try {
         if (!req.user) {
@@ -35,18 +35,30 @@ const createScanCenterC = async(req, res) => {
         });
     }
 };
-const mindsparkController = async(request, res) => {
-    const {user_opt, correct_opt, status} = request.body;
+const mindsparkController = async (request, res) => {
+    const { r_id, user_opt, correct_opt, status, user_mail } = request.body;
+    
     try {
+        // Insert into database
+        const result = await mindsparkm(r_id, user_opt, correct_opt, status, user_mail);
+        
         res.status(200).json({
-             status, user_opt, correct_opt
-        })
+            message: 'Response recorded successfully',
+            data: {
+                status,
+                user_opt,
+                correct_opt,
+                r_id: result.r_id
+            }
+        });
+    } catch (err) {
+        console.error('Error in mindsparkController:', err);
+        res.status(500).json({ 
+            error: 'Failed to record response',
+            details: err.message 
+        });
     }
-    catch(err)
-    {
-        res.status(500).json({err});
-    }
-}
+};
 module.exports = {
     createScanCenterC,
     mindsparkController

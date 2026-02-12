@@ -162,21 +162,24 @@ const getResourcesByModuleIds = (requester, moduleIds) => {
            })
     })
 }
-const mindsparkm = () => {
-      return new Promise((resolve, reject) => {
-         client.query('', (err, result) => {
-             if(err)
-             {
-                  //correct or not
-                  //user chose option
-                  //current option
-
-             }  
-             else
-             {
-
-             }
-         })
-      })
-}
-module.exports = {resourcem, getResourcesModel, getResourcesByModuleIds}
+const mindsparkm = (r_id, user_opt, correct_opt, status, user_mail) => {
+    return new Promise((resolve, reject) => {
+        const query = `
+            INSERT INTO mind_sparks (r_id, user_opt, correct_opt, status, user_mail, created_at) 
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            RETURNING *
+        `;
+        
+        const values = [r_id, user_opt, correct_opt, status, user_mail];
+        
+        client.query(query, values, (err, result) => {
+            if (err) {
+                console.error('Database error:', err);
+                reject(err);
+            } else {
+                resolve(result.rows[0]);
+            }
+        });
+    });
+};
+module.exports = {resourcem, getResourcesModel, getResourcesByModuleIds, mindsparkm}
