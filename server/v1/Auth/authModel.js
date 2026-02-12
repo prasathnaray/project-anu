@@ -28,10 +28,11 @@ const LoginModel = (user_mail, user_password) => {
                     console.error('Failed to log login attempt:', attemptErr);
                 }
                 let role = user.user_role;
+                let people_id = user.people_id;
                 // let token_data = role + '' + user_mail;
                 const accessToken = jwt.sign({user_mail,role}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '20m'})
                 const refreshToken = jwt.sign({ user_mail, role }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-                resolve({ accessToken: accessToken, refreshToken: refreshToken, id: user_mail, role: role, status: 'Login Authenticated', name: user.user_name, code: 200});
+                resolve({ accessToken: accessToken, refreshToken: refreshToken, id: user_mail, role: role, people_id: people_id, status: 'Login Authenticated', name: user.user_name, code: 200});
             })
     })
 }
