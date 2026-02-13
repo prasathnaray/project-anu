@@ -115,6 +115,29 @@ const generateTemporaryPassword = () => {
     return password;
 };
 
+const getscancenterm = (requester) => {
+    return new Promise(async (resolve, reject) => {
+        const isPrivileged = [99].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to access this profile.'
+            });
+        }
+        try {
+            const result = await client.query('SELECT * FROM scan_centers');
+            resolve({
+                status: 'success',
+                code: 200,
+                data: result.rows
+            });
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
 module.exports = {
-    createScancentrem
+    createScancentrem,
+    getscancenterm
 };
