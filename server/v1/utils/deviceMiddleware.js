@@ -42,7 +42,7 @@ const deviceMiddleware = (req, res, next) => {
     userAgent: ua,
   };
 
-  console.log("📌 Device Info:", req.deviceInfo);
+  //console.log("📌 Device Info:", req.deviceInfo);
 
   next();
 };
