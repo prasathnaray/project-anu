@@ -67,6 +67,10 @@ function Login() {
             if (response.data.code === 200) {
               const token = response.data.accessToken;
               localStorage.setItem('user_token', token);
+              localStorage.setItem('isVr', response.data.isVr);
+              localStorage.setItem('loginSource', response.data.loginSource);
+              localStorage.setItem('device', response.data.device);
+              localStorage.setItem('os', response.data.os);
               sessionStorage.setItem('user_name', response.data.name);
               navigate('/dashboard');
             }

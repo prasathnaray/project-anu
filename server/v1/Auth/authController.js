@@ -72,6 +72,7 @@ const LoginRequest = async (req, res) => {
       // ✅ Add login source details in response
       return res.status(200).json({
         ...result,
+        isVr: deviceInfo.isVR,
         loginSource: deviceInfo.isVR ? "VR Device" : "Normal Browser",
         device: deviceInfo.device,
         os: deviceInfo.os,

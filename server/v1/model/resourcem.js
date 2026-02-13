@@ -162,15 +162,23 @@ const getResourcesByModuleIds = (requester, moduleIds) => {
            })
     })
 }
-const mindsparkm = (r_id, user_opt, correct_opt, status, user_mail) => {
+const mindsparkm = (requester, r_id, user_opt, correct_opt, status, user_mail) => {
     return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
+           if(!isPrivileged) {
+                return resolve({
+                  status: 'Unauthorized',
+                  code: 401,
+                  message: 'You do not have permission to access this profile.'
+                });
+        }
         const query = `
             INSERT INTO mind_sparks (r_id, user_opt, correct_opt, status, user_mail, created_at) 
             VALUES ($1, $2, $3, $4, $5, NOW())
             RETURNING *
         `;
         
-        const values = [r_id, user_opt, correct_opt, status, user_mail];
+        const values = [r_id, user_opt, correct_opt, status, requester.user_mail];
         
         client.query(query, values, (err, result) => {
             if (err) {

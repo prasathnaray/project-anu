@@ -54,11 +54,11 @@ const getScanCentersC = async(req, res) => {
 };
 
 const mindsparkController = async (request, res) => {
-    const { r_id, user_opt, correct_opt, status, user_mail } = request.body;
-    
+    const { r_id, user_opt, correct_opt, status } = request.body;
+    const requester = request.user;
     try {
         // Insert into database
-        const result = await mindsparkm(r_id, user_opt, correct_opt, status, user_mail);
+        const result = await mindsparkm(requester, r_id, user_opt, correct_opt, status, requester.user_mail);
         
         res.status(200).json({
             message: 'Response recorded successfully',

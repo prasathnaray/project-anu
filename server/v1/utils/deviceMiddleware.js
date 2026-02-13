@@ -23,6 +23,8 @@ function detectVRDevice(userAgent) {
 }
 
 function detectOS(userAgent) {
+  if (/android/i.test(userAgent)) return "Android";
+  if (/iphone|ipad|ipod/i.test(userAgent)) return "iOS";
   if (/windows/i.test(userAgent)) return "Windows";
   if (/macintosh|mac os/i.test(userAgent)) return "Mac";
   if (/linux/i.test(userAgent)) return "Linux";

@@ -491,6 +491,10 @@ function NavBar() {
   
   const handleLogout = () => {
     localStorage.removeItem("user_token");
+    localStorage.removeItem("isVr");
+    localStorage.removeItem("loginSource");
+    localStorage.removeItem("device");
+    localStorage.removeItem("os");
     navigate("/");
   };
   
