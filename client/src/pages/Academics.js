@@ -27,6 +27,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import { ClipLoader } from "react-spinners";
+import AddScanCenterAPI from "../API/AddScanCenterAPI";
 
 function Academics() {
     // Sidebar state
@@ -45,9 +46,6 @@ function Academics() {
     // Loading state
     const [loading, setLoading] = useState(false);
     
-    // Password visibility
-    const [showPassword, setShowPassword] = useState(false);
-    
     // Dropdown state
     const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
     const dropdownRefs = useRef({});
@@ -63,16 +61,13 @@ function Academics() {
         center_type_filter: ''
     });
     
-    // Scan center form data
+    // Scan center form data - Updated to match API requirements
     const [scanCenterData, setScanCenterData] = useState({
         center_name: '',
         center_email: '',
-        center_password: '',
         center_phone: '',
         center_address: '',
-        admin_name: '',
-        admin_email: '',
-        admin_phone: ''
+        status: 'Active'
     });
     
     // Edit scan center data
@@ -113,14 +108,10 @@ function Academics() {
         setScanCenterData({
             center_name: '',
             center_email: '',
-            center_password: '',
             center_phone: '',
             center_address: '',
-            admin_name: '',
-            admin_email: '',
-            admin_phone: ''
+            status: 'Active'
         });
-        setShowPassword(false);
     };
 
     const handleOpenEditModal = (center) => {
@@ -270,10 +261,9 @@ function Academics() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // Validation - Updated to match new fields
         if (!scanCenterData.center_name || !scanCenterData.center_email || 
-            !scanCenterData.center_password || !scanCenterData.center_phone || 
-            !scanCenterData.center_address || !scanCenterData.admin_name || 
-            !scanCenterData.admin_email || !scanCenterData.admin_phone) {
+            !scanCenterData.center_phone || !scanCenterData.center_address) {
             toast.error("Please fill all the fields", {
                 autoClose: 3000,
                 toastId: 'input-missing',
@@ -285,22 +275,27 @@ function Academics() {
 
         try {
             setLoading(true);
-            // Replace with your actual API call
-            // const response = await CreateScanCenterAPI(token, scanCenterData);
             
-            toast.success("Scan Center Onboarded Successfully", {
-                autoClose: 3000,
-                toastId: 'success-center-created',
-                icon: false,
-                closeButton: CustomCloseButton,
-            });
-            
-            handleCloseCenterModal();
             const token = localStorage.getItem('user_token');
-            fetchScanCenters(token, page, rowsPerPage);
+            const response = await AddScanCenterAPI(token, scanCenterData);
+            
+            // Axios returns data in response.data
+            if (response.status === 200 || response.status === 201) {
+                toast.success("Scan Center Onboarded Successfully!", {
+                    autoClose: 4000,
+                    toastId: 'success-center-created',
+                    icon: false,
+                    closeButton: CustomCloseButton,
+                });
+                
+                handleCloseCenterModal();
+                fetchScanCenters(token, page, rowsPerPage);
+            }
         } catch (err) {
-            console.log(err);
-            toast.error("Failed to onboard scan center", {
+            console.error(err);
+            // Axios error response is in err.response.data
+            const errorMessage = err.response?.data?.message || err.message || "Failed to onboard scan center";
+            toast.error(errorMessage, {
                 autoClose: 3000,
                 toastId: 'create-error',
                 icon: false,
@@ -717,10 +712,10 @@ function Academics() {
                             </div>
                         </div>
 
-                        {/* Onboard Scan Center Modal */}
+                        {/* Onboard Scan Center Modal - UPDATED */}
                         {openCenterModal && (
                             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+                                <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                                     <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
                                         <h2 className="text-xl font-semibold text-gray-800">Onboard New Scan Center</h2>
                                         <button 
@@ -786,75 +781,16 @@ function Academics() {
                                                     }}
                                                 />
                                             </div>
-                                        </div>
-
-                                        {/* Admin Credentials */}
-                                        <div className="mb-6">
-                                            <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-                                                <Users size={20} className="text-[#8DC63F]" />
-                                                Admin Credentials
-                                            </h3>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <TextField
-                                                    fullWidth
-                                                    label="Admin Name"
-                                                    name="admin_name"
-                                                    value={scanCenterData.admin_name}
-                                                    onChange={handleChange}
-                                                    required
-                                                    size="small"
-                                                />
-                                                <TextField
-                                                    fullWidth
-                                                    label="Admin Phone"
-                                                    name="admin_phone"
-                                                    value={scanCenterData.admin_phone}
-                                                    onChange={handleChange}
-                                                    required
-                                                    size="small"
-                                                    InputProps={{
-                                                        startAdornment: <Phone size={18} className="text-gray-400 mr-2" />
-                                                    }}
-                                                />
-                                                <TextField
-                                                    fullWidth
-                                                    label="Admin Email (Login ID)"
-                                                    name="admin_email"
-                                                    type="email"
-                                                    value={scanCenterData.admin_email}
-                                                    onChange={handleChange}
-                                                    required
-                                                    size="small"
-                                                    InputProps={{
-                                                        startAdornment: <Mail size={18} className="text-gray-400 mr-2" />
-                                                    }}
-                                                />
-                                                <TextField
-                                                    fullWidth
-                                                    label="Admin Password"
-                                                    name="center_password"
-                                                    type={showPassword ? "text" : "password"}
-                                                    value={scanCenterData.center_password}
-                                                    onChange={handleChange}
-                                                    required
-                                                    size="small"
-                                                    InputProps={{
-                                                        startAdornment: <Lock size={18} className="text-gray-400 mr-2" />,
-                                                        endAdornment: (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setShowPassword(!showPassword)}
-                                                                className="text-gray-400 hover:text-gray-600"
-                                                            >
-                                                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                                            </button>
-                                                        )
-                                                    }}
-                                                />
+                                            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <p className="text-sm text-blue-800 flex items-start gap-2">
+                                                    <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                                    </svg>
+                                                    <span>
+                                                        <strong>Auto-Generated Credentials:</strong> Upon submission, login credentials will be automatically generated and sent to the center's email address.
+                                                    </span>
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-gray-500 mt-2">
-                                                * These credentials will be used by the scan center admin to login to their dashboard
-                                            </p>
                                         </div>
 
                                         {/* Action Buttons */}

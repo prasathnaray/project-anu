@@ -4,7 +4,7 @@ import SideBar from '../components/sideBar';
 import Login from '../Auth/login';
 import PrivateRoute from './ProtectedRoutes';
 import Dashboard from '../pages/dashboard';
-import Profile from '../pages/Profile';
+// import Profile from '../pages/Profile';
 import Trainee from '../pages/Trainee';
 import AddTrainee from '../components/admin/addTrainee';
 import Queries from '../pages/Queries';
@@ -38,7 +38,7 @@ function RoutesPath() {
                     <Route path="/" element={<Login />}/>
                     <Route element={<PrivateRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
-                            <Route path="/profile" element={<Profile />} />
+                            {/* <Route path="/profile" element={<Profile />} /> */}
                             <Route path="/trainees" element={<Trainee /> } />
                             <Route path="/:people/add" element={<AddTrainee /> } />
                             <Route path="/queries" element={<Queries />} />
