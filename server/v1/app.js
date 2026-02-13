@@ -75,7 +75,12 @@ const getAssocVolumeRouter = require('./routes/getAssoVolumeRoute.js');
 //
 const createscanCentersRouter = require('./routes/createScanCentersRoute.js');
 const mindSparkRouter = require('./routes/mindSparkRoute.js');
+
+//get Scan Centers Route
+const getScanCenterRouter = require('./routes/getScanCenterRoute.js');
+//Auth middleware
 const Authenticate = require('./Auth/Authenticate');
+const deviceMiddleware = require('./utils/deviceMiddleware');
 //enabling cors
 const cors = require('cors');
 const createTraineeRouter = require('./routes/createtraineeRoute');
@@ -105,6 +110,7 @@ app.listen('4004', (err) => {
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 //Auth route
+//routes
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter);
 app.use('/api/v1', refreshTokenRouter);
@@ -208,7 +214,9 @@ app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
 app.use('/api/v1/', Authenticate, getAssocVolumeRouter);
 //scan centers
 app.use('/api/v1/', Authenticate, createscanCentersRouter);
-
+app.use('/api/v1/', Authenticate, getScanCenterRouter);
 //mind spark
 app.use('/api/v1/', Authenticate, mindSparkRouter);
+
+
 module.exports = app;

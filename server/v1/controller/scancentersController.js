@@ -1,5 +1,5 @@
 // controllers/scanCenterController.js
-const { createScancentrem } = require("../model/scancentrem");
+const { createScancentrem, getscancenterm } = require("../model/scancentrem");
 const {mindsparkm} = require('../model/resourcem');
 const createScanCenterC = async(req, res) => {
     try {
@@ -35,6 +35,24 @@ const createScanCenterC = async(req, res) => {
         });
     }
 };
+
+const getScanCentersC = async(req, res) => {
+    try {
+        const result = await getscancenterm(req.user);
+        if (result.code === 401) {
+            return res.status(401).json(result);
+        }
+        res.status(200).json(result);
+    } catch(err) {
+        console.error('Error fetching scan centers:', err);
+        res.status(500).json({
+            status: 'error',
+            message: 'An error occurred while fetching scan centers',
+            error: err.message
+        });
+    }
+};
+
 const mindsparkController = async (request, res) => {
     const { r_id, user_opt, correct_opt, status, user_mail } = request.body;
     
@@ -61,5 +79,6 @@ const mindsparkController = async (request, res) => {
 };
 module.exports = {
     createScanCenterC,
-    mindsparkController
+    mindsparkController,
+    getScanCentersC
 };

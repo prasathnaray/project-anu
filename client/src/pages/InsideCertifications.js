@@ -1106,5 +1106,4 @@ function InsideCertifications() {
     </div>
   );
 }
-
 export default InsideCertifications;
