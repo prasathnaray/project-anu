@@ -111,6 +111,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 //Auth route
 //routes
+app.use(deviceMiddleware);
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter);
 app.use('/api/v1', refreshTokenRouter);
