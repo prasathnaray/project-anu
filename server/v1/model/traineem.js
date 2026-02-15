@@ -319,6 +319,7 @@ SELECT
     lm.learning_module_id,
     rd.resource_id,
     rd.resource_name,
+    rd.resource_type,
     pdt.is_completed,
     pdt.updated_at
 FROM user_info ui
