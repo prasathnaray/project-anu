@@ -412,13 +412,13 @@ ORDER BY attempt_count DESC;`
         })
       )
     ])
-      .then(([progressData, instructorData, testData, reAttemptsData]) => {
+      .then(([progressData, instructorData, reAttemptsData]) => {
         resolve({
           status: 'Success',
           code: 200,
           data: progressData, 
           instructors: instructorData,
-          testQuery: testData,
+        //   testQuery: testData,
           reAttempts: reAttemptsData
         });
       })
