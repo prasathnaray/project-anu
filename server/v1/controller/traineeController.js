@@ -115,9 +115,10 @@ const indController = async(req, res) => {
 const induuidController = async(req, res) => {
         const requester = req.user;
         const people_id = req.params.people_id
+        const isVr = req.query.isVr === 'true';
         try
         {
-                const result = await indDatauuid(requester, people_id);
+                const result = await indDatauuid(requester, people_id, isVr);
                 res.status(200).send(result);
         }
         catch(err)
