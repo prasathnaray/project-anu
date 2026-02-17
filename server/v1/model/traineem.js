@@ -881,12 +881,12 @@ const indDatauuid = (requester, people_id, isVr = true) => {
     ) AS completed_learning_resources,
 
     COUNT(rd.resource_id) FILTER (
-      WHERE rd.resource_type = 'Test'
-    ) AS total_tests,
+      WHERE rd.resource_type = 'Image Interpretation'
+    ) AS total_image_interpretations,
     COUNT(pdt.is_completed) FILTER (
-      WHERE rd.resource_type = 'Test'
+      WHERE rd.resource_type = 'Image Interpretation'
       AND pdt.is_completed = true
-    ) AS completed_tests
+    ) AS completed_image_interpretations
 
   FROM learning_module lm
   LEFT JOIN resource_data rd ON lm.learning_module_id = rd.learning_module_id
