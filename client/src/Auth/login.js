@@ -72,6 +72,7 @@ function Login() {
               localStorage.setItem('device', response.data.device);
               localStorage.setItem('os', response.data.os);
               sessionStorage.setItem('user_name', response.data.name);
+              localStorage.setItem('people_id', response.data.people_id);
               navigate('/dashboard');
             }
           } catch (err) {

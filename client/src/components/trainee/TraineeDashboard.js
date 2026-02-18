@@ -21,6 +21,8 @@ function TraineeDashboard() {
     React.useState({
       data: [],
       instructors: [],
+      currentBatches: [],
+      certificates: [],
     });
 
   // ✅ API call
@@ -37,10 +39,10 @@ function TraineeDashboard() {
       setLoading(false);
     }
   };
-
+  const resolvedId = people_id || localStorage.getItem('people_id');
   React.useEffect(() => {
-    handleApiCall(people_id);
-  }, [people_id]);
+    handleApiCall(resolvedId);
+  }, [resolvedId]);
 
   // ✅ Loading guard
   // if (!individualTraineeProfile?.data?.length) {
@@ -212,7 +214,7 @@ function TraineeDashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {(individualTraineeProfile.instructors || []).map(
+                            {(individualTraineeProfile.instructors || individualTraineeProfile.currentBatches || []).map(
                               (batch, idx) => (
                                 <tr
                                   key={idx}

@@ -456,12 +456,601 @@
 // }
 
 // export default Course;
+
+// below code is working 
+
+// import React, { useState, useEffect, useRef } from "react";
+// import { jwtDecode } from "jwt-decode";
+// import SideBar from "../components/sideBar";
+// import { Navigate, useNavigate } from "react-router-dom";
+// import NavBar from "../components/navBar";
+// import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, Notebook, SlidersHorizontal, X } from "lucide-react";
+// import AddCourse from "../components/admin/AddCourse";
+// import {
+//   FormControl,
+//   InputLabel,
+//   MenuItem,
+//   Select,
+//   TextField,
+// } from "@mui/material";
+// import GetCuriculumAPI from "../API/getCuriculumAPI";
+// import { toast } from "react-toastify";
+// import CustomCloseButton from "../utils/CustomCloseButton";
+// import GetCoursesAPI from "../API/GetCoursesAPI";
+// import DeleteCourseToast from "../utils/deleteCourseToast";
+// import TagCourse from "../components/superadmin/TagCourse";
+// import GetAdminsAPI from "../API/getAdminsAPI";
+// import TagCourseAPI from "../API/TagCourseAPI";
+// import { ClipLoader } from "react-spinners";
+// import CourseCustomisation from "../components/CourseCustomisation";
+// import CreateCertificateAPI from "../API/createCertificateAPI";
+// function Course() {
+//   // Sidebar toggle
+//   const [openCourse, setOpenCourse] = useState(false);
+//   const [changeState, setChangeState] = useState(true);
+//   const handleChangeState = () => {
+//     setChangeState(!changeState)
+//   }
+//   const navigate = useNavigate()
+//   console.log(changeState);
+//   const [curiculumList, setCuriculumList] = useState([]);
+//   const [certificateData, setCertificateData] = useState({
+//     certificate_name: "",
+//     curiculum_id: "",
+//   });
+//   const [adminData, setAdminData] = useState([]);
+//   const [tagCourseState, setTagCourseState] = useState({
+//     user_id: "",
+//     certificate_id: "",
+//   });
+
+//   const [courseList, setCourseList] = useState([]);
+//   const [filteredCourses, setFilteredCourses] = useState([]); // 🔍 for search
+//   const [searchItem, setSearchItem] = useState("");
+
+//   const handleCertificate = (e) => {
+//     const { name, value } = e.target;
+//     setCertificateData({
+//       ...certificateData,
+//       [name]: value,
+//     });
+//   };
+
+//   const handleTagCourse = (e) => {
+//     const { name, value } = e.target;
+//     setTagCourseState({
+//       ...tagCourseState,
+//       [name]: value,
+//     });
+//   };
+
+//   const fetchAdminData = async () => {
+//     try {
+//       const token = localStorage.getItem("user_token");
+//       const result = await GetAdminsAPI(token);
+//       setAdminData(result.data.rows || []);
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+//   const handleClose = () => {
+//     setOpenCourse(false);
+//     setCertificateData({
+//       certificate_name: "",
+//       curiculum_id: "",
+//     });
+//     setTagCourseForm({
+//       user_id: "",
+//       certificate_id: "",
+//     });
+//     setTagCourse(false);
+//   };
+
+//   const GetCoursesList = async () => {
+//     try {
+//       const token = localStorage.getItem("user_token");
+//       const result = await GetCoursesAPI(token);
+//       setCourseList(result.data.result || []);
+//       setFilteredCourses(result.data.result || []); // reset
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+//   const CreatCertificate = async () => {
+//     try {
+//       const token = localStorage.getItem("user_token");
+//       const response = await CreateCertificateAPI(token, certificateData);
+//       if (response) {
+//         toast.success("Certificate Created", {
+//           autoClose: 3000,
+//           toastId: "cert-inserted",
+//           icon: false,
+//           closeButton: CustomCloseButton,
+//         });
+//         handleClose();
+//         GetCoursesList();
+//       }
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+//   const handleDelete = async (course_id) => {
+//     try {
+//       const token = localStorage.getItem("user_token");
+//       DeleteCourseToast(course_id, () => GetCoursesList(), token);
+//     } catch (err) {
+//       if (err?.response?.status === 403) {
+//         toast.error("please login again", {
+//           autoClose: 3000,
+//           toastId: "login-again",
+//           icon: false,
+//           closeButton: CustomCloseButton,
+//         });
+//       }
+//     }
+//   };
+//   console.log(courseList);
+//   const [buttonOpen, setButtonOpen] = useState(true);
+//   const handleButtonOpen = () => {
+//     setButtonOpen(!buttonOpen);
+//   };
+
+//   const GetCuriculumList = async () => {
+//     try {
+//       const token = localStorage.getItem("user_token");
+//       const result = await GetCuriculumAPI(token);
+//       setCuriculumList(result.data.result || []);
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+//   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+//   const dropdownRefs = useRef({});
+//   const toggleDropdown = (index) => {
+//     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+//   };
+
+//   const [tagCourse, setTagCourse] = useState(false);
+//   const [tagCourseForm, setTagCourseForm] = useState({
+//     user_id: "",
+//     certificate_id: "",
+//   });
+//   const handleCourseTag = (e) => {
+//     const { name, value } = e.target;
+//     setTagCourseForm({
+//       ...tagCourseForm,
+//       [name]: value,
+//     });
+//   };
+
+//   const tagCousesubmit = async () => {
+//     try {
+//       const token = localStorage.getItem("user_token");
+//       const response = await TagCourseAPI(token, tagCourseForm);
+//       if (response.data.error?.code === "23505") {
+//         toast.error("data already exists", {
+//           autoClose: 3000,
+//           icon: false,
+//           toastId: "already-exits",
+//           closeButton: CustomCloseButton,
+//         });
+//         handleClose();
+//         GetCoursesList();
+//       } else {
+//         toast.success("Successfully tagged");
+//         handleClose();
+//       }
+//     } catch (err) {
+//       if (err?.response?.status === 403) {
+//         toast.error("please login again", {
+//           autoClose: 3000,
+//           toastId: "login-again",
+//           icon: false,
+//           closeButton: CustomCloseButton,
+//         });
+//       } else if (err?.response?.data?.code === "23505") {
+//         toast.error("data already exists", {
+//           autoClose: 3000,
+//           icon: false,
+//           toastId: "already-exits",
+//           closeButton: CustomCloseButton,
+//         });
+//         handleClose();
+//       }
+//     }
+//   };
+
+//   // 🔍 Search filter
+//   const handleSearchChange = (e) => {
+//     const value = e.target.value.toLowerCase();
+//     setSearchItem(value);
+
+//     if (!value) {
+//       setFilteredCourses(courseList);
+//     } else {
+//       const filtered = courseList.filter((course) => {
+//         const nameMatch = course?.course_name
+//           ?.toLowerCase()
+//           .includes(value);
+//         const statusMatch = String(course?.access_status)
+//           ?.toLowerCase()
+//           .includes(value);
+//         return nameMatch || statusMatch;
+//       });
+//       setFilteredCourses(filtered);
+//     }
+//   };
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       const isClickInside = Object.values(dropdownRefs.current).some(
+//         (ref) => ref && ref.contains(event.target)
+//       );
+//       if (!isClickInside) {
+//         setOpenDropdownIndex(null);
+//       }
+//     };
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () =>
+//       document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+//   //save the url id in the session
+  
+//   useEffect(() => {
+//     GetCuriculumList();
+//     GetCoursesList();
+//     fetchAdminData();
+//   }, []);
+
+//   // Auth check
+//   let token = localStorage.getItem("user_token");
+//   const decoded = jwtDecode(token);
+//   if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103 && decoded.role != 102) {
+//     return <Navigate to="/" replace />;
+//   }
+
+//   return (
+//     <div className={`flex flex-col min-h-screen`}>
+//       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
+//         <NavBar />
+//       </div>
+//       <div className="flex flex-grow">
+//         <div>
+//           <SideBar
+//             handleButtonOpen={handleButtonOpen}
+//             buttonOpen={buttonOpen}
+//           />
+//         </div>
+//         <div
+//           className={`${
+//             buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
+//           } flex-grow`}
+//         >
+//           <div className="bg-gray-100 h-screen pt-12">
+//             <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Certifications</span></div>
+//             {/* <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+//                 <button onClick={handleChangeState} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
+//                   <LayoutDashboard size={15} /> 
+//                   <span className="text-[13px]">Course List</span>
+//                 </button>
+//                 <button onClick={() => setChangeState(false)} className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded-full">
+//                   <SlidersHorizontal size={15} className="text-gray-600" />
+//                   <span className="text-[13px]">Customised Courses</span>
+//                 </button>
+//             </div> */}
+//             <div
+//               className={`${
+//                 buttonOpen
+//                   ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
+//                   : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
+//               }`}
+//             >
+//               <div className="mt-5 font-semibold text-xl text-gray-600">
+//                 Certifications
+//               </div>
+//               <div className="mt-5 bg-white rounded px-8 py-10">
+//                 <div className="font-semibold text-xl text-gray-500">
+//                   All certifications
+//                 </div>
+//                 <div className="grid grid-cols-2 items-center my-5">
+//                   <div>
+//                     <input
+//                       type="text"
+//                       placeholder="Search courses"
+//                       value={searchItem}
+//                       onChange={handleSearchChange}
+//                       className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
+//                     />
+//                   </div>
+//                   {jwtDecode(localStorage.getItem("user_token")).role ==
+//                     99 && (
+//                     <div className="flex justify-end items-center">
+//                       <button
+//                         className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out"
+//                         onClick={() => setOpenCourse(true)}
+//                       >
+//                         Add Course
+//                       </button>
+//                     </div>
+//                   )}
+//                 </div>
+//                 <table className="w-full text-left border-collapse">
+//                   <thead>
+//                     <tr className="border-b border-gray-300 shadow-sm">
+//                       <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">
+//                         <div>Certification Name</div>
+//                         <button>
+//                           <ArrowUpWideNarrow size={20} />
+//                         </button>
+//                       </th>
+//                       <th className="py-2 px-4 text-[#8DC63F]">
+//                         <div className="flex items-center gap-2">
+//                                   <div>Batch Name</div>
+//                                   <button>
+//                                         <ArrowUpWideNarrow size={20} />
+//                                   </button>
+//                         </div>
+//                       </th>
+//                       <th className="py-2 px-4 text-[#8DC63F]">
+//                         <div className="flex items-center gap-2">
+//                           <span>Certificate availability</span>
+//                           <button>
+//                             <ArrowUpWideNarrow size={20} />
+//                           </button>
+//                         </div>
+//                       </th>
+//                       <th className="py-2 px-4 text-[#8DC63F]">
+//                         <div className="flex items-center gap-2">
+//                           <span>Action</span>
+//                           <button>
+//                             <ArrowUpWideNarrow size={20} />
+//                           </button>
+//                         </div>
+//                       </th>
+//                     </tr>
+//                   </thead>
+//                   <tbody>
+//                     {Array.isArray(filteredCourses) &&
+//                     filteredCourses.length > 0 ? (
+//                       filteredCourses.map((data, index) => (
+//                         <tr
+//                           className="text-sm text-gray-700"
+//                           key={index}
+//                         >
+//                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+//                             <button onClick={() => navigate(`/cert-course/${data?.certificate_id}`)}>{data?.certificate_name || data?.course_name}</button>
+//                           </td>
+//                           <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+//                                   {data?.batch_name ? data.batch_name : 'Not Associated'}
+//                           </td>
+//                           <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
+//                             {data?.access_status === true ? (
+//                               <span className="px-2 py-1 bg-green-100 text-sm">
+//                                 Approved
+//                               </span>
+//                             ) : (
+//                               <span className="px-2 py-1 bg-red-100 text-sm">
+//                                 Request
+//                               </span>
+//                             )}
+//                           </td>
+//                           <td className="py-2 px-4 font-semibold border-b-2">
+//                             <button
+//                               onClick={() => toggleDropdown(index)}
+//                             >
+//                               <EllipsisVertical size={24} />
+//                             </button>
+//                             {openDropdownIndex === index && (
+//                               <div
+//                                 ref={(el) =>
+//                                   (dropdownRefs.current[index] = el)
+//                                 }
+//                                 className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right ${
+//                                   openDropdownIndex === index
+//                                     ? "opacity-100 scale-100 visible"
+//                                     : "opacity-0 scale-95 invisible"
+//                                 }`}
+//                               >
+//                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
+//                                   View
+//                                 </button>
+//                                 {jwtDecode(
+//                                   localStorage.getItem("user_token")
+//                                 ).role == 99 && (
+//                                     <button
+//                                       className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+//                                       onClick={() => handleDelete(data.certificate_id)}
+//                                     >
+//                                       Delete
+//                                     </button>
+//                                 )}
+//                                 {jwtDecode(
+//                                   localStorage.getItem("user_token")
+//                                 ).role == 99 && (
+//                                   <button
+//                                     className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+//                                     onClick={() => setTagCourse(true)}
+//                                   >
+//                                     Tag Course
+//                                   </button>
+//                                 )}
+//                               </div>
+//                             )}
+//                           </td>
+//                         </tr>
+//                       ))
+//                     ) : (
+//                       <tr>
+//                         <td
+//                           colSpan={3}
+//                           className="py-4 text-center text-gray-500"
+//                         >
+//                           <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
+//                         </td>
+//                       </tr>
+//                     )}
+//                   </tbody>
+//                 </table>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//       <AddCourse isVisible={openCourse} onClose={handleClose}>
+//         <>
+//           <div className="flex justify-between items-center">
+//             <div>Add Certificate</div>
+//             <div>
+//               <button
+//                 onClick={handleClose}
+//                 className="text-red-500 hover:bg-red-50 p-1 hover:rounded"
+//               >
+//                 <X size={24} />
+//               </button>
+//             </div>
+//           </div>
+//           <div className="grid grid-cols-2 gap-5 mt-5">
+//             <div>
+//               <TextField
+//                 fullWidth
+//                 variant="outlined"
+//                 size="small"
+//                 id="outlined-basic"
+//                 label="Certificate Name"
+//                 onChange={handleCertificate}
+//                 name="certificate_name"
+//                 value={certificateData.certificate_name}
+//               />
+//             </div>
+//             <div>
+//               <FormControl fullWidth variant="outlined" size="small">
+//                 <InputLabel id="batch-select-label">
+//                   Select Curiculum
+//                 </InputLabel>
+//                 <Select
+//                   labelId="batch-select-label"
+//                   name="curiculum_id"
+//                   label="Select curiculum"
+//                   onChange={handleCertificate}
+//                   value={certificateData.curiculum_id}
+//                 >
+//                   {Array.isArray(curiculumList) &&
+//                   curiculumList.length > 0 ? (
+//                     curiculumList.map((data, index) => (
+//                       <MenuItem
+//                         key={index}
+//                         value={data?.curiculum_id}
+//                       >
+//                         {data?.curiculum_nam}
+//                       </MenuItem>
+//                     ))
+//                   ) : (
+//                     <MenuItem disabled>No data found</MenuItem>
+//                   )}
+//                 </Select>
+//               </FormControl>
+//             </div>
+//           </div>
+//           <div className="flex justify-end item-center mt-5">
+//             <button
+//               className="bg-[#8DC63F] px-3 py-2 text-white"
+//               onClick={CreatCertificate}
+//             >
+//               Save
+//             </button>
+//           </div>
+//         </>
+//       </AddCourse>
+//       <TagCourse isVisible={tagCourse} onClose={handleClose}>
+//         <>
+//           <div className="flex justify-between items-center">
+//             <div>Tag Course</div>
+//             <div>
+//               <button
+//                 onClick={handleClose}
+//                 className="text-red-500 hover:bg-red-50 p-1 hover:rounded"
+//               >
+//                 <X size={24} />
+//               </button>
+//             </div>
+//           </div>
+//           <div className="grid grid-cols-2 gap-5 mt-5">
+//             <div>
+//               <FormControl fullWidth variant="outlined" size="small">
+//                 <InputLabel id="user-select-label">
+//                   Select User
+//                 </InputLabel>
+//                 <Select
+//                   labelId="user-select-label"
+//                   name="user_id"
+//                   label="Select User"
+//                   onChange={handleCourseTag}
+//                   value={tagCourseForm.user_id}
+//                 >
+//                   {Array.isArray(adminData) && adminData.length > 0 ? (
+//                     adminData.map((data, index) => (
+//                       <MenuItem key={index} value={data?.user_email}>
+//                         {data?.user_name}
+//                       </MenuItem>
+//                     ))
+//                   ) : (
+//                     <MenuItem disabled>No data found</MenuItem>
+//                   )}
+//                 </Select>
+//               </FormControl>
+//             </div>
+//             <div>
+//               <FormControl fullWidth variant="outlined" size="small">
+//                 <InputLabel id="course-select-label">
+//                   Select course
+//                 </InputLabel>
+//                 <Select
+//                   labelId="course-select-label"
+//                   name="certificate_id"
+//                   label="Select certificate"
+//                   onChange={handleCourseTag}
+//                   value={tagCourseForm.certificate_id}
+//                 >
+//                   {Array.isArray(courseList) && courseList.length > 0 ? (
+//                     courseList.map((data, index) => (
+//                       <MenuItem key={index} value={data?.certificate_id}>
+//                         {data?.certificate_name}
+//                       </MenuItem>
+//                     ))
+//                   ) : (
+//                     <MenuItem disabled>No data found</MenuItem>
+//                   )}
+//                 </Select>
+//               </FormControl>
+//             </div>
+//           </div>
+//           <div className="flex justify-end item-center mt-5">
+//             <button
+//               className="bg-[#8DC63F] px-3 py-2 text-white"
+//               onClick={tagCousesubmit}
+//             >
+//               Save
+//             </button>
+//           </div>
+//         </>
+//       </TagCourse>
+//     </div>
+//   );
+// }
+
+// export default Course;
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { jwtDecode } from "jwt-decode";
 import SideBar from "../components/sideBar";
 import { Navigate, useNavigate } from "react-router-dom";
 import NavBar from "../components/navBar";
-import { ArrowUpWideNarrow, EllipsisVertical, LayoutDashboard, Notebook, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpWideNarrow, ChevronDown, ChevronRight, EllipsisVertical, LayoutDashboard, Notebook, SlidersHorizontal, X } from "lucide-react";
 import AddCourse from "../components/admin/AddCourse";
 import {
   FormControl,
@@ -481,15 +1070,39 @@ import TagCourseAPI from "../API/TagCourseAPI";
 import { ClipLoader } from "react-spinners";
 import CourseCustomisation from "../components/CourseCustomisation";
 import CreateCertificateAPI from "../API/createCertificateAPI";
+
+// Helper: group flat course list by certificate_id
+const groupCoursesByCertificate = (courses) => {
+  const map = new Map();
+  courses.forEach((course) => {
+    const key = course.certificate_id;
+    if (!map.has(key)) {
+      map.set(key, {
+        certificate_id: course.certificate_id,
+        certificate_name: course.certificate_name || course.course_name,
+        access_status: course.access_status,
+        batches: [],
+      });
+    }
+    if (course.batch_name) {
+      map.get(key).batches.push({
+        batch_name: course.batch_name,
+        batch_start_date: course.batch_start_date,
+        batch_end_date: course.batch_end_date,
+      });
+    }
+  });
+  return Array.from(map.values());
+};
+
 function Course() {
   // Sidebar toggle
   const [openCourse, setOpenCourse] = useState(false);
   const [changeState, setChangeState] = useState(true);
   const handleChangeState = () => {
-    setChangeState(!changeState)
-  }
-  const navigate = useNavigate()
-  console.log(changeState);
+    setChangeState(!changeState);
+  };
+  const navigate = useNavigate();
   const [curiculumList, setCuriculumList] = useState([]);
   const [certificateData, setCertificateData] = useState({
     certificate_name: "",
@@ -502,8 +1115,18 @@ function Course() {
   });
 
   const [courseList, setCourseList] = useState([]);
-  const [filteredCourses, setFilteredCourses] = useState([]); // 🔍 for search
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [groupedCourses, setGroupedCourses] = useState([]); // grouped by certificate_id
   const [searchItem, setSearchItem] = useState("");
+
+  // Track which certificate rows are expanded to show batches
+  const [expandedRows, setExpandedRows] = useState({});
+  const toggleExpandRow = (certificate_id) => {
+    setExpandedRows((prev) => ({
+      ...prev,
+      [certificate_id]: !prev[certificate_id],
+    }));
+  };
 
   const handleCertificate = (e) => {
     const { name, value } = e.target;
@@ -548,8 +1171,10 @@ function Course() {
     try {
       const token = localStorage.getItem("user_token");
       const result = await GetCoursesAPI(token);
-      setCourseList(result.data.result || []);
-      setFilteredCourses(result.data.result || []); // reset
+      const raw = result.data.result || [];
+      setCourseList(raw);
+      setFilteredCourses(raw);
+      setGroupedCourses(groupCoursesByCertificate(raw));
     } catch (err) {
       console.log(err);
     }
@@ -589,7 +1214,7 @@ function Course() {
       }
     }
   };
-  console.log(courseList);
+
   const [buttonOpen, setButtonOpen] = useState(true);
   const handleButtonOpen = () => {
     setButtonOpen(!buttonOpen);
@@ -661,24 +1286,25 @@ function Course() {
     }
   };
 
-  // 🔍 Search filter
+  // 🔍 Search filter — operates on grouped data
   const handleSearchChange = (e) => {
     const value = e.target.value.toLowerCase();
     setSearchItem(value);
 
     if (!value) {
-      setFilteredCourses(courseList);
+      setGroupedCourses(groupCoursesByCertificate(courseList));
     } else {
       const filtered = courseList.filter((course) => {
-        const nameMatch = course?.course_name
+        const nameMatch = course?.certificate_name
           ?.toLowerCase()
-          .includes(value);
+          .includes(value) || course?.course_name?.toLowerCase().includes(value);
         const statusMatch = String(course?.access_status)
           ?.toLowerCase()
           .includes(value);
-        return nameMatch || statusMatch;
+        const batchMatch = course?.batch_name?.toLowerCase().includes(value);
+        return nameMatch || statusMatch || batchMatch;
       });
-      setFilteredCourses(filtered);
+      setGroupedCourses(groupCoursesByCertificate(filtered));
     }
   };
 
@@ -692,11 +1318,9 @@ function Course() {
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () =>
-      document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  //save the url id in the session
-  
+
   useEffect(() => {
     GetCuriculumList();
     GetCoursesList();
@@ -706,7 +1330,12 @@ function Course() {
   // Auth check
   let token = localStorage.getItem("user_token");
   const decoded = jwtDecode(token);
-  if (decoded.role != 101 && decoded.role != 99 && decoded.role != 103 && decoded.role != 102) {
+  if (
+    decoded.role != 101 &&
+    decoded.role != 99 &&
+    decoded.role != 103 &&
+    decoded.role != 102
+  ) {
     return <Navigate to="/" replace />;
   }
 
@@ -728,17 +1357,10 @@ function Course() {
           } flex-grow`}
         >
           <div className="bg-gray-100 h-screen pt-12">
-            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border"><LayoutDashboard size={15} /> Dashboard / <Notebook size={15}/> <span className="text-[15px]">Certifications</span></div>
-            {/* <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
-                <button onClick={handleChangeState} className="flex justify-between gap-2 items-center bg-[#8DC63F] px-2 py-[2px] rounded cursor-pointer text-gray-100 font-semibold hover:rounded-full transition-all ease-in-out duration-300">
-                  <LayoutDashboard size={15} /> 
-                  <span className="text-[13px]">Course List</span>
-                </button>
-                <button onClick={() => setChangeState(false)} className="flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out hover:bg-gray-100 hover:rounded-full">
-                  <SlidersHorizontal size={15} className="text-gray-600" />
-                  <span className="text-[13px]">Customised Courses</span>
-                </button>
-            </div> */}
+            <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
+              <LayoutDashboard size={15} /> Dashboard / <Notebook size={15} />{" "}
+              <span className="text-[15px]">Certifications</span>
+            </div>
             <div
               className={`${
                 buttonOpen
@@ -763,8 +1385,7 @@ function Course() {
                       className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                     />
                   </div>
-                  {jwtDecode(localStorage.getItem("user_token")).role ==
-                    99 && (
+                  {jwtDecode(localStorage.getItem("user_token")).role == 99 && (
                     <div className="flex justify-end items-center">
                       <button
                         className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out"
@@ -778,18 +1399,21 @@ function Course() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-300 shadow-sm">
-                      <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">
-                        <div>Certification Name</div>
-                        <button>
-                          <ArrowUpWideNarrow size={20} />
-                        </button>
+                      <th className="py-2 px-4 text-[#8DC63F] w-8"></th>
+                      <th className="py-2 px-4 text-[#8DC63F]">
+                        <div className="flex items-center gap-2">
+                          <div>Certification Name</div>
+                          <button>
+                            <ArrowUpWideNarrow size={20} />
+                          </button>
+                        </div>
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
                         <div className="flex items-center gap-2">
-                                  <div>Batch Name</div>
-                                  <button>
-                                        <ArrowUpWideNarrow size={20} />
-                                  </button>
+                          <div>Batch Name</div>
+                          <button>
+                            <ArrowUpWideNarrow size={20} />
+                          </button>
                         </div>
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
@@ -811,82 +1435,151 @@ function Course() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(filteredCourses) &&
-                    filteredCourses.length > 0 ? (
-                      filteredCourses.map((data, index) => (
-                        <tr
-                          className="text-sm text-gray-700"
-                          key={index}
-                        >
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                            <button onClick={() => navigate(`/cert-course/${data?.certificate_id}`)}>{data?.certificate_name || data?.course_name}</button>
-                          </td>
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
-                                  {data?.batch_name ? data.batch_name : 'Not Associated'}
-                          </td>
-                          <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                            {data?.access_status === true ? (
-                              <span className="px-2 py-1 bg-green-100 text-sm">
-                                Approved
-                              </span>
-                            ) : (
-                              <span className="px-2 py-1 bg-red-100 text-sm">
-                                Request
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2 px-4 font-semibold border-b-2">
-                            <button
-                              onClick={() => toggleDropdown(index)}
-                            >
-                              <EllipsisVertical size={24} />
-                            </button>
-                            {openDropdownIndex === index && (
-                              <div
-                                ref={(el) =>
-                                  (dropdownRefs.current[index] = el)
-                                }
-                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right ${
-                                  openDropdownIndex === index
-                                    ? "opacity-100 scale-100 visible"
-                                    : "opacity-0 scale-95 invisible"
-                                }`}
-                              >
-                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
-                                  View
-                                </button>
-                                {jwtDecode(
-                                  localStorage.getItem("user_token")
-                                ).role == 99 && (
-                                    <button
-                                      className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
-                                      onClick={() => handleDelete(data.certificate_id)}
-                                    >
-                                      Delete
-                                    </button>
-                                )}
-                                {jwtDecode(
-                                  localStorage.getItem("user_token")
-                                ).role == 99 && (
+                    {Array.isArray(groupedCourses) &&
+                    groupedCourses.length > 0 ? (
+                      groupedCourses.map((data, index) => {
+                        const hasBatches = data.batches && data.batches.length > 0;
+                        const isExpanded = expandedRows[data.certificate_id];
+
+                        return (
+                          <React.Fragment key={data.certificate_id}>
+                            {/* Main certificate row */}
+                            <tr className="text-sm text-gray-700">
+                              {/* Expand toggle */}
+                              <td className="py-2 px-4 border-b-2">
+                                {hasBatches && (
                                   <button
-                                    className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
-                                    onClick={() => setTagCourse(true)}
+                                    onClick={() => toggleExpandRow(data.certificate_id)}
+                                    className="text-gray-400 hover:text-[#8DC63F] transition-colors"
                                   >
-                                    Tag Course
+                                    {isExpanded ? (
+                                      <ChevronDown size={16} />
+                                    ) : (
+                                      <ChevronRight size={16} />
+                                    )}
                                   </button>
                                 )}
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      ))
+                              </td>
+                              <td className="py-2 px-4 text-[#8DC63F] font-semibold border-b-2">
+                                <button
+                                  onClick={() =>
+                                    navigate(`/cert-course/${data?.certificate_id}`)
+                                  }
+                                >
+                                  {data?.certificate_name}
+                                </button>
+                              </td>
+                              <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
+                                {hasBatches ? (
+                                  <span
+                                    className="cursor-pointer text-[#8DC63F] underline underline-offset-2 text-xs"
+                                    onClick={() => toggleExpandRow(data.certificate_id)}
+                                  >
+                                    {data.batches.length} batch
+                                    {data.batches.length > 1 ? "es" : ""}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">Not Associated</span>
+                                )}
+                              </td>
+                              <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
+                                {data?.access_status === true ? (
+                                  <span className="px-2 py-1 bg-green-100 text-sm">
+                                    Approved
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 bg-red-100 text-sm">
+                                    Request
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-2 px-4 font-semibold border-b-2">
+                                <button onClick={() => toggleDropdown(index)}>
+                                  <EllipsisVertical size={24} />
+                                </button>
+                                {openDropdownIndex === index && (
+                                  <div
+                                    ref={(el) =>
+                                      (dropdownRefs.current[index] = el)
+                                    }
+                                    className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right ${
+                                      openDropdownIndex === index
+                                        ? "opacity-100 scale-100 visible"
+                                        : "opacity-0 scale-95 invisible"
+                                    }`}
+                                  >
+                                    <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
+                                      View
+                                    </button>
+                                    {jwtDecode(
+                                      localStorage.getItem("user_token")
+                                    ).role == 99 && (
+                                      <button
+                                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                        onClick={() =>
+                                          handleDelete(data.certificate_id)
+                                        }
+                                      >
+                                        Delete
+                                      </button>
+                                    )}
+                                    {jwtDecode(
+                                      localStorage.getItem("user_token")
+                                    ).role == 99 && (
+                                      <button
+                                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                        onClick={() => setTagCourse(true)}
+                                      >
+                                        Tag Course
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+
+                            {/* Expanded batch sub-rows */}
+                            {isExpanded &&
+                              hasBatches &&
+                              data.batches.map((batch, bIdx) => (
+                                <tr
+                                  key={`${data.certificate_id}-batch-${bIdx}`}
+                                  className="text-xs text-gray-500 bg-gray-50"
+                                >
+                                  <td className="py-1 px-4 border-b border-gray-100"></td>
+                                  <td className="py-1 px-4 border-b border-gray-100 pl-8 text-gray-400 italic">
+                                    — {data.certificate_name}
+                                  </td>
+                                  <td className="py-1 px-4 border-b border-gray-100 text-gray-600 font-medium">
+                                    {batch.batch_name}
+                                  </td>
+                                  <td className="py-1 px-4 border-b border-gray-100 text-gray-400">
+                                    {batch.batch_start_date
+                                      ? new Date(batch.batch_start_date).toLocaleDateString()
+                                      : "—"}{" "}
+                                    →{" "}
+                                    {batch.batch_end_date
+                                      ? new Date(batch.batch_end_date).toLocaleDateString()
+                                      : "—"}
+                                  </td>
+                                  <td className="py-1 px-4 border-b border-gray-100"></td>
+                                </tr>
+                              ))}
+                          </React.Fragment>
+                        );
+                      })
                     ) : (
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={5}
                           className="py-4 text-center text-gray-500"
                         >
-                          <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
+                          <ClipLoader
+                            color="#8DC63F"
+                            size={24}
+                            className="ms-2"
+                            cssOverride={{ borderWidth: "4px" }}
+                          />
                         </td>
                       </tr>
                     )}
@@ -897,6 +1590,8 @@ function Course() {
           </div>
         </div>
       </div>
+
+      {/* Add Course Modal */}
       <AddCourse isVisible={openCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -925,9 +1620,7 @@ function Course() {
             </div>
             <div>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel id="batch-select-label">
-                  Select Curiculum
-                </InputLabel>
+                <InputLabel id="batch-select-label">Select Curiculum</InputLabel>
                 <Select
                   labelId="batch-select-label"
                   name="curiculum_id"
@@ -935,13 +1628,9 @@ function Course() {
                   onChange={handleCertificate}
                   value={certificateData.curiculum_id}
                 >
-                  {Array.isArray(curiculumList) &&
-                  curiculumList.length > 0 ? (
+                  {Array.isArray(curiculumList) && curiculumList.length > 0 ? (
                     curiculumList.map((data, index) => (
-                      <MenuItem
-                        key={index}
-                        value={data?.curiculum_id}
-                      >
+                      <MenuItem key={index} value={data?.curiculum_id}>
                         {data?.curiculum_nam}
                       </MenuItem>
                     ))
@@ -962,6 +1651,8 @@ function Course() {
           </div>
         </>
       </AddCourse>
+
+      {/* Tag Course Modal */}
       <TagCourse isVisible={tagCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -978,9 +1669,7 @@ function Course() {
           <div className="grid grid-cols-2 gap-5 mt-5">
             <div>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel id="user-select-label">
-                  Select User
-                </InputLabel>
+                <InputLabel id="user-select-label">Select User</InputLabel>
                 <Select
                   labelId="user-select-label"
                   name="user_id"
@@ -1002,9 +1691,7 @@ function Course() {
             </div>
             <div>
               <FormControl fullWidth variant="outlined" size="small">
-                <InputLabel id="course-select-label">
-                  Select course
-                </InputLabel>
+                <InputLabel id="course-select-label">Select course</InputLabel>
                 <Select
                   labelId="course-select-label"
                   name="certificate_id"
