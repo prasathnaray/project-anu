@@ -106,6 +106,12 @@ app.listen('4004', (err) => {
         console.log(`Working`)
     }
 })
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'Healthy',
+        code: 200
+    });
+});
 //enables
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
