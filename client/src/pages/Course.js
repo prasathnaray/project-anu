@@ -1590,8 +1590,6 @@ function Course() {
           </div>
         </div>
       </div>
-
-      {/* Add Course Modal */}
       <AddCourse isVisible={openCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -1651,8 +1649,6 @@ function Course() {
           </div>
         </>
       </AddCourse>
-
-      {/* Tag Course Modal */}
       <TagCourse isVisible={tagCourse} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">
@@ -1725,5 +1721,4 @@ function Course() {
     </div>
   );
 }
-
 export default Course;
