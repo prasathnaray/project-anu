@@ -6,6 +6,14 @@ const BUCKET = process.env.BUCKET_NAME || 'question-images';
 
 const uploadImage = (file) => {
   return new Promise(async (resolve, reject) => {
+    const isPrivileged = [99, 101].includes(Number(requester.role));
+    if(!isPrivileged) {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to access this profile.'
+        });
+    }
     try {
       const ext = path.extname(file.originalname);
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
@@ -29,8 +37,17 @@ const uploadImage = (file) => {
   });
 };
 
-const submitType1 = (questionNo, optionChosen, isCorrect) => {
+const submitType1 = (requester, questionNo, optionChosen, isCorrect) => {
+  //const isPrivileged = [101, 99, 102].includes(Number(requester.role));
   return new Promise((resolve, reject) => {
+    const isPrivileged = [99, 101].includes(Number(requester.role));
+                if(!isPrivileged) {
+                    return resolve({
+                        status: 'Unauthorized',
+                        code: 401,
+                        message: 'You do not have permission to access this profile.'
+                    });
+                }
     client.query(
       `INSERT INTO submissions (question_type, question_no, option_chosen, is_correct)
        VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -47,8 +64,16 @@ const submitType1 = (questionNo, optionChosen, isCorrect) => {
   });
 };
 
-const submitType2 = (questionNo, isCorrect, file) => {
+const submitType2 = (requester, questionNo, isCorrect, file) => {
   return new Promise((resolve, reject) => {
+     const isPrivileged = [99, 101].includes(Number(requester.role));
+                if(!isPrivileged) {
+                    return resolve({
+                        status: 'Unauthorized',
+                        code: 401,
+                        message: 'You do not have permission to access this profile.'
+                    });
+                }
     uploadImage(file)
       .then((imageData) => {
         client.query(
@@ -69,8 +94,16 @@ const submitType2 = (questionNo, isCorrect, file) => {
   });
 };
 
-const submitAnnotation1 = (questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
+const submitAnnotation1 = (requester, questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
   return new Promise((resolve, reject) => {
+     const isPrivileged = [99, 101].includes(Number(requester.role));
+      if(!isPrivileged) {
+          return resolve({
+              status: 'Unauthorized',
+              code: 401,
+              message: 'You do not have permission to access this profile.'
+          });
+      }
     uploadImage(file)
       .then((imageData) => {
         client.query(
@@ -91,8 +124,16 @@ const submitAnnotation1 = (questionNo, isCorrect, correctLabelCount, wrongLabelC
   });
 };
 
-const submitAnnotation2 = (questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
+const submitAnnotation2 = (requester,questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
   return new Promise((resolve, reject) => {
+    const isPrivileged = [99, 101].includes(Number(requester.role));
+    if(!isPrivileged) {
+        return resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to access this profile.'
+        });
+    }
     uploadImage(file)
       .then((imageData) => {
         client.query(
@@ -113,8 +154,16 @@ const submitAnnotation2 = (questionNo, isCorrect, correctLabelCount, wrongLabelC
   });
 };
 
-const submitMeasurement = (questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, file) => {
+const submitMeasurement = (requester, questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, file) => {
   return new Promise((resolve, reject) => {
+     const isPrivileged = [99, 101].includes(Number(requester.role));
+                if(!isPrivileged) {
+                    return resolve({
+                        status: 'Unauthorized',
+                        code: 401,
+                        message: 'You do not have permission to access this profile.'
+                    });
+                }
     uploadImage(file)
       .then((imageData) => {
         client.query(
