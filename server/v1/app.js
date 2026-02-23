@@ -75,7 +75,7 @@ const getAssocVolumeRouter = require('./routes/getAssoVolumeRoute.js');
 //
 const createscanCentersRouter = require('./routes/createScanCentersRoute.js');
 const mindSparkRouter = require('./routes/mindSparkRoute.js');
-
+const iivrRouter = require('./routes/iivrRoutes.js');
 //get Scan Centers Route
 const getScanCenterRouter = require('./routes/getScanCenterRoute.js');
 //Auth middleware
@@ -225,5 +225,7 @@ app.use('/api/v1/', Authenticate, getScanCenterRouter);
 //mind spark
 app.use('/api/v1/', Authenticate, mindSparkRouter);
 
+//submit image interpretation and measurement
+app.use('/api/v1/', Authenticate, iivrRouter);
 
 module.exports = app;
