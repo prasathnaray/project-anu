@@ -63,7 +63,7 @@ const createSubmission = async (req, res, next) => {
     } else if (questionType === 'measurement') {
       result = await submitMeasurement(Number(qNo), isCorrectBool, parseFloat(value), interpretation, caliperPlacementInterpretation, req.file);
     }
-    res.status(result.code).json({ success: true, ...result });
+    res.status(result.code).json({ success: true, ...result.data });
   } catch (error) {
     next(error);
   }
