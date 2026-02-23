@@ -56,8 +56,6 @@ const submitType1 = (questionNo, optionChosen, isCorrect) => {
   });
 };
 
-// ─── TYPE 2 — Image based ─────────────────────────────────────────────────────
-
 const submitType2 = (questionNo, isCorrect, file) => {
   return new Promise((resolve, reject) => {
     uploadImage(file)
@@ -79,8 +77,6 @@ const submitType2 = (questionNo, isCorrect, file) => {
       .catch((err) => reject(err));
   });
 };
-
-// ─── ANNOTATION 1 ─────────────────────────────────────────────────────────────
 
 const submitAnnotation1 = (questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
   return new Promise((resolve, reject) => {
