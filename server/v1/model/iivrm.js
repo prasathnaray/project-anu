@@ -1,11 +1,8 @@
 const client = require('../utils/conn.js');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
-
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const BUCKET = process.env.BUCKET_NAME || 'question-images';
-
-// ─── Upload image to Supabase Storage ────────────────────────────────────────
 
 const uploadImage = (file) => {
   return new Promise(async (resolve, reject) => {
@@ -13,15 +10,11 @@ const uploadImage = (file) => {
       const ext = path.extname(file.originalname);
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
       const storagePath = `iisub/${filename}`;
-
       const { error } = await supabase.storage
         .from(BUCKET)
         .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
-
       if (error) return reject(error);
-
       const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
-
       return resolve({
         filename,
         original_name: file.originalname,
@@ -35,8 +28,6 @@ const uploadImage = (file) => {
     }
   });
 };
-
-// ─── TYPE 1 — MCQ (no image) ─────────────────────────────────────────────────
 
 const submitType1 = (questionNo, optionChosen, isCorrect) => {
   return new Promise((resolve, reject) => {
@@ -100,8 +91,6 @@ const submitAnnotation1 = (questionNo, isCorrect, correctLabelCount, wrongLabelC
   });
 };
 
-// ─── ANNOTATION 2 ─────────────────────────────────────────────────────────────
-
 const submitAnnotation2 = (questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
   return new Promise((resolve, reject) => {
     uploadImage(file)
@@ -123,8 +112,6 @@ const submitAnnotation2 = (questionNo, isCorrect, correctLabelCount, wrongLabelC
       .catch((err) => reject(err));
   });
 };
-
-// ─── MEASUREMENT ──────────────────────────────────────────────────────────────
 
 const submitMeasurement = (questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, file) => {
   return new Promise((resolve, reject) => {
