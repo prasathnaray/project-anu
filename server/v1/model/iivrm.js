@@ -3,7 +3,7 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'question-images';
+const BUCKET = process.env.BUCKET_NAME || 'question-images';
 
 // ─── Upload image to Supabase Storage ────────────────────────────────────────
 
@@ -12,7 +12,7 @@ const uploadImage = (file) => {
     try {
       const ext = path.extname(file.originalname);
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-      const storagePath = `uploads/${filename}`;
+      const storagePath = `iisub/${filename}`;
 
       const { error } = await supabase.storage
         .from(BUCKET)
