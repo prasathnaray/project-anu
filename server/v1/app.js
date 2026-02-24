@@ -75,6 +75,7 @@ const getAssocVolumeRouter = require('./routes/getAssoVolumeRoute.js');
 //
 const createscanCentersRouter = require('./routes/createScanCentersRoute.js');
 const mindSparkRouter = require('./routes/mindSparkRoute.js');
+const updateTraineeRouter = require('./routes/updateTraineeRoute.js');
 const iivrRouter = require('./routes/iivrRoutes.js');
 //get Scan Centers Route
 const getScanCenterRouter = require('./routes/getScanCenterRoute.js');
@@ -184,6 +185,7 @@ app.use('/api/v1', Authenticate, deleteTargetedLearningRouter);
 app.use('/api/v1', Authenticate, getIndividualTLRouter);
 //trainee by people_id
 app.use('/api/v1', Authenticate, induuidRouter);
+app.use('/api/v1', Authenticate, updateTraineeRouter);
 //batch profile 
 app.use('/api/v1', Authenticate, IndBatchProfileRouter);
 //batch update for instructor

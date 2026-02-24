@@ -1466,4 +1466,42 @@ const indDatauuid = (requester, people_id, isVr = true) => {
 //       });
 //   });
 // };
-module.exports = {traineem, getTraineesm, disableTraineem, deleteTraineem, indData, indDatauuid};
+
+const updateTraineem = (requester, user_id, batch_id) => {
+    return new Promise((resolve, reject) => {
+          const isPrivileged = [101, 99].includes(Number(requester.role));
+          if(!isPrivileged)
+          {
+              return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'You do not have permission to view trainee profiles'
+              })
+          }
+          const batchIdArray = Array.isArray(batch_id) 
+              ? batch_id 
+              : [batch_id];
+
+          client.query(
+              `UPDATE batch_people_data SET batch_id = $1 WHERE user_id = $2`, 
+              [batchIdArray, user_id],
+              (err, result) => {
+                    if (err) {
+                          reject({
+                                status: 'Error',
+                                code: 500,
+                                message: 'Database query failed',
+                                error: err
+                          });
+                    } else {
+                          resolve({
+                                status: 'Success',
+                                code: 200,  
+                                message: 'Trainee batch updated successfully'
+                          });
+                    } 
+              }
+          );
+    })
+}
+module.exports = {traineem, getTraineesm, disableTraineem, deleteTraineem, indData, indDatauuid, updateTraineem};
