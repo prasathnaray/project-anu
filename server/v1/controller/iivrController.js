@@ -4,6 +4,8 @@ const {
   submitAnnotation1,
   submitAnnotation2,
   submitMeasurement,
+  iivrStartTestm,
+  iivrEndTestm
 } = require('../model/iivrm.js');
 const VALID_TYPES = ['type1', 'type2', 'annotation1', 'annotation2', 'measurement'];
 const getMissingFields = (questionType, body, file) => {
@@ -70,4 +72,31 @@ const createSubmission = async (req, res, next) => {
   }
 };
 
-module.exports = { createSubmission };
+const iivrStartTest = async(req, res) => {
+     try
+     {
+        const {resource_id} = req.body;
+        const requester = req.user;
+        const response = await iivrStartTestm(requester, resource_id);
+        res.status(200).json({ message: 'II Test has been Started', data: response.data });
+     }
+     catch(error)
+     {
+        res.status(500).send('Internal Server Error');
+        console.log(error)
+     }
+}
+const iivrEndTest = async(req, res) => {
+      try
+      {
+         const {test_id} = req.body;
+        const requester = req.user;
+        const response = await iivrEndTestm(requester, test_id);
+        res.status(200).json({ message: 'II Test has been Ended', data: response.data });
+      }
+      catch(error)
+      {
+        res.status(500).send('Internal Server Error');
+      }
+}
+module.exports = { createSubmission, iivrStartTest, iivrEndTest};

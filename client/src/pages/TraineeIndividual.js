@@ -308,8 +308,6 @@
 // }
 
 // export default TraineeIndividual;
-
-
 import React from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/navBar";
@@ -333,16 +331,17 @@ function TraineeIndividual() {
   const [profile, setProfile] = React.useState(false);
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
 
-  // ✅ Updated initial state to include testQuery
   const [individualTraineeProfile, setIndividualTraineeProfile] =
     React.useState({
       data: [],
       instructors: [],
-      testQuery: [], // ✅ Added testQuery
+      testQuery: [],
+      currentBatches: [],
+      reAttempts: [],
     });
 
-  // ✅ API call
   let [loading, setLoading] = React.useState(false);
+
   const handleApiCall = async (people_id) => {
     try {
       setLoading(true);
@@ -359,15 +358,9 @@ function TraineeIndividual() {
     handleApiCall(people_id);
   }, [people_id]);
 
-  // ✅ Filter test resources - only show completed tests
-  // const testResources = individualTraineeProfile.data.filter(
-  //   (item) => item.resource_name?.startsWith("Test") && item.is_completed == true
-  // );
   const testResources = individualTraineeProfile.testQuery || [];
-
   const [selectedTestId, setSelectedTestId] = React.useState(null);
 
-  // ✅ Default to first completed test
   React.useEffect(() => {
     if (testResources.length > 0) {
       setSelectedTestId(testResources[0].resource_id);
@@ -376,7 +369,6 @@ function TraineeIndividual() {
     }
   }, [testResources]);
 
-  // ✅ Get selected test data from testQuery using useMemo
   const selectedTestData = React.useMemo(() => {
     if (!selectedTestId) return null;
     return individualTraineeProfile.testQuery?.find(
@@ -384,30 +376,23 @@ function TraineeIndividual() {
     );
   }, [selectedTestId, individualTraineeProfile.testQuery]);
 
-  // ✅ Safe computed values using optional chaining
   const data = individualTraineeProfile.data;
   const counts = {
     img:
-      [
-        ...new Set(data.map((item) => item.user_profile_photo).filter(Boolean)),
-      ][0] || "",
+      [...new Set(data.map((item) => item.user_profile_photo).filter(Boolean))][0] || "",
     name:
-      [...new Set(data.map((item) => item.user_name).filter(Boolean))][0] ||
-      "Unknown",
+      [...new Set(data.map((item) => item.user_name).filter(Boolean))][0] || "Unknown",
     desig:
-      [...new Set(data.map((item) => item.user_role).filter(Boolean))][0] ===
-      "103"
+      [...new Set(data.map((item) => item.user_role).filter(Boolean))][0] === "103"
         ? "Trainee"
         : "Instructor",
     total_courses_enrolled: new Set(data.map((item) => item.certificate_id)),
     total_chapters_associated: new Set(
       data.map((chapter) => chapter.chapter_id).filter((id) => id !== null)
     ),
-    resources_completed: data.filter((item) => item.is_completed === true)
-      .length,
+    resources_completed: data.filter((item) => item.is_completed === true).length,
   };
 
-  // ✅ JWT Token validation
   let token = localStorage.getItem("user_token");
   if (!token) {
     return <Navigate to="/" replace />;
@@ -427,10 +412,7 @@ function TraineeIndividual() {
       <div className="flex flex-grow pt-12">
         {/* Sidebar */}
         <div>
-          <SideBar
-            handleButtonOpen={handleButtonOpen}
-            buttonOpen={buttonOpen}
-          />
+          <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
         </div>
 
         {/* Main Content */}
@@ -451,6 +433,7 @@ function TraineeIndividual() {
                 <div>User Profile</div>
               </div>
             </div>
+
             <div className="p-2 flex justify-between items-center border-b bg-white">
               <button
                 className={`text-sm cursor-pointer p-1 px-2 rounded ${
@@ -491,7 +474,6 @@ function TraineeIndividual() {
                     <div className="text-center mt-2 text-gray-500">
                       {counts.desig}
                     </div>
-
                     <div className="border-t mt-6 pt-1 mb-2">
                       <div className="flex justify-between items-center pt-2">
                         <div className="text-gray-600 font-semibold">
@@ -514,49 +496,62 @@ function TraineeIndividual() {
                   <div className="col-span-3 p-4 bg-white shadow mt-4 transition-all duration-500">
                     <div className="text-gray-600 text-lg mb-3 flex justify-between items-center">
                       <div>Resources Statistics</div>
-                      <div>Batch association</div>
+                      <div>Batch Association</div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="p-12">
                         <HalfDonut dataa={individualTraineeProfile?.data} />
                       </div>
-                      <div className="border shadow mt-4 mx-7">
+
+                      {/* ✅ FIXED: Batch Table */}
+                      <div className="border shadow mt-4 mx-7 overflow-auto">
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="border-b border-gray-300 bg-gray-100">
-                              <th className="py-2 px-4 text-[#8DC63F]">
-                                Batch Name
-                              </th>
-                              <th className="py-2 px-4 text-[#8DC63F]">
-                                Instructor Count
-                              </th>
-                              <th className="py-2 px-4 text-[#8DC63F]">
-                                Instructors
-                              </th>
+                              <th className="py-2 px-4 text-[#8DC63F]">Batch Name</th>
+                              <th className="py-2 px-4 text-[#8DC63F]">Status</th>
+                              <th className="py-2 px-4 text-[#8DC63F]">End Date</th>
+                              <th className="py-2 px-4 text-[#8DC63F]">Instructors</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {(individualTraineeProfile.instructors || []).map(
-                              (batch, idx) => (
+                            {(individualTraineeProfile.currentBatches || []).length === 0 ? (
+                              <tr>
+                                <td
+                                  colSpan={4}
+                                  className="py-6 text-center text-gray-400 italic text-sm"
+                                >
+                                  No batch associated
+                                </td>
+                              </tr>
+                            ) : (
+                              (individualTraineeProfile.currentBatches || []).map((batch, idx) => (
                                 <tr
                                   key={idx}
                                   className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200"
                                 >
+                                  <td className="py-2 px-4">{batch.batch_name}</td>
+                                  <td className="py-2 px-4 capitalize">{batch.batch_status}</td>
                                   <td className="py-2 px-4">
-                                    {batch.batch_name}
+                                    {batch.batch_end_date
+                                      ? new Date(batch.batch_end_date).toLocaleDateString()
+                                      : "—"}
                                   </td>
                                   <td className="py-2 px-4">
-                                    {batch.instructor_count}
-                                  </td>
-                                  <td className="py-2 px-4">
-                                    <ul className="list-disc ml-5">
-                                      {batch.instructors.map((inst, i) => (
-                                        <li key={i}>{inst}</li>
-                                      ))}
-                                    </ul>
+                                    {!batch.instructors || batch.instructors.length === 0 ? (
+                                      <span className="text-gray-400 italic text-sm">
+                                        No instructors
+                                      </span>
+                                    ) : (
+                                      <ul className="list-disc ml-5">
+                                        {batch.instructors.map((inst, i) => (
+                                          <li key={i}>{inst}</li>
+                                        ))}
+                                      </ul>
+                                    )}
                                   </td>
                                 </tr>
-                              )
+                              ))
                             )}
                           </tbody>
                         </table>
@@ -564,10 +559,14 @@ function TraineeIndividual() {
                     </div>
                   </div>
                 </div>
+
+                {/* Learning Streaks */}
                 <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
                   <div className="mb-2 text-lg text-gray-600">Learning Streaks</div>
                   <StreakHeatmap data={individualTraineeProfile.data} />
                 </div>
+
+                {/* Score Breakdown + Test by Certificate */}
                 <div className="grid grid-cols-2 mb-2">
                   <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
                     <div className="flex justify-between items-center mb-4">
@@ -576,41 +575,31 @@ function TraineeIndividual() {
                       </div>
                       <div>
                         {testResources.length > 0 ? (
-                          <FormControl
-                            variant="outlined"
-                            size="small"
-                            sx={{ minWidth: 200 }}
-                          >
+                          <FormControl variant="outlined" size="small" sx={{ minWidth: 200 }}>
                             <Select
                               value={selectedTestId || ""}
                               onChange={(e) => setSelectedTestId(e.target.value)}
-                              //displayEmpty
                             >
                               {testResources.map((test) => {
                                 const label = [
-                                   test.certificate_name,
-                                   test.course_name,
-                                   test.resource_name,
-                                   test.module_name,
-                                   test.course_name
+                                  test.certificate_name,
+                                  test.course_name,
+                                  test.resource_name,
+                                  test.module_name,
+                                  test.unit_name,
                                 ]
+                                  .filter(Boolean)
+                                  .join(" - ");
                                 return (
-                                  <MenuItem
-                                  key={test.resource_id}
-                                  value={test.resource_id}
-                                >
-                                  {/* {test.resource_name} - {test.module_name} -{" "}
-                                  {test.course_name} */}
-                                    {label.filter(Boolean).join(" - ")}
-                                </MenuItem>
-                                )
+                                  <MenuItem key={test.resource_id} value={test.resource_id}>
+                                    {label}
+                                  </MenuItem>
+                                );
                               })}
                             </Select>
                           </FormControl>
                         ) : (
-                          <div className="text-sm text-gray-400 italic">
-                            No completed tests
-                          </div>
+                          <div className="text-sm text-gray-400 italic">No completed tests</div>
                         )}
                       </div>
                     </div>
@@ -624,28 +613,28 @@ function TraineeIndividual() {
                       )}
                     </div>
                   </div>
+
                   <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500">
-                        <div className="">
-                            <div className="mb-2 text-lg text-gray-600">
-                                  Test by Certificate Program
-                            </div>
-                            <div className="pt-5">
-                                <TestByCertificateChart testQuery={individualTraineeProfile.testQuery}/>
-                            </div>
-                        </div>
+                    <div className="mb-2 text-lg text-gray-600">Test by Certificate Program</div>
+                    <div className="pt-5">
+                      <TestByCertificateChart testQuery={individualTraineeProfile.testQuery} />
+                    </div>
                   </div>
                 </div>
+
+                {/* Re-attempt Chart */}
                 <div className="p-4 bg-white shadow mt-4 mx-7 transition-all duration-500 mb-2">
-                        <div className="mb-2 text-lg text-gray-600">
-                          Test with Multiple Attempts
-                        </div>
-                        <div className="">
-                            <TestReattemptChart reAttempts={individualTraineeProfile.reAttempts}  testQuery={individualTraineeProfile.testQuery} />
-                        </div>
+                  <div className="mb-2 text-lg text-gray-600">Test with Multiple Attempts</div>
+                  <div>
+                    <TestReattemptChart
+                      reAttempts={individualTraineeProfile.reAttempts}
+                      testQuery={individualTraineeProfile.testQuery}
+                    />
                   </div>
+                </div>
               </>
             ) : (
-                      <TraineeCompletionTable ApiData={individualTraineeProfile} />
+              <TraineeCompletionTable ApiData={individualTraineeProfile} />
             )}
           </div>
         </div>
@@ -653,4 +642,5 @@ function TraineeIndividual() {
     </div>
   );
 }
+
 export default TraineeIndividual;
