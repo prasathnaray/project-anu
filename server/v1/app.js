@@ -81,6 +81,7 @@ const iivrStartTestRouter = require('./routes/iivrStartTestRoute.js');
 const iivrEndTestRouter = require('./routes/iivrEndTestRoute.js')
 //get Scan Centers Route
 const getScanCenterRouter = require('./routes/getScanCenterRoute.js');
+const practiceRouter = require('./routes/practiceRoute.js');
 //Auth middleware
 const Authenticate = require('./Auth/Authenticate');
 const deviceMiddleware = require('./utils/deviceMiddleware');
@@ -233,4 +234,7 @@ app.use('/api/v1/', Authenticate, iivrRouter);
 //test route for iivr
 app.use('/api/v1/', Authenticate, iivrStartTestRouter);
 app.use('/api/v1/', Authenticate, iivrEndTestRouter);
+
+//practice route 1 and 2
+app.use('/api/v1/', Authenticate, practiceRouter);
 module.exports = app;
