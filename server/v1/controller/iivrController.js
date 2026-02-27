@@ -74,13 +74,13 @@ const getMissingFields = (questionType, body, file) => {
 
 const createSubmission = async (req, res, next) => {
   try {
-    const { questionType, questionNo, isCorrect, session_id } = req.body;
-    const requester = { ...req.user, session_id };
+    const { questionType, questionNo, isCorrect, session_id, resource_id } = req.body;
+    const requester = { ...req.user, session_id, resource_id };
 
-    if (!questionType || questionNo === undefined || isCorrect === undefined || !session_id) {
+    if (!questionType || questionNo === undefined || isCorrect === undefined || !session_id || !resource_id) {
       return res.status(400).json({
         success: false,
-        message: 'questionType, questionNo, isCorrect, and session_id are required',
+        message: 'questionType, questionNo, isCorrect, session_id, and resource_id are required',
       });
     }
     if (!VALID_TYPES.includes(questionType)) {
