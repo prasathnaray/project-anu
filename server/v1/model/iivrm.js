@@ -4,15 +4,15 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const BUCKET = process.env.BUCKET_NAME || 'question-images';
 
-const uploadImage = (file) => {
+const uploadImage = (file, requester) => {
   return new Promise(async (resolve, reject) => {
-    const isPrivileged = [99, 101].includes(Number(requester.role));
-    if(!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to access this profile.'
-        });
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
     }
     try {
       const ext = path.extname(file.originalname);
@@ -38,20 +38,19 @@ const uploadImage = (file) => {
 };
 
 const submitType1 = (requester, questionNo, optionChosen, isCorrect) => {
-  //const isPrivileged = [101, 99, 102].includes(Number(requester.role));
   return new Promise((resolve, reject) => {
-    const isPrivileged = [99, 101].includes(Number(requester.role));
-                if(!isPrivileged) {
-                    return resolve({
-                        status: 'Unauthorized',
-                        code: 401,
-                        message: 'You do not have permission to access this profile.'
-                    });
-                }
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
     client.query(
-      `INSERT INTO submissions (question_type, question_no, option_chosen, is_correct)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      ['type1', questionNo, optionChosen, isCorrect],
+      `INSERT INTO submissions (question_type, question_no, option_chosen, is_correct, session_id, user_mail)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      ['type1', questionNo, optionChosen, isCorrect, requester.session_id, requester.user_mail],
       (err, result) => {
         if (err) return reject(err);
         return resolve({
@@ -66,20 +65,20 @@ const submitType1 = (requester, questionNo, optionChosen, isCorrect) => {
 
 const submitType2 = (requester, questionNo, isCorrect, file) => {
   return new Promise((resolve, reject) => {
-     const isPrivileged = [99, 101].includes(Number(requester.role));
-                if(!isPrivileged) {
-                    return resolve({
-                        status: 'Unauthorized',
-                        code: 401,
-                        message: 'You do not have permission to access this profile.'
-                    });
-                }
-    uploadImage(file)
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
+    uploadImage(file, requester)
       .then((imageData) => {
         client.query(
-          `INSERT INTO submissions (question_type, question_no, is_correct, filename, original_name, storage_path, public_url, mime_type, size)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-          ['type2', questionNo, isCorrect, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size],
+          `INSERT INTO submissions (question_type, question_no, is_correct, filename, original_name, storage_path, public_url, mime_type, size, session_id, user_mail)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+          ['type2', questionNo, isCorrect, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size, requester.session_id, requester.user_mail],
           (err, result) => {
             if (err) return reject(err);
             return resolve({
@@ -96,20 +95,20 @@ const submitType2 = (requester, questionNo, isCorrect, file) => {
 
 const submitAnnotation1 = (requester, questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
   return new Promise((resolve, reject) => {
-     const isPrivileged = [99, 101].includes(Number(requester.role));
-      if(!isPrivileged) {
-          return resolve({
-              status: 'Unauthorized',
-              code: 401,
-              message: 'You do not have permission to access this profile.'
-          });
-      }
-    uploadImage(file)
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
+    uploadImage(file, requester)
       .then((imageData) => {
         client.query(
-          `INSERT INTO submissions (question_type, question_no, is_correct, correct_label_count, wrong_label_count, unused_label_count, filename, original_name, storage_path, public_url, mime_type, size)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-          ['annotation1', questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size],
+          `INSERT INTO submissions (question_type, question_no, is_correct, correct_label_count, wrong_label_count, unused_label_count, filename, original_name, storage_path, public_url, mime_type, size, session_id, user_mail)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+          ['annotation1', questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size, requester.session_id, requester.user_mail],
           (err, result) => {
             if (err) return reject(err);
             return resolve({
@@ -124,22 +123,22 @@ const submitAnnotation1 = (requester, questionNo, isCorrect, correctLabelCount, 
   });
 };
 
-const submitAnnotation2 = (requester,questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
+const submitAnnotation2 = (requester, questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, file) => {
   return new Promise((resolve, reject) => {
-    const isPrivileged = [99, 101].includes(Number(requester.role));
-    if(!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to access this profile.'
-        });
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
     }
-    uploadImage(file)
+    uploadImage(file, requester)
       .then((imageData) => {
         client.query(
-          `INSERT INTO submissions (question_type, question_no, is_correct, correct_label_count, wrong_label_count, unused_label_count, filename, original_name, storage_path, public_url, mime_type, size)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-          ['annotation2', questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size],
+          `INSERT INTO submissions (question_type, question_no, is_correct, correct_label_count, wrong_label_count, unused_label_count, filename, original_name, storage_path, public_url, mime_type, size, session_id, user_mail)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+          ['annotation2', questionNo, isCorrect, correctLabelCount, wrongLabelCount, unusedLabelCount, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size, requester.session_id, requester.user_mail],
           (err, result) => {
             if (err) return reject(err);
             return resolve({
@@ -156,20 +155,20 @@ const submitAnnotation2 = (requester,questionNo, isCorrect, correctLabelCount, w
 
 const submitMeasurement = (requester, questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, file) => {
   return new Promise((resolve, reject) => {
-     const isPrivileged = [99, 101].includes(Number(requester.role));
-                if(!isPrivileged) {
-                    return resolve({
-                        status: 'Unauthorized',
-                        code: 401,
-                        message: 'You do not have permission to access this profile.'
-                    });
-                }
-    uploadImage(file)
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
+    uploadImage(file, requester)
       .then((imageData) => {
         client.query(
-          `INSERT INTO submissions (question_type, question_no, is_correct, value, interpretation, caliper_placement_interpretation, filename, original_name, storage_path, public_url, mime_type, size)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-          ['measurement', questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size],
+          `INSERT INTO submissions (question_type, question_no, is_correct, value, interpretation, caliper_placement_interpretation, filename, original_name, storage_path, public_url, mime_type, size, session_id, user_mail)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+          ['measurement', questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size, requester.session_id, requester.user_mail],
           (err, result) => {
             if (err) return reject(err);
             return resolve({
@@ -185,53 +184,60 @@ const submitMeasurement = (requester, questionNo, isCorrect, value, interpretati
 };
 
 const iivrStartTestm = (requester, resource_id) => {
-    return new Promise((resolve, reject) => {
-          const isPrivileged = [103].includes(Number(requester.role));
-          if(!isPrivileged)
-          {
-              return resolve({
-                  status: 'Unauthorized',
-                  code: 401,
-                  message: 'You do not have permission to access this profile.'
-              });
-          }
-          client.query(`INSERT INTO ii_test_attempts_logs (resource_id, user_id) VALUES ($1, $2) RETURNING *`, [resource_id, requester.user_mail], (err, result) => {
-              if(err) return reject(err);
-              return resolve({
-                  status: 'Test Started',
-                  code: 201,
-                  data: result.rows[0],
-              });
-          });
-    })
-}
+  return new Promise((resolve, reject) => {
+    const isPrivileged = [103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
+    client.query(
+      `INSERT INTO ii_test_attempts_logs (resource_id, user_id) VALUES ($1, $2) RETURNING *`,
+      [resource_id, requester.user_mail],
+      (err, result) => {
+        if (err) return reject(err);
+        return resolve({
+          status: 'Test Started',
+          code: 201,
+          data: result.rows[0],
+        });
+      }
+    );
+  });
+};
+
 const iivrEndTestm = (requester, test_id) => {
-    return new Promise((resolve, reject) => {
-          const isPrivileged = [103].includes(Number(requester.role));
-          if(!isPrivileged)
-          {
-              return resolve({
-                  status: 'Unauthorized',
-                  code: 401,
-                  message: 'You do not have permission to access this profile.'
-              });
-          }
-          client.query(`UPDATE ii_test_attempts_logs SET is_completed = true, completed_time = NOW() WHERE test_id = $1 AND user_id = $2 RETURNING *`, [test_id, requester.user_mail], (err, result) => {
-              if(err) return reject(err);
-              if(result.rows.length === 0) {
-                  return resolve({
-                      status: 'Test Not Found',
-                      code: 404,
-                      message: 'No test attempt found with the provided test_id for this user.'
-                  });
-              }
-              return resolve({
-                  status: 'Test Ended', 
-                  code: 200,
-                  data: result.rows[0],
-              });
-          }
-        );
-    })
-}
-module.exports = { submitType1, submitType2, submitAnnotation1, submitAnnotation2, submitMeasurement, iivrStartTestm, iivrEndTestm};
+  return new Promise((resolve, reject) => {
+    const isPrivileged = [103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
+    client.query(
+      `UPDATE ii_test_attempts_logs SET is_completed = true, completed_time = NOW() WHERE test_id = $1 AND user_id = $2 RETURNING *`,
+      [test_id, requester.user_mail],
+      (err, result) => {
+        if (err) return reject(err);
+        if (result.rows.length === 0) {
+          return resolve({
+            status: 'Test Not Found',
+            code: 404,
+            message: 'No test attempt found with the provided test_id for this user.'
+          });
+        }
+        return resolve({
+          status: 'Test Ended',
+          code: 200,
+          data: result.rows[0],
+        });
+      }
+    );
+  });
+};
+
+module.exports = { submitType1, submitType2, submitAnnotation1, submitAnnotation2, submitMeasurement, iivrStartTestm, iivrEndTestm };
