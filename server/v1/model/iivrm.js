@@ -1,3 +1,43 @@
+
+const client = require('../utils/conn');
+const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const BUCKET = process.env.BUCKET_NAME || 'question-images';
+
+// ✅ uploadImage must be defined BEFORE it is used
+const uploadImage = (file, requester) => {
+  return new Promise(async (resolve, reject) => {
+    const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+    if (!isPrivileged) {
+      return resolve({
+        status: 'Unauthorized',
+        code: 401,
+        message: 'You do not have permission to access this profile.'
+      });
+    }
+    try {
+      const ext = path.extname(file.originalname);
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+      const storagePath = `iisub/${filename}`;
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
+      if (error) return reject(error);
+      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+      return resolve({
+        filename,
+        original_name: file.originalname,
+        storage_path: storagePath,
+        public_url: urlData.publicUrl,
+        mime_type: file.mimetype,
+        size: file.size,
+      });
+    } catch (err) {
+      return reject(err);
+    }
+  });
+};
 const submitType1 = (requester, questionNo, optionChosen, isCorrect) => {
   return new Promise((resolve, reject) => {
     const isPrivileged = [99, 101, 103].includes(Number(requester.role));
