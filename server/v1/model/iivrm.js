@@ -4,7 +4,6 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const BUCKET = process.env.BUCKET_NAME || 'question-images';
-
 // ✅ uploadImage must be defined BEFORE it is used
 const uploadImage = (file, requester) => {
   return new Promise(async (resolve, reject) => {
@@ -143,4 +142,55 @@ const submitMeasurement = (requester, questionNo, isCorrect, value, interpretati
       .catch((err) => reject(err));
   });
 };
-module.exports = { submitType1, submitType2, submitAnnotation1, submitAnnotation2, submitMeasurement };
+
+const iivrStartTestm = (requester, resource_id) => {
+    return new Promise((resolve, reject) => {
+          const isPrivileged = [103].includes(Number(requester.role));
+          if(!isPrivileged)
+          {
+              return resolve({
+                  status: 'Unauthorized',
+                  code: 401,
+                  message: 'You do not have permission to access this profile.'
+              });
+          }
+          client.query(`INSERT INTO ii_test_attempts_logs (resource_id, user_id) VALUES ($1, $2) RETURNING *`, [resource_id, requester.user_mail], (err, result) => {
+              if(err) return reject(err);
+              return resolve({
+                  status: 'Test Started',
+                  code: 201,
+                  data: result.rows[0],
+              });
+          });
+    })
+}
+const iivrEndTestm = (requester, test_id) => {
+    return new Promise((resolve, reject) => {
+          const isPrivileged = [103].includes(Number(requester.role));
+          if(!isPrivileged)
+          {
+              return resolve({
+                  status: 'Unauthorized',
+                  code: 401,
+                  message: 'You do not have permission to access this profile.'
+              });
+          }
+          client.query(`UPDATE ii_test_attempts_logs SET is_completed = true, completed_time = NOW() WHERE test_id = $1 AND user_id = $2 RETURNING *`, [test_id, requester.user_mail], (err, result) => {
+              if(err) return reject(err);
+              if(result.rows.length === 0) {
+                  return resolve({
+                      status: 'Test Not Found',
+                      code: 404,
+                      message: 'No test attempt found with the provided test_id for this user.'
+                  });
+              }
+              return resolve({
+                  status: 'Test Ended', 
+                  code: 200,
+                  data: result.rows[0],
+              });
+          }
+        );
+    })
+}
+module.exports = { submitType1, submitType2, submitAnnotation1, submitAnnotation2, submitMeasurement, iivrStartTestm, iivrEndTestm };
