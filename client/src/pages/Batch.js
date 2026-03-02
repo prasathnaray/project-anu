@@ -848,11 +848,11 @@ function Batch()  {
                                                                                 </td>
                                                                                 {decoded.role == 99 || decoded.role == 101 && (
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
+                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count}
                                                                                 </th>
                                                                                 )} 
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count ?? 0}
+                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count ?? 0}
                                                                                 </th>
                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
                                                                                 <button onClick={() => toggleDropdown(index)}>
