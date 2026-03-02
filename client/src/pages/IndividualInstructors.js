@@ -4,8 +4,10 @@ import { Navigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { GraduationCap, User } from 'lucide-react';
+import { ArrowUpWideNarrow, GraduationCap, User } from 'lucide-react';
 import GetInsAnalysisAPI from '../API/GetInsAnalysisAPI';
+import getMonthYear from '../utils/DateChange';
+
 function IndividualInstructors() {
     let {people_id} = useParams();
     let token = localStorage.getItem('user_token');
@@ -44,6 +46,30 @@ function IndividualInstructors() {
     if (decoded.role != 101 && decoded.role != 102) {
                     return <Navigate to="/" replace />;
     }
+
+    // Parse associated_batches JSON if it's a string
+    const associatedBatches = insData?.associated_batches
+        ? (typeof insData.associated_batches === 'string'
+            ? JSON.parse(insData.associated_batches)
+            : insData.associated_batches)
+        : [];
+
+    // Parse active_batches_with_people JSON if it's a string
+    const activeBatchesWithPeople = insData?.active_batches_with_people
+        ? (typeof insData.active_batches_with_people === 'string'
+            ? JSON.parse(insData.active_batches_with_people)
+            : insData.active_batches_with_people)
+        : [];
+
+    // Merge active people count into associated batches
+    const batchTableData = associatedBatches.map(batch => {
+        const activeBatch = activeBatchesWithPeople.find(ab => ab.batch_id === batch.batch_id);
+        return {
+            ...batch,
+            active_people_count: activeBatch?.active_people_count ?? 0
+        };
+    });
+
   return (
     <div className={`flex flex-col min-h-screen`}>
           <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -60,7 +86,7 @@ function IndividualInstructors() {
                           : "ms-[55.5px] flex-grow"
                       } `}
                   >
-                    <div className="bg-gray-100 h-screen">
+                    <div className="bg-gray-100 min-h-screen">
                               <div className="p-2 flex justify-between items-center border-b bg-white">
                                 <div>Profile</div>
                                 <div className="flex gap-2 text-sm">
@@ -114,7 +140,7 @@ function IndividualInstructors() {
                                                       </span>
                                                       <span className="">
                                                           <div className="flex justify-center items-center mb-2 text-lg">{insData?.total_batches || 0}</div>
-                                                          <div className="text-sm">Batches Traineed</div>
+                                                          <div className="text-sm">Batches Trained</div>
                                                       </span>
                                                 </div>
                                           </div>
@@ -147,6 +173,69 @@ function IndividualInstructors() {
                                               </div>
                                         </div>
                                   </div>
+                              </div>
+
+                              {/* ===== BATCH TABLE SECTION ===== */}
+                              <div className="mx-7 py-4">
+                                   <div className="bg-white rounded px-8 py-10">
+                                        <div className="font-semibold text-xl text-gray-500 flex justify-between items-center">
+                                            <div>Associated Batches</div>
+                                        </div>
+                                        <table className="w-full text-left border-collapse mt-5">
+                                            <thead>
+                                                <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                                    <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">
+                                                        <div>Batch Name</div>
+                                                        <button><ArrowUpWideNarrow size={20}/></button>
+                                                    </th>
+                                                    <th className="py-2 px-4 text-[#8DC63F]">
+                                                        <div className="flex items-center gap-2">
+                                                            <span>Start date</span>
+                                                            <button><ArrowUpWideNarrow size={20}/></button>
+                                                        </div>
+                                                    </th>
+                                                    <th className="py-2 px-4 text-[#8DC63F]">
+                                                        <div className="flex items-center gap-2">
+                                                            <span>End date</span>
+                                                            <button><ArrowUpWideNarrow size={20}/></button>
+                                                        </div>
+                                                    </th>
+                                                    <th className="py-2 px-4 text-[#8DC63F]">
+                                                        <div className="flex items-center gap-2">
+                                                            <span>No.of Active Trainees</span>
+                                                            <button><ArrowUpWideNarrow size={20}/></button>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {batchTableData.length > 0 ? (
+                                                    batchTableData.map((batch, index) => (
+                                                        <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
+                                                            <td className="py-2 px-4 font-semibold text-gray-500">
+                                                                <a href={`/batch/${batch.batch_id}`}>{batch.batch_name}</a>
+                                                            </td>
+                                                            <td className="py-2 px-4 font-semibold text-gray-500">
+                                                                {batch.batch_start_date ? getMonthYear(batch.batch_start_date) : '—'}
+                                                            </td>
+                                                            <td className="py-2 px-4 font-semibold text-gray-500">
+                                                                {batch.batch_end_date ? getMonthYear(batch.batch_end_date) : 'Ongoing'}
+                                                            </td>
+                                                            <th className="py-2 px-4 font-semibold text-gray-500">
+                                                                {batch.active_people_count ?? 0}
+                                                            </th>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan={4} className="py-4 px-4 text-center text-gray-500">
+                                                            No data found
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                   </div>                      
                               </div>
                     </div>
                   </div>
