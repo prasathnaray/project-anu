@@ -1,0 +1,24 @@
+info:
+  name: Login API
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://{{base_url_prod}}/api/v1/login
+  body:
+    type: json
+    data: |-
+      {
+        "user_mail": "admin@anu.in",
+        "user_password": "hashed123"
+      }
+  auth:
+    type: bearer
+    token: Bruno
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

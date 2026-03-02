@@ -243,5 +243,4 @@ function IndividualInstructors() {
     </div>
   )
 }
-
 export default IndividualInstructors;
