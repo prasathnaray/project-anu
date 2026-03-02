@@ -70,6 +70,110 @@ const updateInstructorsm = (requester, batch_id, user_id) => {
         })
     })
 }
+// const instDataAnalysisModel = (requester, people_id) => {
+//     return new Promise((resolve, reject) => {
+//         const isPrivileged = [99, 101].includes(Number(requester.role))
+//         if(!isPrivileged)
+//         {
+//             return resolve({
+//                 status: 'Unauthorized',
+//                 code: 401,
+//                 message: 'You do not have permission to access this profile.'
+//             })
+//         }
+//         client.query(`
+//             WITH instructor AS (
+//     SELECT
+//         user_email,
+//         user_name,
+//         user_role,
+//         user_profile_photo
+//     FROM user_data
+//     WHERE people_id = $1
+// ),
+// instructor_last_login AS (
+//     SELECT
+//         la.user_id,
+//         la.logged_at
+//     FROM login_activity la
+//     JOIN instructor i ON i.user_email = la.user_id
+//     ORDER BY la.logged_at DESC
+//     LIMIT 1
+// ),
+// instructor_batches AS (
+//     SELECT DISTINCT
+//         bd.batch_id,
+//         bd.batch_end_date
+//     FROM batch_people_data bpd
+//     JOIN instructor i
+//         ON i.user_email = bpd.user_id
+//     JOIN batch_data bd
+//         ON bd.batch_id = ANY (bpd.batch_id)
+// ),
+// active_batches AS (
+//     SELECT batch_id
+//     FROM instructor_batches
+//     WHERE batch_end_date IS NULL
+//     OR batch_end_date::date >= CURRENT_DATE
+// ),
+// total_trainees AS (
+//     SELECT DISTINCT ud.user_email
+//     FROM batch_people_data bpd
+//     JOIN user_data ud
+//         ON ud.user_email = bpd.user_id
+//     WHERE ud.user_role = '103'
+//     AND EXISTS (
+//         SELECT 1
+//         FROM instructor_batches ib
+//         WHERE ib.batch_id = ANY (bpd.batch_id)
+//     )
+// ),
+// active_trainees AS (
+//     SELECT DISTINCT ud.user_email
+//     FROM batch_people_data bpd
+//     JOIN user_data ud
+//         ON ud.user_email = bpd.user_id
+//     WHERE ud.user_role = '103'
+//     AND EXISTS (
+//         SELECT 1
+//         FROM active_batches ab
+//         WHERE ab.batch_id = ANY (bpd.batch_id)
+//     )
+// )
+// SELECT
+//     i.user_name AS instructor_name,
+//     i.user_role AS instructor_role,
+//     i.user_profile_photo,
+//     COUNT(DISTINCT at.user_email) AS active_trainees,
+//     COUNT(DISTINCT tt.user_email) AS total_trainees,
+//     (SELECT COUNT(*) FROM active_batches) AS active_batches,
+//     (SELECT COUNT(*) FROM instructor_batches) AS total_batches,
+//     ill.logged_at AS last_login
+// FROM instructor i
+// LEFT JOIN active_trainees at ON TRUE
+// LEFT JOIN total_trainees tt ON TRUE
+// LEFT JOIN instructor_last_login ill ON TRUE
+// GROUP BY
+//     i.user_name,
+//     i.user_role,
+//     i.user_profile_photo,
+//     ill.logged_at;
+//         `, [people_id], (err, result) => {
+//             if(err)
+//             {
+//                 return reject(err)
+//             }
+//             else
+//             {
+//                 return resolve(result)
+//             }
+//         })
+//     })
+// }
+
+
+//the above code is working im gonna change a bit below
+
 const instDataAnalysisModel = (requester, people_id) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101].includes(Number(requester.role))
@@ -103,6 +207,7 @@ instructor_last_login AS (
 instructor_batches AS (
     SELECT DISTINCT
         bd.batch_id,
+        bd.batch_name,
         bd.batch_end_date
     FROM batch_people_data bpd
     JOIN instructor i
@@ -111,7 +216,7 @@ instructor_batches AS (
         ON bd.batch_id = ANY (bpd.batch_id)
 ),
 active_batches AS (
-    SELECT batch_id
+    SELECT batch_id, batch_name
     FROM instructor_batches
     WHERE batch_end_date IS NULL
     OR batch_end_date::date >= CURRENT_DATE
@@ -139,6 +244,20 @@ active_trainees AS (
         FROM active_batches ab
         WHERE ab.batch_id = ANY (bpd.batch_id)
     )
+),
+-- NEW: Active trainees grouped per batch
+batch_active_trainees AS (
+    SELECT
+        ab.batch_id,
+        ab.batch_name,
+        COUNT(DISTINCT ud.user_email) AS active_people_count
+    FROM active_batches ab
+    JOIN batch_people_data bpd
+        ON ab.batch_id = ANY (bpd.batch_id)
+    JOIN user_data ud
+        ON ud.user_email = bpd.user_id
+    WHERE ud.user_role = '103'
+    GROUP BY ab.batch_id, ab.batch_name
 )
 SELECT
     i.user_name AS instructor_name,
@@ -148,7 +267,33 @@ SELECT
     COUNT(DISTINCT tt.user_email) AS total_trainees,
     (SELECT COUNT(*) FROM active_batches) AS active_batches,
     (SELECT COUNT(*) FROM instructor_batches) AS total_batches,
-    ill.logged_at AS last_login
+    ill.logged_at AS last_login,
+
+    -- NEW: All associated batches as JSON array
+    (
+        SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'batch_id', ib.batch_id,
+                'batch_name', ib.batch_name,
+                'batch_end_date', ib.batch_end_date,
+                'is_active', (ib.batch_end_date IS NULL OR ib.batch_end_date::date >= CURRENT_DATE)
+            )
+        )
+        FROM instructor_batches ib
+    ) AS associated_batches,
+
+    -- NEW: Active batches with their active people count as JSON array
+    (
+        SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+                'batch_id', bat.batch_id,
+                'batch_name', bat.batch_name,
+                'active_people_count', bat.active_people_count
+            )
+        )
+        FROM batch_active_trainees bat
+    ) AS active_batches_with_people
+
 FROM instructor i
 LEFT JOIN active_trainees at ON TRUE
 LEFT JOIN total_trainees tt ON TRUE
@@ -170,4 +315,5 @@ GROUP BY
         })
     })
 }
+
 module.exports = {getInstructorsm, deleteInstructorsm, updateInstructorsm, instDataAnalysisModel};
