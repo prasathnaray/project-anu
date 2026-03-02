@@ -315,5 +315,4 @@ GROUP BY
         })
     })
 }
-
 module.exports = {getInstructorsm, deleteInstructorsm, updateInstructorsm, instDataAnalysisModel};
