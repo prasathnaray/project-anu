@@ -114,6 +114,9 @@ function BatchIndividual() {
                                                                                 {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
                                                                         </tr>
                                                                 </thead>
+                                                                <tbody className="text-sm">
+                                                                                
+                                                                </tbody>
                                                         </table>
                                                 </div>
                                         </div>
