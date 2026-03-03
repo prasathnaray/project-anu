@@ -298,7 +298,10 @@ const completionModel = (is_completed, r_id, requester) => {
                     message: 'You do not have permission to access this profile.'
                 })
             }
-            client.query('INSERT INTO progress_data(user_id, is_completed, resourse_id) VALUES($1, $2, $3)', [requester.user_mail, is_completed, r_id], (err, result) => {
+            client.query(`INSERT INTO progress_data(user_id, is_completed, resourse_id) VALUES($1, $2, $3) ON CONFLICT (user_id, resourse_id)
+   DO UPDATE SET
+      is_completed = EXCLUDED.is_completed,
+      updated_at = NOW()`, [requester.user_mail, is_completed, r_id], (err, result) => {
                 if(err)
                 {
                     reject(err)

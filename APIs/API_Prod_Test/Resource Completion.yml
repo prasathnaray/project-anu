@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/resource-completion?r_id=8fb5a33a-3076-4b57-855b-daed94ace933&is_completed=true
+  url: http://localhost:4004/api/v1/resource-completion?r_id=8fb5a33a-3076-4b57-855b-daed94ace933&is_completed=true
   params:
     - name: r_id
       value: 8fb5a33a-3076-4b57-855b-daed94ace933
