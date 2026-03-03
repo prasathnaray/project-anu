@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { ArrowLeft01Icon } from 'hugeicons-react';
-import { ArrowLeftIcon } from 'lucide-react';
+import { ArrowLeftIcon, ArrowUpWideNarrow } from 'lucide-react';
 import BasicPie from '../charts/PieChart';
 import TraineeInsRatio from '../charts/TraineeInsRatio';
 import BatchProfileAPI from '../API/BatchProfileAPI';
@@ -100,6 +100,22 @@ function BatchIndividual() {
                                                                 </div>
                                                         </div>
                                                 )} 
+                                        </div>
+                                        <div className="m-3 bg-white p-2">
+                                                <div>
+                                                        <table className="w-full text-left border-collapse">
+                                                                <thead>
+                                                                        <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                                                                <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Batch Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
+                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Start date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>)}
+                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
+                                                                        </tr>
+                                                                </thead>
+                                                        </table>
+                                                </div>
                                         </div>
                                     </div>
                             </div>
