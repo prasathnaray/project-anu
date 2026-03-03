@@ -71,7 +71,7 @@ const completeModule = async (req, res) => {
     try{
         const result = await completionModel(is_completed, r_id, requester);
         //console.log(submod_id);
-        res.status(200).send(result);
+        res.status(200).json('Module completion status updated successfully');
     }
     catch(err)
     {
