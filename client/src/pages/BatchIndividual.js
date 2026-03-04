@@ -102,20 +102,29 @@ function BatchIndividual() {
                                                 )} 
                                         </div>
                                         <div className="m-3 bg-white p-2">
+                                                <div className="text-lg m-3">
+                                                        <div>Instructor Profile</div>
+                                                </div>
                                                 <div>
                                                         <table className="w-full text-left border-collapse">
                                                                 <thead>
                                                                         <tr className="border-b border-gray-300 shadow-sm text-sm">
-                                                                                <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Batch Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
-                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Start date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>)}
-                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
+                                                                                <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"></th>
+                                                                                <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Instructor Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
+                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Last Login time</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>)}
                                                                                 {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>) }
                                                                         </tr>
                                                                 </thead>
                                                                 <tbody className="text-sm">
-                                                                                
+                                                                         <td className="py-2 px-4">
+                                                                                <img
+                                                                                //src={IMAGE_URL + instructor.user_profile_photo}
+                                                                                        className="w-10 h-10 rounded-full object-cover cursor-pointer"
+                                                                                        alt="profile"
+                                                                                />
+                                                                        </td>
+                                                                        <td>sdfsa</td>
+                                                                        <td>saldj</td>       
                                                                 </tbody>
                                                         </table>
                                                 </div>

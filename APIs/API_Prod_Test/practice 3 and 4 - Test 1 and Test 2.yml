@@ -1,0 +1,151 @@
+info:
+  name: practice 3 and 4 - Test 1 and Test 2
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: http://localhost:4004/api/v1/submit-prac-test
+  body:
+    type: multipart-form
+    data:
+      - name: sessionType
+        type: text
+        value: practice
+      - name: sessionNumber
+        type: text
+        value: "3"
+      - name: userImages_1
+        type: file
+        value:
+          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-26 111401.png
+      - name: userImages_2
+        type: file
+        value:
+          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-27 142644.png
+      - name: expertImages_1
+        type: file
+        value:
+          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-26 111401.png
+      - name: expertImages_2
+        type: file
+        value:
+          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-27 142644.png
+      - name: payload
+        type: text
+        value: |-
+          {
+            "planeIdentification": {
+              "timeTakenSeconds": {
+                "user": 45,
+                "expertExpected": 30,
+                "score": 8,
+                "maxScore": 10
+              },
+              "probePosition": {
+                "user": {
+                  "position": { "x": 1.2, "y": 0.5, "z": 3.1 },
+                  "rotation": { "x": 10.0, "y": 5.0, "z": 2.0 }
+                },
+                "expert": {
+                  "position": { "x": 1.0, "y": 0.4, "z": 3.0 },
+                  "rotation": { "x": 9.5, "y": 4.8, "z": 1.9 }
+                },
+                "score": 7,
+                "maxScore": 10
+              },
+              "probeRotationScore": {
+                "score": 6,
+                "maxScore": 10
+              }
+            },
+            "imageOptimization": {
+              "gain": { "user": 50, "expert": 55, "score": 8, "maxScore": 10 },
+              "depth": { "user": 12, "expert": 14, "score": 7, "maxScore": 10 },
+              "zoom": { "user": 1.5, "expert": 1.8, "score": 6, "maxScore": 10 },
+              "focus": { "user": 3, "expert": 4, "score": 7, "maxScore": 10 },
+              "dynamicRange": { "user": 60, "expert": 65, "score": 8, "maxScore": 10 }
+            },
+            "measurements": [
+              {
+                "type": "BPD",
+                "caliperPlacement": {
+                  "method": "outer-to-outer",
+                  "userPoints": [{ "x": 10, "y": 20 }, { "x": 30, "y": 40 }],
+                  "expertPoints": [{ "x": 11, "y": 21 }, { "x": 31, "y": 41 }],
+                  "score": 8,
+                  "maxScore": 10
+                },
+                "value": {
+                  "user": 45.2,
+                  "expert": 46.0,
+                  "unit": "mm",
+                  "error": 0.8,
+                  "score": 7,
+                  "maxScore": 10
+                },
+                "obtainedImage": {}
+              },
+              {
+                "type": "HC",
+                "caliperPlacement": {
+                  "method": "outer-to-outer",
+                  "userPoints": [{ "x": 15, "y": 25 }, { "x": 35, "y": 45 }],
+                  "expertPoints": [{ "x": 16, "y": 26 }, { "x": 36, "y": 46 }],
+                  "score": 7,
+                  "maxScore": 10
+                },
+                "value": {
+                  "user": 160.5,
+                  "expert": 162.0,
+                  "unit": "mm",
+                  "error": 1.5,
+                  "score": 6,
+                  "maxScore": 10
+                },
+                "obtainedImage": {}
+              }
+            ],
+            "diagnosticInterpretation": {
+              "chartInterpretation": {
+                "user": "normal",
+                "expert": "normal",
+                "score": 5,
+                "maxScore": 5
+              },
+              "rangeInterpretation": {
+                "user": "within range",
+                "expert": "within range",
+                "score": 5,
+                "maxScore": 5
+              }
+            },
+            "scores": {
+              "planeIdentification": 21,
+              "imageOptimization": 36,
+              "measurement": 28,
+              "diagnosticInterpretation": 10,
+              "totalScore": 95,
+              "maxScore": 120,
+              "percentage": 79.17
+            },
+            "feedback": {
+              "overall": "Good performance overall, needs improvement in probe positioning.",
+              "needsPractice": ["probePosition", "zoom"]
+            }
+          }
+      - name: resource_id
+        type: text
+        value: 41c6525b-9b97-425c-a766-5014868668dd
+      - name: session_id
+        type: text
+        value: 41c6525b-9b97-425c-a766-5014868668dc
+  auth:
+    type: bearer
+    token: "{{user_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
