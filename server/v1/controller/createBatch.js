@@ -140,19 +140,32 @@ const filterBatchC = async(req, res) => {
                 res.status(500).send(err);
         }
 }
+// const individualBatchC = async(req, res) => {
+//         const requester = req.user;
+//         const {batch_id} = req.params;
+//         try
+//         {
+//                 const response = await individualBatchStats(requester, batch_id)
+//                 res.status(200).send(response);
+//                 //res.send(batch_id);
+//         }
+//         catch(err)
+//         {
+//                 res.status(500).send(err)
+//         }
+// }
 const individualBatchC = async(req, res) => {
-        const requester = req.user;
-        const {batch_id} = req.params;
-        try
-        {
-                const response = await individualBatchStats(requester, batch_id)
-                res.status(200).send(response.rows);
-                //res.send(batch_id);
-        }
-        catch(err)
-        {
-                res.status(500).send(err)
-        }
+    const requester = req.user;
+    const {batch_id} = req.params;
+    try {
+        const response = await individualBatchStats(requester, batch_id);
+        //console.log('Response being sent:', response); // check this in terminal
+        res.status(200).json(response); // ✅ .json() instead of .send()
+    }
+    catch(err) {
+        //console.log('Error:', err);
+        res.status(500).json({ error: err.message });
+    }
 }
 const updateBatchC = async(req, res) => {
         const requester = req.user;

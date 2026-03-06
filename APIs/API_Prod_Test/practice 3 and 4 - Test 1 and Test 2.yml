@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:4004/api/v1/submit-prac-test
+  url: http://{{base_url_prod}}/api/v1/submit-prac-test
   body:
     type: multipart-form
     data:
@@ -139,7 +139,7 @@ http:
         value: 41c6525b-9b97-425c-a766-5014868668dd
       - name: session_id
         type: text
-        value: 41c6525b-9b97-425c-a766-5014868668dc
+        value: 41c6525b-9b97-425c-a766-5014868663dd
   auth:
     type: bearer
     token: "{{user_token}}"
