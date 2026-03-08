@@ -83,13 +83,15 @@ const iivrEndTestRouter = require('./routes/iivrEndTestRoute.js')
 const getScanCenterRouter = require('./routes/getScanCenterRoute.js');
 const practiceRouter = require('./routes/practiceRoute.js');
 const pracTestRouter = require('./routes/pracTestRoute.js');
+const irobRouter = require('./routes/lrobRoute.js');
+
 //Auth middleware
 const Authenticate = require('./Auth/Authenticate');
 const deviceMiddleware = require('./utils/deviceMiddleware');
 //enabling cors
 const cors = require('cors');
 const createTraineeRouter = require('./routes/createtraineeRoute');
-
+//mindspark and ob booster
 //multer 
 const multer = require('multer');
 const CreateLearningModuleRouter = require('./routes/CreateLearningModuleRoute.js');
@@ -241,4 +243,5 @@ app.use('/api/v1/', Authenticate, practiceRouter);
 
 //prac test route
 app.use('/api/v1/', Authenticate, pracTestRouter);
+app.use('/api/v1/', Authenticate, irobRouter);
 module.exports = app;
