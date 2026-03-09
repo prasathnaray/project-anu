@@ -1,0 +1,26 @@
+info:
+  name: Mind Spark and OB Boosters
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: http://{{base_url_prod}}/api/v1/submit-msob
+  body:
+    type: json
+    data: |-
+      {
+          "resourceType": "PROBEMOVEMENTS",
+          "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "resourceId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "totalTimeTaken": 90
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3NzMwNDExNzZ9.IjJxr_7Y55ZA6tWFP0TdbdGvfsi7gV-03Idbp4WXOe8
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
