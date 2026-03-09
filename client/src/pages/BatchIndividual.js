@@ -158,46 +158,46 @@ function BatchIndividual() {
     const [trainees, setTrainees] = React.useState([]);
     const [counts, setCounts] = React.useState({ instructorCount: 0, traineeCount: 0 });
 
-//     const handleIndBatchAPICall = async (batch_id) => {
-//         try {
-//             let token = localStorage.getItem('user_token');
-//             const result = await BatchProfileAPI(token, batch_id);
-//             const { batchInfo, instructors, trainees, instructorCount, traineeCount } = result.data;
-//             setBatchInfo(batchInfo);
-//             setInstructors(instructors);
-//             setTrainees(trainees);
-//             setCounts({ instructorCount, traineeCount });
-//         } catch (err) {
-//             console.log(err.message);
-//         }
-//     };
-        const handleIndBatchAPICall = async (batch_id) => {
-    try {
-        let token = localStorage.getItem('user_token');
-        const result = await BatchProfileAPI(token, batch_id);
-        //console.log('API result:', result); // check what's coming back
+    //     const handleIndBatchAPICall = async (batch_id) => {
+    //         try {
+    //             let token = localStorage.getItem('user_token');
+    //             const result = await BatchProfileAPI(token, batch_id);
+    //             const { batchInfo, instructors, trainees, instructorCount, traineeCount } = result.data;
+    //             setBatchInfo(batchInfo);
+    //             setInstructors(instructors);
+    //             setTrainees(trainees);
+    //             setCounts({ instructorCount, traineeCount });
+    //         } catch (err) {
+    //             console.log(err.message);
+    //         }
+    //     };
+    const handleIndBatchAPICall = async (batch_id) => {
+        try {
+            let token = localStorage.getItem('user_token');
+            const result = await BatchProfileAPI(token, batch_id);
+            //console.log('API result:', result); // check what's coming back
 
-        const data = result?.data;
-        if (!data) return; // guard against empty response
+            const data = result?.data;
+            if (!data) return; // guard against empty response
 
-        setBatchInfo(data.batchInfo || null);
-        setInstructors(data.instructors || []);
-        setTrainees(data.trainees || []);
-        setCounts({
-            instructorCount: data.instructorCount || 0,
-            traineeCount: data.traineeCount || 0
-        });
-    } catch (err) {
-        console.log(err.message);
-    }
-};
+            setBatchInfo(data.batchInfo || null);
+            setInstructors(data.instructors || []);
+            setTrainees(data.trainees || []);
+            setCounts({
+                instructorCount: data.instructorCount || 0,
+                traineeCount: data.traineeCount || 0
+            });
+        } catch (err) {
+            console.log(err.message);
+        }
+    };
     React.useEffect(() => {
         handleIndBatchAPICall(batch_id);
     }, []);
 
     let token = localStorage.getItem('user_token');
     const decoded = jwtDecode(token);
-
+    const visibleInstructors = decoded.role == 102 ? instructors.filter(i => i.user_email == decoded.user_mail) : instructors;
     if (!decoded.role) {
         return <Navigate to="/" replace />;
     }
@@ -283,7 +283,7 @@ function BatchIndividual() {
                                         <thead>
                                             <tr className="border-b border-gray-300 shadow-sm text-sm">
                                                 <th className="py-2 px-4 text-[#8DC63F]">
-                                                     <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-2">
                                                         <div>Name</div>
                                                         <button><ArrowUpWideNarrow size={20} /></button>
                                                     </div>
@@ -318,8 +318,8 @@ function BatchIndividual() {
                                             </tr>
                                         </thead>
                                         <tbody className="text-sm">
-                                            {instructors.length > 0 ? (
-                                                instructors.map((instructor, index) => (
+                                            {visibleInstructors.length > 0 ? (
+                                                visibleInstructors.map((instructor, index) => (
                                                     <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
                                                         {/* <td className="py-2 px-4">
                                                             <img
@@ -335,7 +335,7 @@ function BatchIndividual() {
                                                         <td className="py-2 px-4 text-gray-600">
                                                             {formatDateTime(instructor.user_created_at)}
                                                         </td>
-                                                        {(decoded.role == 99 || decoded.role == 101) && (
+                                                        {(decoded.role == 99 || decoded.role == 101 || decoded.role == 102) && (
                                                             <td className="py-2 px-4 text-gray-600">
                                                                 {formatDateTime(instructor.last_login)}
                                                             </td>

@@ -208,7 +208,7 @@
 //                         const isClickInside = Object.values(dropdownRefs.current).some(ref =>
 //                         ref && ref.contains(event.target)
 //                         );
-                
+
 //                         if (!isClickInside) {
 //                         setOpenDropdownIndex(null);
 //                         }
@@ -311,7 +311,7 @@
 //                                                                                                                                                                                                                         </button>
 //                                                                                                                                                                                                                 )}
 //                                                                                                                                                                                                                 {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
-                                                                                                
+
 //                                                                                                                                                                                                 </div>
 //                                                                                                                                                                                         )}
 //                                                                                 </td>
@@ -699,7 +699,7 @@
 //       document.removeEventListener("mousedown", handleClickOutside);
 //   }, []);
 //   //save the url id in the session
-  
+
 //   useEffect(() => {
 //     GetCuriculumList();
 //     GetCoursesList();
@@ -1352,9 +1352,8 @@ function Course() {
           />
         </div>
         <div
-          className={`${
-            buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
-          } flex-grow`}
+          className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
+            } flex-grow`}
         >
           <div className="bg-gray-100 h-screen pt-12">
             <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
@@ -1362,11 +1361,10 @@ function Course() {
               <span className="text-[15px]">Certifications</span>
             </div>
             <div
-              className={`${
-                buttonOpen
+              className={`${buttonOpen
                   ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
                   : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
-              }`}
+                }`}
             >
               <div className="mt-5 font-semibold text-xl text-gray-600">
                 Certifications
@@ -1436,7 +1434,7 @@ function Course() {
                   </thead>
                   <tbody>
                     {Array.isArray(groupedCourses) &&
-                    groupedCourses.length > 0 ? (
+                      groupedCourses.length > 0 ? (
                       groupedCourses.map((data, index) => {
                         const hasBatches = data.batches && data.batches.length > 0;
                         const isExpanded = expandedRows[data.certificate_id];
@@ -1502,11 +1500,10 @@ function Course() {
                                     ref={(el) =>
                                       (dropdownRefs.current[index] = el)
                                     }
-                                    className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right ${
-                                      openDropdownIndex === index
+                                    className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right ${openDropdownIndex === index
                                         ? "opacity-100 scale-100 visible"
                                         : "opacity-0 scale-95 invisible"
-                                    }`}
+                                      }`}
                                   >
                                     <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
                                       View
@@ -1514,25 +1511,25 @@ function Course() {
                                     {jwtDecode(
                                       localStorage.getItem("user_token")
                                     ).role == 99 && (
-                                      <button
-                                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
-                                        onClick={() =>
-                                          handleDelete(data.certificate_id)
-                                        }
-                                      >
-                                        Delete
-                                      </button>
-                                    )}
+                                        <button
+                                          className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                          onClick={() =>
+                                            handleDelete(data.certificate_id)
+                                          }
+                                        >
+                                          Delete
+                                        </button>
+                                      )}
                                     {jwtDecode(
                                       localStorage.getItem("user_token")
                                     ).role == 99 && (
-                                      <button
-                                        className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
-                                        onClick={() => setTagCourse(true)}
-                                      >
-                                        Tag Course
-                                      </button>
-                                    )}
+                                        <button
+                                          className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                          onClick={() => setTagCourse(true)}
+                                        >
+                                          Tag Course
+                                        </button>
+                                      )}
                                   </div>
                                 )}
                               </td>
