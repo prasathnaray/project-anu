@@ -2,8 +2,7 @@ const client = require('../utils/conn')
 const GenderRatio = (requester) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 103, 102].includes(Number(requester.role));
-        if(!isPrivileged)
-        {
+        if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -11,8 +10,7 @@ const GenderRatio = (requester) => {
             })
         }
         client.query('SELECT user_gender, COUNT(user_role) FROM user_data WHERE user_role NOT IN ($1, $2) GROUP BY user_gender', ['99', '101'], (err, result) => {
-            if(err)
-            {
+            if (err) {
                 return reject(err)
             }
             else {
@@ -24,8 +22,7 @@ const GenderRatio = (requester) => {
 const UserStats = (requester) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 103].includes(Number(requester.role));
-        if(!isPrivileged)
-        {
+        if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -68,15 +65,14 @@ const UserStats = (requester) => {
         LEFT JOIN user_completed uc 
             ON cr.course_id = uc.course_id
         ORDER BY completion_percentage DESC;
-            `,[requester.user_mail], (err, result) => {
-                if(err)
-                {
-                    return reject(err)
-                }
-                else {
-                    return resolve(result.rows)
-                }
-            })
+            `, [requester.user_mail], (err, result) => {
+            if (err) {
+                return reject(err)
+            }
+            else {
+                return resolve(result.rows)
+            }
+        })
     })
 }
-module.exports = {GenderRatio, UserStats}
+module.exports = { GenderRatio, UserStats }

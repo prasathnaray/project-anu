@@ -104,12 +104,10 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.listen('4004', (err) => {
-    if(err)
-    {
+    if (err) {
         console.log(err)
     }
-    else
-    {
+    else {
         console.log(`Working`)
     }
 })
@@ -121,7 +119,7 @@ app.get('/health', (req, res) => {
 });
 //enables
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 //Auth route
 //routes
 app.use(deviceMiddleware);
@@ -196,16 +194,13 @@ app.use('/api/v1', Authenticate, updateTraineeRouter);
 app.use('/api/v1', Authenticate, IndBatchProfileRouter);
 //batch update for instructor
 app.use('/api/v1', Authenticate, updateInstructorRouter);
-
 //volume upload 
 app.use('/api/v1', Authenticate, svUploadRouter);
 app.use('/api/v1', Authenticate, getVolumeDataRouter);
 app.use('/api/v1', Authenticate, VolumeApprovalRouter)
-
 //certification by curiculum
 app.use('/api/v1', Authenticate, getCertByCuriculumRouter);
 app.use('/api/v1', Authenticate, GetCertificationDetailsByIdRouter);
-
 //creating learning module
 app.use('/api/v1', Authenticate, CreateLearningModuleRouter);
 app.use('/api/v1', Authenticate, GetLearningModuleByIdRouter);
@@ -216,14 +211,14 @@ app.use('/api/v1', Authenticate, moduleTestScoresRouter);
 app.use('/api/v1', Authenticate, getResourceBylmandrtRouter);
 app.use('/api/v1', Authenticate, getInstructorDataAnalysisRoute);
 app.use('/api/v1', Authenticate, attemptTestRouter);
-// volume
+//volume
 app.use('/api/v1', Authenticate, getVolumeByInstructorRouter);
 app.use('/api/v1', Authenticate, updateVolumeConRouter);
 app.use('/api/v1', Authenticate, getConvVolumeListRouter);
 app.use('/api/v1', Authenticate, volumePlacementRouter);
 app.use('/api/v1', Authenticate, volumeRecordingRouter);
 app.use('/api/v1', Authenticate, associateVolumeRouter);
-//recordings 
+//recordings
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
 //associated volume  
 app.use('/api/v1/', Authenticate, getAssocVolumeRouter);
@@ -237,10 +232,8 @@ app.use('/api/v1/', Authenticate, iivrRouter);
 //test route for iivr
 app.use('/api/v1/', Authenticate, iivrStartTestRouter);
 app.use('/api/v1/', Authenticate, iivrEndTestRouter);
-
 //practice route 1 and 2
 app.use('/api/v1/', Authenticate, practiceRouter);
-
 //prac test route
 app.use('/api/v1/', Authenticate, pracTestRouter);
 app.use('/api/v1/', Authenticate, irobRouter);

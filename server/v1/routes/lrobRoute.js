@@ -1,5 +1,5 @@
 const express = require('express');
-const irobRouter  = express.Router();
+const irobRouter = express.Router();
 
 // const {
 //     submit,
@@ -11,5 +11,5 @@ const { irobsubmit } = require('../controller/irobController');
 // ─── MIND SPARKS & OB BOOSTERS ───────────────────────────────────────────────
 // Same Submit / Start / End APIs for all resources under these categories
 
-irobRouter.post('/submit', irobsubmit);
+irobRouter.post('/submit-msob', irobsubmit);
 module.exports = irobRouter;
