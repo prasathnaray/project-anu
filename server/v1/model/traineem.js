@@ -842,6 +842,318 @@ const indData = (requester, user_mail) => {
 //   });
 // };
 
+// const buildCertificateTree = (rows) => {
+//   const certMap = {};
+
+//   for (const row of rows) {
+//     const {
+//       certificate_id, certificate_name,
+//       course_name, module_name, unit_name,
+//       resource_type, resource_topic, resource_name, resource_id, is_completed
+//     } = row;
+
+//     if (!certMap[certificate_id]) {
+//       certMap[certificate_id] = { certificate_id, certificate_name, courses: {} };
+//     }
+//     const cert = certMap[certificate_id];
+
+//     if (!cert.courses[course_name]) {
+//       cert.courses[course_name] = { course_name, modules: {} };
+//     }
+//     const course = cert.courses[course_name];
+
+//     if (!course.modules[module_name]) {
+//       course.modules[module_name] = { module_name, units: {} };
+//     }
+//     const mod = course.modules[module_name];
+
+//     if (!mod.units[unit_name]) {
+//       mod.units[unit_name] = {
+//         unit_name,
+//         learning_resources: { total: 0, completed: 0, items: {} },
+//         image_interpretations: { total: 0, completed: 0, items: {} },
+//         practices: [],
+//         tests: [],
+//       };
+//     }
+//     const unit = mod.units[unit_name];
+
+//     const leaf = { resource_id, resource_name, is_completed: is_completed ?? false };
+
+//     if (resource_type === 'Learning Resource') {
+//       unit.learning_resources.total += 1;
+//       if (is_completed) unit.learning_resources.completed += 1;
+//       if (!unit.learning_resources.items[resource_topic]) {
+//         unit.learning_resources.items[resource_topic] = { resource_topic, resources: [] };
+//       }
+//       unit.learning_resources.items[resource_topic].resources.push(leaf);
+
+//     } else if (resource_type === 'Image Interpretation') {
+//       unit.image_interpretations.total += 1;
+//       if (is_completed) unit.image_interpretations.completed += 1;
+//       if (!unit.image_interpretations.items[resource_topic]) {
+//         unit.image_interpretations.items[resource_topic] = { resource_topic, resources: [] };
+//       }
+//       unit.image_interpretations.items[resource_topic].resources.push(leaf);
+
+//     } else if (resource_type === 'Practice') {
+//       unit.practices.push(leaf);
+
+//     } else if (resource_type === 'Test') {
+//       unit.tests.push(leaf);
+//     }
+//   }
+
+//   // Convert all maps to arrays
+//   return Object.values(certMap).map(cert => ({
+//     ...cert,
+//     courses: Object.values(cert.courses).map(course => ({
+//       ...course,
+//       modules: Object.values(course.modules).map(mod => ({
+//         ...mod,
+//         units: Object.values(mod.units).map(unit => ({
+//           ...unit,
+//           learning_resources: {
+//             ...unit.learning_resources,
+//             items: Object.values(unit.learning_resources.items),
+//           },
+//           image_interpretations: {
+//             ...unit.image_interpretations,
+//             items: Object.values(unit.image_interpretations.items),
+//           },
+//         })),
+//       })),
+//     })),
+//   }));
+// };
+//the above buildCertificateTree function would work
+
+// const UNIT_ORDER = {
+//   'BPD & HC': 1,
+//   'AC': 2,
+//   'FL': 3,
+// };
+
+// const TOPIC_ORDER = [
+//   'Fetal Head',
+//   'Fetal abdomen',
+//   'Fetal Femur',
+//   'Anatomical Landmarks',
+//   'Anatomical landmarks',
+//   'Imaging the Transthalamic Plane',
+//   'Imaging the transabdominal plane',
+//   'Imaging the transfemoral plane',
+//   'Measurement',
+//   'Plane Acquisition Challenges and Common Measurement Errors',
+//   'Pitfalls in Plane Acquisition and Measurement',
+//   'Image Diagnosis',
+//   'Image diagnosis',
+//   'OB Boosters',
+// ];
+//version 2 of the buildCertificateTree with sorting of units based on UNIT_ORDER and handling missing unit names by placing them at the end
+// const buildCertificateTree = (rows) => {
+//   const certMap = {};
+
+//   for (const row of rows) {
+//     const {
+//       certificate_id, certificate_name,
+//       course_name, module_name, unit_name,
+//       resource_type, resource_topic, resource_name, resource_id, is_completed
+//     } = row;
+
+//     if (!certMap[certificate_id]) {
+//       certMap[certificate_id] = { certificate_id, certificate_name, courses: {} };
+//     }
+//     const cert = certMap[certificate_id];
+
+//     if (!cert.courses[course_name]) {
+//       cert.courses[course_name] = { course_name, modules: {} };
+//     }
+//     const course = cert.courses[course_name];
+
+//     if (!course.modules[module_name]) {
+//       course.modules[module_name] = { module_name, units: {} };
+//     }
+//     const mod = course.modules[module_name];
+
+//     if (!mod.units[unit_name]) {
+//       mod.units[unit_name] = {
+//         unit_name,
+//         learning_resources: { total: 0, completed: 0, items: {} },
+//         image_interpretations: { total: 0, completed: 0, items: {} },
+//         practices: [],
+//         tests: [],
+//       };
+//     }
+//     const unit = mod.units[unit_name];
+
+//     const leaf = { resource_id, resource_name, is_completed: is_completed ?? false };
+
+//     if (resource_type === 'Learning Resource') {
+//       unit.learning_resources.total += 1;
+//       if (is_completed) unit.learning_resources.completed += 1;
+//       if (!unit.learning_resources.items[resource_topic]) {
+//         unit.learning_resources.items[resource_topic] = { resource_topic, resources: [] };
+//       }
+//       unit.learning_resources.items[resource_topic].resources.push(leaf);
+
+//     } else if (resource_type === 'Image Interpretation') {
+//       unit.image_interpretations.total += 1;
+//       if (is_completed) unit.image_interpretations.completed += 1;
+//       if (!unit.image_interpretations.items[resource_topic]) {
+//         unit.image_interpretations.items[resource_topic] = { resource_topic, resources: [] };
+//       }
+//       unit.image_interpretations.items[resource_topic].resources.push(leaf);
+
+//     } else if (resource_type === 'Practice') {
+//       unit.practices.push(leaf);
+
+//     } else if (resource_type === 'Test') {
+//       unit.tests.push(leaf);
+//     }
+//   }
+
+//   // Convert all maps to arrays
+//   return Object.values(certMap).map(cert => ({
+//     ...cert,
+//     courses: Object.values(cert.courses).map(course => ({
+//       ...course,
+//       modules: Object.values(course.modules).map(mod => ({
+//         ...mod,
+//         // ↓ ONLY this units block changes — sort applied here
+//         units: Object.values(mod.units)
+//           .sort((a, b) => (UNIT_ORDER[a.unit_name] ?? 99) - (UNIT_ORDER[b.unit_name] ?? 99))
+//           .map(unit => ({
+//             ...unit,
+//             learning_resources: {
+//               ...unit.learning_resources,
+//               items: Object.values(unit.learning_resources.items),
+//             },
+//             image_interpretations: {
+//               ...unit.image_interpretations,
+//               items: Object.values(unit.image_interpretations.items),
+//             },
+//           })),
+//       })),
+//     })),
+//   }));
+// };
+
+
+
+//version 3 
+const UNIT_ORDER = {
+  'BPD & HC': 1,
+  'AC': 2,
+  'FL': 3,
+};
+
+const TOPIC_ORDER = [
+  'Fetal Head',
+  'Fetal abdomen',
+  'Fetal Femur',
+  'Anatomical Landmarks',
+  'Anatomical landmarks',
+  'Imaging the Transthalamic Plane',
+  'Imaging the transabdominal plane',
+  'Imaging the transfemoral plane',
+  'Measurement',
+  'Plane Acquisition Challenges and Common Measurement Errors',
+  'Pitfalls in Plane Acquisition and Measurement',
+  'Image Diagnosis',
+  'Image diagnosis',
+  'OB Boosters',
+];
+
+const RESOURCE_ORDER = {
+  // BPD & HC - Fetal Head
+  'Transthalamic Plane': 1,
+  'Bi-Parietal Diameter': 2,
+  'Head Circumference': 3,
+
+  // BPD & HC - Anatomical Landmarks
+  'Anatomical Landmarks of the Transthalamic Plane': 1,
+
+  // BPD & HC - Imaging the Transthalamic Plane
+  'Finding the fetal presentation': 1,
+  'Mind Sparks - Probe movements': 2,
+  'How to acquire the transthalamic plane': 3,
+  'Mind Sparks - Picture Pick': 4,
+
+  // BPD & HC - Measurement
+  'How to measure BPD': 1,
+  'How to measure HC': 2,
+  'Plane Acquisition Challenges and Common Measurement Errors': 3,
+
+  // BPD & HC - Image Diagnosis
+  'Image Diagnosis': 1,
+  'Percentile Charts  & Significance': 2,
+  'BPD Chart': 3,
+  'HC Chart': 4,
+  'Mind Sparks - Chart Interpretation': 5,
+
+  // OB Boosters (shared across units)
+  'Picture Pick': 1,
+  'True/False': 2,
+  'Word Search': 3,
+  'Crossword puzzle': 1,
+
+  // AC - Fetal abdomen
+  'Transabdominal plane': 1,
+  'Abdominal circumference': 2,
+
+  // AC - Imaging the transabdominal plane
+  'How to acquire the transabdominal plane': 1,
+  'Mind Sparks - Probe movements': 2,
+  'Mind Sparks - Picture pick': 3,
+
+  // AC - Measurement
+  'How to measure AC': 1,
+  'Mind Sparks - Picture Pick': 2,
+
+  // AC - Image Diagnosis
+  'AC chart': 3,
+
+  // FL - Fetal Femur
+  'Femur': 1,
+  'Femur diaphysis': 2,
+
+  // FL - Imaging the transfemoral plane
+  'How to acquire the femur diaphysis plane': 1,
+
+  // FL - Measurement
+  'How to measure FL': 1,
+  'MindSparks - Picture Pick': 2,
+
+  // FL - Image diagnosis
+  'Image diagnosis': 1,
+  'Percentile charts & significance': 2,
+  'FL chart': 3,
+
+  // Shared
+  'Significance': 4,
+  'Geometric shapes of key landmarks and their significance': 2,
+  'Mind Sparks - Anatomical Landmarks': 3,
+  'Plane Acquisition Challenges': 1,
+  'Common Measurement Errors': 2,
+};
+
+const IMAGE_INTERPRETATION_ORDER = {
+  'Find the Image': 1,
+  'Annotation 1': 2,
+  'Annotation 2': 3,
+  'Measurement': 4,
+};
+
+const getTopicOrder = (topic) => {
+  const idx = TOPIC_ORDER.indexOf(topic);
+  return idx === -1 ? 99 : idx;
+};
+
+const getResourceOrder = (name) => {
+  return RESOURCE_ORDER[name] ?? 99;
+};
+
 const buildCertificateTree = (rows) => {
   const certMap = {};
 
@@ -851,6 +1163,8 @@ const buildCertificateTree = (rows) => {
       course_name, module_name, unit_name,
       resource_type, resource_topic, resource_name, resource_id, is_completed
     } = row;
+
+    if (!resource_id) continue;
 
     if (!certMap[certificate_id]) {
       certMap[certificate_id] = { certificate_id, certificate_name, courses: {} };
@@ -904,29 +1218,42 @@ const buildCertificateTree = (rows) => {
     }
   }
 
-  // Convert all maps to arrays
   return Object.values(certMap).map(cert => ({
     ...cert,
     courses: Object.values(cert.courses).map(course => ({
       ...course,
       modules: Object.values(course.modules).map(mod => ({
         ...mod,
-        units: Object.values(mod.units).map(unit => ({
-          ...unit,
-          learning_resources: {
-            ...unit.learning_resources,
-            items: Object.values(unit.learning_resources.items),
-          },
-          image_interpretations: {
-            ...unit.image_interpretations,
-            items: Object.values(unit.image_interpretations.items),
-          },
-        })),
+        units: Object.values(mod.units)
+          .sort((a, b) => (UNIT_ORDER[a.unit_name] ?? 99) - (UNIT_ORDER[b.unit_name] ?? 99))
+          .map(unit => ({
+            ...unit,
+            learning_resources: {
+              ...unit.learning_resources,
+              items: Object.values(unit.learning_resources.items)
+                .sort((a, b) => getTopicOrder(a.resource_topic) - getTopicOrder(b.resource_topic))
+                .map(topicGroup => ({
+                  ...topicGroup,
+                  resources: [...topicGroup.resources]
+                    .sort((a, b) => getResourceOrder(a.resource_name) - getResourceOrder(b.resource_name)),
+                })),
+            },
+            practices: [...unit.practices].sort((a, b) => a.resource_name.localeCompare(b.resource_name)),
+            image_interpretations: {
+              ...unit.image_interpretations,
+              items: Object.values(unit.image_interpretations.items).map(topicGroup => ({
+                ...topicGroup,
+                resources: [...topicGroup.resources].sort(
+                  (a, b) => (IMAGE_INTERPRETATION_ORDER[a.resource_name] ?? 99) - (IMAGE_INTERPRETATION_ORDER[b.resource_name] ?? 99)
+                ),
+              })),
+            },
+            tests: [...unit.tests].sort((a, b) => a.resource_name.localeCompare(b.resource_name)),
+          })),
       })),
     })),
   }));
 };
-
 
 const indDatauuid = (requester, people_id, isVr = true) => {
   return new Promise((resolve, reject) => {
@@ -997,6 +1324,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.resource_name,
           rd.resource_type,
           rd.resource_topic,
+          rd.resource_name,
           up.is_completed
         FROM active_certificates ac
         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
