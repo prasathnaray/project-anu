@@ -1,4 +1,5 @@
 const { submitActivity } = require('../model/irobm');
+const {v4: uuidv4} = require('uuid');
 const buildPayload = (resourceType, body) => {
     switch (resourceType) {
         case 'TYPE1':
@@ -72,15 +73,15 @@ const irobsubmit = async (req, res) => {
             });
         }
 
-        if (!sessionId) {
-            return res.status(400).json({
-                status: 'Bad Request',
-                code: 400,
-                message: 'sessionId is required',
-            });
-        }
-
-        const payload = buildPayload(resourceType.toUpperCase(), { ...rest, resourceId, sessionId });
+        // if (!sessionId) {
+        //     return res.status(400).json({
+        //         status: 'Bad Request',
+        //         code: 400,
+        //         message: 'sessionId is required',
+        //     });
+        // }
+        const resolvedSessionId = sessionId || uuidv4();
+        const payload = buildPayload(resourceType.toUpperCase(), { ...rest, resourceId, sessionId: resolvedSessionId });
 
         if (!payload) {
             return res.status(400).json({

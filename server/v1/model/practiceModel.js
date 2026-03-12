@@ -13,7 +13,6 @@ const bulkCreatePracticeResults = (requester, practice_id, resource_id, practice
                 message: 'You do not have permission to access this profile.',
             });
         }
-
         if (!isValidUUID(resource_id)) {
             return resolve({
                 status: 'Bad Request',
@@ -21,20 +20,16 @@ const bulkCreatePracticeResults = (requester, practice_id, resource_id, practice
                 message: 'resource_id must be a valid UUID',
             });
         }
-
         const results = practiceresults.map((r) => ({
             index: r.index,
             time: r.Time ?? r.time,
         }));
-
         const query = `
             INSERT INTO practice_results (practice_id, resource_id, user_id, practice_number, results)
             VALUES ($1, $2, $3, $4, $5)
             RETURNING *
         `;
-
         const values = [practice_id, resource_id, requester.user_mail, practice_number, JSON.stringify(results)];
-
         client.query(query, values, (err, result) => {
             if (err) {
                 console.error('Database error:', err);
