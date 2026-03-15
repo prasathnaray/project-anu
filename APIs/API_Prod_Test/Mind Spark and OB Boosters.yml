@@ -11,7 +11,6 @@ http:
     data: |-
       {
           "resourceType": "PROBEMOVEMENTS",
-          "sessionId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
           "resourceId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
           "totalTimeTaken": 90
       }

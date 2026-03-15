@@ -300,34 +300,12 @@ function BatchIndividual() {
                                                         <button><ArrowUpWideNarrow size={20} /></button>
                                                     </div>
                                                 </th>
-                                                {/* {(decoded.role == 99 || decoded.role == 101) && (
-                                                    <th className="py-2 px-4 text-[#8DC63F]">
-                                                        <div className="flex items-center gap-2">
-                                                            <span>Last Login time</span>
-                                                            <button><ArrowUpWideNarrow size={20} /></button>
-                                                        </div>
-                                                    </th>
-                                                )} */}
-                                                {/* {(decoded.role == 99 || decoded.role == 101) && (
-                                                    <th className="py-2 px-4 text-[#8DC63F]">
-                                                        <div className="flex items-center gap-2">
-                                                            <span>Actions</span>
-                                                        </div>
-                                                    </th>
-                                                )} */}
                                             </tr>
                                         </thead>
                                         <tbody className="text-sm">
                                             {visibleInstructors.length > 0 ? (
                                                 visibleInstructors.map((instructor, index) => (
                                                     <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                                                        {/* <td className="py-2 px-4">
-                                                            <img
-                                                                src={instructor.user_profile_photo || '/default-avatar.png'}
-                                                                className="w-10 h-10 rounded-full object-cover cursor-pointer"
-                                                                alt="profile"
-                                                            />
-                                                        </td> */}
                                                         <td className="py-2 px-4">
                                                             <div className="font-medium">{instructor.full_name || '—'}</div>
                                                             <div className="text-xs text-gray-400">{instructor.user_email}</div>
@@ -335,18 +313,11 @@ function BatchIndividual() {
                                                         <td className="py-2 px-4 text-gray-600">
                                                             {formatDateTime(instructor.user_created_at)}
                                                         </td>
-                                                        {(decoded.role == 99 || decoded.role == 101 || decoded.role == 102) && (
+                                                        {(decoded.role == 99 || decoded.role == 101 || decoded.role == 102 || decoded.role == 103) && (
                                                             <td className="py-2 px-4 text-gray-600">
                                                                 {formatDateTime(instructor.last_login)}
                                                             </td>
                                                         )}
-                                                        {/* {(decoded.role == 99 || decoded.role == 101) && (
-                                                            <td className="py-2 px-4">
-                                                                <button className="bg-[#8DC63F] text-white text-xs px-3 py-1 rounded hover:bg-green-600" onClick={() => navigate(`/instructor/${instructor.user_id}`)}>
-                                                                    View
-                                                                </button>
-                                                            </td>
-                                                        )} */}
                                                     </tr>
                                                 ))
                                             ) : (
@@ -360,7 +331,58 @@ function BatchIndividual() {
                                     </table>
                                 </div>
                             </div>
-
+                            {decoded.role == 103 && (
+                                <div className="m-3 bg-white p-2">
+                                    <div className="text-lg m-3">
+                                        <div>Associated Certificates</div>
+                                    </div>
+                                    <div>
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                                    <th className="py-2 px-4 text-[#8DC63F]">
+                                                        <div className="flex items-center gap-2">
+                                                            <div>Certificate Name</div>
+                                                            <button><ArrowUpWideNarrow size={20} /></button>
+                                                        </div>
+                                                    </th>
+                                                    <th className="py-2 px-4 text-[#8DC63F]">
+                                                        <div className="flex items-center gap-2">
+                                                            <div>Status</div>
+                                                            <button><ArrowUpWideNarrow size={20} /></button>
+                                                        </div>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-sm">
+                                                {batchInfo?.certificate?.certificate_id ? (
+                                                    <tr className="border-b border-gray-100 hover:bg-gray-50">
+                                                        <td className="py-2 px-4">
+                                                            <div className="font-medium">{batchInfo.certificate.certificate_name || '—'}</div>
+                                                            {/* <div className="text-xs text-gray-400">{batchInfo.certificate.certificate_id}</div> */}
+                                                        </td>
+                                                        <td className="py-2 px-4">
+                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                batchInfo.certificate.certificate_status === 'issued'
+                                                                    ? 'bg-green-100 text-green-700'
+                                                                    : 'bg-yellow-100 text-yellow-700'
+                                                            }`}>
+                                                                {batchInfo.certificate.certificate_status || 'pending'}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="2" className="py-6 text-center text-gray-400">
+                                                            No certificates associated with this batch.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                        )}                
                         </div>
                     </div>
                 </div>

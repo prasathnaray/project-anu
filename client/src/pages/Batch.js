@@ -646,7 +646,7 @@ function Batch() {
                 return <Navigate to="/" replace />;
         }
         const decoded = jwtDecode(token);
-        if (decoded.role != 101 && decoded.role != 102) {
+        if (decoded.role != 101 && decoded.role != 102 && decoded.role != 99 && decoded.role != 103) {
                 return <Navigate to="/" replace />;
         }
 
@@ -727,7 +727,7 @@ function Batch() {
                                                                                                 <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                                                 {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>)}
                                                                                                 <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>)}
+                                                                                                {decoded.role == 99 || decoded.role == 101  && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>)}
                                                                                         </tr>
                                                                                 </thead>
                                                                                 {/* <tbody>
@@ -809,7 +809,8 @@ function Batch() {
                                                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                                                         {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count ?? 0}
                                                                                                                 </th>
-                                                                                                                <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
+                                                                                                                {decoded.role == 99 || decoded.role == 101 && (
+                                                                                                                         <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
                                                                                                                         <button onClick={() => toggleDropdown(index)}>
                                                                                                                                 <EllipsisVertical size={24} />
                                                                                                                         </button>
@@ -844,6 +845,42 @@ function Batch() {
                                                                                                                                 </div>
                                                                                                                         )}
                                                                                                                 </th>
+                                                                                                                )}
+                                                                                                                {/* <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
+                                                                                                                        <button onClick={() => toggleDropdown(index)}>
+                                                                                                                                <EllipsisVertical size={24} />
+                                                                                                                        </button>
+                                                                                                                        {openDropdownIndex === index && (
+                                                                                                                                <div
+                                                                                                                                        ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                                                                                        className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
+                                                                                transition-all ease-in-out duration-500 origin-top-right
+                                                                                ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}`}
+                                                                                                                                >
+                                                                                                                                        <button
+                                                                                                                                                className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
+                                                                                                                                                onClick={() => deleteSubmit(listBatch.batch_id)}
+                                                                                                                                        >
+                                                                                                                                                Delete
+                                                                                                                                        </button>
+                                                                                                                                        <button
+                                                                                                                                                className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
+                                                                                                                                                onClick={() => {
+                                                                                                                                                        setSelectedBatchData(listBatch);
+                                                                                                                                                        setNewBatchEdit({
+                                                                                                                                                                batch_id: listBatch.batch_id,
+                                                                                                                                                                new_batch_name: listBatch.batch_name,
+                                                                                                                                                                new_start_date: listBatch.batch_start_date,
+                                                                                                                                                                new_end_date: listBatch.batch_end_date
+                                                                                                                                                        });
+                                                                                                                                                        setEditBatch(true)
+                                                                                                                                                }}
+                                                                                                                                        >
+                                                                                                                                                Edit
+                                                                                                                                        </button>
+                                                                                                                                </div>
+                                                                                                                        )}
+                                                                                                                </th> */}
                                                                                                         </tr>
                                                                                                 ))
                                                                                         ) : (

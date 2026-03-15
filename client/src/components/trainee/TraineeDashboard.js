@@ -274,6 +274,7 @@ import React from 'react'
 import NavBar from '../navBar'
 import SideBar from '../sideBar'
 import { useNavigate, useParams } from 'react-router-dom';
+import OverallCompletion from '../../charts/OverallCompletion';
 
 function TraineeDashboard() {
   const navigate = useNavigate();
@@ -294,10 +295,14 @@ function TraineeDashboard() {
                 className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
               >
                  <div className="p-4 text-md">
-                        <div className=" grid grid-cols-3">
+                        <div className=" grid grid-cols-3 gap-5">
                           <div className="col-span-2 border rounded-lg p-5 border-gray-300 bg-white">
                               <div className="">Welcome back</div>
-                              <div className="text-xl pt-2">Good afternoon, {people_id || "Abiya"}</div>
+                              <div className="text-xl pt-2">Good afternoon, {people_id || "Abiya!"}</div>
+                          </div>
+                          <div className="col-span-1 border rounded-lg p-5 border-gray-300 bg-white">
+                              <div className="text-md text-gray-500">Overall Progress</div>
+                              <div className="flex justify-center items-center"><OverallCompletion /></div>
                           </div>
                         </div>
                  </div>

@@ -93,12 +93,13 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </>
               }
               {tokdata.role == 103 && 
-                  ["dashboard", "course", "schedules", "Queries"].map((route,i) => {
+                  ["dashboard", "schedules", "Queries", "Batch"].map((route,i) => {
                     const items = [
                       {icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
-                      { icon: <CourseIcon size={20}/>, label: "Courses" },
+                      // { icon: <CourseIcon size={20}/>, label: "Certificates" },
                       {icon: <Calendar size={20}/>, label: "Schedules"},
                       {icon: <ClipboardPenLine size={20}/>, label: "Queries"},
+                      {icon: <Users size={20}/>, label: "Batch"},
                     ];
                     return (
                       <li key={route}
