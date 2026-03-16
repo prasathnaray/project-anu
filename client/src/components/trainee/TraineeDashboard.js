@@ -299,6 +299,36 @@ function TraineeDashboard() {
                           <div className="col-span-2 border rounded-lg p-5 border-gray-300 bg-white">
                               <div className="">Welcome back</div>
                               <div className="text-xl pt-2">Good afternoon, {people_id || "Abiya!"}</div>
+
+                              <div className="mt-5 grid grid-cols-3 gap-3">
+                                    <div className="border shadow-md">
+                                          <div className="flex justify-between items-center p-2">
+                                                 <div>Logo</div>
+                                                 <div className="font-medium">
+                                                      <div>Plane Accuracy</div>
+                                                      <div className="flex justify-end items-center text-2xl font-semibold">85%</div>
+                                                  </div>
+                                          </div>
+                                    </div>
+                                    <div className="border shadow-md">
+                                          <div className="flex justify-between items-center p-2">
+                                                 <div>Logo</div>
+                                                 <div className="font-medium">
+                                                        <div>Avg Time / Scan</div>
+                                                        <div className="flex justify-end items-center text-2xl font-semibold">2.8 min</div>
+                                                  </div>
+                                          </div>
+                                    </div>
+                                    <div className="border shadow-md">
+                                          <div className="flex justify-between items-center p-2">
+                                                 <div>Logo</div>
+                                                 <div className="font-medium">
+                                                      <div>Success Rate</div>
+                                                      <div className="flex justify-end items-center text-2xl font-semibold">75%</div>
+                                                 </div>
+                                          </div>
+                                    </div>
+                              </div>
                           </div>
                           <div className="col-span-1 border rounded-lg p-5 border-gray-300 bg-white">
                               <div className="text-md text-gray-500">Overall Progress</div>

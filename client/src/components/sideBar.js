@@ -92,7 +92,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                   </li>
               </>
               }
-              {tokdata.role == 103 && 
+              {/* {tokdata.role == 103 && 
                   ["dashboard", "schedules", "Queries", "Batch"].map((route,i) => {
                     const items = [
                       {icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
@@ -117,6 +117,37 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       </li>
                     )
                   })
+              } */}
+
+              {/* the above features are for role 103 below is the updated one */}
+              {tokdata.role == 103 && 
+                ["dashboard", "schedules", "Queries", "Batch"].map((route, i) => {
+                  const items = [
+                    { icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
+                    { icon: <Calendar size={20}/>, label: "Schedules" },
+                    { icon: <ClipboardPenLine size={20}/>, label: "Queries" },
+                    { icon: <Users size={20}/>, label: "Batch" },
+                  ];
+                  const isActive = data === `/${route}`;
+                  return (
+                    <li key={route} className="mb-2 mt-2">
+                      <button
+                        onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                        onClick={() => navigate(`/${route}`)}
+                        className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200
+                          ${isActive
+                            ? "bg-[#8DC63F] text-white"
+                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                          }`}
+                      >
+                        {items[i].icon}
+                        <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>
+                          {items[i].label}
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })
               }
               {tokdata.role == 101 && 
               <>
