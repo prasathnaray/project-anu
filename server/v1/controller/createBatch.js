@@ -1,5 +1,5 @@
 const {generateBatchID} = require('../utils/idGenerator.js')
-const {updateBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, filterBatchm, individualBatchStats} = require('../model/Batchm.js')
+const {updateBatchm, createBatchm, getBatchm, associateBatchm, deleteBatchm, createTargetedLearning, getTargetedLearningListModel, deleteTargetedLearningModel, IndividualtllList, filterBatchm, individualBatchStats, InstructorBatch} = require('../model/Batchm.js')
 const batchCreation = async(req, res) =>{
     const requester = req.user;
     const {batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name} = req.body;
@@ -183,4 +183,28 @@ const updateBatchC = async(req, res) => {
                 res.status(500).send(err)
         }
 }
-module.exports = {updateBatchC, filterBatchC, individualBatchC, batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC, InTLListC}
+const InstructorBatchC  = async(req, res) => {
+        const requester = req.user;
+        const people_id = req.query.people_id;
+        try
+        {
+                if(!people_id)
+                {
+                        return res.status(400).json({
+                                code: 400,
+                                status: 'people_id query parameter is required'
+                        })
+                }
+                const result = await InstructorBatch(requester, people_id);
+                res.status(200).json({
+                        code: 200,
+                        status: 'Data retrieved successfully',
+                        result: result.rows
+                });
+        }
+        catch(err)
+        {
+                res.status(500).send(err)
+        }
+}
+module.exports = {InstructorBatchC, updateBatchC, filterBatchC, individualBatchC, batchCreation, getBatchData, associateBatchc, deleteBatchc, createTargetedLearningC, getTargetedLearningC, deleteTargetedLearningC, InTLListC}

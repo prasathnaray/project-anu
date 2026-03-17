@@ -84,7 +84,7 @@ const getScanCenterRouter = require('./routes/getScanCenterRoute.js');
 const practiceRouter = require('./routes/practiceRoute.js');
 const pracTestRouter = require('./routes/pracTestRoute.js');
 const irobRouter = require('./routes/lrobRoute.js');
-
+const getInstrcutorAsPerBatchrouter = require('./routes/getInstructorAsPerBatch.js');
 //Auth middleware
 const Authenticate = require('./Auth/Authenticate');
 const deviceMiddleware = require('./utils/deviceMiddleware');
@@ -237,4 +237,7 @@ app.use('/api/v1/', Authenticate, practiceRouter);
 //prac test route
 app.use('/api/v1/', Authenticate, pracTestRouter);
 app.use('/api/v1/', Authenticate, irobRouter);
+
+//instructor as per batch
+app.use('/api/v1/', Authenticate, getInstrcutorAsPerBatchrouter);
 module.exports = app;

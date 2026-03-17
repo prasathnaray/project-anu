@@ -1362,8 +1362,8 @@ function Course() {
             </div>
             <div
               className={`${buttonOpen
-                  ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
-                  : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
+                ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
+                : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
                 }`}
             >
               <div className="mt-5 font-semibold text-xl text-gray-600">
@@ -1501,8 +1501,8 @@ function Course() {
                                       (dropdownRefs.current[index] = el)
                                     }
                                     className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10 transition-all ease-in-out duration-500 origin-top-right ${openDropdownIndex === index
-                                        ? "opacity-100 scale-100 visible"
-                                        : "opacity-0 scale-95 invisible"
+                                      ? "opacity-100 scale-100 visible"
+                                      : "opacity-0 scale-95 invisible"
                                       }`}
                                   >
                                     <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
