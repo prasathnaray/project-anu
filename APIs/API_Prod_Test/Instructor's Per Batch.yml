@@ -1,0 +1,21 @@
+info:
+  name: Instructor's Per Batch
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: http://{{local_base_url}}/api/v1/instructor-as-per-batch?people_id=43921b1f-1cca-4df5-853d-6491b9317ecc
+  params:
+    - name: people_id
+      value: 43921b1f-1cca-4df5-853d-6491b9317ecc
+      type: query
+  auth:
+    type: bearer
+    token: "{{user_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

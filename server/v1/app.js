@@ -85,6 +85,9 @@ const practiceRouter = require('./routes/practiceRoute.js');
 const pracTestRouter = require('./routes/pracTestRoute.js');
 const irobRouter = require('./routes/lrobRoute.js');
 const getInstrcutorAsPerBatchrouter = require('./routes/getInstructorAsPerBatch.js');
+
+//queries
+const queriesRouter = require('./routes/queriesRoute.js');
 //Auth middleware
 const Authenticate = require('./Auth/Authenticate');
 const deviceMiddleware = require('./utils/deviceMiddleware');
@@ -96,7 +99,7 @@ const createTraineeRouter = require('./routes/createtraineeRoute');
 const multer = require('multer');
 const CreateLearningModuleRouter = require('./routes/CreateLearningModuleRoute.js');
 const GetLearningModuleByIdRouter = require('./routes/GetLearningModuleByIdRoute.js');
-const upload = multer({ storage: multer.memoryStorage()});
+const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
     origin: ["https://project-anu.hticlab.org", "http://13.204.201.73", "http://13.205.207.179", "http://10.42.249.88:3000", "https://project-anu.vercel.app", "http://13.201.19.169:3000", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001", "http://10.42.9.129:4004", "http://localhost:8083", "http://10.42.248.106:3000", "http://35.154.36.145"], //has some docker port as well
@@ -240,4 +243,6 @@ app.use('/api/v1/', Authenticate, irobRouter);
 
 //instructor as per batch
 app.use('/api/v1/', Authenticate, getInstrcutorAsPerBatchrouter);
+//queries
+app.use('/api/v1/', Authenticate, queriesRouter);
 module.exports = app;

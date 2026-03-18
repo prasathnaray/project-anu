@@ -1,4 +1,7 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
+import { getInstructorsPerBatch } from '../API/InstructorsPerBatchAPI';
+import { CreateQueryAPI } from '../API/CreateQueryAPI';
+import { GetQueriesAPI, UpdateQueryStatusAPI, DeleteQueryAPI } from '../API/GetQueriesAPI';
 import NavBar from "../components/navBar";
 import SideBar from "../components/sideBar";
 import QueriesView from "../components/admin/QueriesView";
@@ -8,7 +11,7 @@ import TablePagination from '@mui/material/TablePagination';
 import { jwtDecode } from "jwt-decode";
 import { TextField, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 
-function Queries(){
+function Queries() {
     const [buttonOpen, setButtonOpen] = useState(true);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -19,23 +22,17 @@ function Queries(){
     const [loading, setLoading] = useState(false);
     const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
     const [openCreateQuery, setOpenCreateQuery] = useState(false);
-    
+
     // Query form data
     const [queryData, setQueryData] = useState({
         subject: '',
-        certificate_id: '',
-        course_id: '',
-        module_id: '',
         instructor_id: '',
         message: ''
     });
 
-    // Dropdown data - Replace with your API calls
-    const [certificateList, setCertificateList] = useState([]);
-    const [courseList, setCourseList] = useState([]);
-    const [moduleList, setModuleList] = useState([]);
+    // Dropdown data
     const [instructorList, setInstructorList] = useState([]);
-    
+
     const token = localStorage.getItem('user_token');
     const decoded = token ? jwtDecode(token) : null;
 
@@ -77,33 +74,12 @@ function Queries(){
             ...queryData,
             [name]: value,
         });
-
-        // Load related data when certificate is selected
-        if (name === "certificate_id" && value) {
-            // Call API to get courses for this certificate
-            // getCoursesByCertificate(value);
-        }
-        
-        // Load modules when course is selected
-        if (name === "course_id" && value) {
-            // Call API to get modules for this course
-            // getModulesByCourse(value);
-        }
-
-        // Load instructors when module is selected
-        if (name === "module_id" && value) {
-            // Call API to get instructors for this module
-            // getInstructorsByModule(value);
-        }
     };
 
     const handleClose = () => {
         setOpenCreateQuery(false);
         setQueryData({
             subject: '',
-            certificate_id: '',
-            course_id: '',
-            module_id: '',
             instructor_id: '',
             message: ''
         });
@@ -112,63 +88,88 @@ function Queries(){
     const handleSubmitQuery = async (e) => {
         e.preventDefault();
         try {
-            // Add your API call here to submit the query
-            console.log('Query Data:', queryData);
-            // await CreateQueryAPI(token, queryData);
+            await CreateQueryAPI(token, queryData);
             handleClose();
+            fetchQueries();
         } catch (err) {
             console.log(err);
         }
     };
 
+    const fetchQueries = async () => {
+        setLoading(true);
+        try {
+            const response = await GetQueriesAPI(token, page + 1, rowsPerPage);
+            if (response?.result) {
+                setQueriesList(response.result);
+                setFilteredQueries(response.result);
+                setRowCount(response.total || 0);
+            }
+        } catch (err) {
+            console.error('Error fetching queries:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResolveQuery = async (query_id) => {
+        try {
+            await UpdateQueryStatusAPI(token, query_id, 'resolved');
+            setOpenDropdownIndex(null);
+            fetchQueries();
+        } catch (err) {
+            console.error('Error resolving query:', err);
+        }
+    };
+
+    const handleDeleteQuery = async (query_id) => {
+        try {
+            await DeleteQueryAPI(token, query_id);
+            setOpenDropdownIndex(null);
+            fetchQueries();
+        } catch (err) {
+            console.error('Error deleting query:', err);
+        }
+    };
+
     // Load initial data
     useEffect(() => {
-        // fetchCertificates();
-        // For now, using dummy data
-        setCertificateList([
-            { certificate_id: 1, certificate_name: "Web Development" },
-            { certificate_id: 2, certificate_name: "Data Science" }
-        ]);
-        
-        setCourseList([
-            { course_id: 1, course_name: "HTML & CSS" },
-            { course_id: 2, course_name: "JavaScript" }
-        ]);
-        
-        setModuleList([
-            { module_id: 1, module_name: "Introduction to HTML" },
-            { module_id: 2, module_name: "CSS Fundamentals" }
-        ]);
-        
-        setInstructorList([
-            { instructor_id: 1, instructor_name: "John Smith" },
-            { instructor_id: 2, instructor_name: "Jane Doe" }
-        ]);
+
+        // Fetch instructors from API
+        const fetchInstructors = async () => {
+            try {
+                const peopleId = localStorage.getItem('people_id');
+                if (peopleId && token) {
+                    const response = await getInstructorsPerBatch(peopleId, token);
+                    if (response?.result) {
+                        const instructorMap = new Map();
+                        response.result.forEach(batch => {
+                            if (batch.instructors && batch.instructor_emails) {
+                                batch.instructor_emails.forEach((email, idx) => {
+                                    if (!instructorMap.has(email)) {
+                                        instructorMap.set(email, {
+                                            instructor_id: email,
+                                            instructor_name: batch.instructors[idx] || email
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                        setInstructorList(Array.from(instructorMap.values()));
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching instructors:', err);
+            }
+        };
+        fetchInstructors();
     }, []);
 
-    // Sample data - replace with your API call
+    // Fetch queries from API
     useEffect(() => {
-        // fetchQueries();
-        // For now, using dummy data
-        const dummyData = [
-            {
-                query_id: 1,
-                user_name: "John Doe",
-                message: "How do I reset my password?",
-                timestamp: "2024-02-01T10:30:00",
-                status: "pending"
-            },
-            {
-                query_id: 2,
-                user_name: "Jane Smith",
-                message: "Unable to access course materials",
-                timestamp: "2024-02-01T11:45:00",
-                status: "resolved"
-            },
-        ];
-        setQueriesList(dummyData);
-        setFilteredQueries(dummyData);
-        setRowCount(dummyData.length);
+        if (token) {
+            fetchQueries();
+        }
     }, [page, rowsPerPage]);
 
     const formatDateTime = (dateString) => {
@@ -184,7 +185,7 @@ function Queries(){
 
     //navigation
     const navigate = useNavigate();
-    
+
     return (
         <div className="flex flex-col min-h-screen">
             <div>
@@ -195,9 +196,8 @@ function Queries(){
                     <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
                 </div>
                 <div
-                    className={`${
-                        buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'
-                    } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
+                    className={`${buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'
+                        } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
                 >
                     <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
                         <LayoutDashboard size={15} /> Dashboard / <Notebook size={15} />{' '}
@@ -220,8 +220,8 @@ function Queries(){
                                     />
                                 </div>
                                 <div className="flex justify-end items-center">
-                                    <button 
-                                        className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" 
+                                    <button
+                                        className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out"
                                         onClick={() => setOpenCreateQuery(true)}
                                     >
                                         Create Query
@@ -233,7 +233,7 @@ function Queries(){
                                     <tr className="border-b border-gray-300 shadow-sm text-sm">
                                         <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">
                                             <div>User Name</div>
-                                            <button><ArrowUpWideNarrow size={20}/></button>
+                                            <button><ArrowUpWideNarrow size={20} /></button>
                                         </th>
                                         <th className="py-2 px-4 text-[#8DC63F]">
                                             <div className="flex items-center gap-2">
@@ -285,14 +285,13 @@ function Queries(){
                                                     {query.message}
                                                 </td>
                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                    {formatDateTime(query.timestamp)}
+                                                    {formatDateTime(query.created_at)}
                                                 </td>
                                                 <td className="py-2 px-4">
-                                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                                        query.status === 'resolved' 
-                                                            ? 'bg-green-100 text-green-800' 
-                                                            : 'bg-yellow-100 text-yellow-800'
-                                                    }`}>
+                                                    <span className={`px-2 py-1 rounded text-xs font-semibold ${query.status === 'resolved'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
+                                                        }`}>
                                                         {query.status}
                                                     </span>
                                                 </td>
@@ -309,19 +308,19 @@ function Queries(){
                                                             >
                                                                 <button
                                                                     className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
-                                                                    onClick={() => {/* handle view */}}
+                                                                    onClick={() => { setOpenDropdownIndex(null); }}
                                                                 >
                                                                     View
                                                                 </button>
                                                                 <button
                                                                     className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
-                                                                    onClick={() => {/* handle resolve */}}
+                                                                    onClick={() => handleResolveQuery(query.query_id)}
                                                                 >
                                                                     Mark as Resolved
                                                                 </button>
                                                                 <button
                                                                     className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded"
-                                                                    onClick={() => {/* handle delete */}}
+                                                                    onClick={() => handleDeleteQuery(query.query_id)}
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -341,7 +340,7 @@ function Queries(){
                                 </tbody>
                             </table>
                             <div className="flex justify-end items-center mt-6 gap-10">
-                                <TablePagination 
+                                <TablePagination
                                     component="div"
                                     count={rowCount}
                                     page={page}
@@ -363,10 +362,10 @@ function Queries(){
                         <div className="flex justify-between items-center">
                             <div className="text-lg">Create Query</div>
                             <button onClick={handleClose} className="text-red-500  p-1 hover:rounded">
-                                <X size={24}/>
+                                <X size={24} />
                             </button>
                         </div>
-                        
+
                         <div className="mt-7">
                             <TextField
                                 fullWidth
@@ -379,90 +378,6 @@ function Queries(){
                                 value={queryData.subject}
                                 onChange={handleQueryChange}
                             />
-                        </div>
-
-                        <div className="mt-5">
-                            <FormControl
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                sx={{ minHeight: "35px" }}
-                            >
-                                <InputLabel id="certificate-select-label">Select Certificate</InputLabel>
-                                <Select
-                                    labelId="certificate-select-label"
-                                    label="Select Certificate"
-                                    name="certificate_id"
-                                    value={queryData.certificate_id}
-                                    onChange={handleQueryChange}
-                                >
-                                    {Array.isArray(certificateList) && certificateList.length > 0 ? (
-                                        certificateList.map((cert, index) => (
-                                            <MenuItem key={index} value={cert.certificate_id}>
-                                                {cert.certificate_name}
-                                            </MenuItem>
-                                        ))
-                                    ) : (
-                                        <MenuItem disabled>No data found</MenuItem>
-                                    )}
-                                </Select>
-                            </FormControl>
-                        </div>
-
-                        <div className="mt-5">
-                            <FormControl
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                sx={{ minHeight: "35px" }}
-                            >
-                                <InputLabel id="course-select-label">Select Course</InputLabel>
-                                <Select
-                                    labelId="course-select-label"
-                                    label="Select Course"
-                                    name="course_id"
-                                    value={queryData.course_id}
-                                    onChange={handleQueryChange}
-                                >
-                                    {Array.isArray(courseList) && courseList.length > 0 ? (
-                                        courseList.map((course, index) => (
-                                            <MenuItem key={index} value={course.course_id}>
-                                                {course.course_name}
-                                            </MenuItem>
-                                        ))
-                                    ) : (
-                                        <MenuItem disabled>No data found</MenuItem>
-                                    )}
-                                </Select>
-                            </FormControl>
-                        </div>
-
-                        <div className="mt-5">
-                            <FormControl
-                                fullWidth
-                                variant="outlined"
-                                size="small"
-                                sx={{ minHeight: "35px" }}
-                            >
-                                <InputLabel id="module-select-label">Choose Module</InputLabel>
-                                <Select
-                                    labelId="module-select-label"
-                                    label="Choose Module"
-                                    name="module_id"
-                                    value={queryData.module_id}
-                                    onChange={handleQueryChange}
-                                >
-                                    {Array.isArray(moduleList) && moduleList.length > 0 ? (
-                                        moduleList.map((module, index) => (
-                                            <MenuItem key={index} value={module.module_id}>
-                                                {module.module_name}
-                                            </MenuItem>
-                                        ))
-                                    ) : (
-                                        <MenuItem disabled>No data found</MenuItem>
-                                    )}
-                                </Select>
-                            </FormControl>
                         </div>
 
                         <div className="mt-5">
@@ -507,9 +422,9 @@ function Queries(){
                                 onChange={handleQueryChange}
                             />
                         </div>
-                        
+
                         <div className="mt-5 flex justify-end items-center">
-                            <button 
+                            <button
                                 className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white"
                                 onClick={handleSubmitQuery}
                             >
