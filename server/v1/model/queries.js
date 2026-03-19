@@ -141,5 +141,4 @@ const deleteQuerym = (requester, query_id) => {
         );
     });
 };
-
 module.exports = { createQuerym, getQueriesm, getQueriesByUserm, updateQueryStatusm, deleteQuerym };

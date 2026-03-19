@@ -270,11 +270,14 @@
 // export default TraineeDashboard;
 
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import NavBar from '../navBar'
 import SideBar from '../sideBar'
 import { useNavigate, useParams } from 'react-router-dom';
 import OverallCompletion from '../../charts/OverallCompletion';
+import { GetQueriesAPI } from '../../API/GetQueriesAPI';
+import { Check, Clock, PlaneIcon } from 'lucide-react';
+import { IdentificationIcon } from 'hugeicons-react';
 
 function TraineeDashboard() {
   const navigate = useNavigate();
@@ -282,6 +285,45 @@ function TraineeDashboard() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
   const [profile, setProfile] = React.useState(false);
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
+  
+  // ✅ Add queries state
+  const [queries, setQueries] = useState({
+    pending: 0,
+    resolved: 0,
+    total: 0,
+    loading: false,
+    error: null
+  });
+
+  // ✅ Fetch queries data
+  const handleFetchQueries = async () => {
+    try {
+      setQueries(prev => ({ ...prev, loading: true }));
+      const token = localStorage.getItem('user_token');
+      const response = await GetQueriesAPI(token);
+      
+      // Calculate pending and resolved counts
+      const pendingCount = response.result.filter(q => q.status === 'pending').length;
+      const resolvedCount = response.result.filter(q => q.status === 'resolved').length;
+      
+      setQueries({
+        pending: pendingCount,
+        resolved: resolvedCount,
+        total: response.total,
+        loading: false,
+        error: null
+      });
+    } catch (error) {
+      console.error('Error fetching queries:', error);
+      setQueries(prev => ({ ...prev, loading: false, error: error.message }));
+    }
+  };
+
+  // ✅ Call API on component mount
+  useEffect(() => {
+    handleFetchQueries();
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen">
             <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -303,7 +345,7 @@ function TraineeDashboard() {
                               <div className="mt-5 grid grid-cols-3 gap-3">
                                     <div className="border shadow-md">
                                           <div className="flex justify-between items-center p-2">
-                                                 <div>Logo</div>
+                                                 <div className="text-green-500"><IdentificationIcon size={25} /></div>
                                                  <div className="font-medium">
                                                       <div>Plane Accuracy</div>
                                                       <div className="flex justify-end items-center text-2xl font-semibold">85%</div>
@@ -312,7 +354,7 @@ function TraineeDashboard() {
                                     </div>
                                     <div className="border shadow-md">
                                           <div className="flex justify-between items-center p-2">
-                                                 <div>Logo</div>
+                                                 <div className="text-green-500"><Clock size={25} /></div>
                                                  <div className="font-medium">
                                                         <div>Avg Time / Scan</div>
                                                         <div className="flex justify-end items-center text-2xl font-semibold">2.8 min</div>
@@ -321,7 +363,7 @@ function TraineeDashboard() {
                                     </div>
                                     <div className="border shadow-md">
                                           <div className="flex justify-between items-center p-2">
-                                                 <div>Logo</div>
+                                                 <div className="text-green-500"><Check size={25} /></div>
                                                  <div className="font-medium">
                                                       <div>Success Rate</div>
                                                       <div className="flex justify-end items-center text-2xl font-semibold">75%</div>
@@ -329,9 +371,75 @@ function TraineeDashboard() {
                                           </div>
                                     </div>
                               </div>
+                              <div className="mt-5 border-t pt-3">
+                                    <div className="text-xl pt-2">Queries Raised</div>
+                              
+                                    <div className="mt-4 grid grid-cols-3 gap-3">
+                                      <div className="border shadow-md p-4 rounded">
+                                        <div className="flex justify-between items-center">
+                                          <div className="font-medium text-gray-600">Total Queries</div>
+                                          <div className="text-2xl font-semibold text-[#8DC63F]">
+                                            {queries.loading ? (
+                                              <div className="w-5 h-5 border-2 border-[#8DC63F] border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                              queries.total
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="border shadow-md p-4 rounded">
+                                        <div className="flex justify-between items-center">
+                                          <div className="font-medium text-gray-600">Pending</div>
+                                          <div className="text-2xl font-semibold text-orange-500">
+                                            {queries.loading ? (
+                                              <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                              queries.pending
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="border shadow-md p-4 rounded">
+                                        <div className="flex justify-between items-center">
+                                          <div className="font-medium text-gray-600">Resolved</div>
+                                          <div className="text-2xl font-semibold text-green-600">
+                                            {queries.loading ? (
+                                              <div className="w-5 h-5 border-2 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                              queries.resolved
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Error message */}
+                                    {queries.error && (
+                                      <div className="mt-3 p-3 bg-red-100 text-red-700 rounded text-sm">
+                                        Error loading queries: {queries.error}
+                                      </div>
+                                    )}
+                              </div>
                           </div>
                           <div className="col-span-1 border rounded-lg p-5 border-gray-300 bg-white">
-                              <div className="text-md text-gray-500">Overall Progress</div>
+                              <div className="font-med text-gray-500">Associated Batch</div>
+                              <div className="grid grid-cols-3 mt-2">
+                                    <div className="text-sm p-1">
+                                          <div>Batch Name</div>
+                                          <div className="font-semibold">VR Testing Purpose</div>
+                                    </div>
+                                    <div className="text-sm p-1">
+                                          <div>Start Date</div>
+                                          <div className="font-semibold">February 24, 2026</div>
+                                    </div>
+                                    <div className="text-sm p-1">
+                                          <div>End Date</div>
+                                          <div className="font-semibold">May 24, 2026</div>
+                                    </div>
+                              </div>
+                              <div className="text-md text-gray-500 mt-5">Overall Progress</div>
                               <div className="flex justify-center items-center"><OverallCompletion /></div>
                           </div>
                         </div>
