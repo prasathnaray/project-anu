@@ -278,7 +278,7 @@ import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
 import { Check, Clock, PlaneIcon } from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
-
+import TraineeProfileAPI from '../../API/TraineeProfileAPI';
 function TraineeDashboard() {
   const navigate = useNavigate();
   const { people_id } = useParams();
@@ -318,8 +318,54 @@ function TraineeDashboard() {
       setQueries(prev => ({ ...prev, loading: false, error: error.message }));
     }
   };
+ //format date time
 
+const formatDateTime = (dateString) => {
+  if (!dateString || dateString === 'N/A') return 'N/A';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'N/A';
+  
+  return date.toLocaleString('en-IN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Kolkata'
+  });
+};
   // ✅ Call API on component mount
+  const [loading, setLoading] = useState(false);
+  const [individualTraineeProfile, setIndividualTraineeProfile] = React.useState({
+    data: [],
+    instructors: [],
+    currentBatches: [],
+    certificates: [],
+  });
+  const handleApiCall = async (people_id) => {
+    try {
+      setLoading(true);
+      // const token = localStorage.getItem('user_token');
+      const response = await TraineeProfileAPI(people_id);
+      setIndividualTraineeProfile(response.data);
+    } catch (error) {
+      console.error("Error fetching trainee profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  useEffect(() => {
+    const resolvedId = people_id || localStorage.getItem('people_id');
+    handleApiCall(resolvedId);
+  }, [])
+
+  // Calculate from your API response
+const totalResources = (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null).length;
+const completed = (individualTraineeProfile?.data ?? []).filter(r => r.is_completed === true).length;
+const attempted = (individualTraineeProfile?.testQuery ?? []).length;
   useEffect(() => {
     handleFetchQueries();
   }, []);
@@ -373,7 +419,6 @@ function TraineeDashboard() {
                               </div>
                               <div className="mt-5 border-t pt-3">
                                     <div className="text-xl pt-2">Queries Raised</div>
-                              
                                     <div className="mt-4 grid grid-cols-3 gap-3">
                                       <div className="border shadow-md p-4 rounded">
                                         <div className="flex justify-between items-center">
@@ -422,25 +467,32 @@ function TraineeDashboard() {
                                       </div>
                                     )}
                               </div>
+                              <div className="mt-5 border-t pt-3">
+                                      <div>Repeated Attempt Interactions (LR)</div>           
+                              </div>
                           </div>
                           <div className="col-span-1 border rounded-lg p-5 border-gray-300 bg-white">
                               <div className="font-med text-gray-500">Associated Batch</div>
-                              <div className="grid grid-cols-3 mt-2">
+                              <div className="grid grid-cols-2 mt-2">
                                     <div className="text-sm p-1">
                                           <div>Batch Name</div>
-                                          <div className="font-semibold">VR Testing Purpose</div>
+                                          <div className="font-semibold">{individualTraineeProfile.currentBatches[0]?.batch_name || 'N/A'}</div>
                                     </div>
                                     <div className="text-sm p-1">
-                                          <div>Start Date</div>
-                                          <div className="font-semibold">February 24, 2026</div>
-                                    </div>
-                                    <div className="text-sm p-1">
-                                          <div>End Date</div>
-                                          <div className="font-semibold">May 24, 2026</div>
+                                          <div>Valid till</div>
+                                          <div className="font-semibold">{formatDateTime(individualTraineeProfile.currentBatches[0]?.batch_end_date)}</div>
                                     </div>
                               </div>
                               <div className="text-md text-gray-500 mt-5">Overall Progress</div>
-                              <div className="flex justify-center items-center"><OverallCompletion /></div>
+                              <div className="flex justify-center items-center">
+                                  <OverallCompletion 
+                                      data={{
+                                        totalResources,
+                                        completed,
+                                        attempted
+                                      }}
+                                  />
+                                  </div>
                           </div>
                         </div>
                  </div>

@@ -570,7 +570,7 @@ function NavBar() {
     }
   };
   
-  console.log(count, tokenRes.user_mail);
+  // console.log(count, tokenRes.user_mail);
   
   const readNotification = async(id) => {
     const {error} = await supabase
@@ -650,7 +650,7 @@ function NavBar() {
     setIsProfileModalOpen(true); // Open the profile modal
   };
 
-  console.log(notify);
+  // console.log(notify);
   
   return (
     <>
