@@ -75,4 +75,33 @@ const UserStats = (requester) => {
         })
     })
 }
-module.exports = { GenderRatio, UserStats }
+const InteractionsAttemptStatsM = (requester) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
+        client.query(`SELECT 
+                ass.resource_id,
+                ass.user_id,
+                rd.resource_name,
+                COUNT(ass.session_id) AS attempt_count
+                FROM resource_data rd
+                JOIN activity_submissions ass ON rd.resource_id = ass.resource_id
+                WHERE ass.user_id = $1
+                GROUP BY ass.resource_id, ass.user_id, rd.resource_name
+                HAVING COUNT(ass.session_id) > 1;` , 
+                [requester.user_mail] , (err, result) => {
+                 if (err)
+                 {
+                    return reject(err)
+                 }
+                 else {
+                    return resolve(result.rows)
+                 }
+        })})}
+module.exports = { GenderRatio, UserStats, InteractionsAttemptStatsM }

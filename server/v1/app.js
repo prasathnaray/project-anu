@@ -88,6 +88,9 @@ const getInstrcutorAsPerBatchrouter = require('./routes/getInstructorAsPerBatch.
 
 //queries
 const queriesRouter = require('./routes/queriesRoute.js');
+
+//analytics
+const InteractionsAttemptStatsRouter = require('./routes/InteractionsAttemptStats.js');
 //Auth middleware
 const Authenticate = require('./Auth/Authenticate');
 const deviceMiddleware = require('./utils/deviceMiddleware');
@@ -245,4 +248,6 @@ app.use('/api/v1/', Authenticate, irobRouter);
 app.use('/api/v1/', Authenticate, getInstrcutorAsPerBatchrouter);
 //queries
 app.use('/api/v1/', Authenticate, queriesRouter);
+//analytics
+app.use('/api/v1/', Authenticate, InteractionsAttemptStatsRouter);
 module.exports = app;

@@ -1,0 +1,17 @@
+info:
+  name: Interactions Attempt By Users
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: http:{{local_base_url}}/api/v1/interactions-attempt-stats
+  auth:
+    type: bearer
+    token: "{{user_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
