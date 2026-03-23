@@ -470,7 +470,7 @@ function TraineeDashboard() {
                 <div className="mt-5 border-t pt-4">
                   <div className="text-lg font-medium text-gray-700">LR - Re-Attempts Interactions</div>
                     <InteractionDonut data={interactionStats.data} loading={interactionStats.loading} error={interactionStats.error} totalAttempts={totalAttempts} />
-                </div>
+                  </div>
               </div>
               <div className="col-span-1 border rounded-lg p-5 border-gray-300 bg-white">
                 <div className="text-gray-500 font-medium">Associated Batch</div>
