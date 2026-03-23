@@ -493,7 +493,7 @@ function TraineeDashboard() {
                   <OverallCompletion data={{ totalResources, completed, attempted }} />
                 </div>
                 <div className="mt-5 pt-4">
-                  <div className="text-lg font-medium text-gray-700">Repeated Attempt Interactions (LR)</div>
+                  {/* <div className="text-lg font-medium text-gray-700">Repeated Attempt Interactions (LR)</div> */}
                     {/* <InteractionDonut data={interactionStats.data} loading={interactionStats.loading} error={interactionStats.error} totalAttempts={totalAttempts} /> */}
                 </div>
               </div>
