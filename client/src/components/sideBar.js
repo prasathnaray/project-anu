@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, Scan, School } from 'lucide-react';
+import { BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, Scan, School } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import MaterialRipple from "material-ripple-effects";
 import {
@@ -121,9 +121,11 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
 
               {/* the above features are for role 103 below is the updated one */}
               {tokdata.role == 103 && 
-                ["dashboard", "schedules", "Queries", "Batch"].map((route, i) => {
+                ["dashboard", "my-Learning", "my-progress", "schedules", "Queries", "Batch"].map((route, i) => {
                   const items = [
                     { icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
+                    { icon: <BookText size={20}/>, label: "My Learning" },
+                    {icon:  <BarChart size={20}/>, label: "My Progress" },
                     { icon: <Calendar size={20}/>, label: "Schedules" },
                     { icon: <ClipboardPenLine size={20}/>, label: "Queries" },
                     { icon: <Users size={20}/>, label: "Batch" },
