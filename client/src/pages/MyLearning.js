@@ -313,7 +313,7 @@ function MyLearning() {
             <LayoutDashboard size={15} />
             Dashboard /
             <Notebook size={15} />
-            <span className="text-gray-700 font-medium">My Learning</span>
+            <span className="text-gray-500 font-medium">My Learning</span>
           </div>
 
           <div className="p-5">
