@@ -1,0 +1,30 @@
+info:
+  name: Practice 1 and 2
+  type: http
+  seq: 9
+
+http:
+  method: POST
+  url: http://{{local_base_url}}/api/v1/practice-i-ii
+  body:
+    type: json
+    data: |-
+      {
+        "resource_id": "ca32fad4-bd39-4358-961a-f6cae69c6a2d",
+        "practice_id": "7c401a51-2578-4503-9bb0-c8d7031a647f",
+        "practice_number": 1,
+        "practiceresults": [
+          { "index": 1, "Time": 2.3 },
+          { "index": 2, "Time": 3.3 },
+          { "index": 3, "Time": 0.3 }
+        ]
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJkaGFyYW5pQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3NzQ0MzIzNjV9.3G_x9OoK-WZE5JuS6eVoxemfBbbTPdSJ4zZcS5lQYgU
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

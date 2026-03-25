@@ -119,7 +119,6 @@ const updateProgress = async (userId, resourceId) => {
              RETURNING *`,
             [userId, resourceId]
         );
-
         console.log("Progress updated:", res.rows);
         return res;
 
