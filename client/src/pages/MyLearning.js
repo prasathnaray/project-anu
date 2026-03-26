@@ -1971,28 +1971,22 @@ import {
 
 const BASE_URL = 'http://localhost:4004' || '';
 
-// certificate_id → cert tab id
-// These are discovered dynamically from the API, but we keep a fallback label map
 const CERT_LABEL_MAP = {
   '8264bc83-1d80-47ac-aa6b-ca021ffb4ace': 'BTC',
   '24d9e2c4-42b0-4133-b801-d8cace4600f5': 'UFC',
 };
 
 // ─── RESOURCE ORDER ───────────────────────────────────────────────────────────
-// Key format: 'unit_name::resource_name' → sort position within its topic group
 
 const RESOURCE_ORDER = {
-  // ── BPD & HC ──────────────────────────────────────────────
   'BPD & HC::Transthalamic Plane': 1,
   'BPD & HC::Bi-Parietal Diameter': 2,
   'BPD & HC::Head Circumference': 3,
   'BPD & HC::Significance': 4,
-
   'BPD & HC::Anatomical Landmarks and Significance': 1,
   'BPD & HC::Anatomical Landmarks of the Transthalamic Plane': 1,
   'BPD & HC::Geometric shapes of key landmarks and their significance': 2,
   'BPD & HC::Mind Sparks - Anatomical Landmarks': 3,
-
   'BPD & HC:: How To Image The Plane': 1,
   'BPD & HC::Mind Sparks - Probe Movements': 2,
   'BPD & HC::How To Acquire The Transthalamic Plane': 3,
@@ -2000,72 +1994,54 @@ const RESOURCE_ORDER = {
   'BPD & HC::Finding the fetal presentation': 1,
   'BPD & HC::Mind Sparks - Probe movements': 2,
   'BPD & HC::How to acquire the transthalamic plane': 3,
-
   'BPD & HC::How To Measure BPD': 1,
   'BPD & HC::How To Measure HC': 2,
   'BPD & HC::How to measure BPD': 1,
   'BPD & HC::How to measure HC': 2,
-
   'BPD & HC::Image Diagnosis': 1,
   'BPD & HC::Percentile Chart & Significance': 2,
   'BPD & HC::Percentile Charts  & Significance': 2,
   'BPD & HC::BPD Chart': 3,
   'BPD & HC::HC Chart': 4,
   'BPD & HC::Mind Sparks - Chart Interpretation': 5,
-
   'BPD & HC::Picture Pick': 1,
   'BPD & HC::True / False': 2,
   'BPD & HC::True/False': 2,
   'BPD & HC::Wordsearch': 3,
   'BPD & HC::Word Search': 3,
-
   'BPD & HC::Plane Acquisition Challenges': 1,
   'BPD & HC::Common Measurement Errors': 2,
-
-  // ── AC ────────────────────────────────────────────────────
   'AC::Transabdominal plane': 1,
   'AC::Abdominal circumference': 2,
   'AC::Significance': 3,
-
   'AC::Anatomical landmarks of the transabdominal plane': 1,
   'AC::Geometric shapes of key landmarks and their significance': 2,
   'AC::Mind Sparks - Anatomical Landmarks': 3,
-
   'AC::How to acquire the transabdominal plane': 1,
   'AC::Mind Sparks - Probe movements': 2,
   'AC::Mind Sparks - Picture pick': 3,
-
   'AC::How to measure AC': 1,
   'AC::Mind Sparks - Picture Pick': 2,
-
   'AC::Image Diagnosis': 1,
   'AC::Percentile Charts  & Significance': 2,
   'AC::AC chart': 3,
   'AC::Mind Sparks - Chart Interpretation': 4,
-
   'AC::Crossword puzzle': 1,
   'AC::True/False': 2,
   'AC::Picture Pick': 3,
-
   'AC::Plane Acquisition Challenges': 1,
   'AC::Common Measurement Errors': 2,
-
-  // ── FL ────────────────────────────────────────────────────
   'FL::Femur': 1,
   'FL::Femur diaphysis': 2,
   'FL::Significance': 3,
-
   'FL::Anatomical landmarks of the femur diaphysis plane': 1,
   'FL::Geometric shapes of key landmarks and their significance': 2,
   'FL::Mind Sparks - Anatomical Landmarks': 3,
-
   'FL::How to acquire the femur diaphysis plane': 1,
   'FL::Mind Sparks - Probe movements': 2,
   'FL::Mind Sparks - Picture pick': 3,
-
   'FL::How to measure FL': 1,
   'FL::MindSparks - Picture Pick': 2,
-
   'FL::Image Diagnosis': 1,
   'FL::Image diagnosis': 1,
   'FL::Percentile Charts  & Significance': 2,
@@ -2073,15 +2049,12 @@ const RESOURCE_ORDER = {
   'FL::AC chart': 3,
   'FL::FL chart': 3,
   'FL::Mind Sparks - Chart Interpretation': 4,
-
   'FL::Crossword puzzle': 1,
   'FL::Picture Pick': 2,
   'FL::True/False': 3,
-
   'FL::Plane Acquisition Challenges': 1,
   'FL::Common Measurement Errors': 2,
 };
-
 
 const TYPE_FILTERS = [
   { id: 'all',       label: 'All' },
@@ -2091,7 +2064,6 @@ const TYPE_FILTERS = [
   { id: 'test',      label: 'Test' },
 ];
 
-// resource_type string from API → internal type key
 const RESOURCE_TYPE_MAP = {
   'Learning Resource':    'resource',
   'Practice':             'practice',
@@ -2106,7 +2078,7 @@ const TYPE_META = {
   test:      { label: 'Test',                 icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
 };
 
-// ─── TOPIC ORDER ─────────────────────────────────────────────────────────────
+// ─── TOPIC / MODULE ORDER ─────────────────────────────────────────────────────
 
 const TOPIC_ORDER = [
   'Fetal Head',
@@ -2126,35 +2098,35 @@ const TOPIC_ORDER = [
   'Image diagnosis',
   'OB Boosters',
 ];
+
 const MODULE_ORDER = ['BPD & HC', 'AC', 'FL'];
 
 const TOPIC_ICONS = {
-  'Fetal Head':                                              Brain,
-  'Anatomical Landmarks':                                    Search,
-  'Anatomical landmarks':                                    Search,
-  'Imaging the Plane':                                       Eye,
-  'Imaging the plane':                                       Eye,
-  'Imaging the transabdominal plane':                        Eye,
-  'Imaging the transfemoral plane':                          Eye,
-  'Measurements':                                            Ruler,
-  'Measurement':                                             Ruler,
-  'Image Diagnosis':                                         FileText,
-  'OB Boosters':                                             Puzzle,
-  'Fetal abdomen':                                           Brain,
-  'Plane Acquisition':                                       FileText,
-  'Plane Acquisition Challenges and Common Measurement Errors': FileText,
-  'Fetal Femur':                                             Brain,
+  'Fetal Head':                                                           Brain,
+  'Fetal abdomen':                                                        Brain,
+  'Fetal Femur':                                                          Brain,
+  'Anatomical Landmarks':                                                  Search,
+  'Anatomical landmarks':                                                  Search,
+  'Imaging the Plane':                                                     Eye,
+  'Imaging the plane':                                                     Eye,
+  'Imaging the Transthalamic Plane':                                       Eye,
+  'Imaging the transabdominal plane':                                      Eye,
+  'Imaging the transfemoral plane':                                        Eye,
+  'Measurements':                                                          Ruler,
+  'Measurement':                                                           Ruler,
+  'Image Diagnosis':                                                       FileText,
+  'Image diagnosis':                                                       FileText,
+  'OB Boosters':                                                           Puzzle,
+  'Plane Acquisition':                                                     FileText,
+  'Plane Acquisition Challenges and Common Measurement Errors':            FileText,
+  'Pitfalls in Plane Acquisition and Measurement':                         FileText,
 };
 
-// ─── API DATA TRANSFORMER ─────────────────────────────────────────────────────
-//
-// Transforms raw API response into the shape the component needs:
-//   certs       → [{ id, label }]
-//   modules     → { certId: [{ id, label, done, total, locked, learning_module_id }] }
-//   resources   → { learning_module_id: [resource] }
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
 
 function isMindSpark(name = '') {
-  return name.toLowerCase().includes('mind spark') || name.toLowerCase().includes('mindspark');
+  const lower = name.toLowerCase();
+  return lower.includes('mind spark') || lower.includes('mindspark');
 }
 
 function isOBBooster(topic = '') {
@@ -2166,10 +2138,22 @@ function deriveCompletionSource(name, topic) {
   return 'progress';
 }
 
-function transformApiData(apiResponse) {
-  const { data = [], moduleCompletion = [] } = apiResponse;
+// ─── isResourceDone ── single source of truth for "done" check ───────────────
 
-  // ── 1. Build a quick lookup: resource_id → is_completed ──────────────────
+function isResourceDone(r) {
+  if (r.completionSource === 'activity') return (r.activityData?.attempts ?? 0) > 0;
+  return r.done === true;
+}
+
+// ─── API DATA TRANSFORMER ─────────────────────────────────────────────────────
+//
+// KEY FIX: Module done/total are recalculated from ALL resource types
+// (not just Learning Resources as the API's moduleCompletion only counts those).
+
+function transformApiData(apiResponse) {
+  const { data = [] } = apiResponse;
+
+  // ── 1. Build completion lookup: resource_id → is_completed ───────────────
   const completionMap = {};
   data.forEach(item => {
     if (item.resource_id) {
@@ -2177,18 +2161,9 @@ function transformApiData(apiResponse) {
     }
   });
 
-  // ── 2. Build moduleCompletion lookup: learning_module_id → { done, total } ─
-  const moduleCompletionMap = {};
-  moduleCompletion.forEach(mc => {
-    moduleCompletionMap[mc.learning_module_id] = {
-      done:  parseInt(mc.completed_learning_resources, 10) || 0,
-      total: parseInt(mc.total_learning_resources, 10)     || 0,
-    };
-  });
-
-  // ── 3. Collect unique certificates (preserve insertion order) ────────────
-  const certOrder  = [];
-  const certSeen   = new Set();
+  // ── 2. Collect unique certificates ───────────────────────────────────────
+  const certOrder = [];
+  const certSeen  = new Set();
   data.forEach(item => {
     if (!certSeen.has(item.certificate_id)) {
       certSeen.add(item.certificate_id);
@@ -2199,10 +2174,9 @@ function transformApiData(apiResponse) {
     }
   });
 
-  // ── 4. Collect unique learning modules per cert ──────────────────────────
-  //   A module is "locked" when all its data rows have resource_id = null
-  const modulesByCert  = {}; // certId → Map<learning_module_id, module meta>
-  const resourcesByLMID = {}; // learning_module_id → resource[]
+  // ── 3. Collect modules per cert + resources per module ───────────────────
+  const modulesByCert   = {};   // certId → Map<lmid, module meta>
+  const resourcesByLMID = {};   // lmid   → resource[]
 
   data.forEach(item => {
     const { certificate_id, learning_module_id, unit_name, course_name } = item;
@@ -2211,32 +2185,29 @@ function transformApiData(apiResponse) {
     const certModules = modulesByCert[certificate_id];
 
     if (!certModules.has(learning_module_id)) {
-      const comp = moduleCompletionMap[learning_module_id] || { done: 0, total: 0 };
       certModules.set(learning_module_id, {
         id:                 learning_module_id,
         learning_module_id: learning_module_id,
-        // label: prefer unit_name, fall back to course_name
-        label:   unit_name || course_name || learning_module_id,
-        done:    comp.done,
-        total:   comp.total,
-        locked:  false, // determined below
-        hasAnyResource: false,
+        label:              unit_name || course_name || learning_module_id,
+        locked:             false,
+        hasAnyResource:     false,
+        // done/total will be recalculated after resources are built
+        done:  0,
+        total: 0,
       });
     }
 
-    // If this row has a real resource, the module is NOT locked
     if (item.resource_id) {
       certModules.get(learning_module_id).hasAnyResource = true;
     }
 
-    // ── Build resource list per module ──────────────────────────────────────
-    if (!item.resource_id) return; // skip placeholder rows
+    // ── Build resource list ─────────────────────────────────────────────────
+    if (!item.resource_id) return;
 
     if (!resourcesByLMID[learning_module_id]) resourcesByLMID[learning_module_id] = [];
 
-    // Avoid duplicates (API can return the same resource twice)
-    const alreadyAdded = resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id);
-    if (alreadyAdded) return;
+    // Deduplicate
+    if (resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id)) return;
 
     const typeKey          = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
     const completionSource = typeKey === 'resource'
@@ -2252,42 +2223,51 @@ function transformApiData(apiResponse) {
       topic:            item.resource_topic || '',
       completionSource: completionSource,
       done:             isDone,
-      // activityData defaults (no real activity_submissions data in this endpoint)
       activityData:     completionSource === 'activity'
         ? { attempts: isDone ? 1 : 0, correct: isDone ? 1 : 0, total: 1 }
         : undefined,
     });
   });
-  // ── 5. Finalise modules per cert (set locked flag, convert Map → array) ──
+
+  // ── 4. Finalise modules: set locked flag + sort ───────────────────────────
   const modulesByCertFinal = {};
   certOrder.forEach(cert => {
-  const modMap = modulesByCert[cert.id];
-  if (!modMap) {
-    modulesByCertFinal[cert.id] = [];
-    return;
-  }
-  modulesByCertFinal[cert.id] = Array.from(modMap.values())
-    .map(mod => ({ ...mod, locked: !mod.hasAnyResource }))
-    .sort((a, b) => {
-      const ai = MODULE_ORDER.indexOf(a.label);
-      const bi = MODULE_ORDER.indexOf(b.label);
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-    });
-});
+    const modMap = modulesByCert[cert.id];
+    if (!modMap) {
+      modulesByCertFinal[cert.id] = [];
+      return;
+    }
+    modulesByCertFinal[cert.id] = Array.from(modMap.values())
+      .map(mod => ({ ...mod, locked: !mod.hasAnyResource }))
+      .sort((a, b) => {
+        const ai = MODULE_ORDER.indexOf(a.label);
+        const bi = MODULE_ORDER.indexOf(b.label);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      });
+  });
 
+  // ── 5. Sort resources within each module ─────────────────────────────────
   const sortedResources = {};
   Object.entries(resourcesByLMID).forEach(([lmid, items]) => {
-    // find unit_name for this lmid
     let unitName = '';
     Object.values(modulesByCertFinal).forEach(mods => {
       mods.forEach(m => { if (m.id === lmid) unitName = m.label; });
     });
     sortedResources[lmid] = [...items].sort((a, b) => {
-      const keyA = `${unitName}::${a.name}`;
-      const keyB = `${unitName}::${b.name}`;
-      const posA = RESOURCE_ORDER[keyA] ?? 999;
-      const posB = RESOURCE_ORDER[keyB] ?? 999;
+      const posA = RESOURCE_ORDER[`${unitName}::${a.name}`] ?? 999;
+      const posB = RESOURCE_ORDER[`${unitName}::${b.name}`] ?? 999;
       return posA - posB;
+    });
+  });
+
+  // ── 6. KEY FIX: Recalculate done/total from ALL resource types ────────────
+  //    The API's moduleCompletion only counts Learning Resources, so we ignore
+  //    it and derive the counts ourselves from the full resource list.
+  Object.values(modulesByCertFinal).forEach(mods => {
+    mods.forEach(mod => {
+      const res    = sortedResources[mod.id] || [];
+      mod.total    = res.length;
+      mod.done     = res.filter(isResourceDone).length;
     });
   });
 
@@ -2312,7 +2292,7 @@ function CompletionStatus({ r }) {
 
   if (r.completionSource === 'activity') {
     const { attempts = 0, correct = 0, total = 1 } = r.activityData || {};
-    const pct         = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const pct          = total > 0 ? Math.round((correct / total) * 100) : 0;
     const _isMindSpark = isMindSpark(r.name);
 
     if (attempts === 0) {
@@ -2348,6 +2328,7 @@ function CompletionStatus({ r }) {
     );
   }
 
+  // Non-LR types (practice / interpret / test) — no completionSource
   return (
     <ChevronRight size={16} className="text-gray-300 group-hover:text-[#8DC63F] transition-colors flex-shrink-0" />
   );
@@ -2415,20 +2396,25 @@ function ResourceTypeBadge({ r }) {
 // ─── RESOURCE ROW ─────────────────────────────────────────────────────────────
 
 function ResourceRow({ r }) {
-  const isActivityDone = r.completionSource === 'activity' && r.activityData?.attempts > 0;
-  const isProgressDone = r.completionSource === 'progress' && r.done;
-  const isDone         = isActivityDone || isProgressDone;
+  const done = isResourceDone(r);
 
   return (
     <div className={`flex items-center gap-3 p-3 rounded-xl border bg-white cursor-pointer
       transition-all hover:shadow-sm group
-      ${isDone ? 'border-[#8DC63F]/40 bg-[#8DC63F]/[0.02]' : 'border-gray-200 hover:border-[#8DC63F]/50'}`}>
-
+      ${done
+        ? 'border-[#8DC63F]/40 bg-[#8DC63F]/[0.02]'
+        : 'border-gray-200 hover:border-[#8DC63F]/50'
+      }`}
+    >
       <ResourceIcon r={r} />
 
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium truncate
-          ${isProgressDone ? 'text-gray-400' : 'text-gray-700 group-hover:text-[#8DC63F]'}`}>
+          ${done && r.completionSource === 'progress'
+            ? 'text-gray-400'
+            : 'text-gray-700 group-hover:text-[#8DC63F]'
+          }`}
+        >
           {r.name}
         </p>
       </div>
@@ -2442,9 +2428,9 @@ function ResourceRow({ r }) {
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 function MyLearning() {
-  const [buttonOpen,   setButtonOpen]   = React.useState(true);
-  const [loading,      setLoading]      = React.useState(true);
-  const [error,        setError]        = React.useState(null);
+  const [buttonOpen, setButtonOpen] = React.useState(true);
+  const [loading,    setLoading]    = React.useState(true);
+  const [error,      setError]      = React.useState(null);
 
   // Transformed data
   const [certs,     setCerts]     = React.useState([]);
@@ -2484,7 +2470,6 @@ function MyLearning() {
         setModules(transformed.modules);
         setResources(transformed.resources);
 
-        // Default selections
         const firstCert = transformed.certs[0];
         if (firstCert) {
           setActiveCert(firstCert.id);
@@ -2497,16 +2482,16 @@ function MyLearning() {
       .finally(() => setLoading(false));
   }, [traineeId, token]);
 
-  // ── Guard — after useEffect to avoid conditional hook call ────────────────
+  // ── Guard ──────────────────────────────────────────────────────────────────
   if (!decoded?.role) return <Navigate to="/" replace />;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const toggleTopic = key =>
     setOpenTopics(prev => ({ ...prev, [key]: !prev[key] }));
 
   const handleCertChange = certId => {
     setActiveCert(certId);
-    const mods         = modules[certId] || [];
+    const mods          = modules[certId] || [];
     const firstUnlocked = mods.find(m => !m.locked);
     setActiveModule(firstUnlocked?.id || mods[0]?.id || '');
     setActiveFilter('all');
@@ -2523,44 +2508,41 @@ function MyLearning() {
   };
 
   // ── Derived data ───────────────────────────────────────────────────────────
-  const currentModules   = modules[activeCert]    || [];
-  const allRes           = resources[activeModule] || [];
-  const activeModMeta    = currentModules.find(m => m.id === activeModule);
+  const currentModules = modules[activeCert]    || [];
+  const allRes         = resources[activeModule] || [];
+  const activeModMeta  = currentModules.find(m => m.id === activeModule);
 
+  // Module-level progress (already counts all types thanks to the fix)
+  const doneCount  = activeModMeta?.done  ?? 0;
+  const totalCount = activeModMeta?.total ?? 0;
+  const pct        = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+
+  // Filter + search
   const filtered = allRes.filter(r => {
     const matchType   = activeFilter === 'all' || r.type === activeFilter;
     const matchSearch = r.name.toLowerCase().includes(search.toLowerCase());
     return matchType && matchSearch;
   });
 
-  const doneCount  = allRes.filter(r =>
-    r.done || (r.activityData?.attempts > 0)
-  ).length;
-  const totalCount = allRes.length;
-  const pct        = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
-
-  // Group: LR by topic; others by type key
+  // Group: LR by topic, others by type key
   const grouped = filtered.reduce((acc, r) => {
-    const key = r.type === 'resource'
-      ? (r.topic || 'Learning Resource')
-      : r.type;
+    const key = r.type === 'resource' ? (r.topic || 'Learning Resource') : r.type;
     if (!acc[key]) acc[key] = [];
     acc[key].push(r);
     return acc;
   }, {});
 
-  // Sort grouped keys: topics follow TOPIC_ORDER, type-buckets (practice/interpret/test) come after
   const TYPE_BUCKET_ORDER = ['practice', 'interpret', 'test'];
-  const sortedGroupKeys = Object.keys(grouped).sort((a, b) => {
-    const aIsType  = TYPE_BUCKET_ORDER.includes(a);
-    const bIsType  = TYPE_BUCKET_ORDER.includes(b);
+  const sortedGroupKeys   = Object.keys(grouped).sort((a, b) => {
+    const aIsType = TYPE_BUCKET_ORDER.includes(a);
+    const bIsType = TYPE_BUCKET_ORDER.includes(b);
     if (!aIsType && !bIsType) {
       const ai = TOPIC_ORDER.indexOf(a);
       const bi = TOPIC_ORDER.indexOf(b);
       return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
     }
     if (aIsType && bIsType) return TYPE_BUCKET_ORDER.indexOf(a) - TYPE_BUCKET_ORDER.indexOf(b);
-    return aIsType ? 1 : -1; // topics before type-buckets
+    return aIsType ? 1 : -1;
   });
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -2588,7 +2570,7 @@ function MyLearning() {
 
           <div className="p-5">
 
-            {/* ── Loading ── */}
+            {/* Loading */}
             {loading && (
               <div className="flex items-center justify-center py-24 text-gray-400">
                 <Loader2 size={32} className="animate-spin mr-3" />
@@ -2596,7 +2578,7 @@ function MyLearning() {
               </div>
             )}
 
-            {/* ── Error ── */}
+            {/* Error */}
             {error && !loading && (
               <div className="flex flex-col items-center justify-center py-24 text-red-400">
                 <p className="text-sm font-medium">Failed to load data</p>
@@ -2604,9 +2586,8 @@ function MyLearning() {
               </div>
             )}
 
-            {/* ── Content ── */}
+            {/* Content */}
             {!loading && !error && (
-
               <>
                 {/* Cert tabs */}
                 <div className="flex items-center gap-3 mb-5">
@@ -2624,22 +2605,6 @@ function MyLearning() {
                     </button>
                   ))}
                 </div>
-
-                {/* Legend */}
-                {/* <div className="flex items-center gap-4 mb-4 flex-wrap">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <BookOpen size={12} className="text-blue-500" />
-                    <span>Learning Resource — tracked via <span className="font-medium text-gray-600">progress_data</span></span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Zap size={12} className="text-yellow-500" />
-                    <span>Mind Sparks — tracked via <span className="font-medium text-gray-600">activity_submissions</span></span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Puzzle size={12} className="text-pink-500" />
-                    <span>OB Boosters — tracked via <span className="font-medium text-gray-600">activity_submissions</span></span>
-                  </div>
-                </div> */}
 
                 {/* 3-col grid */}
                 <div className="grid grid-cols-3 gap-5">
@@ -2671,9 +2636,11 @@ function MyLearning() {
                               </span>
                               {mod.locked
                                 ? <Lock size={13} className="text-gray-400" />
-                                : <span className={`text-xs ${isActive ? 'text-[#8DC63F] font-semibold' : 'text-gray-400'}`}>
+                                : (
+                                  <span className={`text-xs ${isActive ? 'text-[#8DC63F] font-semibold' : 'text-gray-400'}`}>
                                     {mod.done}/{mod.total}
                                   </span>
+                                )
                               }
                             </div>
                             {!mod.locked && (
@@ -2705,7 +2672,9 @@ function MyLearning() {
                             style={{ width: `${pct}%` }}
                           />
                         </div>
-                        <p className="text-[11px] text-gray-400 mt-1.5">{doneCount} of {totalCount} resources completed</p>
+                        <p className="text-[11px] text-gray-400 mt-1.5">
+                          {doneCount} of {totalCount} resources completed
+                        </p>
                       </div>
                     )}
                   </div>
@@ -2755,7 +2724,7 @@ function MyLearning() {
                     {sortedGroupKeys.map(topic => {
                       const items = grouped[topic];
 
-                      // Practice / Interpret / Test → flat list
+                      // Practice / Interpret / Test → flat list with header
                       const isTypeBucket = items[0]?.type !== 'resource';
                       if (isTypeBucket) {
                         const meta = TYPE_META[items[0].type] || TYPE_META.resource;
@@ -2780,10 +2749,7 @@ function MyLearning() {
                       // Learning Resources → accordion by topic
                       const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
                       const isOpen    = !!openTopics[topic];
-                      const topicDone = items.filter(r =>
-                        (r.completionSource === 'progress' && r.done) ||
-                        (r.completionSource === 'activity' && r.activityData?.attempts > 0)
-                      ).length;
+                      const topicDone = items.filter(isResourceDone).length;
 
                       return (
                         <div key={topic} className="mb-3">
@@ -2831,7 +2797,6 @@ function MyLearning() {
                         </div>
                       );
                     })}
-
                   </div>
                 </div>
               </>

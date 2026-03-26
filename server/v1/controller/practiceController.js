@@ -1,4 +1,4 @@
-const { bulkCreatePracticeResults } = require('../model/practiceModel.js');
+const { bulkCreatePracticeResults, getPractice12ByUserId } = require('../model/practiceModel.js');
 
 const bulkCreatePracticeResultsController = async (req, res) => {
     const { resource_id, practice_id, practice_number, practiceresults } = req.body;
@@ -23,4 +23,15 @@ const bulkCreatePracticeResultsController = async (req, res) => {
     }
 };
 
+const getPracticesByUser = async (req, res) => {
+    const requester = req.user;
+    try
+    {
+
+    }
+    catch(err)
+    {
+        
+    }
+}
 module.exports = { bulkCreatePracticeResultsController };

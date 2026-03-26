@@ -99,11 +99,6 @@ const updateProgress = async (userId, resourceId) => {
     throw err;
   }
 };
-
-/**
- * Inserts or updates practice results for a given user, practice, and resource.
- * Uses SELECT + INSERT/UPDATE since there is no unique constraint on the table.
- */
 const bulkCreatePracticeResults = async (requester, practice_id, resource_id, practice_number, practiceresults) => {
   const isPrivileged = PRIVILEGED_ROLES.includes(Number(requester.role));
   if (!isPrivileged) {
@@ -113,7 +108,6 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
       message: 'You do not have permission to access this profile.',
     };
   }
-
   if (!isValidUUID(resource_id)) {
     return {
       status: 'Bad Request',
@@ -121,8 +115,6 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
       message: 'resource_id must be a valid UUID',
     };
   }
-
-  // Resolve user identity
   console.log('requester object:', requester);
   const userId = requester.user_id ?? requester.id ?? requester.sub ?? requester.user_mail ?? null;
 
@@ -138,18 +130,13 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
     index: r.index,
     time: r.Time ?? r.time,
   }));
-
   try {
-    // Check if a record already exists for this user + resource
     const existing = await client.query(
       `SELECT user_id FROM practice_results WHERE user_id = $1 AND resource_id = $2`,
       [userId, resource_id]
     );
-
     let result;
-
     if (existing.rows.length > 0) {
-      // Record exists — update it
       result = await client.query(
         `UPDATE practice_results
          SET practice_id     = $1,
@@ -160,7 +147,6 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
         [practice_id, practice_number, JSON.stringify(results), userId, resource_id]
       );
     } else {
-      // No record — insert fresh
       result = await client.query(
         `INSERT INTO practice_results (practice_id, resource_id, user_id, practice_number, results)
          VALUES ($1, $2, $3, $4, $5)
@@ -168,15 +154,28 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
         [practice_id, resource_id, userId, practice_number, JSON.stringify(results)]
       );
     }
-
-    // Auto-update progress once practice results are saved
     await updateProgress(userId, resource_id);
-
     return result.rows[0];
   } catch (err) {
     console.error('Database error:', err);
     throw err;
   }
 };
-
-module.exports = { updateProgress, bulkCreatePracticeResults };
+const getPractice12ByUserId = async (user_id) => {
+  const result = await client.query(
+    `SELECT 
+        rd.resource_id,
+        rd.resource_name,
+        rd.resource_type,
+        pr.user_id,
+        pr.practice_id,
+        pr.practice_number,
+        pr.results
+     FROM practice_results pr
+     JOIN resource_data rd ON rd.resource_id = pr.resource_id
+     WHERE pr.user_id = $1`,
+    [user_id]
+  );
+  return result.rows;
+};
+module.exports = {updateProgress, bulkCreatePracticeResults, getPractice12ByUserId};
