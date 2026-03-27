@@ -27,11 +27,13 @@ const getPracticesByUser = async (req, res) => {
     const requester = req.user;
     try
     {
-
+        const result = await getPractice12ByUserId(requester);
+        if (result.code === 401) return res.status(401).send(result);
+        if (result.code === 400) return res.status(400).send(result);
     }
     catch(err)
     {
-        
-    }
+        res.status(500).send(err);
+    }   
 }
-module.exports = { bulkCreatePracticeResultsController };
+module.exports = { bulkCreatePracticeResultsController, getPracticesByUser};
