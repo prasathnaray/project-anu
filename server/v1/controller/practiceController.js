@@ -28,8 +28,7 @@ const getPracticesByUser = async (req, res) => {
     try
     {
         const result = await getPractice12ByUserId(requester);
-        if (result.code === 401) return res.status(401).send(result);
-        if (result.code === 400) return res.status(400).send(result);
+        return res.status(200).send(result);
     }
     catch(err)
     {
