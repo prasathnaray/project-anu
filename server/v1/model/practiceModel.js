@@ -161,7 +161,15 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
     throw err;
   }
 };
-const getPractice12ByUserId = async (user_id) => {
+const getPractice12ByUserId = async (user_id, requester) => {
+  const isPrivileged = PRIVILEGED_ROLES.includes(Number(requester.role));
+  if (!isPrivileged) {
+    return {
+      status: 'Unauthorized',
+      code: 401,
+      message: 'You do not have permission to access this profile.',
+    };
+  }
   const result = await client.query(
     `SELECT 
         rd.resource_id,
@@ -169,7 +177,7 @@ const getPractice12ByUserId = async (user_id) => {
         rd.resource_type,
         pr.user_id,
         pr.practice_id,
-        pr.practice_number,
+        pr.practice_number,W
         pr.results
      FROM practice_results pr
      JOIN resource_data rd ON rd.resource_id = pr.resource_id

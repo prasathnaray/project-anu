@@ -2747,55 +2747,76 @@ function MyLearning() {
                       }
 
                       // Learning Resources → accordion by topic
-                      const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
-                      const isOpen    = !!openTopics[topic];
-                      const topicDone = items.filter(isResourceDone).length;
+                      // Learning Resources → accordion by topic
+const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
+const isOpen    = !!openTopics[topic];
+const topicDone = items.filter(isResourceDone).length;
 
-                      return (
-                        <div key={topic} className="mb-3">
-                          <button
-                            onClick={() => toggleTopic(topic)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer
-                              ${isOpen
-                                ? 'border-[#8DC63F] bg-[#8DC63F]/5'
-                                : 'border-gray-200 bg-white hover:border-[#8DC63F]/50 hover:bg-[#8DC63F]/[0.02]'
-                              }`}
-                          >
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
-                              ${isOpen ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-400'}`}>
-                              <TopicIcon size={15} />
-                            </div>
+// Show "Learning Resource" heading only for the FIRST topic group
+const isFirstResourceGroup = sortedGroupKeys.filter(k => grouped[k]?.[0]?.type === 'resource').indexOf(topic) === 0;
 
-                            <div className="flex-1 text-left">
-                              <p className={`text-sm font-semibold transition-colors
-                                ${isOpen ? 'text-[#8DC63F]' : 'text-gray-700'}`}>
-                                {topic}
-                              </p>
-                              <p className="text-[11px] text-gray-400 mt-0.5">
-                                {topicDone}/{items.length} completed
-                              </p>
-                            </div>
+return (
+  <div key={topic} className="mb-3">
 
-                            <div className="w-20 bg-gray-100 rounded-full h-1.5 flex-shrink-0">
-                              <div
-                                className="h-1.5 rounded-full bg-[#8DC63F] transition-all duration-500"
-                                style={{ width: `${items.length ? Math.round((topicDone / items.length) * 100) : 0}%` }}
-                              />
-                            </div>
+    {/* ✅ Section heading — shown once above the first topic accordion */}
+    {isFirstResourceGroup && (
+      <div className="flex items-center gap-2 mb-3">
+        <BookOpen size={13} className="text-blue-500" />
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          Learning Resource
+        </span>
+        <div className="flex-1 h-px bg-gray-100" />
+        <span className="text-[10px] text-gray-400">
+          {sortedGroupKeys
+            .filter(k => grouped[k]?.[0]?.type === 'resource')
+            .reduce((sum, k) => sum + grouped[k].length, 0)}
+        </span>
+      </div>
+    )}
 
-                            {isOpen
-                              ? <ChevronDown  size={16} className="text-[#8DC63F] flex-shrink-0" />
-                              : <ChevronRight size={16} className="text-gray-300 flex-shrink-0"  />
-                            }
-                          </button>
+    <button
+      onClick={() => toggleTopic(topic)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer
+        ${isOpen
+          ? 'border-[#8DC63F] bg-[#8DC63F]/5'
+          : 'border-gray-200 bg-white hover:border-[#8DC63F]/50 hover:bg-[#8DC63F]/[0.02]'
+        }`}
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
+        ${isOpen ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-400'}`}>
+        <TopicIcon size={15} />
+      </div>
 
-                          {isOpen && (
-                            <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
-                              {items.map(r => <ResourceRow key={r.id} r={r} />)}
-                            </div>
-                          )}
-                        </div>
-                      );
+      <div className="flex-1 text-left">
+        <p className={`text-sm font-semibold transition-colors
+          ${isOpen ? 'text-[#8DC63F]' : 'text-gray-700'}`}>
+          {topic}
+        </p>
+        <p className="text-[11px] text-gray-400 mt-0.5">
+          {topicDone}/{items.length} completed
+        </p>
+      </div>
+
+      <div className="w-20 bg-gray-100 rounded-full h-1.5 flex-shrink-0">
+        <div
+          className="h-1.5 rounded-full bg-[#8DC63F] transition-all duration-500"
+          style={{ width: `${items.length ? Math.round((topicDone / items.length) * 100) : 0}%` }}
+        />
+      </div>
+
+      {isOpen
+        ? <ChevronDown  size={16} className="text-[#8DC63F] flex-shrink-0" />
+        : <ChevronRight size={16} className="text-gray-300 flex-shrink-0"  />
+      }
+    </button>
+
+    {isOpen && (
+      <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
+        {items.map(r => <ResourceRow key={r.id} r={r} />)}
+      </div>
+    )}
+  </div>
+);
                     })}
                   </div>
                 </div>
