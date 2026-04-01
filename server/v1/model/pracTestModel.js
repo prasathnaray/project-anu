@@ -3,6 +3,387 @@ const supabase = require('../utils/supaBaseConfig.js');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
+// const submitSession = async (requester, sessionType, sessionNumber, resource_id, session_id, payload, imageMap) => {
+//     const isPrivileged = [103].includes(Number(requester.role));
+//     if (!isPrivileged) {
+//         return { status: 'Unauthorized', code: 401, message: 'You do not have permission to submit a session.' };
+//     }
+
+//     const dbClient = await client.connect();
+//     try {
+//         await dbClient.query('BEGIN');
+
+//         // 1. sessions
+//         const sessionResult = await dbClient.query(
+//             `INSERT INTO sessions (id, user_id, session_type, session_number, resource_id)
+//              VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+//             [session_id, requester.user_mail, sessionType, sessionNumber, resource_id]
+//         );
+//         const sessionId = session_id;
+
+//         const { planeIdentification, imageOptimization, measurements,
+//                 diagnosticInterpretation, scores, feedback } = payload;
+
+//         // 2. plane_identification (no user_id/id insert — id is auto PK)
+//         const pi = planeIdentification;
+//         await dbClient.query(
+//             `INSERT INTO plane_identification (
+//                 session_id, resource_id,
+//                 time_taken_user, time_taken_expert, time_taken_score, time_taken_max_score,
+//                 probe_pos_user_x, probe_pos_user_y, probe_pos_user_z,
+//                 probe_rot_user_x, probe_rot_user_y, probe_rot_user_z,
+//                 probe_pos_expert_x, probe_pos_expert_y, probe_pos_expert_z,
+//                 probe_rot_expert_x, probe_rot_expert_y, probe_rot_expert_z,
+//                 probe_position_score, probe_position_max,
+//                 probe_rotation_score, probe_rotation_max,
+//                 subtotal_score, subtotal_max_score
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+//             [
+//                 sessionId, resource_id,
+//                 pi.timeTakenSeconds.user, pi.timeTakenSeconds.expertExpected,
+//                 pi.timeTakenSeconds.score, pi.timeTakenSeconds.maxScore,
+//                 pi.probePosition.user.position.x, pi.probePosition.user.position.y, pi.probePosition.user.position.z,
+//                 pi.probePosition.user.rotation.x, pi.probePosition.user.rotation.y, pi.probePosition.user.rotation.z,
+//                 pi.probePosition.expert.position.x, pi.probePosition.expert.position.y, pi.probePosition.expert.position.z,
+//                 pi.probePosition.expert.rotation.x, pi.probePosition.expert.rotation.y, pi.probePosition.expert.rotation.z,
+//                 pi.probePosition.score, pi.probePosition.maxScore,
+//                 pi.probeRotationScore.score, pi.probeRotationScore.maxScore,
+//                 scores.planeIdentification,
+//                 pi.timeTakenSeconds.maxScore + pi.probePosition.maxScore + pi.probeRotationScore.maxScore,
+//             ]
+//         );
+
+//         // 3. image_optimization (no id insert — id is auto PK)
+//         const io = imageOptimization;
+//         await dbClient.query(
+//             `INSERT INTO image_optimization (
+//                 session_id, resource_id,
+//                 gain_user, gain_expert, gain_score, gain_max_score,
+//                 depth_user, depth_expert, depth_score, depth_max_score,
+//                 zoom_user, zoom_expert, zoom_score, zoom_max_score,
+//                 focus_user, focus_expert, focus_score, focus_max_score,
+//                 dynamic_range_user, dynamic_range_expert, dynamic_range_score, dynamic_range_max_score,
+//                 subtotal_score, subtotal_max_score
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+//             [
+//                 sessionId, resource_id,
+//                 io.gain.user, io.gain.expert, io.gain.score, io.gain.maxScore,
+//                 io.depth.user, io.depth.expert, io.depth.score, io.depth.maxScore,
+//                 io.zoom.user, io.zoom.expert, io.zoom.score, io.zoom.maxScore,
+//                 io.focus.user, io.focus.expert, io.focus.score, io.focus.maxScore,
+//                 io.dynamicRange.user, io.dynamicRange.expert, io.dynamicRange.score, io.dynamicRange.maxScore,
+//                 scores.imageOptimization,
+//                 io.gain.maxScore + io.depth.maxScore + io.zoom.maxScore +
+//                 io.focus.maxScore + io.dynamicRange.maxScore,
+//             ]
+//         );
+
+//         // 4. measurements (no id insert — id is auto PK)
+//         for (const m of measurements) {
+//             const timestamp = Date.now();
+//             const userFile = imageMap[m.type].user;
+//             const expertFile = imageMap[m.type].expert;
+
+//             const userFilePath = `measurement_images/${sessionId}_${m.type}_user_${timestamp}`;
+//             const expertFilePath = `measurement_images/${sessionId}_${m.type}_expert_${timestamp}`;
+
+//             const { error: userImgError } = await supabase.storage
+//                 .from(process.env.BUCKET_NAME)
+//                 .upload(userFilePath, userFile.buffer, { contentType: userFile.mimetype, upsert: true });
+//             if (userImgError) throw new Error(`User image upload failed for ${m.type}: ${userImgError.message}`);
+  
+//             const { error: expertImgError } = await supabase.storage
+//                 .from(process.env.BUCKET_NAME)
+//                 .upload(expertFilePath, expertFile.buffer, { contentType: expertFile.mimetype, upsert: true });
+//             if (expertImgError) throw new Error(`Expert image upload failed for ${m.type}: ${expertImgError.message}`);
+
+//             await dbClient.query(
+//                 `INSERT INTO measurements (
+//                     session_id, resource_id, measurement_type, caliper_method,
+//                     caliper_user_points, caliper_expert_points,
+//                     caliper_placement_score, caliper_placement_max,
+//                     value_user, value_expert, value_unit, value_error,
+//                     value_score, value_max_score,
+//                     user_image_id, expert_image_id,
+//                     subtotal_score, subtotal_max_score
+//                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+//                 [
+//                     sessionId, resource_id, m.type, m.caliperPlacement.method,
+//                     JSON.stringify(m.caliperPlacement.userPoints),
+//                     JSON.stringify(m.caliperPlacement.expertPoints),
+//                     m.caliperPlacement.score, m.caliperPlacement.maxScore,
+//                     m.value.user, m.value.expert, m.value.unit, m.value.error,
+//                     m.value.score, m.value.maxScore,
+//                     userFilePath, expertFilePath,
+//                     m.caliperPlacement.score + m.value.score,
+//                     m.caliperPlacement.maxScore + m.value.maxScore,
+//                 ]
+//             );
+//         }
+
+//         // 5. diagnostic_interpretation (no id insert — id is auto PK)
+//         const di = diagnosticInterpretation;
+//         await dbClient.query(
+//             `INSERT INTO diagnostic_interpretation (
+//                 session_id, resource_id,
+//                 chart_interp_user, chart_interp_expert, chart_interp_score, chart_interp_max_score,
+//                 range_interp_user, range_interp_expert, range_interp_score, range_interp_max_score,
+//                 subtotal_score, subtotal_max_score
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+//             [
+//                 sessionId, resource_id,
+//                 di.chartInterpretation.user, di.chartInterpretation.expert,
+//                 di.chartInterpretation.score, di.chartInterpretation.maxScore,
+//                 di.rangeInterpretation.user, di.rangeInterpretation.expert,
+//                 di.rangeInterpretation.score, di.rangeInterpretation.maxScore,
+//                 scores.diagnosticInterpretation,
+//                 di.chartInterpretation.maxScore + di.rangeInterpretation.maxScore,
+//             ]
+//         );
+
+//         // 6. session_scores (no id insert — id is auto PK)
+//         await dbClient.query(
+//             `INSERT INTO session_scores (
+//                 session_id, resource_id,
+//                 plane_identification_score, image_optimization_score,
+//                 measurement_score, diagnostic_interpretation_score,
+//                 total_score, max_score, percentage
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+//             [
+//                 sessionId, resource_id,
+//                 scores.planeIdentification, scores.imageOptimization,
+//                 scores.measurement, scores.diagnosticInterpretation,
+//                 scores.totalScore, scores.maxScore, scores.percentage,
+//             ]
+//         );
+
+//         // 7. session_feedback (no id insert — id is auto PK)
+//         await dbClient.query(
+//             `INSERT INTO session_feedback (session_id, resource_id, overall_feedback, needs_practice)
+//              VALUES ($1,$2,$3,$4)`,
+//             [sessionId, resource_id, feedback.overall, JSON.stringify(feedback.needsPractice)]
+//         );
+        
+//         //8. mark resource as practiced in practice_results
+//         // 8. mark resource as practiced in practice_results
+// console.log('Inserting into progress_data:', requester.user_mail, resource_id);
+
+// await dbClient.query(
+//     `INSERT INTO progress_data (user_id, resourse_id, is_completed, updated_at)
+//      VALUES ($1, $2, TRUE, NOW())
+//      ON CONFLICT (user_id, resourse_id)
+//      DO UPDATE SET is_completed = TRUE, updated_at = NOW()`,
+//     [requester.user_mail, resource_id]
+// );
+
+// console.log('progress_data insert done');
+        
+//         await dbClient.query('COMMIT');
+//         return { status: 'Session Submitted Successfully', code: 201, data: { sessionId } };
+
+//     } catch (err) {
+//         await dbClient.query('ROLLBACK');
+//         throw err;
+//     } finally {
+//         dbClient.release();
+//     }
+// };
+
+// const submitSession = async (requester, sessionType, sessionNumber, resource_id, session_id, payload, imageMap) => {
+//     const isPrivileged = [103].includes(Number(requester.role));
+//     if (!isPrivileged) {
+//         return { status: 'Unauthorized', code: 401, message: 'You do not have permission to submit a session.' };
+//     }
+
+//     const dbClient = await client.connect();
+//     try {
+//         await dbClient.query('BEGIN');
+
+//         const { planeIdentification, imageOptimization, measurements,
+//                 diagnosticInterpretation, scores, feedback } = payload;
+//         const sessionId = session_id;
+
+//         // 1. sessions
+//         await dbClient.query(
+//             `INSERT INTO sessions (id, user_id, session_type, session_number, resource_id)
+//              VALUES ($1, $2, $3, $4, $5)`,
+//             [sessionId, requester.user_mail, sessionType, sessionNumber, resource_id]
+//         );
+//         console.log('✅ Step 1 done: sessions');
+
+//         // 2. plane_identification
+//         const pi = planeIdentification;
+//         await dbClient.query(
+//             `INSERT INTO plane_identification (
+//                 session_id, resource_id,
+//                 time_taken_user, time_taken_expert, time_taken_score, time_taken_max_score,
+//                 probe_pos_user_x, probe_pos_user_y, probe_pos_user_z,
+//                 probe_rot_user_x, probe_rot_user_y, probe_rot_user_z,
+//                 probe_pos_expert_x, probe_pos_expert_y, probe_pos_expert_z,
+//                 probe_rot_expert_x, probe_rot_expert_y, probe_rot_expert_z,
+//                 probe_position_score, probe_position_max,
+//                 probe_rotation_score, probe_rotation_max,
+//                 subtotal_score, subtotal_max_score
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+//             [
+//                 sessionId, resource_id,
+//                 pi.timeTakenSeconds.user, pi.timeTakenSeconds.expertExpected,
+//                 pi.timeTakenSeconds.score, pi.timeTakenSeconds.maxScore,
+//                 pi.probePosition.user.position.x, pi.probePosition.user.position.y, pi.probePosition.user.position.z,
+//                 pi.probePosition.user.rotation.x, pi.probePosition.user.rotation.y, pi.probePosition.user.rotation.z,
+//                 pi.probePosition.expert.position.x, pi.probePosition.expert.position.y, pi.probePosition.expert.position.z,
+//                 pi.probePosition.expert.rotation.x, pi.probePosition.expert.rotation.y, pi.probePosition.expert.rotation.z,
+//                 pi.probePosition.score, pi.probePosition.maxScore,
+//                 pi.probeRotationScore.score, pi.probeRotationScore.maxScore,
+//                 scores.planeIdentification,
+//                 pi.timeTakenSeconds.maxScore + pi.probePosition.maxScore + pi.probeRotationScore.maxScore,
+//             ]
+//         );
+//         console.log('✅ Step 2 done: plane_identification');
+
+//         // 3. image_optimization
+//         const io = imageOptimization;
+//         await dbClient.query(
+//             `INSERT INTO image_optimization (
+//                 session_id, resource_id,
+//                 gain_user, gain_expert, gain_score, gain_max_score,
+//                 depth_user, depth_expert, depth_score, depth_max_score,
+//                 zoom_user, zoom_expert, zoom_score, zoom_max_score,
+//                 focus_user, focus_expert, focus_score, focus_max_score,
+//                 dynamic_range_user, dynamic_range_expert, dynamic_range_score, dynamic_range_max_score,
+//                 subtotal_score, subtotal_max_score
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+//             [
+//                 sessionId, resource_id,
+//                 io.gain.user, io.gain.expert, io.gain.score, io.gain.maxScore,
+//                 io.depth.user, io.depth.expert, io.depth.score, io.depth.maxScore,
+//                 io.zoom.user, io.zoom.expert, io.zoom.score, io.zoom.maxScore,
+//                 io.focus.user, io.focus.expert, io.focus.score, io.focus.maxScore,
+//                 io.dynamicRange.user, io.dynamicRange.expert, io.dynamicRange.score, io.dynamicRange.maxScore,
+//                 scores.imageOptimization,
+//                 io.gain.maxScore + io.depth.maxScore + io.zoom.maxScore +
+//                 io.focus.maxScore + io.dynamicRange.maxScore,
+//             ]
+//         );
+//         console.log('✅ Step 3 done: image_optimization');
+
+//         // 4. measurements
+//         for (const m of measurements) {
+//             const timestamp = Date.now();
+//             const userFile = imageMap[m.type].user;
+//             const expertFile = imageMap[m.type].expert;
+
+//             const userFilePath = `measurement_images/${sessionId}_${m.type}_user_${timestamp}`;
+//             const expertFilePath = `measurement_images/${sessionId}_${m.type}_expert_${timestamp}`;
+
+//             const { error: userImgError } = await supabase.storage
+//                 .from(process.env.BUCKET_NAME)
+//                 .upload(userFilePath, userFile.buffer, { contentType: userFile.mimetype, upsert: true });
+//             if (userImgError) throw new Error(`User image upload failed for ${m.type}: ${userImgError.message}`);
+
+//             const { error: expertImgError } = await supabase.storage
+//                 .from(process.env.BUCKET_NAME)
+//                 .upload(expertFilePath, expertFile.buffer, { contentType: expertFile.mimetype, upsert: true });
+//             if (expertImgError) throw new Error(`Expert image upload failed for ${m.type}: ${expertImgError.message}`);
+
+//             await dbClient.query(
+//                 `INSERT INTO measurements (
+//                     session_id, resource_id, measurement_type, caliper_method,
+//                     caliper_user_points, caliper_expert_points,
+//                     caliper_placement_score, caliper_placement_max,
+//                     value_user, value_expert, value_unit, value_error,
+//                     value_score, value_max_score,
+//                     user_image_id, expert_image_id,
+//                     subtotal_score, subtotal_max_score
+//                 ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+//                 [
+//                     sessionId, resource_id, m.type, m.caliperPlacement.method,
+//                     JSON.stringify(m.caliperPlacement.userPoints),
+//                     JSON.stringify(m.caliperPlacement.expertPoints),
+//                     m.caliperPlacement.score, m.caliperPlacement.maxScore,
+//                     m.value.user, m.value.expert, m.value.unit, m.value.error,
+//                     m.value.score, m.value.maxScore,
+//                     userFilePath, expertFilePath,
+//                     m.caliperPlacement.score + m.value.score,
+//                     m.caliperPlacement.maxScore + m.value.maxScore,
+//                 ]
+//             );
+//         }
+//         console.log('✅ Step 4 done: measurements');
+
+//         // 5. diagnostic_interpretation
+//         const di = diagnosticInterpretation;
+//         await dbClient.query(
+//             `INSERT INTO diagnostic_interpretation (
+//                 session_id, resource_id,
+//                 chart_interp_user, chart_interp_expert, chart_interp_score, chart_interp_max_score,
+//                 range_interp_user, range_interp_expert, range_interp_score, range_interp_max_score,
+//                 subtotal_score, subtotal_max_score
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+//             [
+//                 sessionId, resource_id,
+//                 di.chartInterpretation.user, di.chartInterpretation.expert,
+//                 di.chartInterpretation.score, di.chartInterpretation.maxScore,
+//                 di.rangeInterpretation.user, di.rangeInterpretation.expert,
+//                 di.rangeInterpretation.score, di.rangeInterpretation.maxScore,
+//                 scores.diagnosticInterpretation,
+//                 di.chartInterpretation.maxScore + di.rangeInterpretation.maxScore,
+//             ]
+//         );
+//         console.log('✅ Step 5 done: diagnostic_interpretation');
+
+//         // 6. session_scores
+//         await dbClient.query(
+//             `INSERT INTO session_scores (
+//                 session_id, resource_id,
+//                 plane_identification_score, image_optimization_score,
+//                 measurement_score, diagnostic_interpretation_score,
+//                 total_score, max_score, percentage
+//             ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+//             [
+//                 sessionId, resource_id,
+//                 scores.planeIdentification, scores.imageOptimization,
+//                 scores.measurement, scores.diagnosticInterpretation,
+//                 scores.totalScore, scores.maxScore, scores.percentage,
+//             ]
+//         );
+//         console.log('✅ Step 6 done: session_scores');
+
+//         // 7. session_feedback
+//         await dbClient.query(
+//             `INSERT INTO session_feedback (session_id, resource_id, overall_feedback, needs_practice)
+//              VALUES ($1,$2,$3,$4)`,
+//             [sessionId, resource_id, feedback.overall, JSON.stringify(feedback.needsPractice)]
+//         );
+//         console.log('✅ Step 7 done: session_feedback');
+
+//         // 8. progress_data
+//         console.log('⏳ Inserting into progress_data...', { user: requester.user_mail, resource_id });
+//         await dbClient.query(
+//             `INSERT INTO progress_data (user_id, resourse_id, is_completed, updated_at)
+//              VALUES ($1, $2, TRUE, NOW())
+//              ON CONFLICT (user_id, resourse_id)
+//              DO UPDATE SET is_completed = TRUE, updated_at = NOW()`,
+//             [requester.user_mail, resource_id]
+//         );
+//         console.log('✅ Step 8 done: progress_data');
+
+//         await dbClient.query('COMMIT');
+//         console.log('✅ Transaction committed successfully');
+//         return { status: 'Session Submitted Successfully', code: 201, data: { sessionId } };
+
+//     } catch (err) {
+//         await dbClient.query('ROLLBACK');
+//         console.error('❌ Transaction rolled back at step:', err.message);
+//         throw err;
+//     } finally {
+//         dbClient.release();
+//     }
+// };
+
+
+//the above code is working
+
 const submitSession = async (requester, sessionType, sessionNumber, resource_id, session_id, payload, imageMap) => {
     const isPrivileged = [103].includes(Number(requester.role));
     if (!isPrivileged) {
@@ -13,22 +394,23 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
     try {
         await dbClient.query('BEGIN');
 
-        // 1. sessions
-        const sessionResult = await dbClient.query(
-            `INSERT INTO sessions (id, user_id, session_type, session_number, resource_id)
-             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [session_id, requester.user_mail, sessionType, sessionNumber, resource_id]
-        );
-        const sessionId = session_id;
-
         const { planeIdentification, imageOptimization, measurements,
                 diagnosticInterpretation, scores, feedback } = payload;
+        const sessionId = session_id;
+        const userId = requester.user_mail;
+        // 1. sessions
+        await dbClient.query(
+            `INSERT INTO sessions (id, user_id, session_type, session_number, resource_id)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [sessionId, userId, sessionType, sessionNumber, resource_id]
+        );
+        console.log('✅ Step 1 done: sessions');
 
-        // 2. plane_identification (no user_id/id insert — id is auto PK)
+        // 2. plane_identification
         const pi = planeIdentification;
         await dbClient.query(
             `INSERT INTO plane_identification (
-                session_id, resource_id,
+                id, session_id, resource_id,
                 time_taken_user, time_taken_expert, time_taken_score, time_taken_max_score,
                 probe_pos_user_x, probe_pos_user_y, probe_pos_user_z,
                 probe_rot_user_x, probe_rot_user_y, probe_rot_user_z,
@@ -37,9 +419,9 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
                 probe_position_score, probe_position_max,
                 probe_rotation_score, probe_rotation_max,
                 subtotal_score, subtotal_max_score
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
             [
-                sessionId, resource_id,
+                userId, sessionId, resource_id,
                 pi.timeTakenSeconds.user, pi.timeTakenSeconds.expertExpected,
                 pi.timeTakenSeconds.score, pi.timeTakenSeconds.maxScore,
                 pi.probePosition.user.position.x, pi.probePosition.user.position.y, pi.probePosition.user.position.z,
@@ -52,21 +434,22 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
                 pi.timeTakenSeconds.maxScore + pi.probePosition.maxScore + pi.probeRotationScore.maxScore,
             ]
         );
+        console.log('✅ Step 2 done: plane_identification');
 
-        // 3. image_optimization (no id insert — id is auto PK)
+        // 3. image_optimization
         const io = imageOptimization;
         await dbClient.query(
             `INSERT INTO image_optimization (
-                session_id, resource_id,
+                id, session_id, resource_id,
                 gain_user, gain_expert, gain_score, gain_max_score,
                 depth_user, depth_expert, depth_score, depth_max_score,
                 zoom_user, zoom_expert, zoom_score, zoom_max_score,
                 focus_user, focus_expert, focus_score, focus_max_score,
                 dynamic_range_user, dynamic_range_expert, dynamic_range_score, dynamic_range_max_score,
                 subtotal_score, subtotal_max_score
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
             [
-                sessionId, resource_id,
+                userId, sessionId, resource_id,
                 io.gain.user, io.gain.expert, io.gain.score, io.gain.maxScore,
                 io.depth.user, io.depth.expert, io.depth.score, io.depth.maxScore,
                 io.zoom.user, io.zoom.expert, io.zoom.score, io.zoom.maxScore,
@@ -77,8 +460,9 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
                 io.focus.maxScore + io.dynamicRange.maxScore,
             ]
         );
+        console.log('✅ Step 3 done: image_optimization');
 
-        // 4. measurements (no id insert — id is auto PK)
+        // 4. measurements
         for (const m of measurements) {
             const timestamp = Date.now();
             const userFile = imageMap[m.type].user;
@@ -91,7 +475,7 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
                 .from(process.env.BUCKET_NAME)
                 .upload(userFilePath, userFile.buffer, { contentType: userFile.mimetype, upsert: true });
             if (userImgError) throw new Error(`User image upload failed for ${m.type}: ${userImgError.message}`);
-  
+
             const { error: expertImgError } = await supabase.storage
                 .from(process.env.BUCKET_NAME)
                 .upload(expertFilePath, expertFile.buffer, { contentType: expertFile.mimetype, upsert: true });
@@ -99,16 +483,18 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
 
             await dbClient.query(
                 `INSERT INTO measurements (
-                    session_id, resource_id, measurement_type, caliper_method,
+                    id, session_id, resource_id,
+                    measurement_type, caliper_method,
                     caliper_user_points, caliper_expert_points,
                     caliper_placement_score, caliper_placement_max,
                     value_user, value_expert, value_unit, value_error,
                     value_score, value_max_score,
                     user_image_id, expert_image_id,
                     subtotal_score, subtotal_max_score
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
                 [
-                    sessionId, resource_id, m.type, m.caliperPlacement.method,
+                    userId, sessionId, resource_id,
+                    m.type, m.caliperPlacement.method,
                     JSON.stringify(m.caliperPlacement.userPoints),
                     JSON.stringify(m.caliperPlacement.expertPoints),
                     m.caliperPlacement.score, m.caliperPlacement.maxScore,
@@ -120,18 +506,19 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
                 ]
             );
         }
+        console.log('✅ Step 4 done: measurements');
 
-        // 5. diagnostic_interpretation (no id insert — id is auto PK)
+        // 5. diagnostic_interpretation
         const di = diagnosticInterpretation;
         await dbClient.query(
             `INSERT INTO diagnostic_interpretation (
-                session_id, resource_id,
+                id, session_id, resource_id,
                 chart_interp_user, chart_interp_expert, chart_interp_score, chart_interp_max_score,
                 range_interp_user, range_interp_expert, range_interp_score, range_interp_max_score,
                 subtotal_score, subtotal_max_score
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
             [
-                sessionId, resource_id,
+                userId, sessionId, resource_id,
                 di.chartInterpretation.user, di.chartInterpretation.expert,
                 di.chartInterpretation.score, di.chartInterpretation.maxScore,
                 di.rangeInterpretation.user, di.rangeInterpretation.expert,
@@ -140,35 +527,50 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
                 di.chartInterpretation.maxScore + di.rangeInterpretation.maxScore,
             ]
         );
+        console.log('✅ Step 5 done: diagnostic_interpretation');
 
-        // 6. session_scores (no id insert — id is auto PK)
+        // 6. session_scores
         await dbClient.query(
             `INSERT INTO session_scores (
-                session_id, resource_id,
+                id, session_id, resource_id,
                 plane_identification_score, image_optimization_score,
                 measurement_score, diagnostic_interpretation_score,
                 total_score, max_score, percentage
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
             [
-                sessionId, resource_id,
+                userId, sessionId, resource_id,
                 scores.planeIdentification, scores.imageOptimization,
                 scores.measurement, scores.diagnosticInterpretation,
                 scores.totalScore, scores.maxScore, scores.percentage,
             ]
         );
+        console.log('✅ Step 6 done: session_scores');
 
-        // 7. session_feedback (no id insert — id is auto PK)
+        // 7. session_feedback
         await dbClient.query(
-            `INSERT INTO session_feedback (session_id, resource_id, overall_feedback, needs_practice)
-             VALUES ($1,$2,$3,$4)`,
-            [sessionId, resource_id, feedback.overall, JSON.stringify(feedback.needsPractice)]
+            `INSERT INTO session_feedback (id, session_id, resource_id, overall_feedback, needs_practice)
+             VALUES ($1,$2,$3,$4,$5)`,
+            [userId, sessionId, resource_id, feedback.overall, JSON.stringify(feedback.needsPractice)]
         );
+        console.log('✅ Step 7 done: session_feedback');
+
+        // 8. progress_data
+        await dbClient.query(
+            `INSERT INTO progress_data (user_id, resourse_id, is_completed, updated_at)
+             VALUES ($1, $2, TRUE, NOW())
+             ON CONFLICT (user_id, resourse_id)
+             DO UPDATE SET is_completed = TRUE, updated_at = NOW()`,
+            [userId, resource_id]
+        );
+        console.log('✅ Step 8 done: progress_data');
 
         await dbClient.query('COMMIT');
+        console.log('✅ Transaction committed successfully');
         return { status: 'Session Submitted Successfully', code: 201, data: { sessionId } };
 
     } catch (err) {
         await dbClient.query('ROLLBACK');
+        console.error('❌ Transaction rolled back at step:', err.message);
         throw err;
     } finally {
         dbClient.release();
@@ -176,3 +578,4 @@ const submitSession = async (requester, sessionType, sessionNumber, resource_id,
 };
 
 module.exports = { submitSession };
+// module.exports = { submitSession };

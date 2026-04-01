@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://{{base_url_prod}}/api/v1/submit-prac-test
+  url: http://{{local_base_url}}/api/v1/submit-prac-test
   body:
     type: multipart-form
     data:

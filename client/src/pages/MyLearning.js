@@ -2057,25 +2057,25 @@ const RESOURCE_ORDER = {
 };
 
 const TYPE_FILTERS = [
-  { id: 'all',       label: 'All' },
-  { id: 'resource',  label: 'Learning Resource' },
-  { id: 'practice',  label: 'Practice' },
+  { id: 'all', label: 'All' },
+  { id: 'resource', label: 'Learning Resource' },
+  { id: 'practice', label: 'Practice' },
   { id: 'interpret', label: 'Image Interpretation' },
-  { id: 'test',      label: 'Test' },
+  { id: 'test', label: 'Test' },
 ];
 
 const RESOURCE_TYPE_MAP = {
-  'Learning Resource':    'resource',
-  'Practice':             'practice',
+  'Learning Resource': 'resource',
+  'Practice': 'practice',
   'Image Interpretation': 'interpret',
-  'Test':                 'test',
+  'Test': 'test',
 };
 
 const TYPE_META = {
-  resource:  { label: 'Learning Resource',    icon: BookOpen,       color: 'text-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200'   },
-  practice:  { label: 'Practice',             icon: Dumbbell,       color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200'  },
-  interpret: { label: 'Image Interpretation', icon: Eye,            color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
-  test:      { label: 'Test',                 icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+  resource: { label: 'Learning Resource', icon: BookOpen, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+  practice: { label: 'Practice', icon: Dumbbell, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+  interpret: { label: 'Image Interpretation', icon: Eye, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
+  test: { label: 'Test', icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
 };
 
 // ─── TOPIC / MODULE ORDER ─────────────────────────────────────────────────────
@@ -2102,24 +2102,24 @@ const TOPIC_ORDER = [
 const MODULE_ORDER = ['BPD & HC', 'AC', 'FL'];
 
 const TOPIC_ICONS = {
-  'Fetal Head':                                                           Brain,
-  'Fetal abdomen':                                                        Brain,
-  'Fetal Femur':                                                          Brain,
-  'Anatomical Landmarks':                                                  Search,
-  'Anatomical landmarks':                                                  Search,
-  'Imaging the Plane':                                                     Eye,
-  'Imaging the plane':                                                     Eye,
-  'Imaging the Transthalamic Plane':                                       Eye,
-  'Imaging the transabdominal plane':                                      Eye,
-  'Imaging the transfemoral plane':                                        Eye,
-  'Measurements':                                                          Ruler,
-  'Measurement':                                                           Ruler,
-  'Image Diagnosis':                                                       FileText,
-  'Image diagnosis':                                                       FileText,
-  'OB Boosters':                                                           Puzzle,
-  'Plane Acquisition':                                                     FileText,
-  'Plane Acquisition Challenges and Common Measurement Errors':            FileText,
-  'Pitfalls in Plane Acquisition and Measurement':                         FileText,
+  'Fetal Head': Brain,
+  'Fetal abdomen': Brain,
+  'Fetal Femur': Brain,
+  'Anatomical Landmarks': Search,
+  'Anatomical landmarks': Search,
+  'Imaging the Plane': Eye,
+  'Imaging the plane': Eye,
+  'Imaging the Transthalamic Plane': Eye,
+  'Imaging the transabdominal plane': Eye,
+  'Imaging the transfemoral plane': Eye,
+  'Measurements': Ruler,
+  'Measurement': Ruler,
+  'Image Diagnosis': FileText,
+  'Image diagnosis': FileText,
+  'OB Boosters': Puzzle,
+  'Plane Acquisition': FileText,
+  'Plane Acquisition Challenges and Common Measurement Errors': FileText,
+  'Pitfalls in Plane Acquisition and Measurement': FileText,
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -2138,22 +2138,45 @@ function deriveCompletionSource(name, topic) {
   return 'progress';
 }
 
-// ─── isResourceDone ── single source of truth for "done" check ───────────────
-
 function isResourceDone(r) {
   if (r.completionSource === 'activity') return (r.activityData?.attempts ?? 0) > 0;
   return r.done === true;
 }
 
+// ─── BUILD TOPIC GROUPS ───────────────────────────────────────────────────────
+// Returns { accordions, directRows }
+// - accordions: items WITH a topic  → rendered as collapsible accordions
+// - directRows: items with NO topic → rendered directly, no wrapper
+
+function buildTopicGroups(items) {
+  const topicMap = {};
+  const directRows = [];
+
+  items.forEach(r => {
+    if (!r.topic) {
+      directRows.push(r);
+    } else {
+      if (!topicMap[r.topic]) topicMap[r.topic] = [];
+      topicMap[r.topic].push(r);
+    }
+  });
+
+  const accordions = Object.entries(topicMap)
+    .map(([topic, topicItems]) => ({ topic, items: topicItems }))
+    .sort((a, b) => {
+      const ai = TOPIC_ORDER.indexOf(a.topic);
+      const bi = TOPIC_ORDER.indexOf(b.topic);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+
+  return { accordions, directRows };
+}
+
 // ─── API DATA TRANSFORMER ─────────────────────────────────────────────────────
-//
-// KEY FIX: Module done/total are recalculated from ALL resource types
-// (not just Learning Resources as the API's moduleCompletion only counts those).
 
 function transformApiData(apiResponse) {
   const { data = [] } = apiResponse;
 
-  // ── 1. Build completion lookup: resource_id → is_completed ───────────────
   const completionMap = {};
   data.forEach(item => {
     if (item.resource_id) {
@@ -2161,22 +2184,20 @@ function transformApiData(apiResponse) {
     }
   });
 
-  // ── 2. Collect unique certificates ───────────────────────────────────────
   const certOrder = [];
-  const certSeen  = new Set();
+  const certSeen = new Set();
   data.forEach(item => {
     if (!certSeen.has(item.certificate_id)) {
       certSeen.add(item.certificate_id);
       certOrder.push({
-        id:    item.certificate_id,
+        id: item.certificate_id,
         label: CERT_LABEL_MAP[item.certificate_id] || item.course_name || item.certificate_id,
       });
     }
   });
 
-  // ── 3. Collect modules per cert + resources per module ───────────────────
-  const modulesByCert   = {};   // certId → Map<lmid, module meta>
-  const resourcesByLMID = {};   // lmid   → resource[]
+  const modulesByCert = {};
+  const resourcesByLMID = {};
 
   data.forEach(item => {
     const { certificate_id, learning_module_id, unit_name, course_name } = item;
@@ -2186,57 +2207,45 @@ function transformApiData(apiResponse) {
 
     if (!certModules.has(learning_module_id)) {
       certModules.set(learning_module_id, {
-        id:                 learning_module_id,
+        id: learning_module_id,
         learning_module_id: learning_module_id,
-        label:              unit_name || course_name || learning_module_id,
-        locked:             false,
-        hasAnyResource:     false,
-        // done/total will be recalculated after resources are built
-        done:  0,
+        label: unit_name || course_name || learning_module_id,
+        locked: false,
+        hasAnyResource: false,
+        done: 0,
         total: 0,
       });
     }
 
-    if (item.resource_id) {
-      certModules.get(learning_module_id).hasAnyResource = true;
-    }
-
-    // ── Build resource list ─────────────────────────────────────────────────
+    if (item.resource_id) certModules.get(learning_module_id).hasAnyResource = true;
     if (!item.resource_id) return;
 
     if (!resourcesByLMID[learning_module_id]) resourcesByLMID[learning_module_id] = [];
-
-    // Deduplicate
     if (resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id)) return;
 
-    const typeKey          = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
+    const typeKey = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
     const completionSource = typeKey === 'resource'
       ? deriveCompletionSource(item.resource_name, item.resource_topic)
       : null;
-
     const isDone = completionMap[item.resource_id] === true;
 
     resourcesByLMID[learning_module_id].push({
-      id:               item.resource_id,
-      name:             (item.resource_name || '').trim(),
-      type:             typeKey,
-      topic:            item.resource_topic || '',
-      completionSource: completionSource,
-      done:             isDone,
-      activityData:     completionSource === 'activity'
+      id: item.resource_id,
+      name: (item.resource_name || '').trim(),
+      type: typeKey,
+      topic: item.resource_topic || '',
+      completionSource,
+      done: isDone,
+      activityData: completionSource === 'activity'
         ? { attempts: isDone ? 1 : 0, correct: isDone ? 1 : 0, total: 1 }
         : undefined,
     });
   });
 
-  // ── 4. Finalise modules: set locked flag + sort ───────────────────────────
   const modulesByCertFinal = {};
   certOrder.forEach(cert => {
     const modMap = modulesByCert[cert.id];
-    if (!modMap) {
-      modulesByCertFinal[cert.id] = [];
-      return;
-    }
+    if (!modMap) { modulesByCertFinal[cert.id] = []; return; }
     modulesByCertFinal[cert.id] = Array.from(modMap.values())
       .map(mod => ({ ...mod, locked: !mod.hasAnyResource }))
       .sort((a, b) => {
@@ -2246,7 +2255,6 @@ function transformApiData(apiResponse) {
       });
   });
 
-  // ── 5. Sort resources within each module ─────────────────────────────────
   const sortedResources = {};
   Object.entries(resourcesByLMID).forEach(([lmid, items]) => {
     let unitName = '';
@@ -2260,21 +2268,18 @@ function transformApiData(apiResponse) {
     });
   });
 
-  // ── 6. KEY FIX: Recalculate done/total from ALL resource types ────────────
-  //    The API's moduleCompletion only counts Learning Resources, so we ignore
-  //    it and derive the counts ourselves from the full resource list.
   Object.values(modulesByCertFinal).forEach(mods => {
     mods.forEach(mod => {
-      const res    = sortedResources[mod.id] || [];
-      mod.total    = res.length;
-      mod.done     = res.filter(isResourceDone).length;
+      const res = sortedResources[mod.id] || [];
+      mod.total = res.length;
+      mod.done = res.filter(isResourceDone).length;
     });
   });
 
   return { certs: certOrder, modules: modulesByCertFinal, resources: sortedResources };
 }
 
-// ─── COMPLETION STATUS BADGE ──────────────────────────────────────────────────
+// ─── COMPLETION STATUS ────────────────────────────────────────────────────────
 
 function CompletionStatus({ r }) {
   if (r.completionSource === 'progress') {
@@ -2292,15 +2297,14 @@ function CompletionStatus({ r }) {
 
   if (r.completionSource === 'activity') {
     const { attempts = 0, correct = 0, total = 1 } = r.activityData || {};
-    const pct          = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const _isMindSpark = isMindSpark(r.name);
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
 
     if (attempts === 0) {
       return (
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {_isMindSpark
-            ? <Zap    size={13} className="text-yellow-400" />
-            : <Puzzle size={13} className="text-pink-400"   />
+          {isMindSpark(r.name)
+            ? <Zap size={13} className="text-yellow-400" />
+            : <Puzzle size={13} className="text-pink-400" />
           }
           <span className="text-[10px] text-gray-400 border border-gray-200 rounded-full px-2 py-0.5">
             Not attempted
@@ -2328,8 +2332,13 @@ function CompletionStatus({ r }) {
     );
   }
 
-  // Non-LR types (practice / interpret / test) — no completionSource
-  return (
+  // practice / interpret / test — no completionSource
+  return r.done ? (
+    <div className="flex items-center gap-1 text-[#8DC63F] flex-shrink-0">
+      <CheckCircle2 size={15} className="fill-[#8DC63F] text-white" />
+      <span className="text-[11px] font-semibold">Completed</span>
+    </div>
+  ) : (
     <ChevronRight size={16} className="text-gray-300 group-hover:text-[#8DC63F] transition-colors flex-shrink-0" />
   );
 }
@@ -2337,18 +2346,16 @@ function CompletionStatus({ r }) {
 // ─── RESOURCE ICON ────────────────────────────────────────────────────────────
 
 function ResourceIcon({ r }) {
-  const meta         = TYPE_META[r.type] || TYPE_META.resource;
-  const _isMindSpark = isMindSpark(r.name);
-  const _isOBBooster = isOBBooster(r.topic);
+  const meta = TYPE_META[r.type] || TYPE_META.resource;
 
-  if (_isMindSpark) {
+  if (isMindSpark(r.name)) {
     return (
       <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-yellow-50 border border-yellow-200">
         <Zap size={16} className="text-yellow-500" />
       </div>
     );
   }
-  if (_isOBBooster) {
+  if (isOBBooster(r.topic)) {
     return (
       <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-pink-50 border border-pink-200">
         <Puzzle size={16} className="text-pink-500" />
@@ -2367,17 +2374,14 @@ function ResourceIcon({ r }) {
 // ─── TYPE BADGE ───────────────────────────────────────────────────────────────
 
 function ResourceTypeBadge({ r }) {
-  const _isMindSpark = isMindSpark(r.name);
-  const _isOBBooster = isOBBooster(r.topic);
-
-  if (_isMindSpark) {
+  if (isMindSpark(r.name)) {
     return (
       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-yellow-50 text-yellow-600 border border-yellow-200">
         Mind Sparks
       </span>
     );
   }
-  if (_isOBBooster) {
+  if (isOBBooster(r.topic)) {
     return (
       <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-pink-50 text-pink-500 border border-pink-200">
         OB Booster
@@ -2397,7 +2401,6 @@ function ResourceTypeBadge({ r }) {
 
 function ResourceRow({ r }) {
   const done = isResourceDone(r);
-
   return (
     <div className={`flex items-center gap-3 p-3 rounded-xl border bg-white cursor-pointer
       transition-all hover:shadow-sm group
@@ -2407,7 +2410,6 @@ function ResourceRow({ r }) {
       }`}
     >
       <ResourceIcon r={r} />
-
       <div className="flex-1 min-w-0">
         <p className={`text-sm font-medium truncate
           ${done && r.completionSource === 'progress'
@@ -2418,9 +2420,105 @@ function ResourceRow({ r }) {
           {r.name}
         </p>
       </div>
-
       <ResourceTypeBadge r={r} />
-      <CompletionStatus  r={r} />
+      <CompletionStatus r={r} />
+    </div>
+  );
+}
+
+// ─── TOPIC ACCORDION ─────────────────────────────────────────────────────────
+
+function TopicAccordion({ topic, items, isOpen, onToggle }) {
+  const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
+  const topicDone = items.filter(isResourceDone).length;
+  const pct = items.length ? Math.round((topicDone / items.length) * 100) : 0;
+
+  return (
+    <div className="mb-3">
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer
+          ${isOpen
+            ? 'border-[#8DC63F] bg-[#8DC63F]/5'
+            : 'border-gray-200 bg-white hover:border-[#8DC63F]/50 hover:bg-[#8DC63F]/[0.02]'
+          }`}
+      >
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
+          ${isOpen ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-400'}`}>
+          <TopicIcon size={15} />
+        </div>
+        <div className="flex-1 text-left">
+          <p className={`text-sm font-semibold transition-colors ${isOpen ? 'text-[#8DC63F]' : 'text-gray-700'}`}>
+            {topic}
+          </p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{topicDone}/{items.length} completed</p>
+        </div>
+        <div className="w-20 bg-gray-100 rounded-full h-1.5 flex-shrink-0">
+          <div
+            className="h-1.5 rounded-full bg-[#8DC63F] transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {isOpen
+          ? <ChevronDown size={16} className="text-[#8DC63F] flex-shrink-0" />
+          : <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+        }
+      </button>
+
+      {isOpen && (
+        <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
+          {items.map(r => <ResourceRow key={r.id} r={r} />)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── TYPE SECTION ─────────────────────────────────────────────────────────────
+
+function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, onToggleTopic }) {
+  const meta = TYPE_META[typeKey] || TYPE_META.resource;
+  const Icon = meta.icon;
+  const total = accordions.reduce((s, g) => s + g.items.length, 0) + directRows.length;
+
+  return (
+    <div className="mb-6">
+      {/* Section header */}
+      <div className="flex items-center gap-2 mb-3">
+        <Icon size={13} className={meta.color} />
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          {meta.label}
+        </span>
+        <div className="flex-1 h-px bg-gray-100" />
+        <span className="text-[10px] text-gray-400">{total}</span>
+      </div>
+
+      {flatList ? (
+        // interpret + test → always flat, no accordions
+        <div className="flex flex-col gap-2">
+          {directRows.map(r => <ResourceRow key={r.id} r={r} />)}
+        </div>
+      ) : (
+        <>
+          {/* Topic accordions — items that have a topic */}
+          {accordions.map(({ topic, items }) => (
+            <TopicAccordion
+              key={topic}
+              topic={topic}
+              items={items}
+              isOpen={!!openTopics[`${typeKey}::${topic}`]}
+              onToggle={() => onToggleTopic(`${typeKey}::${topic}`)}
+            />
+          ))}
+
+          {/* Direct rows — items with NO topic, rendered straight, no wrapper */}
+          {directRows.length > 0 && (
+            <div className="flex flex-col gap-2 mt-1">
+              {directRows.map(r => <ResourceRow key={r.id} r={r} />)}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -2429,31 +2527,28 @@ function ResourceRow({ r }) {
 
 function MyLearning() {
   const [buttonOpen, setButtonOpen] = React.useState(true);
-  const [loading,    setLoading]    = React.useState(true);
-  const [error,      setError]      = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
 
-  // Transformed data
-  const [certs,     setCerts]     = React.useState([]);
-  const [modules,   setModules]   = React.useState({});
+  const [certs, setCerts] = React.useState([]);
+  const [modules, setModules] = React.useState({});
   const [resources, setResources] = React.useState({});
 
-  // UI state
-  const [activeCert,   setActiveCert]   = React.useState('');
+  const [activeCert, setActiveCert] = React.useState('');
   const [activeModule, setActiveModule] = React.useState('');
   const [activeFilter, setActiveFilter] = React.useState('all');
-  const [search,       setSearch]       = React.useState('');
-  const [openTopics,   setOpenTopics]   = React.useState({});
+  const [search, setSearch] = React.useState('');
+  const [openTopics, setOpenTopics] = React.useState({});
 
-  // ── JWT / auth ─────────────────────────────────────────────────────────────
-  const token   = localStorage.getItem('user_token');
-  let   decoded = null;
-  try { decoded = token ? jwtDecode(token) : null; } catch (_) {}
+  // ── Auth ───────────────────────────────────────────────────────────────────
+  const token = localStorage.getItem('user_token');
+  let decoded = null;
+  try { decoded = token ? jwtDecode(token) : null; } catch (_) { }
   const traineeId = decoded?.id || decoded?.sub || decoded?.userId || localStorage.getItem('people_id');
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (!traineeId || !token) return;
-
     setLoading(true);
     setError(null);
 
@@ -2473,7 +2568,7 @@ function MyLearning() {
         const firstCert = transformed.certs[0];
         if (firstCert) {
           setActiveCert(firstCert.id);
-          const firstMods     = transformed.modules[firstCert.id] || [];
+          const firstMods = transformed.modules[firstCert.id] || [];
           const firstUnlocked = firstMods.find(m => !m.locked);
           setActiveModule(firstUnlocked?.id || firstMods[0]?.id || '');
         }
@@ -2482,7 +2577,6 @@ function MyLearning() {
       .finally(() => setLoading(false));
   }, [traineeId, token]);
 
-  // ── Guard ──────────────────────────────────────────────────────────────────
   if (!decoded?.role) return <Navigate to="/" replace />;
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -2491,7 +2585,7 @@ function MyLearning() {
 
   const handleCertChange = certId => {
     setActiveCert(certId);
-    const mods          = modules[certId] || [];
+    const mods = modules[certId] || [];
     const firstUnlocked = mods.find(m => !m.locked);
     setActiveModule(firstUnlocked?.id || mods[0]?.id || '');
     setActiveFilter('all');
@@ -2507,43 +2601,41 @@ function MyLearning() {
     setOpenTopics({});
   };
 
-  // ── Derived data ───────────────────────────────────────────────────────────
-  const currentModules = modules[activeCert]    || [];
-  const allRes         = resources[activeModule] || [];
-  const activeModMeta  = currentModules.find(m => m.id === activeModule);
+  // ── Derived ────────────────────────────────────────────────────────────────
+  const currentModules = modules[activeCert] || [];
+  const allRes = resources[activeModule] || [];
+  const activeModMeta = currentModules.find(m => m.id === activeModule);
 
-  // Module-level progress (already counts all types thanks to the fix)
-  const doneCount  = activeModMeta?.done  ?? 0;
+  const doneCount = activeModMeta?.done ?? 0;
   const totalCount = activeModMeta?.total ?? 0;
-  const pct        = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+  const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
   // Filter + search
   const filtered = allRes.filter(r => {
-    const matchType   = activeFilter === 'all' || r.type === activeFilter;
+    const matchType = activeFilter === 'all' || r.type === activeFilter;
     const matchSearch = r.name.toLowerCase().includes(search.toLowerCase());
     return matchType && matchSearch;
   });
 
-  // Group: LR by topic, others by type key
-  const grouped = filtered.reduce((acc, r) => {
-    const key = r.type === 'resource' ? (r.topic || 'Learning Resource') : r.type;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(r);
+  // ── Build sections ─────────────────────────────────────────────────────────
+  const SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
+
+  const byType = filtered.reduce((acc, r) => {
+    if (!acc[r.type]) acc[r.type] = [];
+    acc[r.type].push(r);
     return acc;
   }, {});
 
-  const TYPE_BUCKET_ORDER = ['practice', 'interpret', 'test'];
-  const sortedGroupKeys   = Object.keys(grouped).sort((a, b) => {
-    const aIsType = TYPE_BUCKET_ORDER.includes(a);
-    const bIsType = TYPE_BUCKET_ORDER.includes(b);
-    if (!aIsType && !bIsType) {
-      const ai = TOPIC_ORDER.indexOf(a);
-      const bi = TOPIC_ORDER.indexOf(b);
-      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-    }
-    if (aIsType && bIsType) return TYPE_BUCKET_ORDER.indexOf(a) - TYPE_BUCKET_ORDER.indexOf(b);
-    return aIsType ? 1 : -1;
-  });
+  const sections = SECTION_ORDER
+    .filter(typeKey => byType[typeKey]?.length > 0)
+    .map(typeKey => {
+      const isFlat = typeKey === 'interpret' || typeKey === 'test';
+      if (isFlat) {
+        return { typeKey, flatList: true, accordions: [], directRows: byType[typeKey] };
+      }
+      const { accordions, directRows } = buildTopicGroups(byType[typeKey]);
+      return { typeKey, flatList: false, accordions, directRows };
+    });
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -2570,7 +2662,6 @@ function MyLearning() {
 
           <div className="p-5">
 
-            {/* Loading */}
             {loading && (
               <div className="flex items-center justify-center py-24 text-gray-400">
                 <Loader2 size={32} className="animate-spin mr-3" />
@@ -2578,7 +2669,6 @@ function MyLearning() {
               </div>
             )}
 
-            {/* Error */}
             {error && !loading && (
               <div className="flex flex-col items-center justify-center py-24 text-red-400">
                 <p className="text-sm font-medium">Failed to load data</p>
@@ -2586,7 +2676,6 @@ function MyLearning() {
               </div>
             )}
 
-            {/* Content */}
             {!loading && !error && (
               <>
                 {/* Cert tabs */}
@@ -2606,17 +2695,16 @@ function MyLearning() {
                   ))}
                 </div>
 
-                {/* 3-col grid */}
                 <div className="grid grid-cols-3 gap-5">
 
-                  {/* Col 1 · Module list */}
+                  {/* Col 1 — Module list */}
                   <div className="col-span-1 border rounded-xl bg-white p-4">
                     <p className="text-sm font-semibold text-gray-700 mb-3">Modules</p>
 
                     <div className="flex flex-col gap-2">
                       {currentModules.map(mod => {
                         const isActive = activeModule === mod.id;
-                        const modPct   = mod.total ? Math.round((mod.done / mod.total) * 100) : 0;
+                        const modPct = mod.total ? Math.round((mod.done / mod.total) * 100) : 0;
                         return (
                           <button
                             key={mod.id}
@@ -2659,7 +2747,6 @@ function MyLearning() {
                       })}
                     </div>
 
-                    {/* Module summary */}
                     {activeModMeta && !activeModMeta.locked && (
                       <div className="mt-4 pt-4 border-t">
                         <div className="flex justify-between items-center mb-1.5">
@@ -2679,7 +2766,7 @@ function MyLearning() {
                     )}
                   </div>
 
-                  {/* Col 2-3 · Resource list */}
+                  {/* Col 2-3 — Resource list */}
                   <div className="col-span-2">
 
                     {/* Filter + search */}
@@ -2720,104 +2807,19 @@ function MyLearning() {
                       </div>
                     )}
 
-                    {/* Grouped accordion */}
-                    {sortedGroupKeys.map(topic => {
-                      const items = grouped[topic];
+                    {/* Sections */}
+                    {sections.map(({ typeKey, flatList, accordions, directRows }) => (
+                      <TypeSection
+                        key={typeKey}
+                        typeKey={typeKey}
+                        flatList={flatList}
+                        accordions={accordions}
+                        directRows={directRows}
+                        openTopics={openTopics}
+                        onToggleTopic={toggleTopic}
+                      />
+                    ))}
 
-                      // Practice / Interpret / Test → flat list with header
-                      const isTypeBucket = items[0]?.type !== 'resource';
-                      if (isTypeBucket) {
-                        const meta = TYPE_META[items[0].type] || TYPE_META.resource;
-                        const Icon = meta.icon;
-                        return (
-                          <div key={topic} className="mb-5">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Icon size={13} className={meta.color} />
-                              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                {meta.label}
-                              </span>
-                              <div className="flex-1 h-px bg-gray-100" />
-                              <span className="text-[10px] text-gray-400">{items.length}</span>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              {items.map(r => <ResourceRow key={r.id} r={r} />)}
-                            </div>
-                          </div>
-                        );
-                      }
-
-                      // Learning Resources → accordion by topic
-                      // Learning Resources → accordion by topic
-const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
-const isOpen    = !!openTopics[topic];
-const topicDone = items.filter(isResourceDone).length;
-
-// Show "Learning Resource" heading only for the FIRST topic group
-const isFirstResourceGroup = sortedGroupKeys.filter(k => grouped[k]?.[0]?.type === 'resource').indexOf(topic) === 0;
-
-return (
-  <div key={topic} className="mb-3">
-
-    {/* ✅ Section heading — shown once above the first topic accordion */}
-    {isFirstResourceGroup && (
-      <div className="flex items-center gap-2 mb-3">
-        <BookOpen size={13} className="text-blue-500" />
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-          Learning Resource
-        </span>
-        <div className="flex-1 h-px bg-gray-100" />
-        <span className="text-[10px] text-gray-400">
-          {sortedGroupKeys
-            .filter(k => grouped[k]?.[0]?.type === 'resource')
-            .reduce((sum, k) => sum + grouped[k].length, 0)}
-        </span>
-      </div>
-    )}
-
-    <button
-      onClick={() => toggleTopic(topic)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer
-        ${isOpen
-          ? 'border-[#8DC63F] bg-[#8DC63F]/5'
-          : 'border-gray-200 bg-white hover:border-[#8DC63F]/50 hover:bg-[#8DC63F]/[0.02]'
-        }`}
-    >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
-        ${isOpen ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-400'}`}>
-        <TopicIcon size={15} />
-      </div>
-
-      <div className="flex-1 text-left">
-        <p className={`text-sm font-semibold transition-colors
-          ${isOpen ? 'text-[#8DC63F]' : 'text-gray-700'}`}>
-          {topic}
-        </p>
-        <p className="text-[11px] text-gray-400 mt-0.5">
-          {topicDone}/{items.length} completed
-        </p>
-      </div>
-
-      <div className="w-20 bg-gray-100 rounded-full h-1.5 flex-shrink-0">
-        <div
-          className="h-1.5 rounded-full bg-[#8DC63F] transition-all duration-500"
-          style={{ width: `${items.length ? Math.round((topicDone / items.length) * 100) : 0}%` }}
-        />
-      </div>
-
-      {isOpen
-        ? <ChevronDown  size={16} className="text-[#8DC63F] flex-shrink-0" />
-        : <ChevronRight size={16} className="text-gray-300 flex-shrink-0"  />
-      }
-    </button>
-
-    {isOpen && (
-      <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
-        {items.map(r => <ResourceRow key={r.id} r={r} />)}
-      </div>
-    )}
-  </div>
-);
-                    })}
                   </div>
                 </div>
               </>

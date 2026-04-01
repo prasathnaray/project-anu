@@ -30,13 +30,4 @@ pracTestRouter.post(
     ]),
     pracTestController
 );
-// pracTestRouter.post(
-//     '/submit-prac-test',
-//     upload.any(), // temporary debug
-//     (req, res) => {
-//         // This will show you EXACTLY what Postman is sending
-//         console.log('Files received:', req.files.map(f => f.fieldname));
-//         res.json({ fields: req.files.map(f => f.fieldname) });
-//     }
-// );
 module.exports = pracTestRouter;
