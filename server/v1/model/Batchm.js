@@ -177,15 +177,15 @@ const getBatchm = (requester, page, limit) => {
 };
 
 const associateBatchm = (requester, batch_id, user_id) => {
-    const isPrivileged = [101, 102].includes(Number(requester.role));
-    if (!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to view trainee profiles'
-        })
-    }
     return new Promise((resolve, reject) => {
+        const isPrivileged = [101, 102].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
         client.query('INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)', [batch_id, user_id], (err, result) => {
             if (err) {
                 return reject(err)
@@ -197,15 +197,15 @@ const associateBatchm = (requester, batch_id, user_id) => {
     })
 }
 const deleteBatchm = (requester, batch_id) => {
-    const isPrivileged = [101, 102].includes(Number(requester.role));
-    if (!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to view trainee profiles'
-        })
-    }
     return new Promise((resolve, reject) => {
+        const isPrivileged = [101, 102].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
         client.query('DELETE FROM batch_data WHERE batch_id=$1', [batch_id], (err, result) => {
             if (err) {
                 reject(err)
@@ -217,18 +217,18 @@ const deleteBatchm = (requester, batch_id) => {
     })
 }
 const createTargetedLearning = (requester, tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id) => {
-    const isPrivileged = [101, 102].includes(Number(requester.role))
-    if (!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to view trainee profiles'
-        })
-    }
-    //  const safeModuleIds = Array.isArray(module_id) && module_id.length > 0 ? module_id : null;
-    const safeResourceIds = Array.isArray(resources_id) && resources_id.length > 0 ? resources_id : null;
-    const traineeIds = Array.isArray(trainee_id) && trainee_id.length > 0 ? trainee_id : null;
     return new Promise((resolve, reject) => {
+        const isPrivileged = [101, 102].includes(Number(requester.role))
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
+        //  const safeModuleIds = Array.isArray(module_id) && module_id.length > 0 ? module_id : null;
+        const safeResourceIds = Array.isArray(resources_id) && resources_id.length > 0 ? resources_id : null;
+        const traineeIds = Array.isArray(trainee_id) && trainee_id.length > 0 ? trainee_id : null;
         client.query('INSERT INTO targeted_learning(tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id, created_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [tar_name, curiculum_id, certificate_id, learning_module_id, safeResourceIds, start_date, end_date, resource_type, traineeIds, requester.user_mail], (err, result) => {
             if (err) {
                 return reject(err)
@@ -241,15 +241,15 @@ const createTargetedLearning = (requester, tar_name, curiculum_id, certificate_i
 }
 
 const getTargetedLearningListModel = (requester) => {
-    const isPrivileged = [101, 102].includes(Number(requester.role));
-    if (!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to view trainee profiles'
-        })
-    }
     return new Promise((resolve, reject) => {
+        const isPrivileged = [101, 102].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
         client.query('SELECT * FROM targeted_learning', (err, result) => {
             if (err) {
                 return reject(err)
@@ -261,15 +261,15 @@ const getTargetedLearningListModel = (requester) => {
     })
 }
 const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
-    const isPrivileged = [101, 102].includes(Number(requester.role))
-    if (!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: "You do not have permission to view"
-        })
-    }
     return new Promise((resolve, reject) => {
+        const isPrivileged = [101, 102].includes(Number(requester.role))
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: "You do not have permission to view"
+            })
+        }
         client.query('DELETE FROM targeted_learning WHERE target_learning_id=$1', [targeted_learning_id], (err, result) => {
             if (err) {
                 return reject(err)
@@ -281,15 +281,15 @@ const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
     })
 }
 const IndividualtllList = (requester) => {
-    const isPrivileged = [103].includes(Number(requester.role));
-    if (!isPrivileged) {
-        return resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to view trainee profiles'
-        })
-    }
     return new Promise((resolve, reject) => {
+        const isPrivileged = [103].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view trainee profiles'
+            })
+        }
         client.query('SELECT * FROM targeted_learning where trainee_id@>$1', [`{${requester.user_mail}}`], (err, result) => {
             if (err) {
                 return reject(err)
