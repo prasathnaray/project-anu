@@ -1,0 +1,37 @@
+info:
+  name: Image Interpretation
+  type: http
+  seq: 12
+
+http:
+  method: POST
+  url: http:{{local_base_url}}/api/v1/submit-ii
+  body:
+    type: multipart-form
+    data:
+      - name: questionType
+        type: text
+        value: type2
+      - name: questionNo
+        type: text
+        value: "8"
+      - name: isCorrect
+        type: text
+        value: "false"
+      - name: resource_id
+        type: text
+        value: 2a0950d1-28e2-4676-ba6b-532e94dc4712
+      - name: session_id
+        type: text
+        value: d8fe2679-7f25-440d-9ca2-fe81b52f5710
+      - name: userImage
+        type: file
+        value:
+          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-27 142644.png
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

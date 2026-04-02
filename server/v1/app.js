@@ -85,6 +85,7 @@ const practiceRouter = require('./routes/practiceRoute.js');
 const pracTestRouter = require('./routes/pracTestRoute.js');
 const irobRouter = require('./routes/lrobRoute.js');
 const getInstrcutorAsPerBatchrouter = require('./routes/getInstructorAsPerBatch.js');
+const getSubmissionsRouter = require('./routes/getSubmissionsRoute.js');
 
 //queries
 const queriesRouter = require('./routes/queriesRoute.js');
@@ -246,6 +247,7 @@ app.use('/api/v1/', Authenticate, irobRouter);
 
 //instructor as per batch
 app.use('/api/v1/', Authenticate, getInstrcutorAsPerBatchrouter);
+app.use('/api/v1/', Authenticate, getSubmissionsRouter);
 //queries
 app.use('/api/v1/', Authenticate, queriesRouter);
 //analytics

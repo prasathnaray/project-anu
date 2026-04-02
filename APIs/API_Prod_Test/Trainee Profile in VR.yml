@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: http://localhost:4004/api/v1/trainee/ffe5c81a-aff5-409b-b5b8-2c9f0f3b2fdc?isVr=true
+  url: http://localhost:4004/api/v1/trainee/b6baabec-3423-4131-8e6f-f59494f397c2?isVr=false
   params:
     - name: isVr
-      value: "true"
+      value: "false"
       type: query
   auth:
     type: bearer
