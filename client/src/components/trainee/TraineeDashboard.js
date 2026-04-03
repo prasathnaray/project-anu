@@ -306,6 +306,8 @@ function TraineeDashboard() {
       setLoading(true);
       const response = await TraineeProfileAPI(id);
       setIndividualTraineeProfile(response.data);
+       const batchId = response.data?.currentBatches?.[0]?.batch_id;
+    if (batchId) localStorage.setItem('batch_id', batchId);
     } catch (error) {
       console.error('Error fetching trainee profile:', error);
     } finally {
@@ -604,7 +606,6 @@ function TraineeDashboard() {
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>

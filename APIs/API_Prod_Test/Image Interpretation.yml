@@ -14,21 +14,23 @@ http:
         value: type2
       - name: questionNo
         type: text
-        value: "8"
+        value: "7"
       - name: isCorrect
         type: text
-        value: "false"
+        value: "true"
       - name: resource_id
         type: text
-        value: 2a0950d1-28e2-4676-ba6b-532e94dc4712
+        value: e196c6db-dc0b-4ebd-93b2-10a2125188e5
       - name: session_id
         type: text
-        value: d8fe2679-7f25-440d-9ca2-fe81b52f5710
+        value: 021306f8-580b-4634-a809-7796b5843387
       - name: userImage
         type: file
         value:
           - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-27 142644.png
-  auth: inherit
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3NzUxMDU3NDF9.6Nbe90m91eUFk2YrLr8JbnsI26Zai1EO-CBkwYkUTVs
 
 settings:
   encodeUrl: true

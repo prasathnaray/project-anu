@@ -4243,11 +4243,7 @@ import APP_URL from '../API/config';
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const BASE_URL = APP_URL || '';
-
-const CERT_LABEL_MAP = {
-  '8264bc83-1d80-47ac-aa6b-ca021ffb4ace': 'BTC',
-  '24d9e2c4-42b0-4133-b801-d8cace4600f5': 'UFC',
-};
+const BATCH_API_BASE = 'https://api.hticlab.org/api/v1/batch-individual';
 
 const RESOURCE_ORDER = {
   'BPD & HC::Transthalamic Plane': 1, 'BPD & HC::Bi-Parietal Diameter': 2,
@@ -4292,18 +4288,18 @@ const RESOURCE_ORDER = {
 };
 
 const TYPE_FILTERS = [
-  { id: 'all', label: 'All' },
-  { id: 'resource', label: 'Learning Resource' },
-  { id: 'practice', label: 'Practice' },
+  { id: 'all',       label: 'All' },
+  { id: 'resource',  label: 'Learning Resource' },
+  { id: 'practice',  label: 'Practice' },
   { id: 'interpret', label: 'Image Interpretation' },
-  { id: 'test', label: 'Test' },
+  { id: 'test',      label: 'Test' },
 ];
 
 const RESOURCE_TYPE_MAP = {
-  'Learning Resource': 'resource',
-  'Practice': 'practice',
+  'Learning Resource':    'resource',
+  'Practice':             'practice',
   'Image Interpretation': 'interpret',
-  'Test': 'test',
+  'Test':                 'test',
 };
 
 const TYPE_META = {
@@ -4388,6 +4384,22 @@ function scoreMeta(pct) {
   return           { hex: '#EF4444', cls: 'text-red-500'    };
 }
 
+// ─── BATCH API ────────────────────────────────────────────────────────────────
+
+async function fetchBatchCertLabel(batchId, token) {
+  const res = await fetch(`${BATCH_API_BASE}/${batchId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  // Returns: { batchInfo: { certificate: { certificate_id, certificate_name } } }
+  const cert = json?.batchInfo?.certificate;
+  if (cert?.certificate_id && cert?.certificate_name) {
+    return { [cert.certificate_id]: cert.certificate_name };
+  }
+  return {};
+}
+
 // ─── SUBMISSION API ───────────────────────────────────────────────────────────
 
 async function fetchSubmissions(resourceId, token) {
@@ -4422,7 +4434,7 @@ function sessionSummary(session) {
 
 // ─── API DATA TRANSFORMER ─────────────────────────────────────────────────────
 
-function transformApiData(apiResponse) {
+function transformApiData(apiResponse, certLabelMap = {}) {
   const { data = [], reAttempts = [] } = apiResponse;
 
   const reAttemptMap = {};
@@ -4444,7 +4456,8 @@ function transformApiData(apiResponse) {
       certSeen.add(item.certificate_id);
       certOrder.push({
         id: item.certificate_id,
-        label: CERT_LABEL_MAP[item.certificate_id] || item.course_name || item.certificate_id,
+        // Use dynamic label from batch API, fallback to course_name, then ID
+        label: certLabelMap[item.certificate_id] || item.course_name || item.certificate_id,
       });
     }
   });
@@ -4693,8 +4706,6 @@ function ImageInterpretModal({ r, token, onClose }) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-
-        {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <div className="w-9 h-9 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0">
             <Eye size={16} className="text-purple-500" />
@@ -4721,7 +4732,6 @@ function ImageInterpretModal({ r, token, onClose }) {
           </button>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
           {loading && (
             <div className="flex items-center justify-center py-16 text-gray-400">
@@ -4752,7 +4762,6 @@ function ImageInterpretModal({ r, token, onClose }) {
           ))}
         </div>
 
-        {/* Footer */}
         {!loading && sessions.length > 0 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50 flex-shrink-0">
             <span className="text-xs text-gray-400">
@@ -4940,7 +4949,6 @@ function PracticeExpandedPanel({ r, showFeedback }) {
 
   return (
     <div className="mt-2 border border-gray-100 rounded-xl bg-gray-50/60 overflow-hidden">
-      {/* Stats strip */}
       <div className="flex items-center gap-4 px-4 py-2.5 bg-white border-b border-gray-100 text-xs text-gray-500">
         <div className="flex items-center gap-1.5">
           <Target size={12} className="text-[#8DC63F]" />
@@ -4960,7 +4968,6 @@ function PracticeExpandedPanel({ r, showFeedback }) {
         )}
       </div>
 
-      {/* Tabs */}
       {tabs.length > 1 && (
         <div className="flex border-b border-gray-100 bg-white">
           {tabs.map(tab => {
@@ -5030,7 +5037,6 @@ function CompletionStatus({ r }) {
     );
   }
 
-  // practice / interpret / test
   return r.done ? (
     <div className="flex items-center gap-1 text-[#8DC63F] flex-shrink-0">
       <CheckCircle2 size={15} className="fill-[#8DC63F] text-white" />
@@ -5106,7 +5112,6 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
         className={`flex items-center gap-3 p-3 group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
       >
         <ResourceIcon r={r} />
-
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-medium truncate
             ${done && r.completionSource === 'progress' ? 'text-gray-400' : 'text-gray-700 group-hover:text-[#8DC63F]'}`}>
@@ -5121,9 +5126,7 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
             </div>
           )}
         </div>
-
         <ResourceTypeBadge r={r} />
-
         {isInterpret && (
           <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-500 border border-purple-200 flex-shrink-0">
             <Eye size={9} /> View Scores
@@ -5134,9 +5137,7 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
             <MessageSquare size={9} /> Feedback
           </span>
         )}
-
         <CompletionStatus r={r} />
-
         {isInterpret && (
           <ChevronRight size={15} className="text-purple-300 group-hover:text-purple-500 transition-colors flex-shrink-0" />
         )}
@@ -5146,7 +5147,6 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
           </div>
         )}
       </div>
-
       {showLog && expanded && (
         <div className="px-3 pb-3">
           <PracticeExpandedPanel r={r} showFeedback={showFeedback} />
@@ -5186,7 +5186,6 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
           : <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
         }
       </button>
-
       {isOpen && (
         <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
           {items.map(r => (
@@ -5213,7 +5212,6 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
         <div className="flex-1 h-px bg-gray-100" />
         <span className="text-[10px] text-gray-400">{total}</span>
       </div>
-
       {flatList ? (
         <div className="flex flex-col gap-2">
           {directRows.map(r => (
@@ -5260,57 +5258,76 @@ function MyLearning() {
   const [activeFilter, setActiveFilter]     = React.useState('all');
   const [search, setSearch]                 = React.useState('');
   const [openTopics, setOpenTopics]         = React.useState({});
-  const [interpretModal, setInterpretModal] = React.useState(null); // resource | null
+  const [interpretModal, setInterpretModal] = React.useState(null);
+  const [certLabelMap, setCertLabelMap]     = React.useState({});
 
-  // Auth
+  // ── Auth ──────────────────────────────────────────────────────────────────
   const token = localStorage.getItem('user_token');
   let decoded = null;
   try { decoded = token ? jwtDecode(token) : null; } catch (_) {}
   const traineeId = decoded?.id || decoded?.sub || decoded?.userId || localStorage.getItem('people_id');
 
-  // Fetch
+  // ── Step 1: Fetch cert label from batch API ───────────────────────────────
+  React.useEffect(() => {
+    const batchId = localStorage.getItem('batch_id');
+    if (!batchId || !token) return;
+
+    fetchBatchCertLabel(batchId, token)
+      .then(map => setCertLabelMap(map))
+      .catch(err => console.error('Failed to fetch batch cert label:', err));
+  }, [token]);
+
+  // ── Step 2: Fetch trainee data, re-transform when certLabelMap is ready ───
   React.useEffect(() => {
     if (!traineeId || !token) return;
-    setLoading(true); setError(null);
+    setLoading(true);
+    setError(null);
+
     fetch(`${BASE_URL}/api/v1/trainee/${traineeId}?isVr=false`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
       .then(json => {
-        const t = transformApiData(json);
-        setCerts(t.certs); setModules(t.modules); setResources(t.resources);
+        const t = transformApiData(json, certLabelMap);
+        setCerts(t.certs);
+        setModules(t.modules);
+        setResources(t.resources);
         const first = t.certs[0];
         if (first) {
           setActiveCert(first.id);
-          const mods = t.modules[first.id] || [];
+          const mods    = t.modules[first.id] || [];
           const unlocked = mods.find(m => !m.locked);
           setActiveModule(unlocked?.id || mods[0]?.id || '');
         }
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [traineeId, token]);
+  }, [traineeId, token, certLabelMap]);
 
   if (!decoded?.role) return <Navigate to="/" replace />;
 
-  // Handlers
+  // ── Handlers ──────────────────────────────────────────────────────────────
   const toggleTopic = key => setOpenTopics(prev => ({ ...prev, [key]: !prev[key] }));
 
   const handleCertChange = certId => {
     setActiveCert(certId);
-    const mods = modules[certId] || [];
+    const mods     = modules[certId] || [];
     const unlocked = mods.find(m => !m.locked);
     setActiveModule(unlocked?.id || mods[0]?.id || '');
-    setActiveFilter('all'); setSearch(''); setOpenTopics({});
+    setActiveFilter('all');
+    setSearch('');
+    setOpenTopics({});
   };
 
   const handleModuleChange = mod => {
     if (mod.locked) return;
     setActiveModule(mod.id);
-    setActiveFilter('all'); setSearch(''); setOpenTopics({});
+    setActiveFilter('all');
+    setSearch('');
+    setOpenTopics({});
   };
 
-  // Derived
+  // ── Derived ───────────────────────────────────────────────────────────────
   const currentModules = modules[activeCert] || [];
   const allRes         = resources[activeModule] || [];
   const activeModMeta  = currentModules.find(m => m.id === activeModule);
@@ -5340,10 +5357,10 @@ function MyLearning() {
       return { typeKey, flatList: false, accordions, directRows };
     });
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
 
-      {/* Image Interpretation Modal */}
       {interpretModal && (
         <ImageInterpretModal
           r={interpretModal}
@@ -5386,7 +5403,7 @@ function MyLearning() {
 
             {!loading && !error && (
               <>
-                {/* Cert tabs */}
+                {/* Cert tabs — labels now come from batch API */}
                 <div className="flex items-center gap-3 mb-5">
                   {certs.map(cert => (
                     <button
@@ -5459,8 +5476,6 @@ function MyLearning() {
 
                   {/* Resource list */}
                   <div className="col-span-2">
-
-                    {/* Filter + search */}
                     <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
                         {TYPE_FILTERS.map(f => (
@@ -5488,7 +5503,6 @@ function MyLearning() {
                       </div>
                     </div>
 
-                    {/* Empty state */}
                     {filtered.length === 0 && (
                       <div className="flex flex-col items-center justify-center py-16 text-gray-400 border rounded-xl bg-white">
                         <BookOpen size={36} className="mb-3 text-gray-300" />
@@ -5497,7 +5511,6 @@ function MyLearning() {
                       </div>
                     )}
 
-                    {/* Sections */}
                     {sections.map(({ typeKey, flatList, accordions, directRows }) => (
                       <TypeSection
                         key={typeKey}
@@ -5521,5 +5534,4 @@ function MyLearning() {
     </div>
   );
 }
-
 export default MyLearning;
