@@ -4226,7 +4226,6 @@
 
 
 //the above code is working good
-
 import { jwtDecode } from 'jwt-decode';
 import React from 'react';
 import { Navigate } from 'react-router-dom';
@@ -4242,7 +4241,7 @@ import APP_URL from '../API/config';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
-const BASE_URL = APP_URL || '';
+const BASE_URL       = APP_URL || '';
 const BATCH_API_BASE = 'https://api.hticlab.org/api/v1/batch-individual';
 
 const RESOURCE_ORDER = {
@@ -4342,74 +4341,217 @@ const QUESTION_TYPE_META = {
   measurement: { label: 'Measurement',             color: 'bg-amber-50 text-amber-600 border-amber-200'    },
 };
 
+const SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
+
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
-function isMindSpark(name = '') {
+const isMindSpark = (name = '') => {
   const l = name.toLowerCase();
   return l.includes('mind spark') || l.includes('mindspark');
-}
-function isOBBooster(topic = '') { return topic === 'OB Boosters'; }
-function deriveCompletionSource(name, topic) {
-  return (isMindSpark(name) || isOBBooster(topic)) ? 'activity' : 'progress';
-}
-function isResourceDone(r) {
-  if (r.completionSource === 'activity') return (r.activityData?.attempts ?? 0) > 0;
-  return r.done === true;
-}
-function getPracticeNumber(name = '') {
+};
+
+const isOBBooster = (topic = '') => topic === 'OB Boosters';
+
+const deriveCompletionSource = (name, topic) =>
+  (isMindSpark(name) || isOBBooster(topic)) ? 'activity' : 'progress';
+
+const isResourceDone = r =>
+  r.completionSource === 'activity'
+    ? (r.activityData?.attempts ?? 0) > 0
+    : r.done === true;
+
+const getPracticeNumber = (name = '') => {
   const m = name.match(/practice\s+(\d+)/i);
   return m ? parseInt(m[1], 10) : null;
-}
-function practiceShowsLog(name) {
-  const n = getPracticeNumber(name);
-  return n !== null && n >= 1 && n <= 4;
-}
-function practiceShowsFeedback(name) {
-  const n = getPracticeNumber(name);
-  return n !== null && n >= 3 && n <= 4;
-}
-function formatDate(d) {
+};
+
+const practiceShowsLog      = name => { const n = getPracticeNumber(name); return n !== null && n >= 1 && n <= 4; };
+const practiceShowsFeedback = name => { const n = getPracticeNumber(name); return n !== null && n >= 3 && n <= 4; };
+
+const formatDate = d => {
   if (!d) return '—';
   try { return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
   catch { return d; }
-}
-function formatDateTime(d) {
+};
+
+const formatDateTime = d => {
   if (!d) return '—';
   try { return new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
   catch { return d; }
-}
-function scoreMeta(pct) {
+};
+
+const scoreMeta = pct => {
   if (pct >= 80) return { hex: '#8DC63F', cls: 'text-[#8DC63F]' };
   if (pct >= 50) return { hex: '#F59E0B', cls: 'text-amber-500'  };
   return           { hex: '#EF4444', cls: 'text-red-500'    };
-}
+};
 
-// ─── BATCH API ────────────────────────────────────────────────────────────────
+// ─── API CALLS ────────────────────────────────────────────────────────────────
 
-async function fetchBatchCertLabel(batchId, token) {
+/**
+ * Returns { certId, certName } for the batch's certificate, or null on failure.
+ * This is the authoritative source — certId is used to filter trainee data.
+ */
+async function fetchBatchCert(batchId, token) {
   const res = await fetch(`${BATCH_API_BASE}/${batchId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`Batch API HTTP ${res.status}`);
   const json = await res.json();
-  // Returns: { batchInfo: { certificate: { certificate_id, certificate_name } } }
   const cert = json?.batchInfo?.certificate;
   if (cert?.certificate_id && cert?.certificate_name) {
-    return { [cert.certificate_id]: cert.certificate_name };
+    return { certId: cert.certificate_id, certName: cert.certificate_name };
   }
-  return {};
+  return null;
 }
 
-// ─── SUBMISSION API ───────────────────────────────────────────────────────────
+async function fetchTraineeData(traineeId, token) {
+  const res = await fetch(`${BASE_URL}/api/v1/trainee/${traineeId}?isVr=false`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Trainee API HTTP ${res.status}`);
+  return res.json();
+}
 
 async function fetchSubmissions(resourceId, token) {
   const res = await fetch(`${BASE_URL}/api/v1/get-submissions?resource_id=${resourceId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`Submissions API HTTP ${res.status}`);
   const json = await res.json();
   return Array.isArray(json) ? json : (json.data ?? []);
 }
+
+// ─── DATA TRANSFORMATION ──────────────────────────────────────────────────────
+
+/**
+ * batchCert: { certId, certName } | null
+ *
+ * The trainee API returns ALL certificates the trainee is enrolled in across
+ * the whole platform (e.g. BTC + "Principle of Ultrasound"). We only want the
+ * one belonging to this batch, so we filter rawData by batchCert.certId first.
+ * After that filter, the cert label is simply batchCert.certName — no guessing.
+ */
+function transformApiData(apiResponse, batchCert = null) {
+  const { data: rawData = [], reAttempts = [] } = apiResponse;
+
+  // ── Filter to batch certificate only ─────────────────────────────────────
+  const data = batchCert
+    ? rawData.filter(item => item.certificate_id === batchCert.certId)
+    : rawData;
+
+  // ── Re-attempt lookup ─────────────────────────────────────────────────────
+  const reAttemptMap = {};
+  reAttempts.forEach(ra => {
+    if (!ra.resource_id) return;
+    if (!reAttemptMap[ra.resource_id]) reAttemptMap[ra.resource_id] = [];
+    reAttemptMap[ra.resource_id].push(ra);
+  });
+
+  // ── Completion lookup ─────────────────────────────────────────────────────
+  const completionMap = {};
+  data.forEach(item => {
+    if (item.resource_id) completionMap[item.resource_id] = item.is_completed === true;
+  });
+
+  // ── Unique certificates ───────────────────────────────────────────────────
+  const certOrder = [];
+  const certSeen  = new Set();
+  data.forEach(item => {
+    if (!item.certificate_id || certSeen.has(item.certificate_id)) return;
+    certSeen.add(item.certificate_id);
+    certOrder.push({
+      id:    item.certificate_id,
+      // After filtering, batchCert.certName is always correct.
+      label: batchCert?.certName ?? item.course_name ?? item.certificate_id,
+    });
+  });
+
+  // ── Modules grouped by certificate ───────────────────────────────────────
+  const modulesByCert   = {};
+  const resourcesByLMID = {};
+
+  data.forEach(item => {
+    const { certificate_id, learning_module_id, unit_name, course_name } = item;
+
+    if (!modulesByCert[certificate_id]) modulesByCert[certificate_id] = new Map();
+    const certModules = modulesByCert[certificate_id];
+
+    if (!certModules.has(learning_module_id)) {
+      certModules.set(learning_module_id, {
+        id: learning_module_id,
+        label: unit_name || course_name || learning_module_id,
+        locked: false, hasAnyResource: false, done: 0, total: 0,
+      });
+    }
+
+    if (item.resource_id) certModules.get(learning_module_id).hasAnyResource = true;
+    if (!item.resource_id) return;
+
+    if (!resourcesByLMID[learning_module_id]) resourcesByLMID[learning_module_id] = [];
+    if (resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id)) return;
+
+    const typeKey          = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
+    const completionSource = typeKey === 'resource'
+      ? deriveCompletionSource(item.resource_name, item.resource_topic)
+      : null;
+    const isDone = completionMap[item.resource_id] === true;
+
+    resourcesByLMID[learning_module_id].push({
+      id:               item.resource_id,
+      name:             (item.resource_name || '').trim(),
+      type:             typeKey,
+      topic:            item.resource_topic || '',
+      completionSource,
+      done:             isDone,
+      updatedAt:        item.updated_at || null,
+      reAttempts:       reAttemptMap[item.resource_id] || [],
+      activityData:     completionSource === 'activity'
+        ? { attempts: isDone ? 1 : 0, correct: isDone ? 1 : 0, total: 1 }
+        : undefined,
+    });
+  });
+
+  // ── Sort modules per certificate ──────────────────────────────────────────
+  const modulesByCertFinal = {};
+  certOrder.forEach(cert => {
+    const modMap = modulesByCert[cert.id];
+    if (!modMap) { modulesByCertFinal[cert.id] = []; return; }
+    modulesByCertFinal[cert.id] = Array.from(modMap.values())
+      .map(mod => ({ ...mod, locked: !mod.hasAnyResource }))
+      .sort((a, b) => {
+        const ai = MODULE_ORDER.indexOf(a.label), bi = MODULE_ORDER.indexOf(b.label);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      });
+  });
+
+  // ── Sort resources within each module ────────────────────────────────────
+  const sortedResources = {};
+  Object.entries(resourcesByLMID).forEach(([lmid, items]) => {
+    let unitName = '';
+    Object.values(modulesByCertFinal).forEach(mods =>
+      mods.forEach(m => { if (m.id === lmid) unitName = m.label; })
+    );
+    sortedResources[lmid] = [...items].sort((a, b) => {
+      const pa = RESOURCE_ORDER[`${unitName}::${a.name}`] ?? 999;
+      const pb = RESOURCE_ORDER[`${unitName}::${b.name}`] ?? 999;
+      return pa - pb;
+    });
+  });
+
+  // ── Compute done / total counts per module ────────────────────────────────
+  Object.values(modulesByCertFinal).forEach(mods => {
+    mods.forEach(mod => {
+      const res = sortedResources[mod.id] || [];
+      mod.total = res.length;
+      mod.done  = res.filter(isResourceDone).length;
+    });
+  });
+
+  return { certs: certOrder, modules: modulesByCertFinal, resources: sortedResources };
+}
+
+// ─── SUBMISSION HELPERS ───────────────────────────────────────────────────────
 
 function groupBySession(submissions) {
   const map = {};
@@ -4425,122 +4567,17 @@ function groupBySession(submissions) {
 }
 
 function sessionSummary(session) {
-  const all = Object.values(session.byType).flat();
-  const total = all.length;
+  const all     = Object.values(session.byType).flat();
+  const total   = all.length;
   const correct = all.filter(q => q.is_correct).length;
-  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const pct     = total > 0 ? Math.round((correct / total) * 100) : 0;
   return { total, correct, pct };
 }
 
-// ─── API DATA TRANSFORMER ─────────────────────────────────────────────────────
-
-function transformApiData(apiResponse, certLabelMap = {}) {
-  const { data = [], reAttempts = [] } = apiResponse;
-
-  const reAttemptMap = {};
-  reAttempts.forEach(ra => {
-    if (!ra.resource_id) return;
-    if (!reAttemptMap[ra.resource_id]) reAttemptMap[ra.resource_id] = [];
-    reAttemptMap[ra.resource_id].push(ra);
-  });
-
-  const completionMap = {};
-  data.forEach(item => {
-    if (item.resource_id) completionMap[item.resource_id] = item.is_completed === true;
-  });
-
-  const certOrder = [];
-  const certSeen = new Set();
-  data.forEach(item => {
-    if (!certSeen.has(item.certificate_id)) {
-      certSeen.add(item.certificate_id);
-      certOrder.push({
-        id: item.certificate_id,
-        // Use dynamic label from batch API, fallback to course_name, then ID
-        label: certLabelMap[item.certificate_id] || item.course_name || item.certificate_id,
-      });
-    }
-  });
-
-  const modulesByCert = {};
-  const resourcesByLMID = {};
-
-  data.forEach(item => {
-    const { certificate_id, learning_module_id, unit_name, course_name } = item;
-    if (!modulesByCert[certificate_id]) modulesByCert[certificate_id] = new Map();
-    const certModules = modulesByCert[certificate_id];
-    if (!certModules.has(learning_module_id)) {
-      certModules.set(learning_module_id, {
-        id: learning_module_id,
-        label: unit_name || course_name || learning_module_id,
-        locked: false, hasAnyResource: false, done: 0, total: 0,
-      });
-    }
-    if (item.resource_id) certModules.get(learning_module_id).hasAnyResource = true;
-    if (!item.resource_id) return;
-
-    if (!resourcesByLMID[learning_module_id]) resourcesByLMID[learning_module_id] = [];
-    if (resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id)) return;
-
-    const typeKey = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
-    const completionSource = typeKey === 'resource'
-      ? deriveCompletionSource(item.resource_name, item.resource_topic)
-      : null;
-    const isDone = completionMap[item.resource_id] === true;
-
-    resourcesByLMID[learning_module_id].push({
-      id: item.resource_id,
-      name: (item.resource_name || '').trim(),
-      type: typeKey,
-      topic: item.resource_topic || '',
-      completionSource,
-      done: isDone,
-      updatedAt: item.updated_at || null,
-      reAttempts: reAttemptMap[item.resource_id] || [],
-      activityData: completionSource === 'activity'
-        ? { attempts: isDone ? 1 : 0, correct: isDone ? 1 : 0, total: 1 }
-        : undefined,
-    });
-  });
-
-  const modulesByCertFinal = {};
-  certOrder.forEach(cert => {
-    const modMap = modulesByCert[cert.id];
-    if (!modMap) { modulesByCertFinal[cert.id] = []; return; }
-    modulesByCertFinal[cert.id] = Array.from(modMap.values())
-      .map(mod => ({ ...mod, locked: !mod.hasAnyResource }))
-      .sort((a, b) => {
-        const ai = MODULE_ORDER.indexOf(a.label), bi = MODULE_ORDER.indexOf(b.label);
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-      });
-  });
-
-  const sortedResources = {};
-  Object.entries(resourcesByLMID).forEach(([lmid, items]) => {
-    let unitName = '';
-    Object.values(modulesByCertFinal).forEach(mods =>
-      mods.forEach(m => { if (m.id === lmid) unitName = m.label; })
-    );
-    sortedResources[lmid] = [...items].sort((a, b) => {
-      const pa = RESOURCE_ORDER[`${unitName}::${a.name}`] ?? 999;
-      const pb = RESOURCE_ORDER[`${unitName}::${b.name}`] ?? 999;
-      return pa - pb;
-    });
-  });
-
-  Object.values(modulesByCertFinal).forEach(mods => {
-    mods.forEach(mod => {
-      const res = sortedResources[mod.id] || [];
-      mod.total = res.length;
-      mod.done  = res.filter(isResourceDone).length;
-    });
-  });
-
-  return { certs: certOrder, modules: modulesByCertFinal, resources: sortedResources };
-}
+// ─── TOPIC GROUPS ─────────────────────────────────────────────────────────────
 
 function buildTopicGroups(items) {
-  const topicMap = {};
+  const topicMap   = {};
   const directRows = [];
   items.forEach(r => {
     if (!r.topic) { directRows.push(r); return; }
@@ -4616,7 +4653,7 @@ function QuestionRow({ q }) {
 
 function SessionCard({ session, attemptNo, isLatest }) {
   const { total, correct, pct } = sessionSummary(session);
-  const sm   = scoreMeta(pct);
+  const sm    = scoreMeta(pct);
   const [open, setOpen] = React.useState(isLatest);
   const types = Object.keys(session.byType);
 
@@ -4661,9 +4698,9 @@ function SessionCard({ session, attemptNo, isLatest }) {
       {open && (
         <div className="px-4 pb-4 pt-2 space-y-4 bg-white border-t border-gray-100">
           {types.map(type => {
-            const qs = session.byType[type].slice().sort((a, b) => a.question_no - b.question_no);
+            const qs          = session.byType[type].slice().sort((a, b) => a.question_no - b.question_no);
             const typeCorrect = qs.filter(q => q.is_correct).length;
-            const tm = QUESTION_TYPE_META[type] || { label: type, color: 'bg-gray-100 text-gray-600 border-gray-200' };
+            const tm          = QUESTION_TYPE_META[type] || { label: type, color: 'bg-gray-100 text-gray-600 border-gray-200' };
             return (
               <div key={type}>
                 <div className="flex items-center gap-2 mb-2">
@@ -4683,15 +4720,15 @@ function SessionCard({ session, attemptNo, isLatest }) {
 }
 
 function ImageInterpretModal({ r, token, onClose }) {
-  const [loading, setLoading]   = React.useState(true);
-  const [error, setError]       = React.useState(null);
+  const [loading,  setLoading]  = React.useState(true);
+  const [error,    setError]    = React.useState(null);
   const [sessions, setSessions] = React.useState([]);
 
   React.useEffect(() => {
     setLoading(true); setError(null);
     fetchSubmissions(r.id, token)
       .then(data => setSessions(groupBySession(data)))
-      .catch(err => setError(err.message))
+      .catch(err  => setError(err.message))
       .finally(() => setLoading(false));
   }, [r.id, token]);
 
@@ -4837,28 +4874,31 @@ function ReattemptLog({ reAttempts, updatedAt }) {
 }
 
 function FeedbackPanel({ reAttempts }) {
-  const entries = reAttempts.flatMap((ra) => {
+  const entries = reAttempts.flatMap(ra => {
     const list = [];
     if (ra.feedback || ra.instructor_feedback || ra.expert_feedback) {
       list.push({
         type: 'text',
         text: ra.feedback || ra.instructor_feedback || ra.expert_feedback,
-        by: ra.feedback_by || ra.instructor_name || 'Instructor',
+        by:   ra.feedback_by || ra.instructor_name || 'Instructor',
         date: ra.feedback_at || ra.attempted_at,
       });
     }
     if (ra.user_measurement !== undefined || ra.expert_measurement !== undefined) {
       list.push({
-        type: 'measurement',
-        userValue: ra.user_measurement, expertValue: ra.expert_measurement,
-        offset: ra.offset, unit: ra.unit || 'mm', date: ra.attempted_at,
+        type:        'measurement',
+        userValue:   ra.user_measurement,
+        expertValue: ra.expert_measurement,
+        offset:      ra.offset,
+        unit:        ra.unit || 'mm',
+        date:        ra.attempted_at,
       });
     }
     if (ra.guidance_notes) {
       list.push({
-        type: 'guidance',
+        type:  'guidance',
         notes: Array.isArray(ra.guidance_notes) ? ra.guidance_notes : [ra.guidance_notes],
-        date: ra.feedback_at || ra.attempted_at,
+        date:  ra.feedback_at || ra.attempted_at,
       });
     }
     return list;
@@ -4888,15 +4928,21 @@ function FeedbackPanel({ reAttempts }) {
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="bg-white rounded-lg px-2 py-1.5 border border-gray-100">
                   <p className="text-[9px] text-gray-400 mb-0.5">Your Measure</p>
-                  <p className="text-sm font-bold text-gray-700">{entry.userValue ?? '—'}<span className="text-[10px] font-normal text-gray-400 ml-0.5">{entry.unit}</span></p>
+                  <p className="text-sm font-bold text-gray-700">
+                    {entry.userValue ?? '—'}<span className="text-[10px] font-normal text-gray-400 ml-0.5">{entry.unit}</span>
+                  </p>
                 </div>
                 <div className="bg-white rounded-lg px-2 py-1.5 border border-gray-100">
                   <p className="text-[9px] text-gray-400 mb-0.5">Expert Measure</p>
-                  <p className="text-sm font-bold text-[#8DC63F]">{entry.expertValue ?? '—'}<span className="text-[10px] font-normal text-gray-400 ml-0.5">{entry.unit}</span></p>
+                  <p className="text-sm font-bold text-[#8DC63F]">
+                    {entry.expertValue ?? '—'}<span className="text-[10px] font-normal text-gray-400 ml-0.5">{entry.unit}</span>
+                  </p>
                 </div>
                 <div className={`rounded-lg px-2 py-1.5 border ${ok ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
                   <p className="text-[9px] text-gray-400 mb-0.5">Offset</p>
-                  <p className={`text-sm font-bold ${ok ? 'text-[#8DC63F]' : 'text-red-500'}`}>{entry.offset !== undefined ? `${entry.offset}${entry.unit}` : '—'}</p>
+                  <p className={`text-sm font-bold ${ok ? 'text-[#8DC63F]' : 'text-red-500'}`}>
+                    {entry.offset !== undefined ? `${entry.offset}${entry.unit}` : '—'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -4941,7 +4987,7 @@ function FeedbackPanel({ reAttempts }) {
 function PracticeExpandedPanel({ r, showFeedback }) {
   const [activeTab, setActiveTab] = React.useState('log');
   const tabs = [
-    { id: 'log', label: 'Attempt Log', icon: History },
+    { id: 'log',      label: 'Attempt Log', icon: History       },
     ...(showFeedback ? [{ id: 'feedback', label: 'Feedback', icon: MessageSquare }] : []),
   ];
   const totalAttempts  = r.reAttempts.length || (r.done ? 1 : 0);
@@ -5018,7 +5064,10 @@ function CompletionStatus({ r }) {
     if (attempts === 0) {
       return (
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          {isMindSpark(r.name) ? <Zap size={13} className="text-yellow-400" /> : <Puzzle size={13} className="text-pink-400" />}
+          {isMindSpark(r.name)
+            ? <Zap size={13} className="text-yellow-400" />
+            : <Puzzle size={13} className="text-pink-400" />
+          }
           <span className="text-[10px] text-gray-400 border border-gray-200 rounded-full px-2 py-0.5">Not attempted</span>
         </div>
       );
@@ -5030,7 +5079,8 @@ function CompletionStatus({ r }) {
           <p className="text-[9px] text-gray-400 mt-0.5">{attempts} attempt{attempts !== 1 ? 's' : ''}</p>
         </div>
         <div className="w-12 bg-gray-100 rounded-full h-1.5">
-          <div className={`h-1.5 rounded-full transition-all duration-500 ${pct === 100 ? 'bg-[#8DC63F]' : 'bg-yellow-400'}`} style={{ width: `${pct}%` }} />
+          <div className={`h-1.5 rounded-full transition-all duration-500 ${pct === 100 ? 'bg-[#8DC63F]' : 'bg-yellow-400'}`}
+            style={{ width: `${pct}%` }} />
         </div>
         {pct === 100 && <CheckCircle2 size={14} className="fill-[#8DC63F] text-white flex-shrink-0" />}
       </div>
@@ -5071,10 +5121,14 @@ function ResourceIcon({ r }) {
 
 function ResourceTypeBadge({ r }) {
   if (isMindSpark(r.name)) return (
-    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-yellow-50 text-yellow-600 border border-yellow-200">Mind Sparks</span>
+    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-yellow-50 text-yellow-600 border border-yellow-200">
+      Mind Sparks
+    </span>
   );
   if (isOBBooster(r.topic)) return (
-    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-pink-50 text-pink-500 border border-pink-200">OB Booster</span>
+    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-pink-50 text-pink-500 border border-pink-200">
+      OB Booster
+    </span>
   );
   const meta = TYPE_META[r.type] || TYPE_META.resource;
   return (
@@ -5087,14 +5141,13 @@ function ResourceTypeBadge({ r }) {
 // ─── RESOURCE ROW ─────────────────────────────────────────────────────────────
 
 function ResourceRow({ r, token, onOpenInterpretModal }) {
-  const done         = isResourceDone(r);
-  const isPractice   = r.type === 'practice';
-  const isInterpret  = r.type === 'interpret';
-  const showLog      = isPractice && practiceShowsLog(r.name);
-  const showFeedback = isPractice && practiceShowsFeedback(r.name);
-  const isClickable  = isInterpret || showLog;
+  const done           = isResourceDone(r);
+  const isPractice     = r.type === 'practice';
+  const isInterpret    = r.type === 'interpret';
+  const showLog        = isPractice && practiceShowsLog(r.name);
+  const showFeedback   = isPractice && practiceShowsFeedback(r.name);
+  const isClickable    = isInterpret || showLog;
   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
-
   const [expanded, setExpanded] = React.useState(false);
 
   const handleClick = () => {
@@ -5156,7 +5209,7 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
   );
 }
 
-// ─── TOPIC ACCORDION ─────────────────────────────────────────────────────────
+// ─── TOPIC ACCORDION ──────────────────────────────────────────────────────────
 
 function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal }) {
   const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
@@ -5168,7 +5221,9 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
       <button
         onClick={onToggle}
         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer
-          ${isOpen ? 'border-[#8DC63F] bg-[#8DC63F]/5' : 'border-gray-200 bg-white hover:border-[#8DC63F]/50 hover:bg-[#8DC63F]/[0.02]'}`}
+          ${isOpen
+            ? 'border-[#8DC63F] bg-[#8DC63F]/5'
+            : 'border-gray-200 bg-white hover:border-[#8DC63F]/50 hover:bg-[#8DC63F]/[0.02]'}`}
       >
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors
           ${isOpen ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-400'}`}>
@@ -5182,8 +5237,8 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
           <div className="h-1.5 rounded-full bg-[#8DC63F] transition-all duration-500" style={{ width: `${pct}%` }} />
         </div>
         {isOpen
-          ? <ChevronDown size={16} className="text-[#8DC63F] flex-shrink-0" />
-          : <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+          ? <ChevronDown  size={16} className="text-[#8DC63F] flex-shrink-0" />
+          : <ChevronRight size={16} className="text-gray-300 flex-shrink-0"  />
         }
       </button>
       {isOpen && (
@@ -5247,66 +5302,64 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 function MyLearning() {
-  const [buttonOpen, setButtonOpen]         = React.useState(true);
-  const [loading, setLoading]               = React.useState(true);
-  const [error, setError]                   = React.useState(null);
-  const [certs, setCerts]                   = React.useState([]);
-  const [modules, setModules]               = React.useState({});
-  const [resources, setResources]           = React.useState({});
-  const [activeCert, setActiveCert]         = React.useState('');
-  const [activeModule, setActiveModule]     = React.useState('');
-  const [activeFilter, setActiveFilter]     = React.useState('all');
-  const [search, setSearch]                 = React.useState('');
-  const [openTopics, setOpenTopics]         = React.useState({});
+  const [buttonOpen,     setButtonOpen]     = React.useState(true);
+  const [loading,        setLoading]        = React.useState(true);
+  const [error,          setError]          = React.useState(null);
+  const [certs,          setCerts]          = React.useState([]);
+  const [modules,        setModules]        = React.useState({});
+  const [resources,      setResources]      = React.useState({});
+  const [activeCert,     setActiveCert]     = React.useState('');
+  const [activeModule,   setActiveModule]   = React.useState('');
+  const [activeFilter,   setActiveFilter]   = React.useState('all');
+  const [search,         setSearch]         = React.useState('');
+  const [openTopics,     setOpenTopics]     = React.useState({});
   const [interpretModal, setInterpretModal] = React.useState(null);
-  const [certLabelMap, setCertLabelMap]     = React.useState({});
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
+  // ── Auth ─────────────────────────────────────────────────────────────────
   const token = localStorage.getItem('user_token');
   let decoded = null;
   try { decoded = token ? jwtDecode(token) : null; } catch (_) {}
   const traineeId = decoded?.id || decoded?.sub || decoded?.userId || localStorage.getItem('people_id');
 
-  // ── Step 1: Fetch cert label from batch API ───────────────────────────────
-  React.useEffect(() => {
-    const batchId = localStorage.getItem('batch_id');
-    if (!batchId || !token) return;
-
-    fetchBatchCertLabel(batchId, token)
-      .then(map => setCertLabelMap(map))
-      .catch(err => console.error('Failed to fetch batch cert label:', err));
-  }, [token]);
-
-  // ── Step 2: Fetch trainee data, re-transform when certLabelMap is ready ───
+  // ── Fetch batch cert + trainee data in parallel ───────────────────────────
   React.useEffect(() => {
     if (!traineeId || !token) return;
+
     setLoading(true);
     setError(null);
 
-    fetch(`${BASE_URL}/api/v1/trainee/${traineeId}?isVr=false`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
-      .then(json => {
-        const t = transformApiData(json, certLabelMap);
+    const batchId = localStorage.getItem('batch_id');
+
+    // batchCert fetch is non-fatal: if it fails we still show data unfiltered
+    const batchCertPromise = batchId
+      ? fetchBatchCert(batchId, token).catch(() => null)
+      : Promise.resolve(null);
+
+    Promise.all([batchCertPromise, fetchTraineeData(traineeId, token)])
+      .then(([batchCert, traineeJson]) => {
+        // batchCert.certId filters rawData to only this batch's certificate rows,
+        // so certs like "Principle of Ultrasound" are excluded before any
+        // label or module logic runs.
+        const t = transformApiData(traineeJson, batchCert);
         setCerts(t.certs);
         setModules(t.modules);
         setResources(t.resources);
+
         const first = t.certs[0];
         if (first) {
           setActiveCert(first.id);
-          const mods    = t.modules[first.id] || [];
+          const mods     = t.modules[first.id] || [];
           const unlocked = mods.find(m => !m.locked);
           setActiveModule(unlocked?.id || mods[0]?.id || '');
         }
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  }, [traineeId, token, certLabelMap]);
+  }, [traineeId, token]);
 
   if (!decoded?.role) return <Navigate to="/" replace />;
 
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────
   const toggleTopic = key => setOpenTopics(prev => ({ ...prev, [key]: !prev[key] }));
 
   const handleCertChange = certId => {
@@ -5331,7 +5384,7 @@ function MyLearning() {
   const currentModules = modules[activeCert] || [];
   const allRes         = resources[activeModule] || [];
   const activeModMeta  = currentModules.find(m => m.id === activeModule);
-  const doneCount      = activeModMeta?.done ?? 0;
+  const doneCount      = activeModMeta?.done  ?? 0;
   const totalCount     = activeModMeta?.total ?? 0;
   const pct            = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
@@ -5341,7 +5394,6 @@ function MyLearning() {
     return matchType && matchSearch;
   });
 
-  const SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
   const byType = filtered.reduce((acc, r) => {
     if (!acc[r.type]) acc[r.type] = [];
     acc[r.type].push(r);
@@ -5403,7 +5455,7 @@ function MyLearning() {
 
             {!loading && !error && (
               <>
-                {/* Cert tabs — labels now come from batch API */}
+                {/* Cert tabs */}
                 <div className="flex items-center gap-3 mb-5">
                   {certs.map(cert => (
                     <button
@@ -5534,4 +5586,5 @@ function MyLearning() {
     </div>
   );
 }
+
 export default MyLearning;
