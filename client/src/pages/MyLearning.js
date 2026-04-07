@@ -5140,12 +5140,85 @@ function ResourceTypeBadge({ r }) {
 
 // ─── RESOURCE ROW ─────────────────────────────────────────────────────────────
 
+// function ResourceRow({ r, token, onOpenInterpretModal }) {
+//   const done           = isResourceDone(r);
+//   const isPractice     = r.type === 'practice';
+//   const isInterpret    = r.type === 'interpret';
+//   const showLog        = isPractice && practiceShowsLog(r.name);
+//   const showFeedback   = isPractice && practiceShowsFeedback(r.name);
+//   const isClickable    = isInterpret || showLog;
+//   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
+//   const [expanded, setExpanded] = React.useState(false);
+
+//   const handleClick = () => {
+//     if (isInterpret) onOpenInterpretModal(r);
+//     else if (showLog) setExpanded(p => !p);
+//   };
+
+//   return (
+//     <div className={`rounded-xl border bg-white transition-all
+//       ${done ? 'border-[#8DC63F]/40 bg-[#8DC63F]/[0.02]' : 'border-gray-200'}
+//       ${isClickable ? 'hover:shadow-sm' : ''}`}
+//     >
+//       <div
+//         onClick={handleClick}
+//         className={`flex items-center gap-3 p-3 group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+//       >
+//         <ResourceIcon r={r} />
+//         <div className="flex-1 min-w-0">
+//           <p className={`text-sm font-medium truncate
+//             ${done && r.completionSource === 'progress' ? 'text-gray-400' : 'text-gray-700 group-hover:text-[#8DC63F]'}`}>
+//             {r.name}
+//           </p>
+//           {showLog && reattemptCount > 0 && (
+//             <div className="flex items-center gap-1 mt-0.5">
+//               <RotateCcw size={10} className="text-amber-500" />
+//               <span className="text-[10px] text-amber-600 font-medium">
+//                 {reattemptCount} re-attempt{reattemptCount !== 1 ? 's' : ''}
+//               </span>
+//             </div>
+//           )}
+//         </div>
+//         <ResourceTypeBadge r={r} />
+//         {isInterpret && (
+//           <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-500 border border-purple-200 flex-shrink-0">
+//             <Eye size={9} /> View Scores
+//           </span>
+//         )}
+//         {showFeedback && (
+//           <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-500 border border-blue-200 flex-shrink-0">
+//             <MessageSquare size={9} /> Feedback
+//           </span>
+//         )}
+//         <CompletionStatus r={r} />
+//         {isInterpret && (
+//           <ChevronRight size={15} className="text-purple-300 group-hover:text-purple-500 transition-colors flex-shrink-0" />
+//         )}
+//         {showLog && (
+//           <div className={`flex-shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+//             <ChevronDown size={15} className={expanded ? 'text-[#8DC63F]' : 'text-gray-300'} />
+//           </div>
+//         )}
+//       </div>
+//       {showLog && expanded && (
+//         <div className="px-3 pb-3">
+//           <PracticeExpandedPanel r={r} showFeedback={showFeedback} />
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
+//working good
 function ResourceRow({ r, token, onOpenInterpretModal }) {
   const done           = isResourceDone(r);
   const isPractice     = r.type === 'practice';
   const isInterpret    = r.type === 'interpret';
-  const showLog        = isPractice && practiceShowsLog(r.name);
-  const showFeedback   = isPractice && practiceShowsFeedback(r.name);
+  const isTest         = r.type === 'test';
+
+  const showLog      = (isPractice && practiceShowsLog(r.name))      || (isTest && testShowsLog(r.name));
+  const showFeedback = (isPractice && practiceShowsFeedback(r.name))  || (isTest && testShowsFeedback(r.name));
+
   const isClickable    = isInterpret || showLog;
   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
   const [expanded, setExpanded] = React.useState(false);
@@ -5209,8 +5282,15 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
   );
 }
 
-// ─── TOPIC ACCORDION ──────────────────────────────────────────────────────────
 
+// ─── TOPIC ACCORDION ──────────────────────────────────────────────────────────
+const getTestNumber = (name = '') => {
+  const m = name.match(/test\s+(\d+)/i);
+  return m ? parseInt(m[1], 10) : null;
+};
+
+const testShowsLog      = name => { const n = getTestNumber(name); return n !== null; };
+const testShowsFeedback = name => { const n = getTestNumber(name); return n !== null; };
 function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal }) {
   const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
   const topicDone = items.filter(isResourceDone).length;
@@ -5403,7 +5483,9 @@ function MyLearning() {
   const sections = SECTION_ORDER
     .filter(k => byType[k]?.length > 0)
     .map(typeKey => {
-      const isFlat = typeKey === 'interpret' || typeKey === 'test';
+      const isFlat = typeKey === "interpret";
+      //down variable is working fine
+      //const isFlat = typeKey === 'interpret' || typeKey === 'test';
       if (isFlat) return { typeKey, flatList: true, accordions: [], directRows: byType[typeKey] };
       const { accordions, directRows } = buildTopicGroups(byType[typeKey]);
       return { typeKey, flatList: false, accordions, directRows };

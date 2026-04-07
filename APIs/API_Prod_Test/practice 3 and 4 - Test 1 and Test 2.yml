@@ -11,10 +11,10 @@ http:
     data:
       - name: sessionType
         type: text
-        value: practice
+        value: test
       - name: sessionNumber
         type: text
-        value: "3"
+        value: "1"
       - name: userImages_1
         type: file
         value:
@@ -136,10 +136,10 @@ http:
           }
       - name: resource_id
         type: text
-        value: 41c6525b-9b97-425c-a766-5014868668dd
+        value: 9f4f8613-64bc-4c3d-a871-daa401d8896b
       - name: session_id
         type: text
-        value: 41c6525b-9b97-425c-a766-5014868663dd
+        value: a66dec6c-b702-481f-b1e0-dfea3e7888b5
   auth:
     type: bearer
     token: "{{user_token}}"
