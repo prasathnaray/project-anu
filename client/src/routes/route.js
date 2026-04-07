@@ -33,6 +33,7 @@ import Reports from '../pages/Reports';
 import Academics from '../pages/Academics';
 import MyLearning from '../pages/MyLearning';
 import MyProgress from '../pages/MyProgress';
+import TraineeDashboard from '../components/trainee/TraineeDashboard';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -59,7 +60,7 @@ function RoutesPath() {
                             <Route path="/module/:chapter_id/:course_id" element={<Module />} />
                             <Route path="/resource/:module_id" element={<Resource />} />
                             <Route path="/schedules" element={<Schedules />} />
-                            <Route path="/trainee/:people_id" element={<TraineeIndividual />} />
+                            <Route path="/trainee/:people_id" element={<TraineeDashboard />} />
                             <Route path="/instructor/:people_id" element={<IndividualInstructors />} />
                             <Route path="/volume-management" element={<VolumeList />} />
                             <Route path="/request-raised" element={<RequestRaised />} />
