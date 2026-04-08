@@ -48,14 +48,113 @@ const getDashboardDatam = (requester) => {
                 );
             });
 
-            Promise.all([getTraineesIns, getBatchDas, TLStats, CourseDataList, BatchPerUserList])
-                .then(([getTraineesIns, getBatchDas, TLStats, CourseDataList, BatchPerUserList]) => {
+            // --- New EDA Additions for Admin ---
+            const TotalResources = new Promise((res, rej) => {
+                client.query('SELECT COUNT(*) FROM resource_data', (err, result) =>
+                    err ? rej(err) : res(result.rows[0])
+                );
+            });
+
+            const TopPerformingTraineesGlobal = new Promise((res, rej) => {
+                client.query(
+                    `SELECT 
+                        ud.user_name,
+                        ud.user_email,
+                        COUNT(pd.resourse_id) as completed_count
+                     FROM user_data ud
+                     JOIN progress_data pd ON ud.user_email = pd.user_id
+                     WHERE ud.user_role = '103' 
+                     AND pd.is_completed = TRUE
+                     GROUP BY ud.user_name, ud.user_email
+                     ORDER BY completed_count DESC
+                     LIMIT 5;`,
+                    (err, result) => (err ? rej(err) : res(result.rows))
+                );
+            });
+
+            const PlatformRecentActivity = new Promise((res, rej) => {
+                client.query(
+                    `SELECT 
+                        ud.user_name,
+                        rd.resource_name,
+                        pd.updated_at
+                     FROM progress_data pd
+                     JOIN user_data ud ON pd.user_id = ud.user_email
+                     JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+                     ORDER BY pd.updated_at DESC
+                     LIMIT 5;`,
+                    (err, result) => (err ? rej(err) : res(result.rows))
+                );
+            });
+
+            const TopInstructorsByTrainees = new Promise((res, rej) => {
+                client.query(
+                    `SELECT 
+                        ud.user_name,
+                        ud.user_email,
+                        COUNT(DISTINCT bpd2.user_id) as total_trainees
+                     FROM user_data ud
+                     JOIN batch_people_data bpd1 ON ud.user_email = bpd1.user_id
+                     JOIN batch_people_data bpd2 ON bpd1.batch_id && bpd2.batch_id
+                     JOIN user_data ud2 ON bpd2.user_id = ud2.user_email
+                     WHERE ud.user_role = '102' AND ud2.user_role = '103'
+                     GROUP BY ud.user_name, ud.user_email
+                     ORDER BY total_trainees DESC
+                     LIMIT 5;`,
+                    (err, result) => (err ? rej(err) : res(result.rows))
+                );
+            });
+
+            const InstructorVolumeActivity = new Promise((res, rej) => {
+                client.query(
+                    `SELECT 
+                        ud.user_name,
+                        COUNT(vcl.volume_id) AS total_volumes
+                     FROM user_data ud
+                     JOIN volume_conv_logs vcl ON ud.user_email = vcl.converted_by
+                     WHERE ud.user_role = '102' AND vcl.conversion_completion = TRUE
+                     GROUP BY ud.user_name
+                     ORDER BY total_volumes DESC
+                     LIMIT 5;`,
+                    (err, result) => (err ? rej(err) : res(result.rows))
+                );
+            });
+
+            Promise.all([
+                getTraineesIns, 
+                getBatchDas, 
+                TLStats, 
+                CourseDataList, 
+                BatchPerUserList,
+                TotalResources,
+                TopPerformingTraineesGlobal,
+                PlatformRecentActivity,
+                TopInstructorsByTrainees,
+                InstructorVolumeActivity
+            ])
+                .then(([
+                    getTraineesIns, 
+                    getBatchDas, 
+                    TLStats, 
+                    CourseDataList, 
+                    BatchPerUserList,
+                    TotalResources,
+                    TopPerformingTraineesGlobal,
+                    PlatformRecentActivity,
+                    TopInstructorsByTrainees,
+                    InstructorVolumeActivity
+                ]) => {
                     resolve({
                         getTraineesIns,
                         getBatchDas,
                         TLStats,
                         CourseDataList,
                         BatchPerUserList,
+                        TotalResources,
+                        TopPerformingTraineesGlobal,
+                        PlatformRecentActivity,
+                        TopInstructorsByTrainees,
+                        InstructorVolumeActivity
                     });
                 })
                 .catch(reject);

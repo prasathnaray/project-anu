@@ -204,52 +204,142 @@ function AdminDashboard(){
                  <TargetedLearningChart targetedLearning={dashboardData} />
               </div>
             </div>
+
+            {/* Instructor Analysis Section */}
+            <div className="my-6 mx-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-1.5 bg-green-500 text-white rounded-md">
+                   <ClipboardPenLine size={18} />
+                </div>
+                <h2 className="text-lg font-bold text-gray-700">Instructor Insights</h2>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-6">
+                {/* Top Instructors by Trainee Count */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                    <GraduationCap size={16} className="text-green-500"/>
+                    Top Instructors (by Trainees)
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {dashboardData?.TopInstructorsByTrainees?.map((inst, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-800">{inst.user_name}</span>
+                          <span className="text-[10px] text-gray-500">{inst.user_email}</span>
+                        </div>
+                        <div className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
+                          {inst.total_trainees} Trainees
+                        </div>
+                      </div>
+                    ))}
+                    {(!dashboardData?.TopInstructorsByTrainees || dashboardData.TopInstructorsByTrainees.length === 0) && (
+                      <p className="text-xs text-gray-400 text-center py-4">No instructor data available</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Instructor Volume Activity */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                    <NotepadText size={16} className="text-green-500"/>
+                    Content Contribution (Volumes)
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {dashboardData?.InstructorVolumeActivity?.map((inst, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
+                        <span className="text-sm font-medium text-gray-800">{inst.user_name}</span>
+                        <div className="flex items-center gap-2">
+                           <div className="w-24 bg-gray-200 rounded-full h-1.5">
+                              <div 
+                                className="bg-green-500 h-1.5 rounded-full" 
+                                style={{ width: `${Math.min(100, (inst.total_volumes / (dashboardData.InstructorVolumeActivity[0]?.total_volumes || 1)) * 100)}%` }}
+                              ></div>
+                           </div>
+                           <span className="text-xs font-bold text-gray-600">{inst.total_volumes}</span>
+                        </div>
+                      </div>
+                    ))}
+                    {(!dashboardData?.InstructorVolumeActivity || dashboardData.InstructorVolumeActivity.length === 0) && (
+                      <p className="text-xs text-gray-400 text-center py-4">No volume activity recorded</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex flex-col gap-4 mt-3  h-[calc(100vh-5rem)]">
-              <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto "
-                style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none"
-                }}
+              <div className="border bg-white rounded-lg shadow-sm p-4 flex-1 overflow-y-auto"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                <div className="flex gap-4 items-center mb-2">
-                  <div className="text-white bg-[#8DC63F] p-2 rounded-full">
-                    <Book01Icon size={20} />
+                <div className="flex gap-4 items-center mb-4 pb-2 border-b">
+                  <div className="text-white bg-blue-500 p-2 rounded-lg">
+                    <GraduationCap size={20} />
                   </div>
-                  <span className="text-lg text-gray-500">All Certificate</span>
+                  <span className="text-lg font-semibold text-gray-700">Top Performing Trainees</span>
                 </div>
-                {/* <div className="flex items-center justify-center py-8 text-gray-500">
-                      <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
-                </div> */}
-                {(dashboardData?.CourseDataList || []).map((data, index) => (
-                    <div className="border grid grid-cols-4 py-6 px-1 mt-3 gap-4 rounded bg-white">
-                          <div className="col-span-2 flex justify-between item-center">
-                                <EllipsisVerticalIcon size={20} className="text-gray-500"/> 
-                                <span className="sm:text-xs bg-[#8DC63F] flex items-center text-white rounded-full px-2"><button onClick={() => navigate(`/cert-course/${data.certificate_id}`)}>View Modules</button></span>
+                
+                {dashboardData?.TopPerformingTraineesGlobal?.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {dashboardData.TopPerformingTraineesGlobal.map((trainee, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                            {index + 1}
                           </div>
-                          <div className="col-span-2 flex justify-end items-center gap-4">
-                              <span className="sm:text-sm rounded-full px-2 font-semibold text-gray-500">{data?.certificate_name}</span>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{trainee.user_name}</p>
+                            <p className="text-xs text-gray-500 truncate w-32 sm:w-auto">{trainee.user_email}</p>
                           </div>
-                    </div>
-                ))}
-              </div>
-                <div className="border bg-white rounded-sm p-3 flex-1 overflow-y-auto"
-                style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none"
-                }}
-                >
-                  <div className="flex gap-4 items-center mb-2">
-                    <div className="text-white bg-[#8DC63F] p-2 rounded-full">
-                      <NotepadText size={21} />
-                    </div>
-                    <span className="text-lg text-gray-500">Recent Activity</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-sm font-bold text-gray-800">{trainee.completed_count}</span>
+                          <span className="text-[10px] text-gray-500">completed</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <div className="flex items-center justify-center py-8 text-gray-500 text-sm">
+                    No completion data available yet.
+                  </div>
+                )}
+              </div>
+
+              <div className="border bg-white rounded-lg shadow-sm p-4 flex-1 overflow-y-auto"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                <div className="flex gap-4 items-center mb-4 pb-2 border-b">
+                  <div className="text-white bg-purple-500 p-2 rounded-lg">
+                    <NotepadText size={20} />
+                  </div>
+                  <span className="text-lg font-semibold text-gray-700">Recent Platform Activity</span>
+                </div>
+                
+                {dashboardData?.PlatformRecentActivity?.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {dashboardData.PlatformRecentActivity.map((activity, index) => (
+                      <div key={index} className="relative pl-4 border-l-2 border-purple-200 py-2">
+                        <div className="absolute w-2 h-2 bg-purple-500 rounded-full -left-[5px] top-3"></div>
+                        <p className="text-sm text-gray-800">
+                          <span className="font-semibold">{activity.user_name}</span> completed
+                        </p>
+                        <p className="text-sm text-gray-600 font-medium truncate">
+                          {activity.resource_name}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(activity.updated_at).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
                   <div className="flex items-center justify-center py-8 text-gray-500">
-                        <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} className="w-[60%]"/>
+                    <img src={'https://ims-traktor.web.app/img/no-events.25d14767.svg'} alt="No recent activity" className="w-[60%]"/>
                   </div>
-                </div>
+                )}
               </div>
+          </div>
         </div>
         )}
         {dashboardState == "users" && (
