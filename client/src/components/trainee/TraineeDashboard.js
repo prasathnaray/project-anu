@@ -350,7 +350,17 @@ function TraineeDashboard() {
     try {
       setInteractionStats(prev => ({ ...prev, loading: true }));
       const response = await getInteractionsAttemptStats();
-      setInteractionStats({ data: response, loading: false, error: null });
+
+    // Normalize: handle array, wrapped object, or null
+      const data = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.result)
+        ? response.result
+        : [];
+
+      setInteractionStats({ data, loading: false, error: null });
     } catch (error) {
       console.error('Error fetching interaction stats:', error);
       setInteractionStats(prev => ({ ...prev, loading: false, error: error.message }));
