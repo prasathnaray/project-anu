@@ -624,5 +624,4 @@ function TraineeDashboard() {
     </div>
   );
 }
-
 export default TraineeDashboard;

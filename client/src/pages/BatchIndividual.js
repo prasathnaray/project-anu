@@ -240,12 +240,14 @@ function BatchIndividual() {
                         <div className="">
                             {/* Batch Info + Ratio */}
                             <div className="grid grid-cols-3 gap-3 m-3">
-                                <div className="col-span-2 bg-white">
+                                <div className={`${decoded.role == 99 || decoded.role == 101 ? 'col-span-2' : 'col-span-3'} bg-white`}>
                                     <div className="p-2 flex justify-between items-center">
                                         <div className="text-xl">Batch Info</div>
-                                        <div>
-                                            <button className="bg-[#8DC63F] p-1 text-white rounded px-2">Edit</button>
-                                        </div>
+                                        {decoded.role == 99 || decoded.role == 101 ? (
+                                            <div>
+                                                <button className="bg-[#8DC63F] p-1 text-white rounded px-2">Edit</button>
+                                            </div>
+                                        ) : null}
                                     </div>
                                     <div className="flex justify-between items-center gap-6 mx-10">
                                         <div className="mt-8">
