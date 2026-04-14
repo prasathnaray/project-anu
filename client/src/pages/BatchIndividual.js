@@ -392,5 +392,4 @@ function BatchIndividual() {
         </div>
     );
 }
-
 export default BatchIndividual;

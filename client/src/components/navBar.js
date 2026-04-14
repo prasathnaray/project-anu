@@ -431,169 +431,636 @@
 //   );
 // }
 // export default NavBar;
+//  434 to 871 is pakka working code but modification is being done here
+// import React, { useMemo, useEffect, useRef, useState } from "react";
+// import {
+//   Notification03Icon,
+//   UserSharingIcon,
+//   Megaphone01Icon,
+//   Search02Icon,
+//   UserSettings01Icon,
+//   Logout01Icon,
+//   CircleIcon
+// } from "hugeicons-react";
+// import { createClient } from "@supabase/supabase-js";
+// import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon, Scan, Minimize} from 'lucide-react';
+// import { useNavigate } from "react-router-dom";
+// import MaterialRipple from "material-ripple-effects";
+// import { jwtDecode } from "jwt-decode";
+// import { Badge } from "@mui/material";
+// import logo from '../assets/image (3).png';
+// import { supabase } from "../supabaseClient";
+// import IconButton from '@mui/material/IconButton';
+// import Stack from '@mui/material/Stack';
+// import DeleteIcon from '@mui/icons-material/Delete';
+// import AlarmIcon from '@mui/icons-material/Alarm';
+// import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+// import Profile from "../pages/Profile";
+// // import CircleIcon from '@mui/icons-material/Circle';
 
-import React, { useMemo, useEffect, useRef, useState } from "react";
-import {
-  Notification03Icon,
-  UserSharingIcon,
-  Megaphone01Icon,
-  Search02Icon,
-  UserSettings01Icon,
-  Logout01Icon,
-  CircleIcon
-} from "hugeicons-react";
-import { createClient } from "@supabase/supabase-js";
-import { CircleUser, Bell, Search, MessageCircleMore, EllipsisVertical, User2Icon, Scan, Minimize} from 'lucide-react';
+// function NavBar() {
+//   ///full screen test
+//   const [isFullscreen, setFullscreen] = useState(false);
+//   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+//   useEffect(() => {
+//     const handleChange = () => {
+//       const fs = !!document.fullscreenElement;
+//       setFullscreen(fs);
+//       localStorage.setItem("isFullscreen", fs);
+//     };
+//     document.addEventListener("fullscreenchange", handleChange);
+//     return () => document.removeEventListener("fullscreenchange", handleChange);
+//   }, []);
+  
+//   const makeFullscreen = async() => {
+//     if (!document.fullscreenElement) {
+//       await document.documentElement.requestFullscreen();
+//       setFullscreen(true);
+//     } else {
+//       await document.exitFullscreen();
+//       setFullscreen(false);
+//     }
+//   };
+  
+//   const tokenRes = jwtDecode(localStorage.getItem("user_token"));
+//   const ripple = new MaterialRipple();
+//   const dropdownRefs = useRef({});
+//   const currentPath = window.location.pathname;
+//   const navigate = useNavigate();
+  
+//   const handleLogout = () => {
+//     localStorage.removeItem("user_token");
+//     localStorage.removeItem("isVr");
+//     localStorage.removeItem("loginSource");
+//     localStorage.removeItem("device");
+//     localStorage.removeItem("os");
+//     navigate("/");
+//   };
+  
+//   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+//   const toggleDropdown = (index) => {
+//     setOpenDropdownIndex(openDropdownIndex === index ? null : index);
+//   };
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       const isClickInside = Object.values(dropdownRefs.current).some(ref =>
+//         ref && ref.contains(event.target)
+//       );
+
+//       if (!isClickInside) {
+//         setOpenDropdownIndex(null);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleClickOutside);
+//     return () => document.removeEventListener("mousedown", handleClickOutside);
+//   }, []);
+
+//   const [count, setCount] = useState(0);
+//   const [notify, setNotify] = useState([]);
+
+//   const fetchCount = async () => {
+//     try {
+//       const [courseRes, traineeRes, volumeRes] = await Promise.all([
+//         supabase
+//           .from("course_availability")
+//           .select("course_id, access_status, is_read", { count: "exact" })
+//           .eq("user_id", tokenRes.user_mail)
+//           .is("is_read", false),
+
+//         supabase
+//           .from("targeted_learning")
+//           .select("tar_name, target_learning_id", { count: "exact" })
+//           .contains("trainee_id", [tokenRes.user_mail]),
+
+//         supabase
+//           .from("volumes")
+//           .select(`added_by, status`, {count: "exact"})
+//           .eq("approver_id", tokenRes.user_mail)
+//           .is("status", false)
+//         ]);
+        
+//       let volumeWithNames = [];
+//       if (volumeRes.data?.length) {
+//         const addedByEmails = volumeRes.data.map((v) => v.added_by);
+//         const { data: users } = await supabase
+//           .from("user_data")
+//           .select("user_email, user_name")
+//           .in("user_email", addedByEmails);
+
+//         volumeWithNames = volumeRes.data.map((v) => ({
+//           ...v,
+//           user_data: users.find((u) => u.user_email === v.added_by)
+//         }));
+//       }
+      
+//       console.log(traineeRes);
+//       const total = (courseRes.count ?? 0) + (traineeRes.count ?? 0) + (volumeRes.count ?? 0);
+//       const allData = [ 
+//         ...(courseRes.data?.map(d => ({ ...d, type: "course" })) || []),
+//         ...(traineeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
+//         ...(volumeWithNames.map(d => ({ ...d, type: "volumes" })) || []),
+//       ];
+//       setCount(total);
+//       setNotify(allData);
+//     } catch (err) {
+//       console.error("Error fetching notifications:", err);
+//     }
+//   };
+  
+//   // console.log(count, tokenRes.user_mail);
+  
+//   const readNotification = async(id) => {
+//     const {error} = await supabase
+//       .from('course_availability')
+//       .update({is_read: true })
+//       .eq("course_id", id)
+//       .eq("user_id", tokenRes.user_mail);
+//     if (error) {
+//       console.error("Error marking as read:", error);
+//     } else {
+//       setNotify((prev) =>
+//         prev.map((n) =>
+//           n.course_id === id ? { ...n, is_read: true } : n
+//         )
+//       );
+//       setCount((prev) => Math.max(prev - 1, 0));
+//     } 
+//     fetchCount();  
+//   };
+  
+//   useEffect(() => {
+//     fetchCount();
+//     const channel = supabase
+//       .channel("course_availability")
+//       .on(
+//         "postgres_changes",
+//         { event: "INSERT", schema: "public", table: "course_availability" },
+//         async (payload) => {
+//           if (payload.new.user_id === tokenRes.user_mail) {
+//             setCount((prev) => prev + 1);
+//             await fetchCount();
+//           }
+//         }
+//       )
+//       .subscribe();
+      
+//     const traineeChannel = supabase
+//       .channel("targeted_learning")
+//       .on(
+//         "postgres_changes",
+//         { event: "INSERT", schema: "public", table: "targeted_learning" },
+//         async (payload) => {
+//           if (payload.new.user_id === tokenRes.user_mail) {
+//             setNotify(prev => [payload.new, ...prev]);
+//             setCount(prev => prev + 1);
+//           }
+//         }
+//       )
+//       .subscribe();
+
+//     const volumeChannel = supabase
+//       .channel("volumes")
+//       .on(
+//         "postgres_changes",
+//         { event: "INSERT", schema: "public", table: "volumes" },
+//         async (payload) => {
+//           if ([101, 102, 103].includes(Number(tokenRes.role))) {
+//             setNotify((prev) => [
+//               { ...payload.new, type: "volume" },
+//               ...prev,
+//             ]);
+//             setCount((prev) => prev + 1);
+//           }
+//         }
+//       )
+//       .subscribe();
+      
+//     return () => {
+//       supabase.removeChannel(channel);
+//       supabase.removeChannel(traineeChannel);
+//       supabase.removeChannel(volumeChannel);
+//     };
+//   }, []);
+
+//   const handleProfileClick = () => {
+//     setOpenDropdownIndex(null); // Close the dropdown
+//     setIsProfileModalOpen(true); // Open the profile modal
+//   };
+
+//   // console.log(notify);
+  
+//   return (
+//     <>
+//       <div className="navbar dm-sans">
+//         <nav className="bg-[#8DC63F] shadow-sm border">
+//           <div className="flex flex-wrap items-center justify-between py-[3px] px-1">
+//             <div className="flex justify-start items-center ms-3 gap-10">
+//               <div className="text-white flex justify-between item-center">
+//                 {currentPath === "/reports" && <div>Reports</div>}
+//                 {currentPath === "/dashboard" && <div>Dashboard</div>}
+//                 {currentPath === "/profile" && <div>Profile</div>}
+//                 {currentPath === "/settings" && <div>Settings</div>}
+//                 {currentPath === "/course" && <div>Courses</div>}
+//                 {currentPath === "/instructors" && <div>Instructors</div>}
+//                 {currentPath === "/batch" && <div>Batch</div>}
+//                 {currentPath === "/vrspace" && <div>Realtime</div>}
+//                 {currentPath.startsWith("/trainee") && <div>Trainee Details</div>}
+//               </div>
+//             </div>
+//             <div className="flex md:order-2">
+//               <button
+//                 type="button"
+//                 data-collapse-toggle="navbar-search"
+//                 aria-controls="navbar-search"
+//                 aria-expanded="false"
+//                 className="md:hidden text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 me-1"
+//               >
+//                 <svg
+//                   className="w-5 h-5"
+//                   aria-hidden="true"
+//                   xmlns="http://www.w3.org/2000/svg"
+//                   fill="none"
+//                   viewBox="0 0 20 20"
+//                 >
+//                   <path
+//                     stroke="currentColor"
+//                     strokeLinecap="round"
+//                     strokeLinejoin="round"
+//                     strokeWidth="2"
+//                     d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+//                   />
+//                 </svg>
+//                 <span className="sr-only">Search</span>
+//               </button>
+//               <div className="relative md:block">
+//                 <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
+//                     {tokenRes.role == "99" && <div className="text-sm text-gray-100">Welcome Super Admin </div>}
+//                     {tokenRes.role == "101" && <div className="text-sm text-white">Welcome Admin</div>}
+//                     {tokenRes.role == "102" && <div className="text-sm text-white">Welcome Instructor</div>}
+//                 </div>
+//               </div>
+//               <div className="relative md:block">
+//                 <div className="px-3 py-2 ms-1 text-gray-200">
+//                   <button className="">
+//                     <Search size={20} />
+//                   </button>
+//                 </div>
+//               </div>
+//               <div className="relative md:block">
+//                 <div className="px-3 py-2 ms-1 text-gray-200">
+//                   <button className="" onClick={makeFullscreen}>
+//                     {isFullscreen ? <Minimize size={20} /> : <Scan size={20} />}
+//                   </button>
+//                 </div>
+//               </div>
+//               <div className="relative md:block">
+//                 <div className="px-3 py-2 ms-1 text-gray-200">
+//                   <div className="">
+//                     <button
+//                       onClick={() => toggleDropdown('notifications')}
+//                       className="relative"
+//                     >
+//                       <Badge badgeContent={`${count}`} color="error">
+//                         <Bell size={20} />
+//                       </Badge>
+//                     </button>
+//                     {openDropdownIndex === 'notifications' && (
+//                         <div
+//                           ref={(el) => (dropdownRefs.current['notifications'] = el)}
+//                           className="absolute right-0 mt-1 w-[480px] bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
+//                         >
+//                           <div className="p-3 border-b text-gray-700 text-xl">Notifications</div>
+
+//                           {notify.length > 0 ? (
+//                             <ul className="max-h-60 overflow-y-auto">
+//                               {notify.map((n, idx) => (
+//                                 <li
+//                                   key={idx}
+//                                   className="px-4 py-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+//                                 >
+//                                   <div className="flex justify-between items-center">
+//                                     <div className="text-black text-sm">
+//                                         {n.course_id && 'Course has been added'} 
+//                                         {n.tar_name && 'Targeted Learning has been initiated'}
+//                                         {n.type === "volumes" &&
+//                                             (n.user_data?.user_name
+//                                               ? `${n.user_data.user_name} Uploaded a volume`
+//                                               : `${n.added_by} Uploaded a volume`)}
+//                                     </div>
+//                                     <div><button className="bg-gray-100 p-1 px-2 text-sm rounded-md text-gray-500" onClick={() => navigate('/request-raised')}>View</button></div>
+//                                     <button onClick={() => {readNotification(n.course_id)}}>
+//                                     <IconButton
+//                                       aria-label="delete"
+//                                     >
+//                                         <Badge badgeContent={''} 
+//                                                color="success"
+//                                                sx={{
+//                                                 "& .MuiBadge-badge": {
+//                                                   minWidth: "8px",
+//                                                   height: "8px",
+//                                                   padding: 0,
+//                                                   borderRadius: "50%",
+//                                                 },
+//                                               }}
+//                                         ></Badge>
+//                                     </IconButton>
+//                                     </button>
+//                                   </div>
+//                                 </li>
+//                               ))}
+//                             </ul>
+//                           ) : (
+//                             <div className="p-4 text-gray-500 text-sm">No new notifications</div>
+//                           )}
+//                         </div>
+//                       )}
+//                   </div>
+//                 </div>
+//               </div>
+//               <div className=" ms-1 relative">
+//                 <button onClick={() => toggleDropdown('user-options')} className="text-gray-200 hover:bg-[#8DC63F] p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
+//                   <CircleUser size={20} />
+//                 </button>
+//                 {openDropdownIndex === 'user-options' && (
+//                   <div
+//                     ref={(el) => (dropdownRefs.current['user-options'] = el)}
+//                     className="absolute right-0 mt-2 w-22 bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
+//                   >
+//                     <button 
+//                       className="block w-full text-left px-4 py-2 hover:bg-gray-50 font-normal" 
+//                       onClick={handleProfileClick}
+//                     >
+//                       Profile
+//                     </button>
+//                     <button className="block w-full text-left px-4 py-3 hover:bg-gray-50">Settings</button>
+//                     <button className="block w-full text-left px-4 py-3 hover:bg-gray-50" onClick={handleLogout}>Logout</button>
+//                   </div>
+//                 )}
+//               </div>
+//               <button
+//                 data-collapse-toggle="navbar-search"
+//                 type="button"
+//                 className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+//                 aria-controls="navbar-search"
+//                 aria-expanded="false"
+//               >
+//                 <span className="sr-only">Open main menu</span>
+//                 <svg
+//                   className="w-5 h-5"
+//                   aria-hidden="true"
+//                   xmlns="http://www.w3.org/2000/svg"
+//                   fill="none"
+//                   viewBox="0 0 17 14"
+//                 >
+//                   <path
+//                     stroke="currentColor"
+//                     strokeLinecap="round"
+//                     strokeLinejoin="round"
+//                     strokeWidth="2"
+//                     d="M1 1h15M1 7h15M1 13h15"
+//                   />
+//                 </svg>
+//               </button>
+//             </div>
+//             <div
+//               className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
+//               id="navbar-search"
+//             >
+//               <div className="relative mt-3 md:hidden">
+//                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+//                   <svg
+//                     className="w-4 h-4 text-gray-500 dark:text-gray-400"
+//                     aria-hidden="true"
+//                     xmlns="http://www.w3.org/2000/svg"
+//                     fill="none"
+//                     viewBox="0 0 20 20"
+//                   >
+//                     <path
+//                       stroke="currentColor"
+//                       strokeLinecap="round"
+//                       strokeLinejoin="round"
+//                       strokeWidth="2"
+//                       d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+//                     />
+//                   </svg>
+//                 </div>
+//                 <input
+//                   type="text"
+//                   id="search-navbar"
+//                   className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+//                   placeholder="Search..."
+//                 />
+//               </div>
+//             </div>
+//           </div>
+//         </nav>
+//       </div>
+
+//       {/* Profile Modal */}
+//       <Profile 
+//         isOpen={isProfileModalOpen} 
+//         onClose={() => setIsProfileModalOpen(false)} 
+//       />
+//     </>
+//   );
+// }
+
+// export default NavBar;
+
+import React, { useEffect, useRef, useState } from "react";
+import { Bell, CircleUser, Scan, Minimize, Search } from "lucide-react";
+import { Badge } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
-import { jwtDecode } from "jwt-decode";
-import { Badge } from "@mui/material";
-import logo from '../assets/image (3).png';
 import { supabase } from "../supabaseClient";
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AlarmIcon from '@mui/icons-material/Alarm';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import Profile from "../pages/Profile";
-// import CircleIcon from '@mui/icons-material/Circle';
 
 function NavBar() {
-  ///full screen test
-  const [isFullscreen, setFullscreen] = useState(false);
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const ripple = new MaterialRipple();
+  const dropdownRefs = useRef({});
+  const currentPath = window.location.pathname;
 
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  const tokenRes = jwtDecode(localStorage.getItem("user_token"));
+  const isAdmin = [99, 101, 102].includes(Number(tokenRes.role));
+
+  // ── UI state ──────────────────────────────────────────────────────────────
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
+
+  // ── Notification state ────────────────────────────────────────────────────
+  const [count, setCount] = useState(0);
+  const [notify, setNotify] = useState([]);
+  // Track locally-dismissed query notifications (no DB column needed)
+  const [readQueryIds, setReadQueryIds] = useState(new Set());
+
+  // ── Page title map ────────────────────────────────────────────────────────
+  const pageTitles = {
+    "/reports": "Reports",
+    "/dashboard": "Dashboard",
+    "/profile": "Profile",
+    "/settings": "Settings",
+    "/course": "Courses",
+    "/instructors": "Instructors",
+    "/batch": "Batch",
+    "/vrspace": "Realtime",
+  };
+  const pageTitle =
+    pageTitles[currentPath] ||
+    (currentPath.startsWith("/trainee") ? "Trainee Details" : "");
+
+  const roleLabel = {
+    99: "Welcome Super Admin",
+    101: "Welcome Admin",
+    102: "Welcome Instructor",
+  }[tokenRes.role];
+
+  // ── Fullscreen ────────────────────────────────────────────────────────────
   useEffect(() => {
     const handleChange = () => {
       const fs = !!document.fullscreenElement;
-      setFullscreen(fs);
+      setIsFullscreen(fs);
       localStorage.setItem("isFullscreen", fs);
     };
     document.addEventListener("fullscreenchange", handleChange);
     return () => document.removeEventListener("fullscreenchange", handleChange);
   }, []);
-  
-  const makeFullscreen = async() => {
+
+  const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
       await document.documentElement.requestFullscreen();
-      setFullscreen(true);
     } else {
       await document.exitFullscreen();
-      setFullscreen(false);
     }
   };
-  
-  const tokenRes = jwtDecode(localStorage.getItem("user_token"));
-  const ripple = new MaterialRipple();
-  const dropdownRefs = useRef({});
-  const currentPath = window.location.pathname;
-  const navigate = useNavigate();
-  
-  const handleLogout = () => {
-    localStorage.removeItem("user_token");
-    localStorage.removeItem("isVr");
-    localStorage.removeItem("loginSource");
-    localStorage.removeItem("device");
-    localStorage.removeItem("os");
-    navigate("/");
-  };
-  
-  const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-  const toggleDropdown = (index) => {
-    setOpenDropdownIndex(openDropdownIndex === index ? null : index);
-  };
 
+  // ── Close dropdown on outside click ──────────────────────────────────────
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const isClickInside = Object.values(dropdownRefs.current).some(ref =>
-        ref && ref.contains(event.target)
+    const handleClickOutside = (e) => {
+      const inside = Object.values(dropdownRefs.current).some(
+        (ref) => ref && ref.contains(e.target)
       );
-
-      if (!isClickInside) {
-        setOpenDropdownIndex(null);
-      }
+      if (!inside) setOpenDropdownIndex(null);
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [count, setCount] = useState(0);
-  const [notify, setNotify] = useState([]);
+  const toggleDropdown = (index) =>
+    setOpenDropdownIndex((prev) => (prev === index ? null : index));
 
+  // ── Fetch notifications ───────────────────────────────────────────────────
   const fetchCount = async () => {
     try {
-      const [courseRes, traineeRes, volumeRes] = await Promise.all([
+      const [courseRes, traineeRes, volumeRes, queryRes] = await Promise.all([
+        // Unread course assignments
         supabase
           .from("course_availability")
           .select("course_id, access_status, is_read", { count: "exact" })
           .eq("user_id", tokenRes.user_mail)
           .is("is_read", false),
 
+        // Targeted learning assignments
         supabase
           .from("targeted_learning")
           .select("tar_name, target_learning_id", { count: "exact" })
           .contains("trainee_id", [tokenRes.user_mail]),
 
+        // Pending volume approvals (admin only)
         supabase
           .from("volumes")
-          .select(`added_by, status`, {count: "exact"})
+          .select("added_by, status", { count: "exact" })
           .eq("approver_id", tokenRes.user_mail)
-          .is("status", false)
-        ]);
-        
+          .is("status", false),
+
+        // Pending trainee queries (admin/instructor only)
+        ...(isAdmin
+          ? [
+              supabase
+                .from("queries_data")
+                .select("query_id, subject, created_by, status, created_at", {
+                  count: "exact",
+                })
+                .eq("status", "pending"),
+            ]
+          : [Promise.resolve({ data: [], count: 0 })]),
+      ]);
+
+      // Enrich volume entries with uploader names
       let volumeWithNames = [];
       if (volumeRes.data?.length) {
-        const addedByEmails = volumeRes.data.map((v) => v.added_by);
+        const emails = volumeRes.data.map((v) => v.added_by);
         const { data: users } = await supabase
           .from("user_data")
           .select("user_email, user_name")
-          .in("user_email", addedByEmails);
-
+          .in("user_email", emails);
         volumeWithNames = volumeRes.data.map((v) => ({
           ...v,
-          user_data: users.find((u) => u.user_email === v.added_by)
+          user_data: users?.find((u) => u.user_email === v.added_by),
         }));
       }
-      
-      console.log(traineeRes);
-      const total = (courseRes.count ?? 0) + (traineeRes.count ?? 0) + (volumeRes.count ?? 0);
-      const allData = [ 
-        ...(courseRes.data?.map(d => ({ ...d, type: "course" })) || []),
-        ...(traineeRes.data?.map(d => ({ ...d, type: "trainee" })) || []),
-        ...(volumeWithNames.map(d => ({ ...d, type: "volumes" })) || []),
+
+      const unreadQueryCount = (queryRes?.data ?? []).filter(
+        (q) => !readQueryIds.has(q.query_id)
+      ).length;
+
+      const total =
+        (courseRes.count ?? 0) +
+        (traineeRes.count ?? 0) +
+        (volumeRes.count ?? 0) +
+        unreadQueryCount;
+
+      const allData = [
+        ...(courseRes.data?.map((d) => ({ ...d, type: "course" })) || []),
+        ...(traineeRes.data?.map((d) => ({ ...d, type: "trainee" })) || []),
+        ...(volumeWithNames.map((d) => ({ ...d, type: "volumes" })) || []),
+        ...(queryRes?.data?.map((d) => ({ ...d, type: "query" })) || []),
       ];
+
       setCount(total);
       setNotify(allData);
     } catch (err) {
       console.error("Error fetching notifications:", err);
     }
   };
-  
-  // console.log(count, tokenRes.user_mail);
-  
-  const readNotification = async(id) => {
-    const {error} = await supabase
-      .from('course_availability')
-      .update({is_read: true })
+
+  // ── Mark course notification as read ─────────────────────────────────────
+  const readCourseNotification = async (id) => {
+    const { error } = await supabase
+      .from("course_availability")
+      .update({ is_read: true })
       .eq("course_id", id)
       .eq("user_id", tokenRes.user_mail);
+
     if (error) {
       console.error("Error marking as read:", error);
-    } else {
-      setNotify((prev) =>
-        prev.map((n) =>
-          n.course_id === id ? { ...n, is_read: true } : n
-        )
-      );
-      setCount((prev) => Math.max(prev - 1, 0));
-    } 
-    fetchCount();  
+      return;
+    }
+    setNotify((prev) =>
+      prev.map((n) => (n.course_id === id ? { ...n, is_read: true } : n))
+    );
+    setCount((prev) => Math.max(prev - 1, 0));
+    fetchCount();
   };
-  
+
+  // ── Mark query notification as read (local only) ──────────────────────────
+  const readQueryNotification = (id) => {
+    setReadQueryIds((prev) => new Set([...prev, id]));
+    setCount((prev) => Math.max(prev - 1, 0));
+  };
+
+  // ── Real-time subscriptions ───────────────────────────────────────────────
   useEffect(() => {
     fetchCount();
-    const channel = supabase
+
+    const courseChannel = supabase
       .channel("course_availability")
       .on(
         "postgres_changes",
@@ -606,7 +1073,7 @@ function NavBar() {
         }
       )
       .subscribe();
-      
+
     const traineeChannel = supabase
       .channel("targeted_learning")
       .on(
@@ -614,8 +1081,8 @@ function NavBar() {
         { event: "INSERT", schema: "public", table: "targeted_learning" },
         async (payload) => {
           if (payload.new.user_id === tokenRes.user_mail) {
-            setNotify(prev => [payload.new, ...prev]);
-            setCount(prev => prev + 1);
+            setNotify((prev) => [payload.new, ...prev]);
+            setCount((prev) => prev + 1);
           }
         }
       )
@@ -629,7 +1096,7 @@ function NavBar() {
         async (payload) => {
           if ([101, 102, 103].includes(Number(tokenRes.role))) {
             setNotify((prev) => [
-              { ...payload.new, type: "volume" },
+              { ...payload.new, type: "volumes" },
               ...prev,
             ]);
             setCount((prev) => prev + 1);
@@ -637,177 +1104,230 @@ function NavBar() {
         }
       )
       .subscribe();
-      
+
+    const queriesChannel = supabase
+      .channel("queries_data")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "queries_data" },
+        async (payload) => {
+          if (isAdmin) {
+            setNotify((prev) => [
+              { ...payload.new, type: "query" },
+              ...prev,
+            ]);
+            setCount((prev) => prev + 1);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(courseChannel);
       supabase.removeChannel(traineeChannel);
       supabase.removeChannel(volumeChannel);
+      supabase.removeChannel(queriesChannel);
     };
   }, []);
 
-  const handleProfileClick = () => {
-    setOpenDropdownIndex(null); // Close the dropdown
-    setIsProfileModalOpen(true); // Open the profile modal
+  // ── Logout ────────────────────────────────────────────────────────────────
+  const handleLogout = () => {
+    ["user_token", "isVr", "loginSource", "device", "os"].forEach((k) =>
+      localStorage.removeItem(k)
+    );
+    navigate("/");
   };
 
-  // console.log(notify);
-  
+  // ── Notification message helper ───────────────────────────────────────────
+  const getNotificationMessage = (n) => {
+    if (n.type === "course") return "A course has been assigned to you";
+    if (n.type === "trainee") return "Targeted learning has been initiated";
+    if (n.type === "volumes")
+      return `${n.user_data?.user_name ?? n.added_by} uploaded a volume`;
+    if (n.type === "query")
+      return `New query raised: "${n.subject}" by ${n.created_by}`;
+    return "New notification";
+  };
+
+  const getNotificationRoute = (n) => {
+    if (n.type === "volumes") return "/request-raised";
+    if (n.type === "query") return "/queries";
+    return "/dashboard";
+  };
+
+  const isRead = (n) => {
+    if (n.type === "course") return !!n.is_read;
+    if (n.type === "query") return readQueryIds.has(n.query_id);
+    return false;
+  };
+
+  const handleMarkRead = (n) => {
+    if (n.type === "course") readCourseNotification(n.course_id);
+    if (n.type === "query") readQueryNotification(n.query_id);
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <div className="navbar dm-sans">
         <nav className="bg-[#8DC63F] shadow-sm border">
           <div className="flex flex-wrap items-center justify-between py-[3px] px-1">
-            <div className="flex justify-start items-center ms-3 gap-10">
-              <div className="text-white flex justify-between item-center">
-                {currentPath === "/reports" && <div>Reports</div>}
-                {currentPath === "/dashboard" && <div>Dashboard</div>}
-                {currentPath === "/profile" && <div>Profile</div>}
-                {currentPath === "/settings" && <div>Settings</div>}
-                {currentPath === "/course" && <div>Courses</div>}
-                {currentPath === "/instructors" && <div>Instructors</div>}
-                {currentPath === "/batch" && <div>Batch</div>}
-                {currentPath === "/vrspace" && <div>Realtime</div>}
-                {currentPath.startsWith("/trainee") && <div>Trainee Details</div>}
-              </div>
-            </div>
-            <div className="flex md:order-2">
-              <button
-                type="button"
-                data-collapse-toggle="navbar-search"
-                aria-controls="navbar-search"
-                aria-expanded="false"
-                className="md:hidden text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5 me-1"
-              >
-                <svg
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                  />
-                </svg>
-                <span className="sr-only">Search</span>
-              </button>
-              <div className="relative md:block">
-                <div className="px-2 py-2 ms-3 text-gray-600 hover:text-[#8DC63F]">
-                    {tokenRes.role == "99" && <div className="text-sm text-gray-100">Welcome Super Admin </div>}
-                    {tokenRes.role == "101" && <div className="text-sm text-white">Welcome Admin</div>}
-                    {tokenRes.role == "102" && <div className="text-sm text-white">Welcome Instructor</div>}
-                </div>
-              </div>
-              <div className="relative md:block">
-                <div className="px-3 py-2 ms-1 text-gray-200">
-                  <button className="">
-                    <Search size={20} />
-                  </button>
-                </div>
-              </div>
-              <div className="relative md:block">
-                <div className="px-3 py-2 ms-1 text-gray-200">
-                  <button className="" onClick={makeFullscreen}>
-                    {isFullscreen ? <Minimize size={20} /> : <Scan size={20} />}
-                  </button>
-                </div>
-              </div>
-              <div className="relative md:block">
-                <div className="px-3 py-2 ms-1 text-gray-200">
-                  <div className="">
-                    <button
-                      onClick={() => toggleDropdown('notifications')}
-                      className="relative"
-                    >
-                      <Badge badgeContent={`${count}`} color="error">
-                        <Bell size={20} />
-                      </Badge>
-                    </button>
-                    {openDropdownIndex === 'notifications' && (
-                        <div
-                          ref={(el) => (dropdownRefs.current['notifications'] = el)}
-                          className="absolute right-0 mt-1 w-[480px] bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
-                        >
-                          <div className="p-3 border-b text-gray-700 text-xl">Notifications</div>
 
-                          {notify.length > 0 ? (
-                            <ul className="max-h-60 overflow-y-auto">
-                              {notify.map((n, idx) => (
-                                <li
-                                  key={idx}
-                                  className="px-4 py-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <div className="text-black text-sm">
-                                        {n.course_id && 'Course has been added'} 
-                                        {n.tar_name && 'Targeted Learning has been initiated'}
-                                        {n.type === "volumes" &&
-                                            (n.user_data?.user_name
-                                              ? `${n.user_data.user_name} Uploaded a volume`
-                                              : `${n.added_by} Uploaded a volume`)}
-                                    </div>
-                                    <div><button className="bg-gray-100 p-1 px-2 text-sm rounded-md text-gray-500" onClick={() => navigate('/request-raised')}>View</button></div>
-                                    <button onClick={() => {readNotification(n.course_id)}}>
-                                    <IconButton
-                                      aria-label="delete"
-                                    >
-                                        <Badge badgeContent={''} 
-                                               color="success"
-                                               sx={{
-                                                "& .MuiBadge-badge": {
-                                                  minWidth: "8px",
-                                                  height: "8px",
-                                                  padding: 0,
-                                                  borderRadius: "50%",
-                                                },
-                                              }}
-                                        ></Badge>
-                                    </IconButton>
-                                    </button>
-                                  </div>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div className="p-4 text-gray-500 text-sm">No new notifications</div>
-                          )}
-                        </div>
-                      )}
-                  </div>
+            {/* Left: page title */}
+            <div className="flex justify-start items-center ms-3 gap-10">
+              {pageTitle && (
+                <div className="text-white text-sm font-medium">{pageTitle}</div>
+              )}
+            </div>
+
+            {/* Right: action icons */}
+            <div className="flex md:order-2 items-center">
+
+              {/* Role greeting */}
+              {roleLabel && (
+                <div className="px-2 py-2 ms-3 text-sm text-white hidden md:block">
+                  {roleLabel}
                 </div>
-              </div>
-              <div className=" ms-1 relative">
-                <button onClick={() => toggleDropdown('user-options')} className="text-gray-200 hover:bg-[#8DC63F] p-2 rounded"  onMouseDown={(e) => ripple.create(e, "dark", "circle")}>
-                  <CircleUser size={20} />
+              )}
+
+              {/* Search */}
+              <div className="px-3 py-2 ms-1 text-gray-200">
+                <button aria-label="Search">
+                  <Search size={20} />
                 </button>
-                {openDropdownIndex === 'user-options' && (
+              </div>
+
+              {/* Fullscreen toggle */}
+              <div className="px-3 py-2 ms-1 text-gray-200">
+                <button onClick={toggleFullscreen} aria-label="Toggle fullscreen">
+                  {isFullscreen ? <Minimize size={20} /> : <Scan size={20} />}
+                </button>
+              </div>
+
+              {/* Notifications */}
+              <div className="relative md:block px-3 py-2 ms-1 text-gray-200">
+                <button
+                  onClick={() => toggleDropdown("notifications")}
+                  className="relative"
+                  aria-label="Notifications"
+                >
+                  <Badge badgeContent={String(count)} color="error">
+                    <Bell size={20} />
+                  </Badge>
+                </button>
+
+                {openDropdownIndex === "notifications" && (
                   <div
-                    ref={(el) => (dropdownRefs.current['user-options'] = el)}
-                    className="absolute right-0 mt-2 w-22 bg-white border border-gray-200 rounded shadow-md z-50 transition-all ease-in-out duration-300"
+                    ref={(el) => (dropdownRefs.current["notifications"] = el)}
+                    className="absolute right-0 mt-1 w-[480px] bg-white border border-gray-200 rounded shadow-md z-50"
                   >
-                    <button 
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 font-normal" 
-                      onClick={handleProfileClick}
-                    >
-                      Profile
-                    </button>
-                    <button className="block w-full text-left px-4 py-3 hover:bg-gray-50">Settings</button>
-                    <button className="block w-full text-left px-4 py-3 hover:bg-gray-50" onClick={handleLogout}>Logout</button>
+                    <div className="p-3 border-b text-gray-700 text-xl font-medium">
+                      Notifications
+                    </div>
+
+                    {notify.length > 0 ? (
+                      <ul className="max-h-60 overflow-y-auto">
+                        {notify.map((n, idx) => (
+                          <li
+                            key={n.query_id ?? n.course_id ?? n.target_learning_id ?? idx}
+                            className="px-4 py-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                          >
+                            <div className="flex justify-between items-center gap-2">
+                              {/* Message */}
+                              <div className="text-black text-sm flex-1">
+                                {getNotificationMessage(n)}
+                              </div>
+
+                              {/* View button */}
+                              <button
+                                className="bg-gray-100 p-1 px-2 text-sm rounded-md text-gray-500 whitespace-nowrap"
+                                onClick={() => navigate(getNotificationRoute(n))}
+                              >
+                                View
+                              </button>
+
+                              {/* Mark-read dot (course & query only) */}
+                              {(n.type === "course" || n.type === "query") &&
+                                !isRead(n) && (
+                                  <IconButton
+                                    aria-label="Mark as read"
+                                    size="small"
+                                    onClick={() => handleMarkRead(n)}
+                                  >
+                                    <Badge
+                                      badgeContent=""
+                                      color="success"
+                                      sx={{
+                                        "& .MuiBadge-badge": {
+                                          minWidth: "8px",
+                                          height: "8px",
+                                          padding: 0,
+                                          borderRadius: "50%",
+                                        },
+                                      }}
+                                    />
+                                  </IconButton>
+                                )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-4 text-gray-500 text-sm">
+                        No new notifications
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+
+              {/* User menu */}
+              <div className="ms-1 relative">
+                <button
+                  onClick={() => toggleDropdown("user-options")}
+                  className="text-gray-200 hover:bg-[#74a832] p-2 rounded"
+                  onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                  aria-label="User menu"
+                >
+                  <CircleUser size={20} />
+                </button>
+
+                {openDropdownIndex === "user-options" && (
+                  <div
+                    ref={(el) => (dropdownRefs.current["user-options"] = el)}
+                    className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-50"
+                  >
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      onClick={() => {
+                        setOpenDropdownIndex(null);
+                        setIsProfileModalOpen(true);
+                      }}
+                    >
+                      Profile
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      onClick={() => navigate("/settings")}
+                    >
+                      Settings
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile hamburger */}
               <button
-                data-collapse-toggle="navbar-search"
                 type="button"
-                className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
-                aria-controls="navbar-search"
-                aria-expanded="false"
+                className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-200 rounded-lg md:hidden hover:bg-[#74a832] focus:outline-none focus:ring-2 focus:ring-white/30"
+                aria-label="Open menu"
               >
-                <span className="sr-only">Open main menu</span>
                 <svg
                   className="w-5 h-5"
                   aria-hidden="true"
@@ -825,44 +1345,13 @@ function NavBar() {
                 </svg>
               </button>
             </div>
-            <div
-              className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
-              id="navbar-search"
-            >
-              <div className="relative mt-3 md:hidden">
-                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                    />
-                  </svg>
-                </div>
-                <input
-                  type="text"
-                  id="search-navbar"
-                  className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Search..."
-                />
-              </div>
-            </div>
           </div>
         </nav>
       </div>
 
-      {/* Profile Modal */}
-      <Profile 
-        isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
+      <Profile
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
     </>
   );
