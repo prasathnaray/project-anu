@@ -333,7 +333,7 @@ function BatchIndividual() {
                                     </table>
                                 </div>
                             </div>
-                            {decoded.role == 103 && (
+                            {decoded.role == 103 || decoded.role == 101 && (
                                 <div className="m-3 bg-white p-2">
                                     <div className="text-lg m-3">
                                         <div>Associated Certificates</div>
@@ -348,12 +348,14 @@ function BatchIndividual() {
                                                             <button><ArrowUpWideNarrow size={20} /></button>
                                                         </div>
                                                     </th>
-                                                    <th className="py-2 px-4 text-[#8DC63F]">
-                                                        <div className="flex items-center gap-2">
-                                                            <div>Status</div>
-                                                            <button><ArrowUpWideNarrow size={20} /></button>
-                                                        </div>
-                                                    </th>
+                                                    {decoded.role == 102 || decoded.role == 103 && (
+                                                        <th className="py-2 px-4 text-[#8DC63F]">
+                                                            <div className="flex items-center gap-2">
+                                                                <div>Status</div>
+                                                                <button><ArrowUpWideNarrow size={20} /></button>
+                                                            </div>
+                                                        </th>
+                                                    )} 
                                                 </tr>
                                             </thead>
                                             <tbody className="text-sm">
@@ -363,15 +365,17 @@ function BatchIndividual() {
                                                             <div className="font-medium">{batchInfo.certificate.certificate_name || '—'}</div>
                                                             {/* <div className="text-xs text-gray-400">{batchInfo.certificate.certificate_id}</div> */}
                                                         </td>
-                                                        <td className="py-2 px-4">
-                                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                                                batchInfo.certificate.certificate_status === 'issued'
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-yellow-100 text-yellow-700'
-                                                            }`}>
-                                                                {batchInfo.certificate.certificate_status || 'pending'}
-                                                            </span>
-                                                        </td>
+                                                        {decoded.role == 102 || decoded.role == 103 && (
+                                                            <td className="py-2 px-4">
+                                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                                    batchInfo.certificate.certificate_status === 'issued'
+                                                                        ? 'bg-green-100 text-green-700'
+                                                                        : 'bg-yellow-100 text-yellow-700'
+                                                                }`}>
+                                                                    {batchInfo.certificate.certificate_status || 'pending'}
+                                                                </span>
+                                                            </td>
+                                                        )}  
                                                     </tr>
                                                 ) : (
                                                     <tr>
