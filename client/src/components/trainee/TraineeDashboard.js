@@ -280,7 +280,7 @@ import SideBar from '../sideBar'
 import { useNavigate, useParams } from 'react-router-dom';
 import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
-import { Check, Clock, BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare, CheckCircle, AlertCircle } from 'lucide-react';
+import { Check, Clock, BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare, CheckCircle, AlertCircle, BarChart } from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
 import getInteractionsAttemptStats from '../../API/InteractionAttemptAPI';
@@ -548,6 +548,34 @@ function TraineeDashboard() {
                     totalAttempts={totalAttempts}
                   />
                 </div>
+                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BarChart size={16} className="text-[#8DC63F]" />
+                      <div className="text-base font-semibold text-gray-700">
+                        Learning Path Progress
+                      </div>
+
+                      {/* Dropdowns aligned to the right in the same row */}
+                      <div className="ml-auto flex items-center gap-2">
+                        <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                          <option value="">All Courses</option>
+                          <option value="course1">Course 1</option>
+                          <option value="course2">Course 2</option>
+                        </select>
+
+                        <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                          <option value="">All Time</option>
+                          <option value="week">This Week</option>
+                          <option value="month">This Month</option>
+                          <option value="year">This Year</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                        
+                    </div>
+                  </div>
               </div>
 
               {/* ── Right Panel ──────────────────────────────── */}
