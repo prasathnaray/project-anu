@@ -92,6 +92,8 @@ const queriesRouter = require('./routes/queriesRoute.js');
 
 //analytics
 const InteractionsAttemptStatsRouter = require('./routes/InteractionsAttemptStats.js');
+//questions
+const questionsRouter = require('./routes/questionsRoute.js');
 //Auth middleware
 const Authenticate = require('./Auth/Authenticate');
 const deviceMiddleware = require('./utils/deviceMiddleware');
