@@ -2120,6 +2120,291 @@ const buildCertificateTree = (rows) => {
   }));
 };
 
+//pakka va work agudhu
+// const indDatauuid = (requester, people_id, isVr = true) => {
+//   return new Promise((resolve, reject) => {
+//     const isPrivileged = [101, 102, 103].includes(Number(requester.role));
+
+//     if (!isPrivileged) {
+//       return resolve({
+//         status: 'Unauthorized',
+//         code: 401,
+//         message: 'You do not have permission to view profiles',
+//       });
+//     }
+
+//     // ─── VR LOGIN ────────────────────────────────────────────────────────────
+//     if (isVr) {
+//       const vrBatchQuery = `
+//         SELECT 
+//           bd.batch_id,
+//           bd.batch_name,
+//           bd.batch_end_date,
+//           COUNT(DISTINCT CASE WHEN ud.user_role = '102' THEN ud.user_email END) AS instructor_count,
+//           ARRAY_AGG(DISTINCT ud.user_name) FILTER (WHERE ud.user_role = '102' AND ud.user_name IS NOT NULL) AS instructors
+//         FROM batch_data bd
+//         JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+//         JOIN user_data ud ON ud.user_email = bpd.user_id
+//         WHERE bd.batch_end_date::DATE >= CURRENT_DATE
+//           AND bd.batch_id IN (
+//             SELECT UNNEST(bpd.batch_id)
+//             FROM user_data ud
+//             JOIN batch_people_data bpd ON bpd.user_id = ud.user_email
+//             WHERE ud.people_id = $1
+//           )
+//         GROUP BY bd.batch_id, bd.batch_name, bd.batch_end_date
+//         ORDER BY bd.batch_end_date::DATE DESC;
+//       `;
+
+//       const vrCertificateTreeQuery = `
+//         WITH user_info AS (
+//           SELECT ud.user_email
+//           FROM user_data ud
+//           WHERE ud.people_id = $1
+//         ),
+//         active_batches AS (
+//           SELECT UNNEST(bpd.batch_id) AS batch_id
+//           FROM user_data ud
+//           JOIN batch_people_data bpd ON bpd.user_id = ud.user_email
+//           WHERE ud.people_id = $1
+//         ),
+//         active_certificates AS (
+//           SELECT DISTINCT cd.certificate_id, cd.certificate_name
+//           FROM active_batches ab
+//           JOIN batch_data bd ON bd.batch_id = ab.batch_id
+//           JOIN certification_data cd ON bd.certification_data ? cd.certificate_id::text
+//           WHERE bd.batch_end_date::DATE >= CURRENT_DATE
+//         ),
+//         user_progress AS (
+//           SELECT pd.resourse_id, pd.is_completed
+//           FROM progress_data pd
+//           WHERE pd.user_id IN (SELECT user_email FROM user_info)
+//         )
+//         SELECT
+//           ac.certificate_id,
+//           ac.certificate_name,
+//           lm.course_name,
+//           lm.module_name,
+//           lm.unit_name,
+//           rd.resource_id,
+//           rd.resource_name,
+//           rd.resource_type,
+//           rd.resource_topic,
+//           up.is_completed
+//         FROM active_certificates ac
+//         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
+//         JOIN resource_data rd ON rd.learning_module_id = lm.learning_module_id
+//         LEFT JOIN user_progress up ON up.resourse_id = rd.resource_id
+//         ORDER BY
+//           ac.certificate_name,
+//           lm.course_name,
+//           lm.module_name,
+//           lm.unit_name,
+//           rd.resource_type,
+//           rd.resource_topic,
+//           rd.resource_name;
+//       `;
+
+//       Promise.all([
+//         new Promise((res, rej) =>
+//           client.query(vrBatchQuery, [people_id], (err, result) =>
+//             err ? rej(err) : res(result.rows)
+//           )
+//         ),
+//         new Promise((res, rej) =>
+//           client.query(vrCertificateTreeQuery, [people_id], (err, result) =>
+//             err ? rej(err) : res(result.rows)
+//           )
+//         ),
+//       ])
+//         .then(([batchData, rawCertData]) => {
+//           const certificates = buildCertificateTree(rawCertData);
+//           resolve({
+//             status: 'Success',
+//             code: 200,
+//             currentBatches: batchData,
+//             certificates: certificates,
+//             loginContext: 'vr',
+//           });
+//         })
+//         .catch((err) => {
+//           reject({
+//             status: 'Error',
+//             code: 500,
+//             message: 'Database query failed',
+//             error: err,
+//           });
+//         });
+
+//       return;
+//     }
+
+//     // ─── LMS LOGIN ───────────────────────────────────────────────────────────
+//     const userProgressQuery = `
+//       WITH user_info AS (
+//         SELECT user_email, user_name, user_role, user_profile_photo
+//         FROM user_data
+//         WHERE people_id = $1
+//       ),
+//       pdt AS (
+//         SELECT resourse_id AS rid, user_id, is_completed, updated_at
+//         FROM progress_data
+//         WHERE user_id IN (SELECT user_email FROM user_info)
+//       )
+//       SELECT 
+//         ui.user_name, ui.user_profile_photo, ui.user_role,
+//         lm.certificate_id, lm.course_name, lm.module_name, lm.unit_name, lm.learning_module_id,
+//         rd.resource_id, rd.resource_name, rd.resource_type, rd.resource_topic,
+//         pdt.is_completed, pdt.updated_at
+//       FROM user_info ui
+//       CROSS JOIN learning_module lm
+//       LEFT JOIN resource_data rd ON lm.learning_module_id = rd.learning_module_id
+//       LEFT JOIN pdt ON pdt.rid = rd.resource_id;
+//     `;
+
+//     const instructorQuery = `
+//       SELECT 
+//         bd.batch_id,
+//         bd.batch_name,
+//         bd.batch_end_date,
+//         CASE 
+//           WHEN bd.batch_end_date::DATE >= CURRENT_DATE THEN 'current'
+//           ELSE 'completed'
+//         END AS batch_status,
+//         COUNT(DISTINCT CASE WHEN ud.user_role = '102' THEN ud.user_email END) AS instructor_count,
+//         ARRAY_AGG(DISTINCT ud.user_name) FILTER (WHERE ud.user_role = '102' AND ud.user_name IS NOT NULL) AS instructors
+//       FROM batch_data bd
+//       JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+//       JOIN user_data ud ON ud.user_email = bpd.user_id
+//       WHERE bd.batch_id IN (
+//         SELECT UNNEST(bpd.batch_id)
+//         FROM user_data ud
+//         JOIN batch_people_data bpd ON bpd.user_id = ud.user_email
+//         WHERE ud.people_id = $1
+//       )
+//       GROUP BY bd.batch_id, bd.batch_name, bd.batch_end_date
+//       ORDER BY bd.batch_end_date::DATE DESC;
+//     `;
+
+//     const testDataQuery = `
+//       SELECT 
+//         rd.resource_id, rd.resource_name, rd.resource_type,
+//         ctd.plane_identification, ctd.image_optimization, ctd.measurement, ctd.diagnostic_interpretation, ctd.created_at,
+//         lm.learning_module_id, lm.module_name, lm.unit_name, lm.course_name,
+//         cd.certificate_name
+//       FROM user_data ud
+//       JOIN course_test_data ctd ON ud.user_email = ctd.user_id
+//       JOIN resource_data rd ON rd.resource_id = ctd.r_id
+//       JOIN learning_module lm ON lm.learning_module_id = rd.learning_module_id
+//       JOIN certification_data cd ON cd.certificate_id = lm.certificate_id
+//       WHERE ud.people_id = $1
+//       ORDER BY ctd.created_at DESC;
+//     `;
+
+//     const testReattempts = `
+//       SELECT 
+//         r.resource_id, r.resource_name, r.resource_type,
+//         COUNT(t.r_id) AS attempt_count
+//       FROM user_data ud
+//       JOIN test_attempts_logs t ON t.user_id = ud.user_email
+//       JOIN resource_data r ON r.resource_id = t.r_id
+//       WHERE ud.people_id = $1
+//       GROUP BY r.resource_id, r.resource_name, r.resource_type
+//       HAVING COUNT(t.r_id) > 1
+//       ORDER BY attempt_count DESC;
+//     `;
+
+//     const moduleCompletionQuery = `
+//       WITH user_info AS (
+//         SELECT user_email
+//         FROM user_data
+//         WHERE people_id = $1
+//       ),
+//       pdt AS (
+//         SELECT resourse_id AS rid, user_id, is_completed
+//         FROM progress_data
+//         WHERE user_id IN (SELECT user_email FROM user_info)
+//       )
+//       SELECT
+//         lm.learning_module_id,
+//         lm.course_name,
+//         lm.module_name,
+//         lm.unit_name,
+//         COUNT(rd.resource_id) FILTER (
+//           WHERE rd.resource_type = 'Learning Resource'
+//         ) AS total_learning_resources,
+//         COUNT(pdt.is_completed) FILTER (
+//           WHERE rd.resource_type = 'Learning Resource'
+//           AND pdt.is_completed = true
+//         ) AS completed_learning_resources,
+//         COUNT(rd.resource_id) FILTER (
+//           WHERE rd.resource_type = 'Image Interpretation'
+//         ) AS total_image_interpretations,
+//         COUNT(pdt.is_completed) FILTER (
+//           WHERE rd.resource_type = 'Image Interpretation'
+//           AND pdt.is_completed = true
+//         ) AS completed_image_interpretations
+//       FROM learning_module lm
+//       LEFT JOIN resource_data rd ON lm.learning_module_id = rd.learning_module_id
+//       LEFT JOIN pdt ON pdt.rid = rd.resource_id
+//       GROUP BY lm.learning_module_id, lm.course_name, lm.module_name, lm.unit_name;
+//     `;
+
+//     Promise.all([
+//       new Promise((res, rej) =>
+//         client.query(userProgressQuery, [people_id], (err, result) =>
+//           err ? rej(err) : res(result.rows)
+//         )
+//       ),
+//       new Promise((res, rej) =>
+//         client.query(instructorQuery, [people_id], (err, result) =>
+//           err ? rej(err) : res(result.rows)
+//         )
+//       ),
+//       new Promise((res, rej) =>
+//         client.query(testDataQuery, [people_id], (err, result) =>
+//           err ? rej(err) : res(result.rows)
+//         )
+//       ),
+//       new Promise((res, rej) =>
+//         client.query(testReattempts, [people_id], (err, result) =>
+//           err ? rej(err) : res(result.rows)
+//         )
+//       ),
+//       new Promise((res, rej) =>
+//         client.query(moduleCompletionQuery, [people_id], (err, result) =>
+//           err ? rej(err) : res(result.rows)
+//         )
+//       ),
+//     ])
+//       .then(([progressData, instructorData, testData, reAttemptsData, moduleCompletion]) => {
+//         const currentBatches = instructorData.filter(b => b.batch_status === 'current');
+//         const completedBatches = instructorData.filter(b => b.batch_status === 'completed');
+
+//         resolve({
+//           status: 'Success',
+//           code: 200,
+//           data: progressData,
+//           currentBatches: currentBatches,
+//           completedBatches: completedBatches,
+//           testQuery: testData,
+//           reAttempts: reAttemptsData,
+//           moduleCompletion: moduleCompletion,
+//           loginContext: 'lms',
+//         });
+//       })
+//       .catch((err) => {
+//         reject({
+//           status: 'Error',
+//           code: 500,
+//           message: 'Database query failed',
+//           error: err,
+//         });
+//       });
+//   });
+// };
+
+//new version
 const indDatauuid = (requester, people_id, isVr = true) => {
   return new Promise((resolve, reject) => {
     const isPrivileged = [101, 102, 103].includes(Number(requester.role));
@@ -2175,7 +2460,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           WHERE bd.batch_end_date::DATE >= CURRENT_DATE
         ),
         user_progress AS (
-          SELECT pd.resourse_id, pd.is_completed
+          SELECT pd.resourse_id, pd.user_id, pd.is_completed, pd.updated_at
           FROM progress_data pd
           WHERE pd.user_id IN (SELECT user_email FROM user_info)
         )
@@ -2189,7 +2474,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.resource_name,
           rd.resource_type,
           rd.resource_topic,
-          up.is_completed
+          up.user_id AS progress_user_id,
+          up.is_completed,
+          up.updated_at
         FROM active_certificates ac
         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
         JOIN resource_data rd ON rd.learning_module_id = lm.learning_module_id
@@ -2204,6 +2491,28 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.resource_name;
       `;
 
+      const vrProgressQuery = `
+        SELECT 
+          pd.user_id,
+          pd.resourse_id,
+          pd.is_completed,
+          pd.updated_at,
+          rd.resource_name,
+          rd.resource_type,
+          rd.resource_topic,
+          rd.learning_module_id,
+          rd.created_at AS resource_created_at
+        FROM progress_data pd
+        LEFT JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+        WHERE pd.user_id = (
+          SELECT user_email 
+          FROM user_data 
+          WHERE people_id = $1
+        )
+        ORDER BY pd.updated_at DESC
+        LIMIT 1;
+      `;
+
       Promise.all([
         new Promise((res, rej) =>
           client.query(vrBatchQuery, [people_id], (err, result) =>
@@ -2215,14 +2524,20 @@ const indDatauuid = (requester, people_id, isVr = true) => {
             err ? rej(err) : res(result.rows)
           )
         ),
+        new Promise((res, rej) =>
+          client.query(vrProgressQuery, [people_id], (err, result) =>
+            err ? rej(err) : res(result.rows)
+          )
+        ),
       ])
-        .then(([batchData, rawCertData]) => {
+        .then(([batchData, rawCertData, vrProgressData]) => {
           const certificates = buildCertificateTree(rawCertData);
           resolve({
             status: 'Success',
             code: 200,
             currentBatches: batchData,
             certificates: certificates,
+            latestProgress: vrProgressData[0] || null,
             loginContext: 'vr',
           });
         })
@@ -2254,11 +2569,36 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         ui.user_name, ui.user_profile_photo, ui.user_role,
         lm.certificate_id, lm.course_name, lm.module_name, lm.unit_name, lm.learning_module_id,
         rd.resource_id, rd.resource_name, rd.resource_type, rd.resource_topic,
-        pdt.is_completed, pdt.updated_at
+        pdt.user_id AS progress_user_id,
+        pdt.is_completed,
+        pdt.updated_at
       FROM user_info ui
       CROSS JOIN learning_module lm
       LEFT JOIN resource_data rd ON lm.learning_module_id = rd.learning_module_id
-      LEFT JOIN pdt ON pdt.rid = rd.resource_id;
+      LEFT JOIN pdt ON pdt.rid = rd.resource_id
+      ORDER BY pdt.updated_at DESC;
+    `;
+
+    const lmsProgressQuery = `
+      SELECT 
+        pd.user_id,
+        pd.resourse_id,
+        pd.is_completed,
+        pd.updated_at,
+        rd.resource_name,
+        rd.resource_type,
+        rd.resource_topic,
+        rd.learning_module_id,
+        rd.created_at AS resource_created_at
+      FROM progress_data pd
+      LEFT JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+      WHERE pd.user_id = (
+        SELECT user_email 
+        FROM user_data 
+        WHERE people_id = $1
+      )
+      ORDER BY pd.updated_at DESC
+      LIMIT 1;
     `;
 
     const instructorQuery = `
@@ -2356,6 +2696,11 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         )
       ),
       new Promise((res, rej) =>
+        client.query(lmsProgressQuery, [people_id], (err, result) =>
+          err ? rej(err) : res(result.rows)
+        )
+      ),
+      new Promise((res, rej) =>
         client.query(instructorQuery, [people_id], (err, result) =>
           err ? rej(err) : res(result.rows)
         )
@@ -2376,7 +2721,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         )
       ),
     ])
-      .then(([progressData, instructorData, testData, reAttemptsData, moduleCompletion]) => {
+      .then(([progressData, lmsProgressData, instructorData, testData, reAttemptsData, moduleCompletion]) => {
         const currentBatches = instructorData.filter(b => b.batch_status === 'current');
         const completedBatches = instructorData.filter(b => b.batch_status === 'completed');
 
@@ -2384,6 +2729,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           status: 'Success',
           code: 200,
           data: progressData,
+          latestProgress: lmsProgressData[0] || null,
           currentBatches: currentBatches,
           completedBatches: completedBatches,
           testQuery: testData,

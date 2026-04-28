@@ -644,6 +644,34 @@ function TraineeDashboard() {
                     </div>
                   </div>
                 </div>
+                {/* ? last completed module  */}
+                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                  <div className="text-gray-500 font-semibold mb-3">Last Completed Module</div>
+                  {loading ? (
+                    <div className="flex justify-center py-4"><Spinner /></div>
+                  ) : allResources.filter(r => r.is_completed === true).length > 0 ? (  
+                    (() => {
+                      const lastCompleted = allResources
+                        .filter(r => r.is_completed === true) 
+                        .sort((a, b) => new Date(b.completed_on) - new Date(a.completed_on))[0];
+                      return (
+                        <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                          <div className="text-gray-400 text-xs mb-1">Module Name</div>
+                          <div className="font-semibold text-gray-700">
+                            {lastCompleted.resource_name || 'N/A'}
+                          </div>
+                          <div className="text-gray-400 text-xs mt-2">Completed On</div>
+                          <div className="font-semibold text-gray-700">
+                            {formatDateTime(lastCompleted.updated_at)}
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="text-sm text-gray-400 text-center py-4">No modules completed yet</div>
+                   )  
+                  }
+                </div>
               </div>
             </div>
           </div>
