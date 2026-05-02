@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/trainee/b6baabec-3423-4131-8e6f-f59494f397c2?isVr=false
+  url: http://{{local_base_url}}/api/v1/trainee/b6baabec-3423-4131-8e6f-f59494f397c2?isVr=false
   params:
     - name: isVr
       value: "false"
