@@ -274,17 +274,24 @@
 
 // dashboard
 
-import React, { useState, useEffect } from 'react'
-import NavBar from '../navBar'
-import SideBar from '../sideBar'
+import React, { useState, useEffect, useMemo } from 'react';
+import NavBar from '../navBar';
+import SideBar from '../sideBar';
 import { useNavigate, useParams } from 'react-router-dom';
 import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
-import { BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare, CheckCircle, AlertCircle, BarChart, ArrowRight } from 'lucide-react';
+import {
+  BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare,
+  CheckCircle, AlertCircle, BarChart, ArrowRight, Award,
+  Target, Flame, TrendingUp,
+} from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
 import getInteractionsAttemptStats from '../../API/InteractionAttemptAPI';
 import InteractionDonut from '../../charts/InteractionDonut';
+import {
+  startOfWeek, endOfWeek, subWeeks, isWithinInterval, format,
+} from 'date-fns';
 
 function TraineeDashboard() {
   const navigate = useNavigate();
@@ -297,9 +304,13 @@ function TraineeDashboard() {
     data: [],
     instructors: [],
     currentBatches: [],
+    completedBatches: [],
     certificates: [],
     testQuery: [],
+    reAttempts: [],
+    moduleCompletion: [],
     nextModule: null,
+    latestProgress: null,
   });
 
   const handleApiCall = async (id) => {
@@ -331,7 +342,7 @@ function TraineeDashboard() {
       setQueries(prev => ({ ...prev, loading: true }));
       const token = localStorage.getItem('user_token');
       const response = await GetQueriesAPI(token);
-      const pendingCount = response.result.filter(q => q.status === 'pending').length;
+      const pendingCount  = response.result.filter(q => q.status === 'pending').length;
       const resolvedCount = response.result.filter(q => q.status === 'resolved').length;
       setQueries({ pending: pendingCount, resolved: resolvedCount, total: response.total, loading: false, error: null });
     } catch (error) {
@@ -368,20 +379,23 @@ function TraineeDashboard() {
   useEffect(() => { handleFetchInteractionStats(); }, []);
 
   // ── Derived values ────────────────────────────────────────
-  const allResources = (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null);
+  const allResources = useMemo(
+    () => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null),
+    [individualTraineeProfile.data]
+  );
 
-  const totalLR       = allResources.filter(r => r.resource_type === 'Learning Resource').length;
-  const totalPractice = allResources.filter(r => r.resource_type === 'Practice').length;
-  const totalTests    = allResources.filter(r => r.resource_type === 'Test').length;
-  const totalIR       = allResources.filter(r => r.resource_type === 'Image Interpretation').length;
+  const totalLR       = useMemo(() => allResources.filter(r => r.resource_type === 'Learning Resource').length, [allResources]);
+  const totalPractice = useMemo(() => allResources.filter(r => r.resource_type === 'Practice').length, [allResources]);
+  const totalTests    = useMemo(() => allResources.filter(r => r.resource_type === 'Test').length, [allResources]);
+  const totalIR       = useMemo(() => allResources.filter(r => r.resource_type === 'Image Interpretation').length, [allResources]);
 
-  const completedLR       = allResources.filter(r => r.resource_type === 'Learning Resource' && r.is_completed === true).length;
-  const completedPractice = allResources.filter(r => r.resource_type === 'Practice' && r.is_completed === true).length;
-  const completedTests    = allResources.filter(r => r.resource_type === 'Test' && r.is_completed === true).length;
-  const completedIR       = allResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed === true).length;
+  const completedLR       = useMemo(() => allResources.filter(r => r.resource_type === 'Learning Resource' && r.is_completed === true).length, [allResources]);
+  const completedPractice = useMemo(() => allResources.filter(r => r.resource_type === 'Practice' && r.is_completed === true).length, [allResources]);
+  const completedTests    = useMemo(() => allResources.filter(r => r.resource_type === 'Test' && r.is_completed === true).length, [allResources]);
+  const completedIR       = useMemo(() => allResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed === true).length, [allResources]);
 
   const totalResources = allResources.length;
-  const completed      = allResources.filter(r => r.is_completed === true).length;
+  const completed      = useMemo(() => allResources.filter(r => r.is_completed === true).length, [allResources]);
   const attempted      = (individualTraineeProfile?.testQuery ?? []).length;
   const totalAttempts  = interactionStats.data.reduce((sum, r) => sum + Number(r.attempt_count), 0);
 
@@ -393,18 +407,187 @@ function TraineeDashboard() {
     ? Math.round((Number(nextModule.completed_image_interpretations) / Number(nextModule.total_image_interpretations)) * 100) || 0
     : 0;
 
-  const lastCompleted = allResources
-    .filter(r => r.is_completed === true)
-    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0] ?? null;
+  // ── Last Completed Module ─────────────────────────────────
+  // Groups resources by learning_module_id; finds the module with the most
+  // recently completed resource (module does not need to be 100% done).
+  const lastCompletedModuleData = useMemo(() => {
+    const moduleMap = {};
+    allResources.forEach(r => {
+      if (!r.learning_module_id) return;
+      const key = r.learning_module_id;
+      if (!moduleMap[key]) {
+        moduleMap[key] = {
+          learning_module_id: r.learning_module_id,
+          unit_name: r.unit_name,
+          module_name: r.module_name,
+          course_name: r.course_name,
+          resources: [],
+        };
+      }
+      moduleMap[key].resources.push(r);
+    });
 
-  const formatDateTime = (dateString) => {
-    if (!dateString || dateString === 'N/A') return 'N/A';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'N/A';
-    return date.toLocaleString('en-IN', {
+    // Find module with at least one completed resource, pick latest updated_at
+    const modulesWithCompletion = Object.values(moduleMap)
+      .map(m => {
+        const completedResources = m.resources.filter(r => r.is_completed === true && r.updated_at);
+        const totalCount     = m.resources.filter(r => r.resource_id).length;
+        const completedCount = completedResources.length;
+        const lastDate = completedResources
+          .map(r => new Date(r.updated_at))
+          .sort((a, b) => b - a)[0] ?? null;
+        return { ...m, completedCount, totalCount, lastDate };
+      })
+      .filter(m => m.completedCount > 0 && m.lastDate)
+      .sort((a, b) => b.lastDate - a.lastDate);
+
+    return modulesWithCompletion[0] ?? null;
+  }, [allResources]);
+
+  // ── Weekly Practice Streak ────────────────────────────────
+  const weeklyStreak = useMemo(() => {
+    const completedDates = allResources
+      .filter(r => r.is_completed === true && r.updated_at)
+      .map(r => new Date(r.updated_at));
+
+    if (completedDates.length === 0) return 0;
+
+    const now = new Date();
+    const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const thisWeekEnd   = endOfWeek(now, { weekStartsOn: 1 });
+    const hasThisWeek   = completedDates.some(d => isWithinInterval(d, { start: thisWeekStart, end: thisWeekEnd }));
+
+    let streak = 0;
+    // If no activity this week, start counting from last week
+    const startOffset = hasThisWeek ? 0 : 1;
+
+    for (let i = startOffset; i < 52; i++) {
+      const wStart = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 });
+      const wEnd   = endOfWeek(wStart, { weekStartsOn: 1 });
+      if (completedDates.some(d => isWithinInterval(d, { start: wStart, end: wEnd }))) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [allResources]);
+
+  // ── Last 8 Weeks Activity (bar chart for streak card) ────
+  const last8WeeksActivity = useMemo(() => {
+    const completedDates = allResources
+      .filter(r => r.is_completed === true && r.updated_at)
+      .map(r => new Date(r.updated_at));
+
+    return Array.from({ length: 8 }, (_, i) => {
+      const wStart = startOfWeek(subWeeks(new Date(), 7 - i), { weekStartsOn: 1 });
+      const wEnd   = endOfWeek(wStart, { weekStartsOn: 1 });
+      const count  = completedDates.filter(d => isWithinInterval(d, { start: wStart, end: wEnd })).length;
+      return {
+        week: format(wStart, 'MMM d'),
+        count,
+        isCurrentWeek: i === 7,
+      };
+    });
+  }, [allResources]);
+
+  // ── Test Scores & Reattempts ──────────────────────────────
+  const testScores    = (individualTraineeProfile?.testQuery ?? [])[0] ?? null;
+  const testReattempts = useMemo(() => individualTraineeProfile?.reAttempts ?? [], [individualTraineeProfile.reAttempts]);
+  const moduleCompletion = useMemo(() => individualTraineeProfile?.moduleCompletion ?? [], [individualTraineeProfile.moduleCompletion]);
+
+  // ── MS — MindSparks ───────────────────────────────────────
+  const msTotalAttempts  = totalAttempts;
+  const msResourceCount  = interactionStats.data.length;
+
+  // ── OB — OB Booster resources ────────────────────────────
+  const obResources = useMemo(() =>
+    allResources.filter(r =>
+      r.resource_topic?.toLowerCase().includes('ob booster') ||
+      r.resource_name?.toLowerCase().includes('ob booster') ||
+      r.resource_topic?.toLowerCase().includes('ob boosters')
+    ), [allResources]);
+  const obCompleted = obResources.filter(r => r.is_completed === true).length;
+
+  // ── Practice & Test resource lists ───────────────────────
+  const practiceResources = useMemo(() => {
+    const seen = new Set();
+    return allResources
+      .filter(r => r.resource_type === 'Practice' && r.resource_id && !seen.has(r.resource_id) && seen.add(r.resource_id))
+      .sort((a, b) => (a.resource_name || '').localeCompare(b.resource_name || ''));
+  }, [allResources]);
+
+  const testResourcesList = useMemo(() => {
+    const seen = new Set();
+    return allResources
+      .filter(r => r.resource_type === 'Test' && r.resource_id && !seen.has(r.resource_id) && seen.add(r.resource_id))
+      .sort((a, b) => (a.resource_name || '').localeCompare(b.resource_name || ''));
+  }, [allResources]);
+
+  // P1–P4 practices, T1–T4 tests with reattempt counts
+  const resourcePerformanceItems = useMemo(() => {
+    const practices = practiceResources.slice(0, 4).map((r, i) => ({
+      label: `P${i + 1}`,
+      resource_name: r.resource_name,
+      resource_type: 'Practice',
+      resource_id: r.resource_id,
+      is_completed: r.is_completed,
+      updated_at: r.updated_at,
+      reattempts: 0,
+    }));
+    const tests = testResourcesList.slice(0, 4).map((r, i) => {
+      const entry = testReattempts.find(ra => ra.resource_id === r.resource_id);
+      return {
+        label: `T${i + 1}`,
+        resource_name: r.resource_name,
+        resource_type: 'Test',
+        resource_id: r.resource_id,
+        is_completed: r.is_completed,
+        updated_at: r.updated_at,
+        reattempts: entry ? Math.max(0, Number(entry.attempt_count) - 1) : 0,
+      };
+    });
+    return [...practices, ...tests];
+  }, [practiceResources, testResourcesList, testReattempts]);
+
+  // ── Learning Path Progress (group by course) ─────────────
+  const learningPathProgress = useMemo(() => {
+    const courseMap = {};
+    moduleCompletion.forEach(m => {
+      const key = m.course_name || 'Unknown Course';
+      if (!courseMap[key]) courseMap[key] = { course_name: key, modules: [] };
+      courseMap[key].modules.push(m);
+    });
+    return Object.values(courseMap);
+  }, [moduleCompletion]);
+
+  // ── Helpers ───────────────────────────────────────────────
+  const formatDateTime = (ds) => {
+    if (!ds || ds === 'N/A') return 'N/A';
+    const d = new Date(ds);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleString('en-IN', {
       year: 'numeric', month: 'short', day: 'numeric',
       hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata',
     });
+  };
+
+  const formatDate = (ds) => {
+    if (!ds || ds === 'N/A') return 'N/A';
+    const d = new Date(ds);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString('en-IN', {
+      year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata',
+    });
+  };
+
+  const calcAvgScore = (scores) => {
+    if (!scores) return null;
+    const vals = [
+      scores.plane_identification, scores.image_optimization,
+      scores.measurement, scores.diagnostic_interpretation,
+    ].map(Number).filter(v => !isNaN(v));
+    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
   };
 
   // ── Sub-components ────────────────────────────────────────
@@ -415,8 +598,8 @@ function TraineeDashboard() {
     />
   );
 
-  const StatCard = ({ icon: Icon, iconColor, label, completed, total }) => {
-    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const StatCard = ({ icon: Icon, iconColor, label, completed: c, total: t }) => {
+    const pct = t > 0 ? Math.round((c / t) * 100) : 0;
     return (
       <div className="border shadow-sm rounded-lg p-3 bg-white flex flex-col gap-2">
         <div className="flex justify-between items-center">
@@ -429,22 +612,31 @@ function TraineeDashboard() {
               <div className="flex justify-end mt-1"><Spinner /></div>
             ) : (
               <div className="text-xl font-bold text-gray-700">
-                {completed}
-                <span className="text-sm font-normal text-gray-400">/{total}</span>
+                {c}<span className="text-sm font-normal text-gray-400">/{t}</span>
               </div>
             )}
           </div>
         </div>
         <div className="w-full bg-gray-100 rounded-full h-1.5">
-          <div
-            className="h-1.5 rounded-full transition-all duration-500"
-            style={{ width: `${pct}%`, backgroundColor: '#8DC63F' }}
-          />
+          <div className="h-1.5 rounded-full transition-all duration-500"
+            style={{ width: `${pct}%`, backgroundColor: '#8DC63F' }} />
         </div>
         <div className="text-[10px] text-gray-400">{pct}% completed</div>
       </div>
     );
   };
+
+  const ScoreBadge = ({ label, value, color, subLabel }) => (
+    <div className="flex flex-col items-center justify-center p-3 rounded-lg border bg-gray-50 gap-1 min-h-[90px]">
+      <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</div>
+      {loading ? <Spinner size={4} /> : (
+        <div className="text-2xl font-bold" style={{ color }}>
+          {value !== null && value !== undefined ? value : '—'}
+        </div>
+      )}
+      {subLabel && <div className="text-[9px] text-gray-400 text-center leading-tight">{subLabel}</div>}
+    </div>
+  );
 
   // ── Render ────────────────────────────────────────────────
   return (
@@ -462,7 +654,7 @@ function TraineeDashboard() {
           <div className="p-4">
             <div className="grid grid-cols-3 gap-5">
 
-              {/* ── Left Panel ───────────────────────────────── */}
+              {/* ── LEFT PANEL ──────────────────────────────── */}
               <div className="col-span-2 flex flex-col gap-4">
 
                 {/* Welcome */}
@@ -478,6 +670,188 @@ function TraineeDashboard() {
                   <StatCard icon={Dumbbell}       iconColor="text-green-500"  label="Practices"             completed={completedPractice} total={totalPractice} />
                   <StatCard icon={ClipboardCheck} iconColor="text-orange-500" label="Tests"                 completed={completedTests}    total={totalTests} />
                   <StatCard icon={Eye}            iconColor="text-purple-500" label="Image Interpretations" completed={completedIR}       total={totalIR} />
+                </div>
+
+                {/* ── LAST SCORE: MS | OB | II | T ─────────── */}
+                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Award size={16} className="text-[#8DC63F]" />
+                    <div className="text-base font-semibold text-gray-700">Last Score</div>
+                    {testScores && (
+                      <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+                        Last test: {formatDate(testScores.created_at)}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3">
+                    {/* MS – MindSparks */}
+                    <ScoreBadge
+                      label="MS"
+                      value={msTotalAttempts}
+                      color="#8DC63F"
+                      subLabel={`MindSpark Attempts${msResourceCount > 0 ? ` (${msResourceCount} resources)` : ''}`}
+                    />
+                    {/* OB – OB Booster */}
+                    <ScoreBadge
+                      label="OB"
+                      value={obResources.length > 0 ? `${obCompleted}/${obResources.length}` : '—'}
+                      color="#f97316"
+                      subLabel="OB Booster"
+                    />
+                    {/* II – Image Interpretation */}
+                    <ScoreBadge
+                      label="II"
+                      value={totalIR > 0 ? `${completedIR}/${totalIR}` : '—'}
+                      color="#a78bfa"
+                      subLabel="Image Interp."
+                    />
+                    {/* T – Test */}
+                    <ScoreBadge
+                      label="T"
+                      value={testScores ? `${calcAvgScore(testScores) ?? '—'}%` : '—'}
+                      color="#3b82f6"
+                      subLabel={testScores ? (testScores.resource_name || 'Last Test') : 'No test yet'}
+                    />
+                  </div>
+
+                  {/* Test sub-scores breakdown */}
+                  {testScores && (
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+                        Last Test — Sub-Scores
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                        {[
+                          { key: 'plane_identification',       label: 'Plane Identification', color: '#3b82f6' },
+                          { key: 'image_optimization',         label: 'Image Optimization',   color: '#8b5cf6' },
+                          { key: 'measurement',                label: 'Measurement',          color: '#10b981' },
+                          { key: 'diagnostic_interpretation',  label: 'Diagnostic Interp.',   color: '#f59e0b' },
+                        ].map(({ key, label, color }) => {
+                          const val = Number(testScores[key]);
+                          const pct = isNaN(val) ? 0 : Math.min(100, Math.round(val));
+                          return (
+                            <div key={key} className="flex flex-col gap-1">
+                              <div className="flex justify-between text-[10px] text-gray-500">
+                                <span>{label}</span>
+                                <span className="font-semibold" style={{ color }}>
+                                  {isNaN(val) ? '—' : `${val}%`}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                <div className="h-1.5 rounded-full transition-all duration-700"
+                                  style={{ width: `${pct}%`, backgroundColor: color }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ── PRACTICE & TEST PERFORMANCE (P1–P4, T1–T4) ── */}
+                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Target size={16} className="text-[#8DC63F]" />
+                    <div className="text-base font-semibold text-gray-700">Practice &amp; Test Performance</div>
+                  </div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-6"><Spinner /></div>
+                  ) : resourcePerformanceItems.length > 0 ? (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b border-gray-100 bg-gray-50">
+                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold rounded-tl">#</th>
+                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Resource</th>
+                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Type</th>
+                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Status</th>
+                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Last Attempted</th>
+                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold rounded-tr">Re-Attempts</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {resourcePerformanceItems.map((item, idx) => (
+                              <tr key={item.resource_id || idx}
+                                className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
+                                <td className="py-2 px-2">
+                                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                    item.resource_type === 'Practice'
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-blue-100 text-blue-700'
+                                  }`}>
+                                    {item.label}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-2 text-gray-700 font-medium max-w-[180px] truncate" title={item.resource_name}>
+                                  {item.resource_name || 'N/A'}
+                                </td>
+                                <td className="py-2 px-2">
+                                  <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                    item.resource_type === 'Practice'
+                                      ? 'bg-green-50 text-green-600'
+                                      : 'bg-blue-50 text-blue-600'
+                                  }`}>
+                                    {item.resource_type}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-2">
+                                  {item.is_completed ? (
+                                    <span className="flex items-center gap-1 text-xs text-green-600">
+                                      <CheckCircle size={11} /> Done
+                                    </span>
+                                  ) : item.updated_at ? (
+                                    <span className="text-xs text-orange-500">In Progress</span>
+                                  ) : (
+                                    <span className="text-xs text-gray-400">Not Started</span>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 text-xs text-gray-500">
+                                  {item.updated_at ? formatDate(item.updated_at) : '—'}
+                                </td>
+                                <td className="py-2 px-2">
+                                  {item.reattempts > 0 ? (
+                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
+                                      {item.reattempts}×
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-gray-300">—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Overall Test Re-Attempts */}
+                      {testReattempts.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-gray-100">
+                          <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+                            Overall — No. of Re-Attempts
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {testReattempts.map((r, i) => (
+                              <div key={i}
+                                className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 text-xs">
+                                <span className="text-gray-600 font-medium truncate max-w-[140px]" title={r.resource_name}>
+                                  {r.resource_name}
+                                </span>
+                                <span className="text-orange-600 font-bold">{r.attempt_count}×</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-sm text-gray-400 text-center py-6">
+                      No practice or test data available yet
+                    </div>
+                  )}
                 </div>
 
                 {/* Queries */}
@@ -519,11 +893,11 @@ function TraineeDashboard() {
                   )}
                 </div>
 
-                {/* Interaction Stats */}
+                {/* LR Re-Attempts Interactions */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="flex items-center gap-2 mb-4">
                     <IdentificationIcon size={16} className="text-[#8DC63F]" />
-                    <div className="text-base font-semibold text-gray-700">LR - Re-Attempts Interactions</div>
+                    <div className="text-base font-semibold text-gray-700">LR — Re-Attempts Interactions</div>
                   </div>
                   <InteractionDonut
                     data={interactionStats.data}
@@ -533,34 +907,94 @@ function TraineeDashboard() {
                   />
                 </div>
 
-                {/* Learning Path Progress */}
+                {/* ── LEARNING PATH PROGRESS ───────────────────── */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="flex items-center gap-2 mb-4">
-                    <BarChart size={16} className="text-[#8DC63F]" />
+                    <TrendingUp size={16} className="text-[#8DC63F]" />
                     <div className="text-base font-semibold text-gray-700">Learning Path Progress</div>
-                    <div className="ml-auto flex items-center gap-2">
-                      <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
-                        <option value="">All Courses</option>
-                        <option value="course1">Course 1</option>
-                        <option value="course2">Course 2</option>
-                      </select>
-                      <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
-                        <option value="">All Time</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="year">This Year</option>
-                      </select>
-                    </div>
+                    {moduleCompletion.length > 0 && (
+                      <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+                        {moduleCompletion.filter(m => {
+                          const total = Number(m.total_learning_resources) + Number(m.total_image_interpretations);
+                          const done  = Number(m.completed_learning_resources) + Number(m.completed_image_interpretations);
+                          return total > 0 && done === total;
+                        }).length} / {moduleCompletion.length} modules done
+                      </span>
+                    )}
                   </div>
-                  <div></div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-6"><Spinner /></div>
+                  ) : learningPathProgress.length > 0 ? (
+                    <div className="flex flex-col gap-5">
+                      {learningPathProgress.map((course, ci) => (
+                        <div key={ci}>
+                          <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2 pb-1 border-b border-gray-100">
+                            <BookOpen size={13} className="text-blue-400" />
+                            {course.course_name}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {course.modules.map((mod, mi) => {
+                              const lrTotal = Number(mod.total_learning_resources)    || 0;
+                              const lrDone  = Number(mod.completed_learning_resources) || 0;
+                              const iiTotal = Number(mod.total_image_interpretations)  || 0;
+                              const iiDone  = Number(mod.completed_image_interpretations) || 0;
+                              const total   = lrTotal + iiTotal;
+                              const done    = lrDone  + iiDone;
+                              const pct     = total > 0 ? Math.round((done / total) * 100) : 0;
+                              const isDone  = total > 0 && done === total;
+                              return (
+                                <div key={mi}
+                                  className={`rounded-lg border p-3 transition-colors ${
+                                    isDone ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'
+                                  }`}>
+                                  <div className="flex justify-between items-start mb-1.5">
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-xs font-semibold text-gray-700">
+                                        {mod.unit_name || mod.module_name || 'Module'}
+                                      </span>
+                                      {mod.unit_name && mod.module_name && (
+                                        <span className="text-[10px] text-gray-400">{mod.module_name}</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                                      {isDone && <CheckCircle size={12} className="text-green-500" />}
+                                      <span className={`text-xs font-bold ${isDone ? 'text-green-600' : 'text-gray-600'}`}>
+                                        {pct}%
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                    <div className="h-1.5 rounded-full transition-all duration-700"
+                                      style={{
+                                        width: `${pct}%`,
+                                        backgroundColor: isDone ? '#22c55e' : '#8DC63F',
+                                      }} />
+                                  </div>
+                                  <div className="flex gap-4 mt-1.5 text-[10px] text-gray-400">
+                                    <span>LR: <span className="text-gray-600 font-medium">{lrDone}/{lrTotal}</span></span>
+                                    <span>II: <span className="text-gray-600 font-medium">{iiDone}/{iiTotal}</span></span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400 text-center py-6">
+                      No learning path data available
+                    </div>
+                  )}
                 </div>
 
               </div>
 
-              {/* ── Right Panel ──────────────────────────────── */}
+              {/* ── RIGHT PANEL ──────────────────────────────── */}
               <div className="col-span-1 flex flex-col gap-4">
 
-                {/* Batch Info */}
+                {/* Associated Batch */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="text-gray-500 font-semibold mb-3">Associated Batch</div>
                   {loading ? (
@@ -625,28 +1059,118 @@ function TraineeDashboard() {
                   </div>
                 </div>
 
-                {/* Last Completed Resource */}
+                {/* ── LAST COMPLETED MODULE ─────────────────── */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="text-gray-500 font-semibold mb-3">Last Completed Resource</div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <CheckCircle size={16} className="text-[#8DC63F]" />
+                    <div className="text-gray-500 font-semibold">Last Completed Module</div>
+                  </div>
                   {loading ? (
                     <div className="flex justify-center py-4"><Spinner /></div>
-                  ) : lastCompleted ? (
+                  ) : lastCompletedModuleData ? (
                     <div className="flex flex-col gap-2">
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Resource Name</div>
-                        <div className="font-semibold text-gray-700">{lastCompleted.resource_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                      <div className="text-sm p-2 bg-green-50 rounded-lg border border-green-100">
                         <div className="text-gray-400 text-xs mb-1">Unit</div>
-                        <div className="font-semibold text-gray-700">{lastCompleted.unit_name || 'N/A'}</div>
+                        <div className="font-semibold text-gray-700">{lastCompletedModuleData.unit_name || 'N/A'}</div>
                       </div>
                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Completed On</div>
-                        <div className="font-semibold text-gray-700">{formatDateTime(lastCompleted.updated_at)}</div>
+                        <div className="text-gray-400 text-xs mb-1">Module</div>
+                        <div className="font-semibold text-gray-700">{lastCompletedModuleData.module_name || 'N/A'}</div>
+                      </div>
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Course</div>
+                        <div className="font-semibold text-gray-700">{lastCompletedModuleData.course_name || 'N/A'}</div>
+                      </div>
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Last Activity</div>
+                        <div className="font-semibold text-gray-700">{formatDateTime(lastCompletedModuleData.lastDate)}</div>
+                      </div>
+                      {/* Mini progress bar */}
+                      <div className="flex flex-col gap-1 pt-1">
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Resources Completed</span>
+                          <span className="font-semibold text-gray-500">
+                            {lastCompletedModuleData.completedCount}/{lastCompletedModuleData.totalCount}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                          <div className="h-1.5 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${lastCompletedModuleData.totalCount > 0
+                                ? Math.round((lastCompletedModuleData.completedCount / lastCompletedModuleData.totalCount) * 100)
+                                : 0}%`,
+                              backgroundColor: '#8DC63F',
+                            }} />
+                        </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-400 text-center py-4">No resources completed yet</div>
+                    <div className="text-sm text-gray-400 text-center py-4">No module activity yet</div>
+                  )}
+                </div>
+
+                {/* ── PRACTICE STREAK — WEEKLY ──────────────── */}
+                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Flame size={16} className="text-orange-500" />
+                    <div className="text-gray-500 font-semibold">Practice Streak</div>
+                    <div className="ml-auto flex items-center gap-1">
+                      <span className="text-2xl font-bold text-orange-500">{weeklyStreak}</span>
+                      <span className="text-xs text-gray-400 leading-tight">
+                        week{weeklyStreak !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-gray-400 mb-3">Weekly activity — last 8 weeks</div>
+
+                  {loading ? (
+                    <div className="flex justify-center py-4"><Spinner /></div>
+                  ) : (
+                    <>
+                      <div className="flex items-end gap-1 h-14">
+                        {last8WeeksActivity.map((week, i) => {
+                          const maxCount = Math.max(...last8WeeksActivity.map(w => w.count), 1);
+                          const heightPct = week.count === 0 ? 15 : Math.max(20, Math.round((week.count / maxCount) * 100));
+                          return (
+                            <div key={i} className="flex flex-col items-center gap-1 flex-1 h-full justify-end">
+                              <div
+                                className={`w-full rounded-t transition-all duration-500 ${
+                                  week.isCurrentWeek ? 'ring-1 ring-orange-400' : ''
+                                }`}
+                                style={{
+                                  height: `${heightPct}%`,
+                                  backgroundColor: week.count === 0
+                                    ? '#e5e7eb'
+                                    : week.count <= 3
+                                    ? '#bbf7d0'
+                                    : week.count <= 7
+                                    ? '#8DC63F'
+                                    : '#16a34a',
+                                }}
+                                title={`${week.week}: ${week.count} completion${week.count !== 1 ? 's' : ''}`}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between mt-1.5 text-[9px] text-gray-400 px-0.5">
+                        {last8WeeksActivity.map((week, i) => (
+                          <span key={i} className={`flex-1 text-center ${week.isCurrentWeek ? 'text-orange-500 font-semibold' : ''}`}>
+                            {week.week.split(' ')[0]}
+                          </span>
+                        ))}
+                      </div>
+                      {weeklyStreak === 0 && (
+                        <div className="mt-2 text-xs text-center text-gray-400 bg-gray-50 rounded-lg py-2">
+                          Complete a resource this week to start your streak!
+                        </div>
+                      )}
+                      {weeklyStreak >= 3 && (
+                        <div className="mt-2 text-xs text-center text-orange-500 font-semibold bg-orange-50 rounded-lg py-2">
+                          {weeklyStreak >= 8 ? 'Incredible streak!' : weeklyStreak >= 5 ? 'Great consistency!' : 'Keep it up!'}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -678,10 +1202,8 @@ function TraineeDashboard() {
                           <span>{nextModule.completed_learning_resources}/{nextModule.total_learning_resources}</span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div
-                            className="h-1.5 rounded-full transition-all duration-500"
-                            style={{ width: `${nextModuleLRPct}%`, backgroundColor: '#8DC63F' }}
-                          />
+                          <div className="h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${nextModuleLRPct}%`, backgroundColor: '#8DC63F' }} />
                         </div>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -690,15 +1212,13 @@ function TraineeDashboard() {
                           <span>{nextModule.completed_image_interpretations}/{nextModule.total_image_interpretations}</span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div
-                            className="h-1.5 rounded-full transition-all duration-500"
-                            style={{ width: `${nextModuleIRPct}%`, backgroundColor: '#a78bfa' }}
-                          />
+                          <div className="h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${nextModuleIRPct}%`, backgroundColor: '#a78bfa' }} />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-400 text-center py-4">All modules completed 🎉</div>
+                    <div className="text-sm text-gray-400 text-center py-4">All modules completed!</div>
                   )}
                 </div>
 
