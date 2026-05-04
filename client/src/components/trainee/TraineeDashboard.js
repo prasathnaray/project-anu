@@ -280,7 +280,7 @@ import SideBar from '../sideBar'
 import { useNavigate, useParams } from 'react-router-dom';
 import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
-import { Check, Clock, BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare, CheckCircle, AlertCircle, BarChart } from 'lucide-react';
+import { BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare, CheckCircle, AlertCircle, BarChart, ArrowRight } from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
 import getInteractionsAttemptStats from '../../API/InteractionAttemptAPI';
@@ -299,6 +299,7 @@ function TraineeDashboard() {
     currentBatches: [],
     certificates: [],
     testQuery: [],
+    nextModule: null,
   });
 
   const handleApiCall = async (id) => {
@@ -306,8 +307,8 @@ function TraineeDashboard() {
       setLoading(true);
       const response = await TraineeProfileAPI(id);
       setIndividualTraineeProfile(response.data);
-       const batchId = response.data?.currentBatches?.[0]?.batch_id;
-    if (batchId) localStorage.setItem('batch_id', batchId);
+      const batchId = response.data?.currentBatches?.[0]?.batch_id;
+      if (batchId) localStorage.setItem('batch_id', batchId);
     } catch (error) {
       console.error('Error fetching trainee profile:', error);
     } finally {
@@ -322,7 +323,7 @@ function TraineeDashboard() {
 
   // ── Queries ───────────────────────────────────────────────
   const [queries, setQueries] = useState({
-    pending: 0, resolved: 0, total: 0, loading: false, error: null
+    pending: 0, resolved: 0, total: 0, loading: false, error: null,
   });
 
   const handleFetchQueries = async () => {
@@ -343,15 +344,13 @@ function TraineeDashboard() {
 
   // ── Interaction Stats ─────────────────────────────────────
   const [interactionStats, setInteractionStats] = useState({
-    data: [], loading: false, error: null
+    data: [], loading: false, error: null,
   });
 
   const handleFetchInteractionStats = async () => {
     try {
       setInteractionStats(prev => ({ ...prev, loading: true }));
       const response = await getInteractionsAttemptStats();
-
-    // Normalize: handle array, wrapped object, or null
       const data = Array.isArray(response)
         ? response
         : Array.isArray(response?.data)
@@ -359,7 +358,6 @@ function TraineeDashboard() {
         : Array.isArray(response?.result)
         ? response.result
         : [];
-
       setInteractionStats({ data, loading: false, error: null });
     } catch (error) {
       console.error('Error fetching interaction stats:', error);
@@ -372,20 +370,32 @@ function TraineeDashboard() {
   // ── Derived values ────────────────────────────────────────
   const allResources = (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null);
 
-  const totalLR = allResources.filter(r => r.resource_type === 'Learning Resource').length;
+  const totalLR       = allResources.filter(r => r.resource_type === 'Learning Resource').length;
   const totalPractice = allResources.filter(r => r.resource_type === 'Practice').length;
-  const totalTests = allResources.filter(r => r.resource_type === 'Test').length;
-  const totalIR = allResources.filter(r => r.resource_type === 'Image Interpretation').length;
+  const totalTests    = allResources.filter(r => r.resource_type === 'Test').length;
+  const totalIR       = allResources.filter(r => r.resource_type === 'Image Interpretation').length;
 
-  const completedLR = allResources.filter(r => r.resource_type === 'Learning Resource' && r.is_completed === true).length;
+  const completedLR       = allResources.filter(r => r.resource_type === 'Learning Resource' && r.is_completed === true).length;
   const completedPractice = allResources.filter(r => r.resource_type === 'Practice' && r.is_completed === true).length;
-  const completedTests = allResources.filter(r => r.resource_type === 'Test' && r.is_completed === true).length;
-  const completedIR = allResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed === true).length;
+  const completedTests    = allResources.filter(r => r.resource_type === 'Test' && r.is_completed === true).length;
+  const completedIR       = allResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed === true).length;
 
   const totalResources = allResources.length;
-  const completed = allResources.filter(r => r.is_completed === true).length;
-  const attempted = (individualTraineeProfile?.testQuery ?? []).length;
-  const totalAttempts = interactionStats.data.reduce((sum, r) => sum + Number(r.attempt_count), 0);
+  const completed      = allResources.filter(r => r.is_completed === true).length;
+  const attempted      = (individualTraineeProfile?.testQuery ?? []).length;
+  const totalAttempts  = interactionStats.data.reduce((sum, r) => sum + Number(r.attempt_count), 0);
+
+  const nextModule = individualTraineeProfile?.nextModule ?? null;
+  const nextModuleLRPct = nextModule
+    ? Math.round((Number(nextModule.completed_learning_resources) / Number(nextModule.total_learning_resources)) * 100) || 0
+    : 0;
+  const nextModuleIRPct = nextModule
+    ? Math.round((Number(nextModule.completed_image_interpretations) / Number(nextModule.total_image_interpretations)) * 100) || 0
+    : 0;
+
+  const lastCompleted = allResources
+    .filter(r => r.is_completed === true)
+    .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0] ?? null;
 
   const formatDateTime = (dateString) => {
     if (!dateString || dateString === 'N/A') return 'N/A';
@@ -393,11 +403,11 @@ function TraineeDashboard() {
     if (isNaN(date.getTime())) return 'N/A';
     return date.toLocaleString('en-IN', {
       year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata'
+      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata',
     });
   };
 
-  // ── Spinner ───────────────────────────────────────────────
+  // ── Sub-components ────────────────────────────────────────
   const Spinner = ({ color = '#8DC63F', size = 5 }) => (
     <div
       className={`w-${size} h-${size} border-2 border-t-transparent rounded-full animate-spin`}
@@ -405,13 +415,12 @@ function TraineeDashboard() {
     />
   );
 
-  // ── Stat Card ─────────────────────────────────────────────
   const StatCard = ({ icon: Icon, iconColor, label, completed, total }) => {
     const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
     return (
       <div className="border shadow-sm rounded-lg p-3 bg-white flex flex-col gap-2">
         <div className="flex justify-between items-center">
-          <div className={`p-2 rounded-lg bg-gray-50`}>
+          <div className="p-2 rounded-lg bg-gray-50">
             <Icon size={20} className={iconColor} />
           </div>
           <div className="text-right">
@@ -456,9 +465,8 @@ function TraineeDashboard() {
               {/* ── Left Panel ───────────────────────────────── */}
               <div className="col-span-2 flex flex-col gap-4">
 
-                {/* Welcome Card */}
+                {/* Welcome */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  {/* <div className="text-gray-400 text-sm">Welcome back</div> */}
                   <div className="text-xl pt-1 font-semibold text-gray-700">
                     Welcome Back, {individualTraineeProfile.data[0]?.user_name || 'NA'}
                   </div>
@@ -466,37 +474,13 @@ function TraineeDashboard() {
 
                 {/* Stat Cards */}
                 <div className="grid grid-cols-4 gap-3">
-                  <StatCard
-                    icon={BookOpen}
-                    iconColor="text-blue-500"
-                    label="Learning Resources"
-                    completed={completedLR}
-                    total={totalLR}
-                  />
-                  <StatCard
-                    icon={Dumbbell}
-                    iconColor="text-green-500"
-                    label="Practices"
-                    completed={completedPractice}
-                    total={totalPractice}
-                  />
-                  <StatCard
-                    icon={ClipboardCheck}
-                    iconColor="text-orange-500"
-                    label="Tests"
-                    completed={completedTests}
-                    total={totalTests}
-                  />
-                  <StatCard
-                    icon={Eye}
-                    iconColor="text-purple-500"
-                    label="Image Interpretations"
-                    completed={completedIR}
-                    total={totalIR}
-                  />
+                  <StatCard icon={BookOpen}      iconColor="text-blue-500"   label="Learning Resources"   completed={completedLR}       total={totalLR} />
+                  <StatCard icon={Dumbbell}       iconColor="text-green-500"  label="Practices"             completed={completedPractice} total={totalPractice} />
+                  <StatCard icon={ClipboardCheck} iconColor="text-orange-500" label="Tests"                 completed={completedTests}    total={totalTests} />
+                  <StatCard icon={Eye}            iconColor="text-purple-500" label="Image Interpretations" completed={completedIR}       total={totalIR} />
                 </div>
 
-                {/* Queries Card */}
+                {/* Queries */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="flex items-center gap-2 mb-4">
                     <MessageSquare size={16} className="text-[#8DC63F]" />
@@ -535,7 +519,7 @@ function TraineeDashboard() {
                   )}
                 </div>
 
-                {/* Interaction Stats Card */}
+                {/* Interaction Stats */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="flex items-center gap-2 mb-4">
                     <IdentificationIcon size={16} className="text-[#8DC63F]" />
@@ -548,34 +532,29 @@ function TraineeDashboard() {
                     totalAttempts={totalAttempts}
                   />
                 </div>
+
+                {/* Learning Path Progress */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                    <div className="flex items-center gap-2 mb-4">
-                      <BarChart size={16} className="text-[#8DC63F]" />
-                      <div className="text-base font-semibold text-gray-700">
-                        Learning Path Progress
-                      </div>
-
-                      {/* Dropdowns aligned to the right in the same row */}
-                      <div className="ml-auto flex items-center gap-2">
-                        <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
-                          <option value="">All Courses</option>
-                          <option value="course1">Course 1</option>
-                          <option value="course2">Course 2</option>
-                        </select>
-
-                        <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
-                          <option value="">All Time</option>
-                          <option value="week">This Week</option>
-                          <option value="month">This Month</option>
-                          <option value="year">This Year</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                        
+                  <div className="flex items-center gap-2 mb-4">
+                    <BarChart size={16} className="text-[#8DC63F]" />
+                    <div className="text-base font-semibold text-gray-700">Learning Path Progress</div>
+                    <div className="ml-auto flex items-center gap-2">
+                      <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                        <option value="">All Courses</option>
+                        <option value="course1">Course 1</option>
+                        <option value="course2">Course 2</option>
+                      </select>
+                      <select className="text-sm border border-gray-300 rounded-md px-3 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                        <option value="">All Time</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                      </select>
                     </div>
                   </div>
+                  <div></div>
+                </div>
+
               </div>
 
               {/* ── Right Panel ──────────────────────────────── */}
@@ -603,10 +582,11 @@ function TraineeDashboard() {
                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
                         <div className="text-gray-400 text-xs mb-1">Status</div>
                         <div className="font-semibold">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${individualTraineeProfile.currentBatches[0]?.batch_status === 'current'
-                            ? 'bg-green-100 text-green-600'
-                            : 'bg-gray-100 text-gray-500'
-                            }`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            individualTraineeProfile.currentBatches[0]?.batch_status === 'current'
+                              ? 'bg-green-100 text-green-600'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}>
                             {individualTraineeProfile.currentBatches[0]?.batch_status || 'N/A'}
                           </span>
                         </div>
@@ -644,34 +624,84 @@ function TraineeDashboard() {
                     </div>
                   </div>
                 </div>
-                {/* ? last completed module  */}
+
+                {/* Last Completed Resource */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="text-gray-500 font-semibold mb-3">Last Completed Module</div>
+                  <div className="text-gray-500 font-semibold mb-3">Last Completed Resource</div>
                   {loading ? (
                     <div className="flex justify-center py-4"><Spinner /></div>
-                  ) : allResources.filter(r => r.is_completed === true).length > 0 ? (  
-                    (() => {
-                      const lastCompleted = allResources
-                        .filter(r => r.is_completed === true) 
-                        .sort((a, b) => new Date(b.completed_on) - new Date(a.completed_on))[0];
-                      return (
-                        <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                          <div className="text-gray-400 text-xs mb-1">Module Name</div>
-                          <div className="font-semibold text-gray-700">
-                            {lastCompleted.resource_name || 'N/A'}
-                          </div>
-                          <div className="text-gray-400 text-xs mt-2">Completed On</div>
-                          <div className="font-semibold text-gray-700">
-                            {formatDateTime(lastCompleted.updated_at)}
-                          </div>
-                        </div>
-                      );
-                    })()
+                  ) : lastCompleted ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Resource Name</div>
+                        <div className="font-semibold text-gray-700">{lastCompleted.resource_name || 'N/A'}</div>
+                      </div>
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Unit</div>
+                        <div className="font-semibold text-gray-700">{lastCompleted.unit_name || 'N/A'}</div>
+                      </div>
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Completed On</div>
+                        <div className="font-semibold text-gray-700">{formatDateTime(lastCompleted.updated_at)}</div>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="text-sm text-gray-400 text-center py-4">No modules completed yet</div>
-                   )  
-                  }
+                    <div className="text-sm text-gray-400 text-center py-4">No resources completed yet</div>
+                  )}
                 </div>
+
+                {/* Next Module */}
+                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ArrowRight size={16} className="text-[#8DC63F]" />
+                    <div className="text-gray-500 font-semibold">Next Module</div>
+                  </div>
+                  {loading ? (
+                    <div className="flex justify-center py-4"><Spinner /></div>
+                  ) : nextModule ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Unit</div>
+                        <div className="font-semibold text-gray-700">{nextModule.unit_name || 'N/A'}</div>
+                      </div>
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Module</div>
+                        <div className="font-semibold text-gray-700">{nextModule.module_name || 'N/A'}</div>
+                      </div>
+                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
+                        <div className="text-gray-400 text-xs mb-1">Course</div>
+                        <div className="font-semibold text-gray-700">{nextModule.course_name || 'N/A'}</div>
+                      </div>
+                      <div className="flex flex-col gap-1 pt-1">
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Learning Resources</span>
+                          <span>{nextModule.completed_learning_resources}/{nextModule.total_learning_resources}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                          <div
+                            className="h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${nextModuleLRPct}%`, backgroundColor: '#8DC63F' }}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>Image Interpretations</span>
+                          <span>{nextModule.completed_image_interpretations}/{nextModule.total_image_interpretations}</span>
+                        </div>
+                        <div className="w-full bg-gray-100 rounded-full h-1.5">
+                          <div
+                            className="h-1.5 rounded-full transition-all duration-500"
+                            style={{ width: `${nextModuleIRPct}%`, backgroundColor: '#a78bfa' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400 text-center py-4">All modules completed 🎉</div>
+                  )}
+                </div>
+
               </div>
             </div>
           </div>
@@ -680,4 +710,5 @@ function TraineeDashboard() {
     </div>
   );
 }
+
 export default TraineeDashboard;
