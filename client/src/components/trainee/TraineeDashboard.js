@@ -653,26 +653,18 @@ function TraineeDashboard() {
         <div className={`${buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
           <div className="p-4">
             <div className="grid grid-cols-3 gap-5">
-
-              {/* ── LEFT PANEL ──────────────────────────────── */}
               <div className="col-span-2 flex flex-col gap-4">
-
-                {/* Welcome */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="text-xl pt-1 font-semibold text-gray-700">
                     Welcome Back, {individualTraineeProfile.data[0]?.user_name || 'NA'}
                   </div>
                 </div>
-
-                {/* Stat Cards */}
                 <div className="grid grid-cols-4 gap-3">
                   <StatCard icon={BookOpen}      iconColor="text-blue-500"   label="Learning Resources"   completed={completedLR}       total={totalLR} />
                   <StatCard icon={Dumbbell}       iconColor="text-green-500"  label="Practices"             completed={completedPractice} total={totalPractice} />
                   <StatCard icon={ClipboardCheck} iconColor="text-orange-500" label="Tests"                 completed={completedTests}    total={totalTests} />
                   <StatCard icon={Eye}            iconColor="text-purple-500" label="Image Interpretations" completed={completedIR}       total={totalIR} />
                 </div>
-
-                {/* ── LAST SCORE: MS | OB | II | T ─────────── */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="flex items-center gap-2 mb-4">
                     <Award size={16} className="text-[#8DC63F]" />
@@ -685,28 +677,24 @@ function TraineeDashboard() {
                   </div>
 
                   <div className="grid grid-cols-4 gap-3">
-                    {/* MS – MindSparks */}
                     <ScoreBadge
                       label="MS"
                       value={msTotalAttempts}
                       color="#8DC63F"
                       subLabel={`MindSpark Attempts${msResourceCount > 0 ? ` (${msResourceCount} resources)` : ''}`}
                     />
-                    {/* OB – OB Booster */}
                     <ScoreBadge
                       label="OB"
                       value={obResources.length > 0 ? `${obCompleted}/${obResources.length}` : '—'}
                       color="#f97316"
                       subLabel="OB Booster"
                     />
-                    {/* II – Image Interpretation */}
                     <ScoreBadge
                       label="II"
                       value={totalIR > 0 ? `${completedIR}/${totalIR}` : '—'}
                       color="#a78bfa"
                       subLabel="Image Interp."
                     />
-                    {/* T – Test */}
                     <ScoreBadge
                       label="T"
                       value={testScores ? `${calcAvgScore(testScores) ?? '—'}%` : '—'}
