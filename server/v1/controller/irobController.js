@@ -97,7 +97,7 @@ const irobsubmit = async (req, res) => {
             status: 'Success',
             code: 200,
             message: 'Activity submitted successfully',
-            data: result.rows ?? [],
+            data: result.rows,
         });
     } catch (err) {
         console.error('[submit] Error:', err);
