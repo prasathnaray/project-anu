@@ -1,5 +1,5 @@
 const { submitActivity } = require('../model/irobm');
-const {v4: uuidv4} = require('uuid');
+const { v4: uuidv4 } = require('uuid');
 const buildPayload = (resourceType, body) => {
     switch (resourceType) {
         case 'TYPE1':

@@ -1676,9 +1676,35 @@ function TraineeDashboard() {
 
                 {/* Last Score */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Award size={16} className="text-[#8DC63F]" />
-                    <div className="text-base font-semibold text-gray-700">Last Score</div>
+                  <div className="flex items-center justify-between gap-2 mb-4">
+                    <div className="flex items-center gap-1">
+                            <Award size={16} className="text-[#8DC63F]" />
+                            <div className="text-base font-semibold text-gray-700">Last Score</div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                        {/* Certificate Dropdown */}
+                        <select className="text-sm border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                            <option value="">Certificate</option>
+                            <option value="btc">BTC</option>
+                            <option value="svt">SVT</option>
+                        </select>
+
+                        {/* Course Dropdown */}
+                        <select className="text-sm border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                            <option value="">Course</option>
+                            <option value="1st">1st Trimester</option>
+                            <option value="2nd">2nd Trimester</option>
+                            <option value="3rd">3rd Trimester</option>
+                        </select>
+
+                        {/* Module Dropdown */}
+                        <select className="text-sm border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer">
+                            <option value="">Module</option>
+                            <option value="bpd-hc">BPD & HC</option>
+                            <option value="ac">AC</option>
+                            <option value="fl">FL</option>
+                        </select>
+                    </div>
                     {testScores && (
                       <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
                         Last test: {formatDate(testScores.created_at)}
