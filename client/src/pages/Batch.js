@@ -717,7 +717,9 @@ function Batch() {
                                                                                         onChange={handleSearchChange}
                                                                                         className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                                                 /></div>
-                                                                                <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={() => setOpenBatch(true)}>Create Batch</button></div>
+                                                                                {decoded.role != 103 && (
+                                                                                        <div className="flex justify-end items-center"><button className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out" onClick={() => setOpenBatch(true)}>Create Batch</button></div>
+                                                                                )}
                                                                         </div>
                                                                         <table className="w-full text-left border-collapse">
                                                                                 <thead>
