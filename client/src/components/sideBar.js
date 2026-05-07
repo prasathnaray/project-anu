@@ -130,7 +130,10 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     { icon: <ClipboardPenLine size={20}/>, label: "Queries" },
                     { icon: <Users size={20}/>, label: "Batch" },
                   ];
-                  const isActive = data === `/${route}`;
+                  // const isActive = data === `/${route}` || data.startsWith(`/${route}/`);
+                  const isActive = 
+  data.toLowerCase() === `/${route.toLowerCase()}` || 
+  data.toLowerCase().startsWith(`/${route.toLowerCase()}/`);
                   return (
                     <li key={route} className="mb-2 mt-2">
                       <button
