@@ -104,4 +104,67 @@ const InteractionsAttemptStatsM = (requester) => {
                     return resolve(result.rows)
                  }
         })})}
-module.exports = { GenderRatio, UserStats, InteractionsAttemptStatsM }
+const ActivityLastScoresM = (requester) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 103].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view this data'
+            });
+        }
+        client.query(`
+            WITH latest_sessions AS (
+                SELECT
+                    user_id,
+                    resource_id,
+                    session_id,
+                    MAX(submitted_at) AS session_date,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY user_id, resource_id
+                        ORDER BY MAX(submitted_at) DESC
+                    ) AS rn
+                FROM activity_submissions
+                WHERE user_id = $1
+                GROUP BY user_id, resource_id, session_id
+            ),
+            unique_resources AS (
+                SELECT DISTINCT ON (resource_id)
+                    resource_id,
+                    resource_name,
+                    resource_type,
+                    resource_topic
+                FROM resource_data
+            )
+            SELECT
+                ls.resource_id,
+                ls.session_id,
+                ls.session_date,
+                ur.resource_name,
+                ur.resource_type,
+                ur.resource_topic,
+                COUNT(*)                                                      AS total_questions,
+                COUNT(*) FILTER (WHERE ass.is_correct = true)                AS correct_answers,
+                COUNT(*) FILTER (WHERE ass.is_correct = false)               AS wrong_answers,
+                ROUND(
+                    COUNT(*) FILTER (WHERE ass.is_correct = true)::decimal /
+                    NULLIF(COUNT(*) FILTER (WHERE ass.is_correct IS NOT NULL), 0) * 100,
+                    2
+                ) AS score_percentage
+            FROM latest_sessions ls
+            JOIN activity_submissions ass
+                ON ass.session_id  = ls.session_id
+               AND ass.resource_id = ls.resource_id
+            JOIN unique_resources ur ON ur.resource_id = ls.resource_id
+            WHERE ls.rn = 1
+            GROUP BY ls.resource_id, ls.session_id, ls.session_date,
+                     ur.resource_name, ur.resource_type, ur.resource_topic
+            ORDER BY ls.session_date DESC;
+        `, [requester.user_mail], (err, result) => {
+            if (err) return reject(err);
+            return resolve(result.rows);
+        });
+    });
+};
+module.exports = { GenderRatio, UserStats, InteractionsAttemptStatsM, ActivityLastScoresM }

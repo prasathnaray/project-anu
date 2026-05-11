@@ -1,4 +1,4 @@
-const { GenderRatio, UserStats, InteractionsAttemptStatsM } = require("../model/AnalyticsModel")
+const { GenderRatio, UserStats, InteractionsAttemptStatsM, ActivityLastScoresM } = require("../model/AnalyticsModel")
 
 const GenderRatioC = async(req, res) => {
     const requester = req.user;
@@ -37,4 +37,13 @@ const InteractionsAttemptStats = async(req, res) => {
             res.status(500).json(err)
         }
 }
-module.exports = {GenderRatioC, UserStatsC, InteractionsAttemptStats}
+const ActivityLastScores = async(req, res) => {
+    const requester = req.user;
+    try {
+        const result = await ActivityLastScoresM(requester);
+        res.status(200).send(result);
+    } catch(err) {
+        res.status(500).json(err);
+    }
+}
+module.exports = {GenderRatioC, UserStatsC, InteractionsAttemptStats, ActivityLastScores}

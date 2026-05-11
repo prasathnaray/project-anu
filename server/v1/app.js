@@ -92,6 +92,7 @@ const queriesRouter = require('./routes/queriesRoute.js');
 
 //analytics
 const InteractionsAttemptStatsRouter = require('./routes/InteractionsAttemptStats.js');
+const activityLastScoresRouter = require('./routes/activityLastScoresRoute.js');
 //questions
 const questionsRouter = require('./routes/questionsRoute.js');
 //Auth middleware
@@ -254,4 +255,5 @@ app.use('/api/v1/', Authenticate, getSubmissionsRouter);
 app.use('/api/v1/', Authenticate, queriesRouter);
 //analytics
 app.use('/api/v1/', Authenticate, InteractionsAttemptStatsRouter);
+app.use('/api/v1/', Authenticate, activityLastScoresRouter);
 module.exports = app;
