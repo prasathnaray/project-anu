@@ -3096,7 +3096,7 @@ function TraineeDashboard() {
                 </div>
 
                 {/* Practice & Test Performance */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
+                {/* <div className="border rounded-lg p-5 border-gray-300 bg-white">
                   <div className="flex items-center gap-2 mb-4">
                     <Target size={16} className="text-[#8DC63F]" />
                     <div className="text-base font-semibold text-gray-700">Practice &amp; Test Performance</div>
@@ -3170,7 +3170,7 @@ function TraineeDashboard() {
                   ) : (
                     <div className="text-sm text-gray-400 text-center py-6">No practice or test data available yet</div>
                   )}
-                </div>
+                </div> */}
 
                 {/* Queries */}
                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
@@ -3661,5 +3661,4 @@ function TraineeDashboard() {
     </div>
   );
 }
-
 export default TraineeDashboard;
