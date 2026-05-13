@@ -2449,6 +2449,1222 @@
 // export default TraineeDashboard;
 
 //new version let's see how it works
+// import React, { useState, useEffect, useMemo } from 'react';
+// import NavBar from '../navBar';
+// import SideBar from '../sideBar';
+// import { useNavigate, useParams } from 'react-router-dom';
+// import OverallCompletion from '../../charts/OverallCompletion';
+// import { GetQueriesAPI } from '../../API/GetQueriesAPI';
+// import {
+//   BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare,
+//   CheckCircle, AlertCircle, BarChart, ArrowRight, Award,
+//   Target, Flame, TrendingUp, Activity, Zap, Brain,
+//   ChevronUp, ChevronDown, Minus, Clock, XCircle,
+// } from 'lucide-react';
+// import { IdentificationIcon } from 'hugeicons-react';
+// import TraineeProfileAPI from '../../API/TraineeProfileAPI';
+// import getInteractionsAttemptStats from '../../API/InteractionAttemptAPI';
+// import getActivityLastScores from '../../API/ActivityLastScoresAPI';
+// import InteractionDonut from '../../charts/InteractionDonut';
+// import {
+//   startOfWeek, endOfWeek, subWeeks, isWithinInterval, format,
+// } from 'date-fns';
+
+// // ─────────────────────────────────────────────────────────────
+// // MOCK DATA — swap these out for real API responses later
+// // ─────────────────────────────────────────────────────────────
+
+// const MOCK_PERFORMANCE_METRICS = {
+//   accuracy:    { value: 78, prev: 70, unit: '%' },
+//   timePerTask: { value: 4.2, prev: 5.1, unit: ' min' },
+//   errorRate:   { value: 18, prev: 24, unit: '%' },
+//   consistency: 'Medium',
+// };
+
+// const MOCK_SKILL_COMPETENCY = [
+//   { skill: 'Probe Handling',         level: 'Intermediate', score: 62, trend: 'up' },
+//   { skill: 'Plane Acquisition',      level: 'Advanced',     score: 84, trend: 'up' },
+//   { skill: 'Fetal Biometry',         level: 'Intermediate', score: 58, trend: 'neutral' },
+//   { skill: 'Anatomy Identification', level: 'Beginner',     score: 34, trend: 'down' },
+// ];
+
+// const MOCK_LAST_SESSION = {
+//   module: 'Biometry — AC, P3',
+//   date: '2025-04-30T10:22:00',
+//   checks: [
+//     { label: 'Correct Plane Acquired',    passed: true },
+//     { label: 'Landmark Misidentified',    passed: false },
+//     { label: 'Measurement Offset +2.3mm', passed: false },
+//   ],
+//   feedback: 'Adjust probe tilt slightly inferiorly to get a cleaner abdominal circumference plane.',
+// };
+
+// // ─────────────────────────────────────────────────────────────
+
+// function TraineeDashboard() {
+//   const navigate   = useNavigate();
+//   const { people_id } = useParams();
+//   const [buttonOpen, setButtonOpen] = useState(true);
+
+//   // ── Trainee Profile ──────────────────────────────────────
+//   const [loading, setLoading] = useState(false);
+//   const [individualTraineeProfile, setIndividualTraineeProfile] = useState({
+//     data: [],
+//     instructors: [],
+//     currentBatches: [],
+//     completedBatches: [],
+//     certificates: [],
+//     testQuery: [],
+//     reAttempts: [],
+//     moduleCompletion: [],
+//     nextModule: null,
+//     latestProgress: null,
+//   });
+
+//   const handleApiCall = async (id) => {
+//     try {
+//       setLoading(true);
+//       const response = await TraineeProfileAPI(id);
+//       setIndividualTraineeProfile(response.data);
+//       const batchId = response.data?.currentBatches?.[0]?.batch_id;
+//       if (batchId) localStorage.setItem('batch_id', batchId);
+//     } catch (error) {
+//       console.error('Error fetching trainee profile:', error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     const resolvedId = people_id || localStorage.getItem('people_id');
+//     handleApiCall(resolvedId);
+//   }, []);
+
+//   // ── Queries ───────────────────────────────────────────────
+//   const [queries, setQueries] = useState({
+//     pending: 0, resolved: 0, total: 0, loading: false, error: null,
+//   });
+
+//   const handleFetchQueries = async () => {
+//     try {
+//       setQueries(prev => ({ ...prev, loading: true }));
+//       const token = localStorage.getItem('user_token');
+//       const response = await GetQueriesAPI(token);
+//       const pendingCount  = response.result.filter(q => q.status === 'pending').length;
+//       const resolvedCount = response.result.filter(q => q.status === 'resolved').length;
+//       setQueries({ pending: pendingCount, resolved: resolvedCount, total: response.total, loading: false, error: null });
+//     } catch (error) {
+//       console.error('Error fetching queries:', error);
+//       setQueries(prev => ({ ...prev, loading: false, error: error.message }));
+//     }
+//   };
+
+//   useEffect(() => { handleFetchQueries(); }, []);
+
+//   // ── Interaction Stats ─────────────────────────────────────
+//   const [interactionStats, setInteractionStats] = useState({
+//     data: [], loading: false, error: null,
+//   });
+
+//   const handleFetchInteractionStats = async () => {
+//     try {
+//       setInteractionStats(prev => ({ ...prev, loading: true }));
+//       const response = await getInteractionsAttemptStats();
+//       const data = Array.isArray(response)
+//         ? response
+//         : Array.isArray(response?.data)
+//         ? response.data
+//         : Array.isArray(response?.result)
+//         ? response.result
+//         : [];
+//       setInteractionStats({ data, loading: false, error: null });
+//     } catch (error) {
+//       console.error('Error fetching interaction stats:', error);
+//       setInteractionStats(prev => ({ ...prev, loading: false, error: error.message }));
+//     }
+//   };
+
+//   useEffect(() => { handleFetchInteractionStats(); }, []);
+
+//   // ── Activity Last Scores ──────────────────────────────────
+//   const [activityLastScores, setActivityLastScores] = useState({
+//     data: [], loading: false, error: null,
+//   });
+
+//   const handleFetchActivityLastScores = async () => {
+//     try {
+//       setActivityLastScores(prev => ({ ...prev, loading: true }));
+//       const response = await getActivityLastScores();
+//       const data = Array.isArray(response)
+//         ? response
+//         : Array.isArray(response?.data)
+//         ? response.data
+//         : [];
+//       setActivityLastScores({ data, loading: false, error: null });
+//     } catch (error) {
+//       console.error('Error fetching activity last scores:', error);
+//       setActivityLastScores(prev => ({ ...prev, loading: false, error: error.message }));
+//     }
+//   };
+
+//   useEffect(() => { handleFetchActivityLastScores(); }, []);
+
+//   // ── Base: all non-null resources ──────────────────────────
+//   const allResources = useMemo(
+//     () => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null),
+//     [individualTraineeProfile.data]
+//   );
+
+//   // ── Certificate filter ────────────────────────────────────
+//   const [selectedCertificate, setSelectedCertificate] = useState('');
+
+//   /**
+//    * Build unique certificate list from raw data.
+//    * Each row has certificate_id + course_name; we use course_name as the
+//    * human-readable label (swap for a dedicated cert_name field if your API
+//    * returns one, e.g. "BTC", "SVT").
+//    */
+//   const certificates = useMemo(() => {
+//     const seen = new Set();
+//     return (individualTraineeProfile?.data ?? [])
+//       .filter(r => r.certificate_id)
+//       .reduce((acc, r) => {
+//         if (!seen.has(r.certificate_id)) {
+//           seen.add(r.certificate_id);
+//           acc.push({ id: r.certificate_id, label: r.course_name || r.certificate_id });
+//         }
+//         return acc;
+//       }, []);
+//   }, [individualTraineeProfile.data]);
+
+//   /**
+//    * filteredResources — the single source of truth for ALL stat cards,
+//    * progress charts, and counts. When selectedCertificate is '' (All),
+//    * this equals allResources; otherwise it narrows to just that cert.
+//    */
+//   const filteredResources = useMemo(
+//     () => selectedCertificate
+//       ? allResources.filter(r => r.certificate_id === selectedCertificate)
+//       : allResources,
+//     [allResources, selectedCertificate]
+//   );
+
+//   // ── Stat counts (all derived from filteredResources) ──────
+//   const totalLR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource').length,                             [filteredResources]);
+//   const totalPractice = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice').length,                                      [filteredResources]);
+//   const totalTests    = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test').length,                                          [filteredResources]);
+//   const totalIR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation').length,                          [filteredResources]);
+
+//   const completedLR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource'    && r.is_completed === true).length, [filteredResources]);
+//   const completedPractice = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice'             && r.is_completed === true).length, [filteredResources]);
+//   const completedTests    = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test'                 && r.is_completed === true).length, [filteredResources]);
+//   const completedIR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed === true).length, [filteredResources]);
+
+//   const totalResources = filteredResources.length;
+//   const completed      = useMemo(() => filteredResources.filter(r => r.is_completed === true).length, [filteredResources]);
+//   const attempted      = (individualTraineeProfile?.testQuery ?? []).length;
+//   const totalAttempts  = interactionStats.data.reduce((sum, r) => sum + Number(r.attempt_count), 0);
+
+//   // ── Next Module ───────────────────────────────────────────
+//   const nextModule = individualTraineeProfile?.nextModule ?? null;
+//   const nextModuleLRPct = nextModule
+//     ? Math.round((Number(nextModule.completed_learning_resources) / Number(nextModule.total_learning_resources)) * 100) || 0
+//     : 0;
+//   const nextModuleIRPct = nextModule
+//     ? Math.round((Number(nextModule.completed_image_interpretations) / Number(nextModule.total_image_interpretations)) * 100) || 0
+//     : 0;
+
+//   // ── Last Completed Module ─────────────────────────────────
+//   const lastCompletedModuleData = useMemo(() => {
+//     const moduleMap = {};
+//     filteredResources.forEach(r => {
+//       if (!r.learning_module_id) return;
+//       const key = r.learning_module_id;
+//       if (!moduleMap[key]) {
+//         moduleMap[key] = {
+//           learning_module_id: r.learning_module_id,
+//           unit_name: r.unit_name,
+//           module_name: r.module_name,
+//           course_name: r.course_name,
+//           resources: [],
+//         };
+//       }
+//       moduleMap[key].resources.push(r);
+//     });
+
+//     return Object.values(moduleMap)
+//       .map(m => {
+//         const completedRes = m.resources.filter(r => r.is_completed === true && r.updated_at);
+//         const totalCount   = m.resources.filter(r => r.resource_id).length;
+//         const lastDate     = completedRes.map(r => new Date(r.updated_at)).sort((a, b) => b - a)[0] ?? null;
+//         return { ...m, completedCount: completedRes.length, totalCount, lastDate };
+//       })
+//       .filter(m => m.completedCount > 0 && m.lastDate)
+//       .sort((a, b) => b.lastDate - a.lastDate)[0] ?? null;
+//   }, [filteredResources]);
+
+//   // ── Weekly Practice Streak ────────────────────────────────
+//   const weeklyStreak = useMemo(() => {
+//     const completedDates = filteredResources
+//       .filter(r => r.is_completed === true && r.updated_at)
+//       .map(r => new Date(r.updated_at));
+
+//     if (completedDates.length === 0) return 0;
+
+//     const now = new Date();
+//     const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
+//     const thisWeekEnd   = endOfWeek(now,   { weekStartsOn: 1 });
+//     const hasThisWeek   = completedDates.some(d => isWithinInterval(d, { start: thisWeekStart, end: thisWeekEnd }));
+
+//     let streak = 0;
+//     const startOffset = hasThisWeek ? 0 : 1;
+
+//     for (let i = startOffset; i < 52; i++) {
+//       const wStart = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 });
+//       const wEnd   = endOfWeek(wStart, { weekStartsOn: 1 });
+//       if (completedDates.some(d => isWithinInterval(d, { start: wStart, end: wEnd }))) {
+//         streak++;
+//       } else {
+//         break;
+//       }
+//     }
+//     return streak;
+//   }, [filteredResources]);
+
+//   // ── Last 8 Weeks Activity ─────────────────────────────────
+//   const last8WeeksActivity = useMemo(() => {
+//     const completedDates = filteredResources
+//       .filter(r => r.is_completed === true && r.updated_at)
+//       .map(r => new Date(r.updated_at));
+
+//     return Array.from({ length: 8 }, (_, i) => {
+//       const wStart = startOfWeek(subWeeks(new Date(), 7 - i), { weekStartsOn: 1 });
+//       const wEnd   = endOfWeek(wStart, { weekStartsOn: 1 });
+//       const count  = completedDates.filter(d => isWithinInterval(d, { start: wStart, end: wEnd })).length;
+//       return { week: format(wStart, 'MMM d'), count, isCurrentWeek: i === 7 };
+//     });
+//   }, [filteredResources]);
+
+//   // ── Test Scores & Reattempts ──────────────────────────────
+//   const testScores     = (individualTraineeProfile?.testQuery ?? [])[0] ?? null;
+//   const testReattempts = useMemo(() => individualTraineeProfile?.reAttempts ?? [], [individualTraineeProfile.reAttempts]);
+//   const moduleCompletion = useMemo(() => individualTraineeProfile?.moduleCompletion ?? [], [individualTraineeProfile.moduleCompletion]);
+
+//   const msResourceCount = interactionStats.data.length;
+
+//   // ── OB Booster detection ──────────────────────────────────
+//   const isOBRecord = (r) => {
+//     const rto = (r.resource_topic || '').toLowerCase();
+//     const rn  = (r.resource_name  || '').toLowerCase();
+//     const rt  = (r.resource_type  || '').toLowerCase();
+//     return rto.includes('ob booster') || rto.includes('ob boosters') ||
+//            rn.includes('ob booster')  || rn.includes('ob boosters')  ||
+//            rt.includes('ob booster')  || rt.includes('ob boosters');
+//   };
+
+//   const obResources = useMemo(() =>
+//     filteredResources.filter(r =>
+//       r.resource_topic?.toLowerCase().includes('ob booster') ||
+//       r.resource_name?.toLowerCase().includes('ob booster') ||
+//       r.resource_topic?.toLowerCase().includes('ob boosters')
+//     ), [filteredResources]);
+//   const obCompleted = obResources.filter(r => r.is_completed === true).length;
+
+//   const msLastScores = useMemo(() =>
+//     activityLastScores.data.filter(r => !isOBRecord(r)),
+//   [activityLastScores.data]);
+
+//   const msLastScoreSummary = useMemo(() => {
+//     if (!msLastScores.length) return null;
+//     const totalQ  = msLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0);
+//     const correct = msLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0);
+//     const wrong   = msLastScores.reduce((s, r) => s + Number(r.wrong_answers   || 0), 0);
+//     return { totalQ, correct, wrong, resources: msLastScores.length };
+//   }, [msLastScores]);
+
+//   const obLastScores = useMemo(() =>
+//     activityLastScores.data.filter(r => isOBRecord(r)),
+//   [activityLastScores.data]);
+
+//   const obLastScoreSummary = useMemo(() => {
+//     if (!obLastScores.length) return null;
+//     const totalQ  = obLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0);
+//     const correct = obLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0);
+//     const wrong   = obLastScores.reduce((s, r) => s + Number(r.wrong_answers   || 0), 0);
+//     return { totalQ, correct, wrong, resources: obLastScores.length };
+//   }, [obLastScores]);
+
+//   // ── Practice & Test resource lists ───────────────────────
+//   const practiceResources = useMemo(() => {
+//     const seen = new Set();
+//     return filteredResources
+//       .filter(r => r.resource_type === 'Practice' && r.resource_id && !seen.has(r.resource_id) && seen.add(r.resource_id))
+//       .sort((a, b) => (a.resource_name || '').localeCompare(b.resource_name || ''));
+//   }, [filteredResources]);
+
+//   const testResourcesList = useMemo(() => {
+//     const seen = new Set();
+//     return filteredResources
+//       .filter(r => r.resource_type === 'Test' && r.resource_id && !seen.has(r.resource_id) && seen.add(r.resource_id))
+//       .sort((a, b) => (a.resource_name || '').localeCompare(b.resource_name || ''));
+//   }, [filteredResources]);
+
+//   const resourcePerformanceItems = useMemo(() => {
+//     const practices = practiceResources.slice(0, 4).map((r, i) => ({
+//       label: `P${i + 1}`,
+//       resource_name: r.resource_name,
+//       resource_type: 'Practice',
+//       resource_id: r.resource_id,
+//       is_completed: r.is_completed,
+//       updated_at: r.updated_at,
+//       reattempts: 0,
+//     }));
+//     const tests = testResourcesList.slice(0, 4).map((r, i) => {
+//       const entry = testReattempts.find(ra => ra.resource_id === r.resource_id);
+//       return {
+//         label: `T${i + 1}`,
+//         resource_name: r.resource_name,
+//         resource_type: 'Test',
+//         resource_id: r.resource_id,
+//         is_completed: r.is_completed,
+//         updated_at: r.updated_at,
+//         reattempts: entry ? Math.max(0, Number(entry.attempt_count) - 1) : 0,
+//       };
+//     });
+//     return [...practices, ...tests];
+//   }, [practiceResources, testResourcesList, testReattempts]);
+
+//   // ── Learning path filtered by certificate ────────────────
+//   const learningPathProgress = useMemo(() => {
+//     // Filter moduleCompletion to only modules present in filteredResources
+//     const visibleModuleIds = new Set(filteredResources.map(r => r.learning_module_id));
+//     const filtered = selectedCertificate
+//       ? moduleCompletion.filter(m => visibleModuleIds.has(m.learning_module_id))
+//       : moduleCompletion;
+
+//     const courseMap = {};
+//     filtered.forEach(m => {
+//       const key = m.course_name || 'Unknown Course';
+//       if (!courseMap[key]) courseMap[key] = { course_name: key, modules: [] };
+//       courseMap[key].modules.push(m);
+//     });
+//     return Object.values(courseMap);
+//   }, [moduleCompletion, filteredResources, selectedCertificate]);
+
+//   // ── Helpers ───────────────────────────────────────────────
+//   const formatDateTime = (ds) => {
+//     if (!ds || ds === 'N/A') return 'N/A';
+//     const d = new Date(ds);
+//     if (isNaN(d.getTime())) return 'N/A';
+//     return d.toLocaleString('en-IN', {
+//       year: 'numeric', month: 'short', day: 'numeric',
+//       hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata',
+//     });
+//   };
+
+//   const formatDate = (ds) => {
+//     if (!ds || ds === 'N/A') return 'N/A';
+//     const d = new Date(ds);
+//     if (isNaN(d.getTime())) return 'N/A';
+//     return d.toLocaleDateString('en-IN', {
+//       year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata',
+//     });
+//   };
+
+//   const calcAvgScore = (scores) => {
+//     if (!scores) return null;
+//     const vals = [
+//       scores.plane_identification, scores.image_optimization,
+//       scores.measurement, scores.diagnostic_interpretation,
+//     ].map(Number).filter(v => !isNaN(v));
+//     return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
+//   };
+
+//   // ── Sub-components ────────────────────────────────────────
+//   const Spinner = ({ color = '#8DC63F', size = 5 }) => (
+//     <div
+//       className={`w-${size} h-${size} border-2 border-t-transparent rounded-full animate-spin`}
+//       style={{ borderColor: `${color} transparent transparent transparent` }}
+//     />
+//   );
+
+//   const StatCard = ({ icon: Icon, iconColor, label, completed: c, total: t }) => {
+//     const pct = t > 0 ? Math.round((c / t) * 100) : 0;
+//     return (
+//       <div className="border shadow-sm rounded-lg p-3 bg-white flex flex-col gap-2">
+//         <div className="flex justify-between items-center">
+//           <div className="p-2 rounded-lg bg-gray-50">
+//             <Icon size={20} className={iconColor} />
+//           </div>
+//           <div className="text-right">
+//             <div className="text-xs text-gray-400">{label}</div>
+//             {loading ? (
+//               <div className="flex justify-end mt-1"><Spinner /></div>
+//             ) : (
+//               <div className="text-xl font-bold text-gray-700">
+//                 {c}<span className="text-sm font-normal text-gray-400">/{t}</span>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//         <div className="w-full bg-gray-100 rounded-full h-1.5">
+//           <div className="h-1.5 rounded-full transition-all duration-500"
+//             style={{ width: `${pct}%`, backgroundColor: '#8DC63F' }} />
+//         </div>
+//         <div className="text-[10px] text-gray-400">{pct}% completed</div>
+//       </div>
+//     );
+//   };
+
+//   const ScoreBadge = ({ label, value, color, subLabel }) => (
+//     <div className="flex flex-col items-center justify-center p-3 rounded-lg border bg-gray-50 gap-1 min-h-[90px]">
+//       <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</div>
+//       {loading ? <Spinner size={4} /> : (
+//         <div className="text-2xl font-bold" style={{ color }}>
+//           {value !== null && value !== undefined ? value : '—'}
+//         </div>
+//       )}
+//       {subLabel && <div className="text-[9px] text-gray-400 text-center leading-tight">{subLabel}</div>}
+//     </div>
+//   );
+
+//   // ── Performance Metrics helpers ───────────────────────────
+//   const TrendIcon = ({ value, prev, lowerIsBetter = false }) => {
+//     const improved = lowerIsBetter ? value < prev : value > prev;
+//     const same = value === prev;
+//     if (same) return <Minus size={12} className="text-gray-400" />;
+//     return improved
+//       ? <ChevronUp size={12} className="text-green-500" />
+//       : <ChevronDown size={12} className="text-red-400" />;
+//   };
+
+//   const TrendLabel = ({ value, prev, unit = '', lowerIsBetter = false }) => {
+//     const diff = Math.abs(value - prev);
+//     const improved = lowerIsBetter ? value < prev : value > prev;
+//     if (diff === 0) return <span className="text-[10px] text-gray-400">No change</span>;
+//     return (
+//       <span className={`text-[10px] font-semibold ${improved ? 'text-green-500' : 'text-red-400'}`}>
+//         {improved ? '↑' : '↓'} {diff}{unit} from last
+//       </span>
+//     );
+//   };
+
+//   const skillLevelConfig = {
+//     Beginner:     { color: '#ef4444', bg: 'bg-red-50',    border: 'border-red-200',    dot: 'bg-red-400' },
+//     Intermediate: { color: '#f59e0b', bg: 'bg-yellow-50', border: 'border-yellow-200', dot: 'bg-yellow-400' },
+//     Advanced:     { color: '#22c55e', bg: 'bg-green-50',  border: 'border-green-200',  dot: 'bg-green-500' },
+//   };
+
+//   const consistencyConfig = {
+//     Low:    { color: 'text-red-500',    bg: 'bg-red-50',    label: 'Low' },
+//     Medium: { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Medium' },
+//     High:   { color: 'text-green-600',  bg: 'bg-green-50',  label: 'High' },
+//   };
+
+//   // ── Shared dropdown style ─────────────────────────────────
+//   const selectCls = "text-sm border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer";
+
+//   // ── Render ────────────────────────────────────────────────
+//   return (
+//     <div className="flex flex-col min-h-screen">
+//       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
+//         <NavBar />
+//       </div>
+
+//       <div className="flex flex-grow pt-12">
+//         <div>
+//           <SideBar handleButtonOpen={() => setButtonOpen(p => !p)} buttonOpen={buttonOpen} />
+//         </div>
+
+//         <div className={`${buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
+//           <div className="p-4">
+//             <div className="grid grid-cols-3 gap-5">
+
+//               {/* ── LEFT + CENTRE COLUMN ────────────────────── */}
+//               <div className="col-span-2 flex flex-col gap-4">
+
+//                 {/* Welcome */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="text-xl pt-1 font-semibold text-gray-700">
+//                     Welcome Back, {individualTraineeProfile.data[0]?.user_name || 'NA'}
+//                   </div>
+//                 </div>
+
+//                 {/* Stat Cards */}
+//                 <div className="grid grid-cols-4 gap-3">
+//                   <StatCard icon={BookOpen}      iconColor="text-blue-500"   label="Learning Resources"   completed={completedLR}       total={totalLR} />
+//                   <StatCard icon={Dumbbell}       iconColor="text-green-500"  label="Practices"             completed={completedPractice} total={totalPractice} />
+//                   <StatCard icon={ClipboardCheck} iconColor="text-orange-500" label="Tests"                 completed={completedTests}    total={totalTests} />
+//                   <StatCard icon={Eye}            iconColor="text-purple-500" label="Image Interpretations" completed={completedIR}       total={totalIR} />
+//                 </div>
+
+//                 {/* Last Score */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center justify-between gap-2 mb-4">
+//                     <div className="flex items-center gap-1">
+//                       <Award size={16} className="text-[#8DC63F]" />
+//                       <div className="text-base font-semibold text-gray-700">Last Score</div>
+//                     </div>
+//                     <div className="flex items-center gap-2 mt-2">
+//                       <select className={selectCls}>
+//                         <option value="">Certificate</option>
+//                         <option value="btc">BTC</option>
+//                         <option value="svt">SVT</option>
+//                       </select>
+//                       <select className={selectCls}>
+//                         <option value="">Course</option>
+//                         <option value="1st">1st Trimester</option>
+//                         <option value="2nd">2nd Trimester</option>
+//                         <option value="3rd">3rd Trimester</option>
+//                       </select>
+//                       <select className={selectCls}>
+//                         <option value="">Module</option>
+//                         <option value="bpd-hc">BPD &amp; HC</option>
+//                         <option value="ac">AC</option>
+//                         <option value="fl">FL</option>
+//                       </select>
+//                     </div>
+//                     {testScores && (
+//                       <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+//                         Last test: {formatDate(testScores.created_at)}
+//                       </span>
+//                     )}
+//                   </div>
+//                   <div className="grid grid-cols-4 gap-3">
+//                     <ScoreBadge
+//                       label="MS"
+//                       value={
+//                         activityLastScores.loading
+//                           ? null
+//                           : msLastScoreSummary
+//                           ? `${msLastScoreSummary.correct}/${msLastScoreSummary.totalQ}`
+//                           : totalAttempts > 0 ? totalAttempts : '—'
+//                       }
+//                       color="#8DC63F"
+//                       subLabel={
+//                         msLastScoreSummary
+//                           ? `MindSpark · ${msLastScoreSummary.resources} resource${msLastScoreSummary.resources > 1 ? 's' : ''} · ${msLastScoreSummary.wrong} wrong`
+//                           : `MindSpark Attempts${msResourceCount > 0 ? ` (${msResourceCount} resources)` : ''}`
+//                       }
+//                     />
+//                     <ScoreBadge
+//                       label="OB"
+//                       value={
+//                         activityLastScores.loading
+//                           ? null
+//                           : obLastScoreSummary
+//                           ? `${obLastScoreSummary.correct}/${obLastScoreSummary.totalQ}`
+//                           : obResources.length > 0 ? `${obCompleted}/${obResources.length}` : '—'
+//                       }
+//                       color="#f97316"
+//                       subLabel={
+//                         obLastScoreSummary
+//                           ? `OB Booster · ${obLastScoreSummary.resources} resource${obLastScoreSummary.resources > 1 ? 's' : ''} · ${obLastScoreSummary.wrong} wrong`
+//                           : 'OB Booster'
+//                       }
+//                     />
+//                     <ScoreBadge label="II" value={totalIR > 0 ? `${completedIR}/${totalIR}` : '—'} color="#a78bfa" subLabel="Image Interp." />
+//                     <ScoreBadge label="T"  value={testScores ? `${calcAvgScore(testScores) ?? '—'}%` : '—'} color="#3b82f6" subLabel={testScores ? (testScores.resource_name || 'Last Test') : 'No test yet'} />
+//                   </div>
+//                   {testScores && (
+//                     <div className="mt-4 pt-3 border-t border-gray-100">
+//                       <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Last Test — Sub-Scores</div>
+//                       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+//                         {[
+//                           { key: 'plane_identification',      label: 'Plane Identification', color: '#3b82f6' },
+//                           { key: 'image_optimization',        label: 'Image Optimization',   color: '#8b5cf6' },
+//                           { key: 'measurement',               label: 'Measurement',          color: '#10b981' },
+//                           { key: 'diagnostic_interpretation', label: 'Diagnostic Interp.',   color: '#f59e0b' },
+//                         ].map(({ key, label, color }) => {
+//                           const val = Number(testScores[key]);
+//                           const pct = isNaN(val) ? 0 : Math.min(100, Math.round(val));
+//                           return (
+//                             <div key={key} className="flex flex-col gap-1">
+//                               <div className="flex justify-between text-[10px] text-gray-500">
+//                                 <span>{label}</span>
+//                                 <span className="font-semibold" style={{ color }}>{isNaN(val) ? '—' : `${val}%`}</span>
+//                               </div>
+//                               <div className="w-full bg-gray-100 rounded-full h-1.5">
+//                                 <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
+//                               </div>
+//                             </div>
+//                           );
+//                         })}
+//                       </div>
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 {/* Practice & Test Performance */}
+//                 {/* <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-4">
+//                     <Target size={16} className="text-[#8DC63F]" />
+//                     <div className="text-base font-semibold text-gray-700">Practice &amp; Test Performance</div>
+//                   </div>
+//                   {loading ? (
+//                     <div className="flex justify-center py-6"><Spinner /></div>
+//                   ) : resourcePerformanceItems.length > 0 ? (
+//                     <>
+//                       <div className="overflow-x-auto">
+//                         <table className="w-full text-sm border-collapse">
+//                           <thead>
+//                             <tr className="border-b border-gray-100 bg-gray-50">
+//                               <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">#</th>
+//                               <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Resource</th>
+//                               <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Type</th>
+//                               <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Status</th>
+//                               <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Last Attempted</th>
+//                               <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Re-Attempts</th>
+//                             </tr>
+//                           </thead>
+//                           <tbody>
+//                             {resourcePerformanceItems.map((item, idx) => (
+//                               <tr key={item.resource_id || idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
+//                                 <td className="py-2 px-2">
+//                                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.resource_type === 'Practice' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+//                                     {item.label}
+//                                   </span>
+//                                 </td>
+//                                 <td className="py-2 px-2 text-gray-700 font-medium max-w-[180px] truncate" title={item.resource_name}>{item.resource_name || 'N/A'}</td>
+//                                 <td className="py-2 px-2">
+//                                   <span className={`text-xs px-2 py-0.5 rounded-full ${item.resource_type === 'Practice' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+//                                     {item.resource_type}
+//                                   </span>
+//                                 </td>
+//                                 <td className="py-2 px-2">
+//                                   {item.is_completed ? (
+//                                     <span className="flex items-center gap-1 text-xs text-green-600"><CheckCircle size={11} /> Done</span>
+//                                   ) : item.updated_at ? (
+//                                     <span className="text-xs text-orange-500">In Progress</span>
+//                                   ) : (
+//                                     <span className="text-xs text-gray-400">Not Started</span>
+//                                   )}
+//                                 </td>
+//                                 <td className="py-2 px-2 text-xs text-gray-500">{item.updated_at ? formatDate(item.updated_at) : '—'}</td>
+//                                 <td className="py-2 px-2">
+//                                   {item.reattempts > 0 ? (
+//                                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">{item.reattempts}×</span>
+//                                   ) : (
+//                                     <span className="text-xs text-gray-300">—</span>
+//                                   )}
+//                                 </td>
+//                               </tr>
+//                             ))}
+//                           </tbody>
+//                         </table>
+//                       </div>
+//                       {testReattempts.length > 0 && (
+//                         <div className="mt-4 pt-3 border-t border-gray-100">
+//                           <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Overall — No. of Re-Attempts</div>
+//                           <div className="flex flex-wrap gap-2">
+//                             {testReattempts.map((r, i) => (
+//                               <div key={i} className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 text-xs">
+//                                 <span className="text-gray-600 font-medium truncate max-w-[140px]" title={r.resource_name}>{r.resource_name}</span>
+//                                 <span className="text-orange-600 font-bold">{r.attempt_count}×</span>
+//                               </div>
+//                             ))}
+//                           </div>
+//                         </div>
+//                       )}
+//                     </>
+//                   ) : (
+//                     <div className="text-sm text-gray-400 text-center py-6">No practice or test data available yet</div>
+//                   )}
+//                 </div> */}
+
+//                 {/* Queries */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-4">
+//                     <MessageSquare size={16} className="text-[#8DC63F]" />
+//                     <div className="text-base font-semibold text-gray-700">Queries Raised</div>
+//                   </div>
+//                   <div className="grid grid-cols-3 gap-3">
+//                     <div className="border shadow-sm rounded-lg p-4 flex justify-between items-center">
+//                       <div className="text-sm text-gray-500">Total</div>
+//                       <div className="text-2xl font-bold text-[#8DC63F]">{queries.loading ? <Spinner color="#8DC63F" /> : queries.total}</div>
+//                     </div>
+//                     <div className="border shadow-sm rounded-lg p-4 flex justify-between items-center">
+//                       <div className="flex items-center gap-1.5">
+//                         <AlertCircle size={14} className="text-orange-400" />
+//                         <div className="text-sm text-gray-500">Pending</div>
+//                       </div>
+//                       <div className="text-2xl font-bold text-orange-500">{queries.loading ? <Spinner color="#f97316" /> : queries.pending}</div>
+//                     </div>
+//                     <div className="border shadow-sm rounded-lg p-4 flex justify-between items-center">
+//                       <div className="flex items-center gap-1.5">
+//                         <CheckCircle size={14} className="text-green-500" />
+//                         <div className="text-sm text-gray-500">Resolved</div>
+//                       </div>
+//                       <div className="text-2xl font-bold text-green-600">{queries.loading ? <Spinner color="#16a34a" /> : queries.resolved}</div>
+//                     </div>
+//                   </div>
+//                   {queries.error && (
+//                     <div className="mt-3 p-3 bg-red-50 text-red-600 rounded text-xs border border-red-200">Error loading queries: {queries.error}</div>
+//                   )}
+//                 </div>
+
+//                 {/* LR Re-Attempts */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-4">
+//                     <IdentificationIcon size={16} className="text-[#8DC63F]" />
+//                     <div className="text-base font-semibold text-gray-700">LR — Re-Attempts Interactions</div>
+//                   </div>
+//                   <InteractionDonut data={interactionStats.data} loading={interactionStats.loading} error={interactionStats.error} totalAttempts={totalAttempts} />
+//                 </div>
+
+//                 {/* Learning Path Progress */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-4">
+//                     <TrendingUp size={16} className="text-[#8DC63F]" />
+//                     <div className="text-base font-semibold text-gray-700">Learning Path Progress</div>
+//                     {moduleCompletion.length > 0 && (
+//                       <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
+//                         {moduleCompletion.filter(m => {
+//                           const total = Number(m.total_learning_resources) + Number(m.total_image_interpretations);
+//                           const done  = Number(m.completed_learning_resources) + Number(m.completed_image_interpretations);
+//                           return total > 0 && done === total;
+//                         }).length} / {moduleCompletion.length} modules done
+//                       </span>
+//                     )}
+//                   </div>
+//                   {loading ? (
+//                     <div className="flex justify-center py-6"><Spinner /></div>
+//                   ) : learningPathProgress.length > 0 ? (
+//                     <div className="flex flex-col gap-5">
+//                       {learningPathProgress.map((course, ci) => (
+//                         <div key={ci}>
+//                           <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2 pb-1 border-b border-gray-100">
+//                             <BookOpen size={13} className="text-blue-400" />
+//                             {course.course_name}
+//                           </div>
+//                           <div className="flex flex-col gap-2">
+//                             {course.modules.map((mod, mi) => {
+//                               const lrTotal = Number(mod.total_learning_resources)       || 0;
+//                               const lrDone  = Number(mod.completed_learning_resources)   || 0;
+//                               const iiTotal = Number(mod.total_image_interpretations)    || 0;
+//                               const iiDone  = Number(mod.completed_image_interpretations) || 0;
+//                               const total   = lrTotal + iiTotal;
+//                               const done    = lrDone  + iiDone;
+//                               const pct     = total > 0 ? Math.round((done / total) * 100) : 0;
+//                               const isDone  = total > 0 && done === total;
+//                               return (
+//                                 <div key={mi} className={`rounded-lg border p-3 transition-colors ${isDone ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+//                                   <div className="flex justify-between items-start mb-1.5">
+//                                     <div className="flex flex-col gap-0.5">
+//                                       <span className="text-xs font-semibold text-gray-700">{mod.unit_name || mod.module_name || 'Module'}</span>
+//                                       {mod.unit_name && mod.module_name && (
+//                                         <span className="text-[10px] text-gray-400">{mod.module_name}</span>
+//                                       )}
+//                                     </div>
+//                                     <div className="flex items-center gap-1.5 ml-2 shrink-0">
+//                                       {isDone && <CheckCircle size={12} className="text-green-500" />}
+//                                       <span className={`text-xs font-bold ${isDone ? 'text-green-600' : 'text-gray-600'}`}>{pct}%</span>
+//                                     </div>
+//                                   </div>
+//                                   <div className="w-full bg-gray-200 rounded-full h-1.5">
+//                                     <div className="h-1.5 rounded-full transition-all duration-700"
+//                                       style={{ width: `${pct}%`, backgroundColor: isDone ? '#22c55e' : '#8DC63F' }} />
+//                                   </div>
+//                                   <div className="flex gap-4 mt-1.5 text-[10px] text-gray-400">
+//                                     <span>LR: <span className="text-gray-600 font-medium">{lrDone}/{lrTotal}</span></span>
+//                                     <span>II: <span className="text-gray-600 font-medium">{iiDone}/{iiTotal}</span></span>
+//                                   </div>
+//                                 </div>
+//                               );
+//                             })}
+//                           </div>
+//                         </div>
+//                       ))}
+//                     </div>
+//                   ) : (
+//                     <div className="text-sm text-gray-400 text-center py-6">No learning path data available</div>
+//                   )}
+//                 </div>
+//               </div>
+
+//               {/* ── RIGHT PANEL ──────────────────────────────── */}
+//               <div className="col-span-1 flex flex-col gap-4">
+
+//                 {/* Associated Batch */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="text-gray-500 font-semibold mb-3">Associated Batch</div>
+//                   {loading ? (
+//                     <div className="flex justify-center py-4"><Spinner /></div>
+//                   ) : individualTraineeProfile.currentBatches[0] ? (
+//                     <div className="grid grid-cols-2 gap-2">
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Batch Name</div>
+//                         <div className="font-semibold text-gray-700">{individualTraineeProfile.currentBatches[0]?.batch_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Valid Till</div>
+//                         <div className="font-semibold text-gray-700">{formatDateTime(individualTraineeProfile.currentBatches[0]?.batch_end_date)}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Status</div>
+//                         <div className="font-semibold">
+//                           <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${individualTraineeProfile.currentBatches[0]?.batch_status === 'current' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+//                             {individualTraineeProfile.currentBatches[0]?.batch_status || 'N/A'}
+//                           </span>
+//                         </div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Instructors</div>
+//                         <div className="font-semibold text-gray-700 text-xs">{individualTraineeProfile.currentBatches[0]?.instructors?.join(', ') || 'N/A'}</div>
+//                       </div>
+//                     </div>
+//                   ) : (
+//                     <div className="text-sm text-gray-400 text-center py-4">No batch assigned</div>
+//                   )}
+//                 </div>
+
+//                 {/* ══════════════════════════════════════════════
+//                     OVERALL PROGRESS — certificate-aware
+//                     Dropdown is built from real API data.
+//                     Selecting a cert filters ALL counts above too.
+//                     ══════════════════════════════════════════════ */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex justify-between items-center mb-3">
+//                     <div className="text-gray-500 font-semibold">Overall Progress</div>
+//                     <select
+//                       value={selectedCertificate}
+//                       onChange={e => setSelectedCertificate(e.target.value)}
+//                       className={selectCls}
+//                     >
+//                       <option value="">All Certificates</option>
+//                       {certificates.map(cert => (
+//                         <option key={cert.id} value={cert.id}>
+//                           {cert.label}
+//                         </option>
+//                       ))}
+//                     </select>
+//                   </div>
+//                   <div className="flex justify-center items-center">
+//                     <OverallCompletion data={{ totalResources, completed, attempted }} />
+//                   </div>
+//                   <div className="mt-3 grid grid-cols-2 gap-2 text-center">
+//                     <div className="bg-gray-50 rounded-lg p-2">
+//                       <div className="text-xs text-gray-400">Total</div>
+//                       <div className="text-lg font-bold text-gray-700">{totalResources}</div>
+//                     </div>
+//                     <div className="bg-green-50 rounded-lg p-2">
+//                       <div className="text-xs text-gray-400">Completed</div>
+//                       <div className="text-lg font-bold text-[#8DC63F]">{completed}</div>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 {/* Performance Metrics (Mock) */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-4">
+//                     <Activity size={16} className="text-[#8DC63F]" />
+//                     <div className="text-gray-500 font-semibold">Performance Metrics</div>
+//                     <span className="ml-auto text-[9px] font-semibold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full">
+//                       Mock Data
+//                     </span>
+//                   </div>
+//                   <div className="flex flex-col gap-3">
+//                     {/* Accuracy */}
+//                     <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+//                       <div className="flex justify-between items-center mb-1">
+//                         <span className="text-xs text-gray-500 font-medium">Accuracy</span>
+//                         <div className="flex items-center gap-1">
+//                           <TrendIcon value={MOCK_PERFORMANCE_METRICS.accuracy.value} prev={MOCK_PERFORMANCE_METRICS.accuracy.prev} />
+//                           <span className="text-xl font-bold text-[#8DC63F]">{MOCK_PERFORMANCE_METRICS.accuracy.value}%</span>
+//                         </div>
+//                       </div>
+//                       <div className="w-full bg-gray-200 rounded-full h-2">
+//                         <div className="h-2 rounded-full transition-all duration-700 bg-[#8DC63F]"
+//                           style={{ width: `${MOCK_PERFORMANCE_METRICS.accuracy.value}%` }} />
+//                       </div>
+//                       <TrendLabel value={MOCK_PERFORMANCE_METRICS.accuracy.value} prev={MOCK_PERFORMANCE_METRICS.accuracy.prev} unit="%" />
+//                     </div>
+//                     {/* Time per Task */}
+//                     <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+//                       <div className="flex justify-between items-center mb-1">
+//                         <div className="flex items-center gap-1.5">
+//                           <Clock size={12} className="text-blue-400" />
+//                           <span className="text-xs text-gray-500 font-medium">Time per Task</span>
+//                         </div>
+//                         <div className="flex items-center gap-1">
+//                           <TrendIcon value={MOCK_PERFORMANCE_METRICS.timePerTask.value} prev={MOCK_PERFORMANCE_METRICS.timePerTask.prev} lowerIsBetter />
+//                           <span className="text-xl font-bold text-blue-500">{MOCK_PERFORMANCE_METRICS.timePerTask.value} min</span>
+//                         </div>
+//                       </div>
+//                       <div className="w-full bg-gray-200 rounded-full h-2">
+//                         <div className="h-2 rounded-full bg-blue-400 transition-all duration-700"
+//                           style={{ width: `${Math.min(100, (MOCK_PERFORMANCE_METRICS.timePerTask.value / 10) * 100)}%` }} />
+//                       </div>
+//                       <TrendLabel value={MOCK_PERFORMANCE_METRICS.timePerTask.value} prev={MOCK_PERFORMANCE_METRICS.timePerTask.prev} unit=" min" lowerIsBetter />
+//                     </div>
+//                     {/* Error Rate */}
+//                     <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
+//                       <div className="flex justify-between items-center mb-1">
+//                         <span className="text-xs text-gray-500 font-medium">Error Rate</span>
+//                         <div className="flex items-center gap-1">
+//                           <TrendIcon value={MOCK_PERFORMANCE_METRICS.errorRate.value} prev={MOCK_PERFORMANCE_METRICS.errorRate.prev} lowerIsBetter />
+//                           <span className="text-xl font-bold text-orange-500">{MOCK_PERFORMANCE_METRICS.errorRate.value}%</span>
+//                         </div>
+//                       </div>
+//                       <div className="w-full bg-gray-200 rounded-full h-2">
+//                         <div className="h-2 rounded-full bg-orange-400 transition-all duration-700"
+//                           style={{ width: `${MOCK_PERFORMANCE_METRICS.errorRate.value}%` }} />
+//                       </div>
+//                       <TrendLabel value={MOCK_PERFORMANCE_METRICS.errorRate.value} prev={MOCK_PERFORMANCE_METRICS.errorRate.prev} unit="%" lowerIsBetter />
+//                     </div>
+//                     {/* Consistency */}
+//                     <div className="flex justify-between items-center rounded-lg border border-gray-100 bg-gray-50 p-3">
+//                       <span className="text-xs text-gray-500 font-medium">Consistency</span>
+//                       <span className={`text-xs font-bold px-3 py-1 rounded-full ${consistencyConfig[MOCK_PERFORMANCE_METRICS.consistency]?.bg} ${consistencyConfig[MOCK_PERFORMANCE_METRICS.consistency]?.color}`}>
+//                         {MOCK_PERFORMANCE_METRICS.consistency}
+//                       </span>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 {/* Skill Competency (Mock) */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-4">
+//                     <Brain size={16} className="text-[#8DC63F]" />
+//                     <div className="text-gray-500 font-semibold">Skill Competency</div>
+//                     <span className="ml-auto text-[9px] font-semibold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full">
+//                       Mock Data
+//                     </span>
+//                   </div>
+//                   <div className="flex flex-col gap-2.5">
+//                     {MOCK_SKILL_COMPETENCY.map((skill, i) => {
+//                       const cfg = skillLevelConfig[skill.level] ?? skillLevelConfig['Intermediate'];
+//                       return (
+//                         <div key={i} className={`rounded-lg border p-3 ${cfg.bg} ${cfg.border}`}>
+//                           <div className="flex justify-between items-center mb-1.5">
+//                             <div className="flex items-center gap-2">
+//                               <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+//                               <span className="text-xs font-semibold text-gray-700">{skill.skill}</span>
+//                             </div>
+//                             <div className="flex items-center gap-2">
+//                               {skill.trend === 'up'      && <ChevronUp   size={13} className="text-green-500" />}
+//                               {skill.trend === 'down'    && <ChevronDown size={13} className="text-red-400" />}
+//                               {skill.trend === 'neutral' && <Minus       size={13} className="text-gray-400" />}
+//                               <span className="text-xs font-bold" style={{ color: cfg.color }}>{skill.score}%</span>
+//                             </div>
+//                           </div>
+//                           <div className="w-full bg-white rounded-full h-1.5 border border-gray-100">
+//                             <div className="h-1.5 rounded-full transition-all duration-700"
+//                               style={{ width: `${skill.score}%`, backgroundColor: cfg.color }} />
+//                           </div>
+//                           <div className="mt-1.5">
+//                             <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: cfg.color }}>
+//                               {skill.level}
+//                             </span>
+//                           </div>
+//                         </div>
+//                       );
+//                     })}
+//                   </div>
+//                 </div>
+
+//                 {/* Last Session (Mock) */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-1">
+//                     <Zap size={16} className="text-[#8DC63F]" />
+//                     <div className="text-gray-500 font-semibold">Last Session</div>
+//                     <span className="ml-auto text-[9px] font-semibold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full">
+//                       Mock Data
+//                     </span>
+//                   </div>
+//                   <div className="text-xs text-gray-400 mb-3">{formatDateTime(MOCK_LAST_SESSION.date)}</div>
+//                   <div className="text-sm font-semibold text-gray-700 mb-3 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
+//                     {MOCK_LAST_SESSION.module}
+//                   </div>
+//                   <div className="flex flex-col gap-2 mb-3">
+//                     {MOCK_LAST_SESSION.checks.map((check, i) => (
+//                       <div key={i} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium border ${
+//                         check.passed ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-600'
+//                       }`}>
+//                         {check.passed
+//                           ? <CheckCircle size={13} className="text-green-500 shrink-0" />
+//                           : <XCircle    size={13} className="text-red-400 shrink-0" />
+//                         }
+//                         {check.label}
+//                       </div>
+//                     ))}
+//                   </div>
+//                   <div className="rounded-lg border border-[#8DC63F]/30 bg-[#8DC63F]/5 p-3">
+//                     <div className="text-[10px] font-bold uppercase tracking-widest text-[#8DC63F] mb-1">💡 Feedback</div>
+//                     <div className="text-xs text-gray-600 leading-relaxed italic">
+//                       "{MOCK_LAST_SESSION.feedback}"
+//                     </div>
+//                   </div>
+//                   <div className="grid grid-cols-2 gap-2 mt-3">
+//                     <button className="text-xs font-semibold text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">
+//                       Replay Attempt
+//                     </button>
+//                     <button className="text-xs font-semibold text-white rounded-lg py-2 hover:opacity-90 transition-opacity"
+//                       style={{ backgroundColor: '#8DC63F' }}>
+//                       Practice Again
+//                     </button>
+//                   </div>
+//                 </div>
+
+//                 {/* Last Completed Module */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-3">
+//                     <CheckCircle size={16} className="text-[#8DC63F]" />
+//                     <div className="text-gray-500 font-semibold">Last Completed Module</div>
+//                   </div>
+//                   {loading ? (
+//                     <div className="flex justify-center py-4"><Spinner /></div>
+//                   ) : lastCompletedModuleData ? (
+//                     <div className="flex flex-col gap-2">
+//                       <div className="text-sm p-2 bg-green-50 rounded-lg border border-green-100">
+//                         <div className="text-gray-400 text-xs mb-1">Unit</div>
+//                         <div className="font-semibold text-gray-700">{lastCompletedModuleData.unit_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Module</div>
+//                         <div className="font-semibold text-gray-700">{lastCompletedModuleData.module_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Course</div>
+//                         <div className="font-semibold text-gray-700">{lastCompletedModuleData.course_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Last Activity</div>
+//                         <div className="font-semibold text-gray-700">{formatDateTime(lastCompletedModuleData.lastDate)}</div>
+//                       </div>
+//                       <div className="flex flex-col gap-1 pt-1">
+//                         <div className="flex justify-between text-[10px] text-gray-400">
+//                           <span>Resources Completed</span>
+//                           <span className="font-semibold text-gray-500">{lastCompletedModuleData.completedCount}/{lastCompletedModuleData.totalCount}</span>
+//                         </div>
+//                         <div className="w-full bg-gray-100 rounded-full h-1.5">
+//                           <div className="h-1.5 rounded-full transition-all duration-500"
+//                             style={{
+//                               width: `${lastCompletedModuleData.totalCount > 0 ? Math.round((lastCompletedModuleData.completedCount / lastCompletedModuleData.totalCount) * 100) : 0}%`,
+//                               backgroundColor: '#8DC63F',
+//                             }} />
+//                         </div>
+//                       </div>
+//                     </div>
+//                   ) : (
+//                     <div className="text-sm text-gray-400 text-center py-4">No module activity yet</div>
+//                   )}
+//                 </div>
+
+//                 {/* Practice Streak */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-1">
+//                     <Flame size={16} className="text-orange-500" />
+//                     <div className="text-gray-500 font-semibold">Practice Streak</div>
+//                     <div className="ml-auto flex items-center gap-1">
+//                       <span className="text-2xl font-bold text-orange-500">{weeklyStreak}</span>
+//                       <span className="text-xs text-gray-400 leading-tight">week{weeklyStreak !== 1 ? 's' : ''}</span>
+//                     </div>
+//                   </div>
+//                   <div className="text-[10px] text-gray-400 mb-3">Weekly activity — last 8 weeks</div>
+//                   {loading ? (
+//                     <div className="flex justify-center py-4"><Spinner /></div>
+//                   ) : (
+//                     <>
+//                       <div className="flex items-end gap-1 h-14">
+//                         {last8WeeksActivity.map((week, i) => {
+//                           const maxCount  = Math.max(...last8WeeksActivity.map(w => w.count), 1);
+//                           const heightPct = week.count === 0 ? 15 : Math.max(20, Math.round((week.count / maxCount) * 100));
+//                           return (
+//                             <div key={i} className="flex flex-col items-center gap-1 flex-1 h-full justify-end">
+//                               <div
+//                                 className={`w-full rounded-t transition-all duration-500 ${week.isCurrentWeek ? 'ring-1 ring-orange-400' : ''}`}
+//                                 style={{
+//                                   height: `${heightPct}%`,
+//                                   backgroundColor: week.count === 0 ? '#e5e7eb' : week.count <= 3 ? '#bbf7d0' : week.count <= 7 ? '#8DC63F' : '#16a34a',
+//                                 }}
+//                                 title={`${week.week}: ${week.count} completion${week.count !== 1 ? 's' : ''}`}
+//                               />
+//                             </div>
+//                           );
+//                         })}
+//                       </div>
+//                       <div className="flex justify-between mt-1.5 text-[9px] text-gray-400 px-0.5">
+//                         {last8WeeksActivity.map((week, i) => (
+//                           <span key={i} className={`flex-1 text-center ${week.isCurrentWeek ? 'text-orange-500 font-semibold' : ''}`}>
+//                             {week.week.split(' ')[0]}
+//                           </span>
+//                         ))}
+//                       </div>
+//                       {weeklyStreak === 0 && (
+//                         <div className="mt-2 text-xs text-center text-gray-400 bg-gray-50 rounded-lg py-2">
+//                           Complete a resource this week to start your streak!
+//                         </div>
+//                       )}
+//                       {weeklyStreak >= 3 && (
+//                         <div className="mt-2 text-xs text-center text-orange-500 font-semibold bg-orange-50 rounded-lg py-2">
+//                           {weeklyStreak >= 8 ? 'Incredible streak!' : weeklyStreak >= 5 ? 'Great consistency!' : 'Keep it up!'}
+//                         </div>
+//                       )}
+//                     </>
+//                   )}
+//                 </div>
+
+//                 {/* Next Module */}
+//                 <div className="border rounded-lg p-5 border-gray-300 bg-white">
+//                   <div className="flex items-center gap-2 mb-3">
+//                     <ArrowRight size={16} className="text-[#8DC63F]" />
+//                     <div className="text-gray-500 font-semibold">Next Module</div>
+//                   </div>
+//                   {loading ? (
+//                     <div className="flex justify-center py-4"><Spinner /></div>
+//                   ) : nextModule ? (
+//                     <div className="flex flex-col gap-2">
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Unit</div>
+//                         <div className="font-semibold text-gray-700">{nextModule.unit_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Module</div>
+//                         <div className="font-semibold text-gray-700">{nextModule.module_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="text-sm p-2 bg-gray-50 rounded-lg">
+//                         <div className="text-gray-400 text-xs mb-1">Course</div>
+//                         <div className="font-semibold text-gray-700">{nextModule.course_name || 'N/A'}</div>
+//                       </div>
+//                       <div className="flex flex-col gap-1 pt-1">
+//                         <div className="flex justify-between text-[10px] text-gray-400">
+//                           <span>Learning Resources</span>
+//                           <span>{nextModule.completed_learning_resources}/{nextModule.total_learning_resources}</span>
+//                         </div>
+//                         <div className="w-full bg-gray-100 rounded-full h-1.5">
+//                           <div className="h-1.5 rounded-full transition-all duration-500"
+//                             style={{ width: `${nextModuleLRPct}%`, backgroundColor: '#8DC63F' }} />
+//                         </div>
+//                       </div>
+//                       <div className="flex flex-col gap-1">
+//                         <div className="flex justify-between text-[10px] text-gray-400">
+//                           <span>Image Interpretations</span>
+//                           <span>{nextModule.completed_image_interpretations}/{nextModule.total_image_interpretations}</span>
+//                         </div>
+//                         <div className="w-full bg-gray-100 rounded-full h-1.5">
+//                           <div className="h-1.5 rounded-full transition-all duration-500"
+//                             style={{ width: `${nextModuleIRPct}%`, backgroundColor: '#a78bfa' }} />
+//                         </div>
+//                       </div>
+//                     </div>
+//                   ) : (
+//                     <div className="text-sm text-gray-400 text-center py-4">All modules completed!</div>
+//                   )}
+//                 </div>
+
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+// export default TraineeDashboard;
+
+
+//changes in the new version
 import React, { useState, useEffect, useMemo } from 'react';
 import NavBar from '../navBar';
 import SideBar from '../sideBar';
@@ -2457,9 +3673,9 @@ import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
 import {
   BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare,
-  CheckCircle, AlertCircle, BarChart, ArrowRight, Award,
-  Target, Flame, TrendingUp, Activity, Zap, Brain,
-  ChevronUp, ChevronDown, Minus, Clock, XCircle,
+  CheckCircle, AlertCircle, Award, ArrowRight, Flame,
+  TrendingUp, Activity, Zap, Brain, ChevronUp, ChevronDown,
+  Minus, Clock, XCircle, Lock, RefreshCw, Target,
 } from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
@@ -2470,24 +3686,19 @@ import {
   startOfWeek, endOfWeek, subWeeks, isWithinInterval, format,
 } from 'date-fns';
 
-// ─────────────────────────────────────────────────────────────
-// MOCK DATA — swap these out for real API responses later
-// ─────────────────────────────────────────────────────────────
-
+// ─── MOCK DATA ────────────────────────────────────────────────
 const MOCK_PERFORMANCE_METRICS = {
   accuracy:    { value: 78, prev: 70, unit: '%' },
   timePerTask: { value: 4.2, prev: 5.1, unit: ' min' },
   errorRate:   { value: 18, prev: 24, unit: '%' },
   consistency: 'Medium',
 };
-
 const MOCK_SKILL_COMPETENCY = [
   { skill: 'Probe Handling',         level: 'Intermediate', score: 62, trend: 'up' },
   { skill: 'Plane Acquisition',      level: 'Advanced',     score: 84, trend: 'up' },
   { skill: 'Fetal Biometry',         level: 'Intermediate', score: 58, trend: 'neutral' },
   { skill: 'Anatomy Identification', level: 'Beginner',     score: 34, trend: 'down' },
 ];
-
 const MOCK_LAST_SESSION = {
   module: 'Biometry — AC, P3',
   date: '2025-04-30T10:22:00',
@@ -2499,472 +3710,721 @@ const MOCK_LAST_SESSION = {
   feedback: 'Adjust probe tilt slightly inferiorly to get a cleaner abdominal circumference plane.',
 };
 
-// ─────────────────────────────────────────────────────────────
+// ─── Radial Progress Ring ─────────────────────────────────────
+const RadialRing = ({ pct = 0, size = 56, stroke = 5, color = '#8DC63F', bg = '#e5e7eb', children }) => {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={bg} strokeWidth={stroke} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+          strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
+          style={{ transition: 'stroke-dasharray 0.7s ease' }} />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">{children}</div>
+    </div>
+  );
+};
+
+// ─── Mini progress bar ────────────────────────────────────────
+const MiniBar = ({ value, max, color }) => (
+  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+    <div className="h-full rounded-full transition-all duration-700"
+      style={{ width: `${max > 0 ? Math.round((value / max) * 100) : 0}%`, backgroundColor: color }} />
+  </div>
+);
+
+// ─── Section label ────────────────────────────────────────────
+const SectionLabel = ({ icon: Icon, color, label, badge }) => (
+  <div className="flex items-center gap-2 mb-3">
+    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}18` }}>
+      <Icon size={14} style={{ color }} />
+    </div>
+    <span className="text-sm font-semibold text-gray-700">{label}</span>
+    {badge && <span className="ml-auto text-[9px] font-bold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">{badge}</span>}
+  </div>
+);
 
 function TraineeDashboard() {
-  const navigate   = useNavigate();
   const { people_id } = useParams();
   const [buttonOpen, setButtonOpen] = useState(true);
 
-  // ── Trainee Profile ──────────────────────────────────────
+  // ── Profile ───────────────────────────────────────────────
   const [loading, setLoading] = useState(false);
   const [individualTraineeProfile, setIndividualTraineeProfile] = useState({
-    data: [],
-    instructors: [],
-    currentBatches: [],
-    completedBatches: [],
-    certificates: [],
-    testQuery: [],
-    reAttempts: [],
-    moduleCompletion: [],
-    nextModule: null,
-    latestProgress: null,
+    data: [], instructors: [], currentBatches: [], completedBatches: [],
+    certificates: [], testQuery: [], reAttempts: [], moduleCompletion: [],
+    nextModule: null, latestProgress: null,
   });
 
   const handleApiCall = async (id) => {
     try {
       setLoading(true);
-      const response = await TraineeProfileAPI(id);
-      setIndividualTraineeProfile(response.data);
-      const batchId = response.data?.currentBatches?.[0]?.batch_id;
-      if (batchId) localStorage.setItem('batch_id', batchId);
-    } catch (error) {
-      console.error('Error fetching trainee profile:', error);
-    } finally {
-      setLoading(false);
-    }
+      const r = await TraineeProfileAPI(id);
+      setIndividualTraineeProfile(r.data);
+      const b = r.data?.currentBatches?.[0]?.batch_id;
+      if (b) localStorage.setItem('batch_id', b);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
   };
-
-  useEffect(() => {
-    const resolvedId = people_id || localStorage.getItem('people_id');
-    handleApiCall(resolvedId);
-  }, []);
+  useEffect(() => { handleApiCall(people_id || localStorage.getItem('people_id')); }, []);
 
   // ── Queries ───────────────────────────────────────────────
-  const [queries, setQueries] = useState({
-    pending: 0, resolved: 0, total: 0, loading: false, error: null,
-  });
-
-  const handleFetchQueries = async () => {
-    try {
-      setQueries(prev => ({ ...prev, loading: true }));
-      const token = localStorage.getItem('user_token');
-      const response = await GetQueriesAPI(token);
-      const pendingCount  = response.result.filter(q => q.status === 'pending').length;
-      const resolvedCount = response.result.filter(q => q.status === 'resolved').length;
-      setQueries({ pending: pendingCount, resolved: resolvedCount, total: response.total, loading: false, error: null });
-    } catch (error) {
-      console.error('Error fetching queries:', error);
-      setQueries(prev => ({ ...prev, loading: false, error: error.message }));
-    }
-  };
-
-  useEffect(() => { handleFetchQueries(); }, []);
+  const [queries, setQueries] = useState({ pending: 0, resolved: 0, total: 0, loading: false, error: null });
+  useEffect(() => {
+    (async () => {
+      try {
+        setQueries(p => ({ ...p, loading: true }));
+        const r = await GetQueriesAPI(localStorage.getItem('user_token'));
+        setQueries({ pending: r.result.filter(q => q.status === 'pending').length, resolved: r.result.filter(q => q.status === 'resolved').length, total: r.total, loading: false, error: null });
+      } catch (e) { setQueries(p => ({ ...p, loading: false, error: e.message })); }
+    })();
+  }, []);
 
   // ── Interaction Stats ─────────────────────────────────────
-  const [interactionStats, setInteractionStats] = useState({
-    data: [], loading: false, error: null,
-  });
-
-  const handleFetchInteractionStats = async () => {
-    try {
-      setInteractionStats(prev => ({ ...prev, loading: true }));
-      const response = await getInteractionsAttemptStats();
-      const data = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.data)
-        ? response.data
-        : Array.isArray(response?.result)
-        ? response.result
-        : [];
-      setInteractionStats({ data, loading: false, error: null });
-    } catch (error) {
-      console.error('Error fetching interaction stats:', error);
-      setInteractionStats(prev => ({ ...prev, loading: false, error: error.message }));
-    }
-  };
-
-  useEffect(() => { handleFetchInteractionStats(); }, []);
+  const [interactionStats, setInteractionStats] = useState({ data: [], loading: false, error: null });
+  useEffect(() => {
+    (async () => {
+      try {
+        setInteractionStats(p => ({ ...p, loading: true }));
+        const r = await getInteractionsAttemptStats();
+        const data = Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : Array.isArray(r?.result) ? r.result : [];
+        setInteractionStats({ data, loading: false, error: null });
+      } catch (e) { setInteractionStats(p => ({ ...p, loading: false, error: e.message })); }
+    })();
+  }, []);
 
   // ── Activity Last Scores ──────────────────────────────────
-  const [activityLastScores, setActivityLastScores] = useState({
-    data: [], loading: false, error: null,
-  });
+  const [activityLastScores, setActivityLastScores] = useState({ data: [], loading: false, error: null });
+  useEffect(() => {
+    (async () => {
+      try {
+        setActivityLastScores(p => ({ ...p, loading: true }));
+        const r = await getActivityLastScores();
+        const data = Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : [];
+        setActivityLastScores({ data, loading: false, error: null });
+      } catch (e) { setActivityLastScores(p => ({ ...p, loading: false, error: e.message })); }
+    })();
+  }, []);
 
-  const handleFetchActivityLastScores = async () => {
-    try {
-      setActivityLastScores(prev => ({ ...prev, loading: true }));
-      const response = await getActivityLastScores();
-      const data = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.data)
-        ? response.data
-        : [];
-      setActivityLastScores({ data, loading: false, error: null });
-    } catch (error) {
-      console.error('Error fetching activity last scores:', error);
-      setActivityLastScores(prev => ({ ...prev, loading: false, error: error.message }));
-    }
-  };
+  // ── Derived Data ──────────────────────────────────────────
+  const allResources = useMemo(() => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null), [individualTraineeProfile.data]);
 
-  useEffect(() => { handleFetchActivityLastScores(); }, []);
-
-  // ── Base: all non-null resources ──────────────────────────
-  const allResources = useMemo(
-    () => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null),
-    [individualTraineeProfile.data]
-  );
-
-  // ── Certificate filter ────────────────────────────────────
   const [selectedCertificate, setSelectedCertificate] = useState('');
-
-  /**
-   * Build unique certificate list from raw data.
-   * Each row has certificate_id + course_name; we use course_name as the
-   * human-readable label (swap for a dedicated cert_name field if your API
-   * returns one, e.g. "BTC", "SVT").
-   */
   const certificates = useMemo(() => {
     const seen = new Set();
-    return (individualTraineeProfile?.data ?? [])
-      .filter(r => r.certificate_id)
-      .reduce((acc, r) => {
-        if (!seen.has(r.certificate_id)) {
-          seen.add(r.certificate_id);
-          acc.push({ id: r.certificate_id, label: r.course_name || r.certificate_id });
-        }
-        return acc;
-      }, []);
+    return (individualTraineeProfile?.data ?? []).filter(r => r.certificate_id).reduce((a, r) => {
+      if (!seen.has(r.certificate_id)) { seen.add(r.certificate_id); a.push({ id: r.certificate_id, label: r.course_name || r.certificate_id }); }
+      return a;
+    }, []);
   }, [individualTraineeProfile.data]);
 
-  /**
-   * filteredResources — the single source of truth for ALL stat cards,
-   * progress charts, and counts. When selectedCertificate is '' (All),
-   * this equals allResources; otherwise it narrows to just that cert.
-   */
-  const filteredResources = useMemo(
-    () => selectedCertificate
-      ? allResources.filter(r => r.certificate_id === selectedCertificate)
-      : allResources,
-    [allResources, selectedCertificate]
-  );
+  const filteredResources = useMemo(() =>
+    selectedCertificate ? allResources.filter(r => r.certificate_id === selectedCertificate) : allResources,
+    [allResources, selectedCertificate]);
 
-  // ── Stat counts (all derived from filteredResources) ──────
-  const totalLR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource').length,                             [filteredResources]);
-  const totalPractice = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice').length,                                      [filteredResources]);
-  const totalTests    = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test').length,                                          [filteredResources]);
-  const totalIR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation').length,                          [filteredResources]);
+  const totalLR           = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource').length, [filteredResources]);
+  const totalPractice     = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice').length, [filteredResources]);
+  const totalTests        = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test').length, [filteredResources]);
+  const totalIR           = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation').length, [filteredResources]);
+  const completedLR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource'    && r.is_completed).length, [filteredResources]);
+  const completedPractice = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice'             && r.is_completed).length, [filteredResources]);
+  const completedTests    = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test'                 && r.is_completed).length, [filteredResources]);
+  const completedIR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed).length, [filteredResources]);
+  const totalResources    = filteredResources.length;
+  const completed         = useMemo(() => filteredResources.filter(r => r.is_completed).length, [filteredResources]);
+  const attempted         = (individualTraineeProfile?.testQuery ?? []).length;
+  const totalAttempts     = interactionStats.data.reduce((s, r) => s + Number(r.attempt_count), 0);
 
-  const completedLR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource'    && r.is_completed === true).length, [filteredResources]);
-  const completedPractice = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice'             && r.is_completed === true).length, [filteredResources]);
-  const completedTests    = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test'                 && r.is_completed === true).length, [filteredResources]);
-  const completedIR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed === true).length, [filteredResources]);
+  const nextModule      = individualTraineeProfile?.nextModule ?? null;
+  const nextModuleLRPct = nextModule ? Math.round((Number(nextModule.completed_learning_resources) / Number(nextModule.total_learning_resources)) * 100) || 0 : 0;
+  const nextModuleIRPct = nextModule ? Math.round((Number(nextModule.completed_image_interpretations) / Number(nextModule.total_image_interpretations)) * 100) || 0 : 0;
 
-  const totalResources = filteredResources.length;
-  const completed      = useMemo(() => filteredResources.filter(r => r.is_completed === true).length, [filteredResources]);
-  const attempted      = (individualTraineeProfile?.testQuery ?? []).length;
-  const totalAttempts  = interactionStats.data.reduce((sum, r) => sum + Number(r.attempt_count), 0);
-
-  // ── Next Module ───────────────────────────────────────────
-  const nextModule = individualTraineeProfile?.nextModule ?? null;
-  const nextModuleLRPct = nextModule
-    ? Math.round((Number(nextModule.completed_learning_resources) / Number(nextModule.total_learning_resources)) * 100) || 0
-    : 0;
-  const nextModuleIRPct = nextModule
-    ? Math.round((Number(nextModule.completed_image_interpretations) / Number(nextModule.total_image_interpretations)) * 100) || 0
-    : 0;
-
-  // ── Last Completed Module ─────────────────────────────────
   const lastCompletedModuleData = useMemo(() => {
-    const moduleMap = {};
+    const map = {};
     filteredResources.forEach(r => {
       if (!r.learning_module_id) return;
-      const key = r.learning_module_id;
-      if (!moduleMap[key]) {
-        moduleMap[key] = {
-          learning_module_id: r.learning_module_id,
-          unit_name: r.unit_name,
-          module_name: r.module_name,
-          course_name: r.course_name,
-          resources: [],
-        };
-      }
-      moduleMap[key].resources.push(r);
+      if (!map[r.learning_module_id]) map[r.learning_module_id] = { ...r, resources: [] };
+      map[r.learning_module_id].resources.push(r);
     });
-
-    return Object.values(moduleMap)
-      .map(m => {
-        const completedRes = m.resources.filter(r => r.is_completed === true && r.updated_at);
-        const totalCount   = m.resources.filter(r => r.resource_id).length;
-        const lastDate     = completedRes.map(r => new Date(r.updated_at)).sort((a, b) => b - a)[0] ?? null;
-        return { ...m, completedCount: completedRes.length, totalCount, lastDate };
-      })
-      .filter(m => m.completedCount > 0 && m.lastDate)
-      .sort((a, b) => b.lastDate - a.lastDate)[0] ?? null;
+    return Object.values(map).map(m => {
+      const done = m.resources.filter(r => r.is_completed && r.updated_at);
+      const last = done.map(r => new Date(r.updated_at)).sort((a, b) => b - a)[0] ?? null;
+      return { ...m, completedCount: done.length, totalCount: m.resources.filter(r => r.resource_id).length, lastDate: last };
+    }).filter(m => m.completedCount > 0 && m.lastDate).sort((a, b) => b.lastDate - a.lastDate)[0] ?? null;
   }, [filteredResources]);
 
-  // ── Weekly Practice Streak ────────────────────────────────
   const weeklyStreak = useMemo(() => {
-    const completedDates = filteredResources
-      .filter(r => r.is_completed === true && r.updated_at)
-      .map(r => new Date(r.updated_at));
-
-    if (completedDates.length === 0) return 0;
-
+    const dates = filteredResources.filter(r => r.is_completed && r.updated_at).map(r => new Date(r.updated_at));
+    if (!dates.length) return 0;
     const now = new Date();
-    const thisWeekStart = startOfWeek(now, { weekStartsOn: 1 });
-    const thisWeekEnd   = endOfWeek(now,   { weekStartsOn: 1 });
-    const hasThisWeek   = completedDates.some(d => isWithinInterval(d, { start: thisWeekStart, end: thisWeekEnd }));
-
+    const hasNow = dates.some(d => isWithinInterval(d, { start: startOfWeek(now, { weekStartsOn: 1 }), end: endOfWeek(now, { weekStartsOn: 1 }) }));
     let streak = 0;
-    const startOffset = hasThisWeek ? 0 : 1;
-
-    for (let i = startOffset; i < 52; i++) {
-      const wStart = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 });
-      const wEnd   = endOfWeek(wStart, { weekStartsOn: 1 });
-      if (completedDates.some(d => isWithinInterval(d, { start: wStart, end: wEnd }))) {
-        streak++;
-      } else {
-        break;
-      }
+    for (let i = hasNow ? 0 : 1; i < 52; i++) {
+      const s = startOfWeek(subWeeks(now, i), { weekStartsOn: 1 });
+      if (dates.some(d => isWithinInterval(d, { start: s, end: endOfWeek(s, { weekStartsOn: 1 }) }))) streak++;
+      else break;
     }
     return streak;
   }, [filteredResources]);
 
-  // ── Last 8 Weeks Activity ─────────────────────────────────
   const last8WeeksActivity = useMemo(() => {
-    const completedDates = filteredResources
-      .filter(r => r.is_completed === true && r.updated_at)
-      .map(r => new Date(r.updated_at));
-
+    const dates = filteredResources.filter(r => r.is_completed && r.updated_at).map(r => new Date(r.updated_at));
     return Array.from({ length: 8 }, (_, i) => {
-      const wStart = startOfWeek(subWeeks(new Date(), 7 - i), { weekStartsOn: 1 });
-      const wEnd   = endOfWeek(wStart, { weekStartsOn: 1 });
-      const count  = completedDates.filter(d => isWithinInterval(d, { start: wStart, end: wEnd })).length;
-      return { week: format(wStart, 'MMM d'), count, isCurrentWeek: i === 7 };
+      const s = startOfWeek(subWeeks(new Date(), 7 - i), { weekStartsOn: 1 });
+      const e = endOfWeek(s, { weekStartsOn: 1 });
+      return { week: format(s, 'MMM d'), count: dates.filter(d => isWithinInterval(d, { start: s, end: e })).length, isCurrentWeek: i === 7 };
     });
   }, [filteredResources]);
 
-  // ── Test Scores & Reattempts ──────────────────────────────
-  const testScores     = (individualTraineeProfile?.testQuery ?? [])[0] ?? null;
-  const testReattempts = useMemo(() => individualTraineeProfile?.reAttempts ?? [], [individualTraineeProfile.reAttempts]);
+  const testScores       = (individualTraineeProfile?.testQuery ?? [])[0] ?? null;
+  const testReattempts   = useMemo(() => individualTraineeProfile?.reAttempts ?? [], [individualTraineeProfile.reAttempts]);
   const moduleCompletion = useMemo(() => individualTraineeProfile?.moduleCompletion ?? [], [individualTraineeProfile.moduleCompletion]);
+  const msResourceCount  = interactionStats.data.length;
 
-  const msResourceCount = interactionStats.data.length;
+  const isOBRecord = r => ['resource_topic', 'resource_name', 'resource_type'].some(k => (r[k] || '').toLowerCase().includes('ob booster'));
+  const obResources = useMemo(() => filteredResources.filter(r => isOBRecord(r)), [filteredResources]);
+  const obCompleted = obResources.filter(r => r.is_completed).length;
 
-  // ── OB Booster detection ──────────────────────────────────
-  const isOBRecord = (r) => {
-    const rto = (r.resource_topic || '').toLowerCase();
-    const rn  = (r.resource_name  || '').toLowerCase();
-    const rt  = (r.resource_type  || '').toLowerCase();
-    return rto.includes('ob booster') || rto.includes('ob boosters') ||
-           rn.includes('ob booster')  || rn.includes('ob boosters')  ||
-           rt.includes('ob booster')  || rt.includes('ob boosters');
-  };
-
-  const obResources = useMemo(() =>
-    filteredResources.filter(r =>
-      r.resource_topic?.toLowerCase().includes('ob booster') ||
-      r.resource_name?.toLowerCase().includes('ob booster') ||
-      r.resource_topic?.toLowerCase().includes('ob boosters')
-    ), [filteredResources]);
-  const obCompleted = obResources.filter(r => r.is_completed === true).length;
-
-  const msLastScores = useMemo(() =>
-    activityLastScores.data.filter(r => !isOBRecord(r)),
-  [activityLastScores.data]);
-
+  const msLastScores      = useMemo(() => activityLastScores.data.filter(r => !isOBRecord(r)), [activityLastScores.data]);
   const msLastScoreSummary = useMemo(() => {
     if (!msLastScores.length) return null;
-    const totalQ  = msLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0);
-    const correct = msLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0);
-    const wrong   = msLastScores.reduce((s, r) => s + Number(r.wrong_answers   || 0), 0);
-    return { totalQ, correct, wrong, resources: msLastScores.length };
+    return { totalQ: msLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0), correct: msLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0), wrong: msLastScores.reduce((s, r) => s + Number(r.wrong_answers || 0), 0), resources: msLastScores.length };
   }, [msLastScores]);
 
-  const obLastScores = useMemo(() =>
-    activityLastScores.data.filter(r => isOBRecord(r)),
-  [activityLastScores.data]);
-
+  const obLastScores      = useMemo(() => activityLastScores.data.filter(r => isOBRecord(r)), [activityLastScores.data]);
   const obLastScoreSummary = useMemo(() => {
     if (!obLastScores.length) return null;
-    const totalQ  = obLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0);
-    const correct = obLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0);
-    const wrong   = obLastScores.reduce((s, r) => s + Number(r.wrong_answers   || 0), 0);
-    return { totalQ, correct, wrong, resources: obLastScores.length };
+    return { totalQ: obLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0), correct: obLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0), wrong: obLastScores.reduce((s, r) => s + Number(r.wrong_answers || 0), 0), resources: obLastScores.length };
   }, [obLastScores]);
 
-  // ── Practice & Test resource lists ───────────────────────
-  const practiceResources = useMemo(() => {
-    const seen = new Set();
-    return filteredResources
-      .filter(r => r.resource_type === 'Practice' && r.resource_id && !seen.has(r.resource_id) && seen.add(r.resource_id))
-      .sort((a, b) => (a.resource_name || '').localeCompare(b.resource_name || ''));
-  }, [filteredResources]);
-
-  const testResourcesList = useMemo(() => {
-    const seen = new Set();
-    return filteredResources
-      .filter(r => r.resource_type === 'Test' && r.resource_id && !seen.has(r.resource_id) && seen.add(r.resource_id))
-      .sort((a, b) => (a.resource_name || '').localeCompare(b.resource_name || ''));
-  }, [filteredResources]);
-
-  const resourcePerformanceItems = useMemo(() => {
-    const practices = practiceResources.slice(0, 4).map((r, i) => ({
-      label: `P${i + 1}`,
-      resource_name: r.resource_name,
-      resource_type: 'Practice',
-      resource_id: r.resource_id,
-      is_completed: r.is_completed,
-      updated_at: r.updated_at,
-      reattempts: 0,
-    }));
-    const tests = testResourcesList.slice(0, 4).map((r, i) => {
-      const entry = testReattempts.find(ra => ra.resource_id === r.resource_id);
-      return {
-        label: `T${i + 1}`,
-        resource_name: r.resource_name,
-        resource_type: 'Test',
-        resource_id: r.resource_id,
-        is_completed: r.is_completed,
-        updated_at: r.updated_at,
-        reattempts: entry ? Math.max(0, Number(entry.attempt_count) - 1) : 0,
-      };
-    });
-    return [...practices, ...tests];
-  }, [practiceResources, testResourcesList, testReattempts]);
-
-  // ── Learning path filtered by certificate ────────────────
   const learningPathProgress = useMemo(() => {
-    // Filter moduleCompletion to only modules present in filteredResources
-    const visibleModuleIds = new Set(filteredResources.map(r => r.learning_module_id));
-    const filtered = selectedCertificate
-      ? moduleCompletion.filter(m => visibleModuleIds.has(m.learning_module_id))
-      : moduleCompletion;
-
-    const courseMap = {};
-    filtered.forEach(m => {
-      const key = m.course_name || 'Unknown Course';
-      if (!courseMap[key]) courseMap[key] = { course_name: key, modules: [] };
-      courseMap[key].modules.push(m);
-    });
-    return Object.values(courseMap);
+    const ids = new Set(filteredResources.map(r => r.learning_module_id));
+    const filtered = selectedCertificate ? moduleCompletion.filter(m => ids.has(m.learning_module_id)) : moduleCompletion;
+    const map = {};
+    filtered.forEach(m => { const k = m.course_name || 'Unknown'; if (!map[k]) map[k] = { course_name: k, modules: [] }; map[k].modules.push(m); });
+    return Object.values(map);
   }, [moduleCompletion, filteredResources, selectedCertificate]);
 
   // ── Helpers ───────────────────────────────────────────────
-  const formatDateTime = (ds) => {
-    if (!ds || ds === 'N/A') return 'N/A';
-    const d = new Date(ds);
-    if (isNaN(d.getTime())) return 'N/A';
-    return d.toLocaleString('en-IN', {
-      year: 'numeric', month: 'short', day: 'numeric',
-      hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata',
-    });
-  };
+  const fmtDT = ds => { if (!ds || ds === 'N/A') return 'N/A'; const d = new Date(ds); if (isNaN(d)) return 'N/A'; return d.toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }); };
+  const fmtD  = ds => { if (!ds || ds === 'N/A') return 'N/A'; const d = new Date(ds); if (isNaN(d)) return 'N/A'; return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }); };
+  const calcAvgScore = s => { if (!s) return null; const v = [s.plane_identification, s.image_optimization, s.measurement, s.diagnostic_interpretation].map(Number).filter(n => !isNaN(n)); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
 
-  const formatDate = (ds) => {
-    if (!ds || ds === 'N/A') return 'N/A';
-    const d = new Date(ds);
-    if (isNaN(d.getTime())) return 'N/A';
-    return d.toLocaleDateString('en-IN', {
-      year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata',
-    });
-  };
-
-  const calcAvgScore = (scores) => {
-    if (!scores) return null;
-    const vals = [
-      scores.plane_identification, scores.image_optimization,
-      scores.measurement, scores.diagnostic_interpretation,
-    ].map(Number).filter(v => !isNaN(v));
-    return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : null;
-  };
-
-  // ── Sub-components ────────────────────────────────────────
   const Spinner = ({ color = '#8DC63F', size = 5 }) => (
-    <div
-      className={`w-${size} h-${size} border-2 border-t-transparent rounded-full animate-spin`}
-      style={{ borderColor: `${color} transparent transparent transparent` }}
-    />
+    <div className={`w-${size} h-${size} border-2 border-t-transparent rounded-full animate-spin`} style={{ borderColor: `${color} transparent transparent transparent` }} />
   );
 
-  const StatCard = ({ icon: Icon, iconColor, label, completed: c, total: t }) => {
-    const pct = t > 0 ? Math.round((c / t) * 100) : 0;
+  const TrendChip = ({ value, prev, unit = '', lowerIsBetter = false }) => {
+    const diff = Math.abs(value - prev); const imp = lowerIsBetter ? value < prev : value > prev;
+    if (diff === 0) return <span className="text-[10px] text-gray-400 flex items-center gap-0.5"><Minus size={10} />No change</span>;
+    return <span className={`text-[10px] font-semibold flex items-center gap-0.5 ${imp ? 'text-green-500' : 'text-red-400'}`}>{imp ? <ChevronUp size={11} /> : <ChevronDown size={11} />}{diff}{unit} from last</span>;
+  };
+
+  const getModuleStatus = m => {
+    const t = (Number(m.total_learning_resources) || 0) + (Number(m.total_image_interpretations) || 0);
+    const d = (Number(m.completed_learning_resources) || 0) + (Number(m.completed_image_interpretations) || 0);
+    if (t === 0) return 'locked'; if (d === t) return 'completed'; if (d > 0) return 'active'; return 'locked';
+  };
+
+  const selectCls = "text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] cursor-pointer";
+
+  // ═══════════════════════════════════════════════════════════
+  // 1. LAST SESSION CARD
+  // ═══════════════════════════════════════════════════════════
+  const LastSessionCard = () => {
+    const passCount = MOCK_LAST_SESSION.checks.filter(c => c.passed).length;
+    const pct = Math.round((passCount / MOCK_LAST_SESSION.checks.length) * 100);
     return (
-      <div className="border shadow-sm rounded-lg p-3 bg-white flex flex-col gap-2">
-        <div className="flex justify-between items-center">
-          <div className="p-2 rounded-lg bg-gray-50">
-            <Icon size={20} className={iconColor} />
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-400">{label}</div>
-            {loading ? (
-              <div className="flex justify-end mt-1"><Spinner /></div>
-            ) : (
-              <div className="text-xl font-bold text-gray-700">
-                {c}<span className="text-sm font-normal text-gray-400">/{t}</span>
+      <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+        {/* gradient header */}
+        <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg,#f0fde6 0%,#e8fbd4 60%,#f7fef0 100%)' }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <Zap size={12} style={{ color: '#8DC63F' }} />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#6aa629]">Last Session</span>
+                <span className="text-[9px] bg-white/70 text-gray-400 px-2 py-0.5 rounded-full border border-white ml-1">Mock</span>
               </div>
-            )}
+              <div className="text-base font-bold text-gray-800 leading-snug">{MOCK_LAST_SESSION.module}</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">{fmtDT(MOCK_LAST_SESSION.date)}</div>
+            </div>
+            <RadialRing pct={pct} size={62} stroke={6} color="#8DC63F" bg="#d1fae5">
+              <div className="flex flex-col items-center">
+                <span className="text-sm font-black text-gray-700">{pct}%</span>
+              </div>
+            </RadialRing>
           </div>
         </div>
-        <div className="w-full bg-gray-100 rounded-full h-1.5">
-          <div className="h-1.5 rounded-full transition-all duration-500"
-            style={{ width: `${pct}%`, backgroundColor: '#8DC63F' }} />
+
+        <div className="px-5 py-4 flex flex-col gap-3">
+          {/* checks */}
+          <div className="flex flex-col gap-1.5">
+            {MOCK_LAST_SESSION.checks.map((c, i) => (
+              <div key={i} className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${c.passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+                {c.passed ? <CheckCircle size={12} className="shrink-0" /> : <XCircle size={12} className="shrink-0" />}
+                {c.label}
+              </div>
+            ))}
+          </div>
+
+          {/* feedback */}
+          <div className="flex gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+            <span className="text-base leading-none mt-0.5">💡</span>
+            <p className="text-[11px] text-amber-800 leading-relaxed italic">{MOCK_LAST_SESSION.feedback}</p>
+          </div>
+
+          {/* last completed module inline */}
+          {lastCompletedModuleData && (
+            <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#8DC63F18' }}>
+                <CheckCircle size={14} style={{ color: '#8DC63F' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Last Completed Module</div>
+                <div className="text-xs font-semibold text-gray-700 truncate">{lastCompletedModuleData.unit_name || lastCompletedModuleData.module_name}</div>
+                <div className="text-[10px] text-gray-400">{lastCompletedModuleData.course_name} · {fmtD(lastCompletedModuleData.lastDate)}</div>
+              </div>
+              <RadialRing
+                pct={lastCompletedModuleData.totalCount > 0 ? Math.round((lastCompletedModuleData.completedCount / lastCompletedModuleData.totalCount) * 100) : 0}
+                size={38} stroke={4} color="#8DC63F" bg="#e5e7eb">
+                <span className="text-[9px] font-bold text-gray-600">{lastCompletedModuleData.completedCount}/{lastCompletedModuleData.totalCount}</span>
+              </RadialRing>
+            </div>
+          )}
+
+          {/* actions */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button className="text-xs font-semibold text-gray-600 border border-gray-200 rounded-xl py-2 hover:bg-gray-50 transition-colors">Replay Attempt</button>
+            <button className="text-xs font-semibold text-white rounded-xl py-2 hover:opacity-90 transition-opacity" style={{ backgroundColor: '#8DC63F' }}>Practice Again</button>
+          </div>
         </div>
-        <div className="text-[10px] text-gray-400">{pct}% completed</div>
       </div>
     );
   };
 
-  const ScoreBadge = ({ label, value, color, subLabel }) => (
-    <div className="flex flex-col items-center justify-center p-3 rounded-lg border bg-gray-50 gap-1 min-h-[90px]">
-      <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">{label}</div>
-      {loading ? <Spinner size={4} /> : (
-        <div className="text-2xl font-bold" style={{ color }}>
-          {value !== null && value !== undefined ? value : '—'}
-        </div>
-      )}
-      {subLabel && <div className="text-[9px] text-gray-400 text-center leading-tight">{subLabel}</div>}
-    </div>
-  );
-
-  // ── Performance Metrics helpers ───────────────────────────
-  const TrendIcon = ({ value, prev, lowerIsBetter = false }) => {
-    const improved = lowerIsBetter ? value < prev : value > prev;
-    const same = value === prev;
-    if (same) return <Minus size={12} className="text-gray-400" />;
-    return improved
-      ? <ChevronUp size={12} className="text-green-500" />
-      : <ChevronDown size={12} className="text-red-400" />;
-  };
-
-  const TrendLabel = ({ value, prev, unit = '', lowerIsBetter = false }) => {
-    const diff = Math.abs(value - prev);
-    const improved = lowerIsBetter ? value < prev : value > prev;
-    if (diff === 0) return <span className="text-[10px] text-gray-400">No change</span>;
+  // ═══════════════════════════════════════════════════════════
+  // 2. LAST SCORE CARD
+  // ═══════════════════════════════════════════════════════════
+  const LastScoreCard = () => {
+    const scoreItems = [
+      { label: 'MS', value: msLastScoreSummary ? `${msLastScoreSummary.correct}/${msLastScoreSummary.totalQ}` : totalAttempts > 0 ? totalAttempts : '—', sub: 'MindSpark', color: '#8DC63F', ring: msLastScoreSummary ? Math.round((msLastScoreSummary.correct / Math.max(msLastScoreSummary.totalQ, 1)) * 100) : 0 },
+      { label: 'OB', value: obLastScoreSummary ? `${obLastScoreSummary.correct}/${obLastScoreSummary.totalQ}` : obResources.length > 0 ? `${obCompleted}/${obResources.length}` : '—', sub: 'OB Booster', color: '#f97316', ring: obLastScoreSummary ? Math.round((obLastScoreSummary.correct / Math.max(obLastScoreSummary.totalQ, 1)) * 100) : 0 },
+      { label: 'II', value: totalIR > 0 ? `${completedIR}/${totalIR}` : '—', sub: 'Image Interp.', color: '#a78bfa', ring: totalIR > 0 ? Math.round((completedIR / totalIR) * 100) : 0 },
+      { label: 'T',  value: testScores ? `${calcAvgScore(testScores) ?? '—'}%` : '—', sub: 'Last Test', color: '#3b82f6', ring: testScores ? calcAvgScore(testScores) ?? 0 : 0 },
+    ];
+    const subScores = [
+      { key: 'plane_identification',      label: 'Plane ID',    color: '#3b82f6' },
+      { key: 'image_optimization',        label: 'Image Opt.',  color: '#8b5cf6' },
+      { key: 'measurement',               label: 'Measurement', color: '#10b981' },
+      { key: 'diagnostic_interpretation', label: 'Diagnostic',  color: '#f59e0b' },
+    ];
     return (
-      <span className={`text-[10px] font-semibold ${improved ? 'text-green-500' : 'text-red-400'}`}>
-        {improved ? '↑' : '↓'} {diff}{unit} from last
-      </span>
+      <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 pt-5 pb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <SectionLabel icon={Award} color="#f59e0b" label="Last Score" />
+          <div className="flex items-center gap-2 flex-wrap">
+            {[
+              { label: 'Certificate', opts: [{ v: 'btc', l: 'BTC' }, { v: 'svt', l: 'SVT' }] },
+              { label: 'Course', opts: [{ v: '1st', l: '1st Trim.' }, { v: '2nd', l: '2nd Trim.' }, { v: '3rd', l: '3rd Trim.' }] },
+              { label: 'Module', opts: [{ v: 'bpd-hc', l: 'BPD & HC' }, { v: 'ac', l: 'AC' }, { v: 'fl', l: 'FL' }] },
+            ].map(({ label, opts }) => (
+              <select key={label} className={selectCls}>
+                <option value="">{label}</option>
+                {opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </select>
+            ))}
+          </div>
+        </div>
+
+        {/* 4 ring scores */}
+        <div className="grid grid-cols-4 gap-3 mb-4">
+          {scoreItems.map(({ label, value, sub, color, ring }) => (
+            <div key={label} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
+              <RadialRing pct={ring} size={54} stroke={5} color={color} bg="#e5e7eb">
+                <span className="text-[10px] font-bold" style={{ color }}>{label}</span>
+              </RadialRing>
+              <span className="text-sm font-bold text-gray-800 leading-none">{value}</span>
+              <span className="text-[9px] text-gray-400 text-center leading-tight">{sub}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* sub-score bars */}
+        {testScores && (
+          <div className="pt-3 border-t border-gray-100">
+            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Test Sub-Scores</div>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-2.5">
+              {subScores.map(({ key, label, color }) => {
+                const val = Number(testScores[key]); const pct = isNaN(val) ? 0 : Math.min(100, Math.round(val));
+                return (
+                  <div key={key}>
+                    <div className="flex justify-between text-[10px] mb-1">
+                      <span className="text-gray-500">{label}</span>
+                      <span className="font-bold" style={{ color }}>{isNaN(val) ? '—' : `${val}%`}</span>
+                    </div>
+                    <MiniBar value={pct} max={100} color={color} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
-  const skillLevelConfig = {
-    Beginner:     { color: '#ef4444', bg: 'bg-red-50',    border: 'border-red-200',    dot: 'bg-red-400' },
-    Intermediate: { color: '#f59e0b', bg: 'bg-yellow-50', border: 'border-yellow-200', dot: 'bg-yellow-400' },
-    Advanced:     { color: '#22c55e', bg: 'bg-green-50',  border: 'border-green-200',  dot: 'bg-green-500' },
+  // ═══════════════════════════════════════════════════════════
+  // 3. PERFORMANCE METRICS
+  // ═══════════════════════════════════════════════════════════
+  const PerformanceMetricsCard = () => {
+    const cc = { Low: { color: '#ef4444', bg: '#fef2f2' }, Medium: { color: '#f59e0b', bg: '#fffbeb' }, High: { color: '#22c55e', bg: '#f0fdf4' } }[MOCK_PERFORMANCE_METRICS.consistency] || { color: '#f59e0b', bg: '#fffbeb' };
+    return (
+      <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+        <SectionLabel icon={Activity} color="#8DC63F" label="Performance Metrics" badge="Mock Data" />
+        <div className="grid grid-cols-2 gap-3">
+          {/* Accuracy — full width */}
+          <div className="col-span-2 flex items-center gap-4 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+            <RadialRing pct={MOCK_PERFORMANCE_METRICS.accuracy.value} size={58} stroke={6} color="#8DC63F" bg="#e5e7eb">
+              <span className="text-sm font-bold text-gray-700">{MOCK_PERFORMANCE_METRICS.accuracy.value}%</span>
+            </RadialRing>
+            <div className="flex-1">
+              <div className="text-xs font-semibold text-gray-600 mb-1">Accuracy</div>
+              <TrendChip value={MOCK_PERFORMANCE_METRICS.accuracy.value} prev={MOCK_PERFORMANCE_METRICS.accuracy.prev} unit="%" />
+            </div>
+          </div>
+          {/* Time */}
+          <div className="flex flex-col gap-1.5 bg-blue-50 rounded-xl px-3 py-3 border border-blue-100">
+            <div className="flex items-center gap-1"><Clock size={11} className="text-blue-400" /><span className="text-[10px] font-semibold text-gray-500">Time / Task</span></div>
+            <span className="text-2xl font-black text-blue-500">{MOCK_PERFORMANCE_METRICS.timePerTask.value}<span className="text-xs font-normal text-gray-400 ml-1">min</span></span>
+            <TrendChip value={MOCK_PERFORMANCE_METRICS.timePerTask.value} prev={MOCK_PERFORMANCE_METRICS.timePerTask.prev} unit=" min" lowerIsBetter />
+          </div>
+          {/* Error Rate */}
+          <div className="flex flex-col gap-1.5 bg-orange-50 rounded-xl px-3 py-3 border border-orange-100">
+            <span className="text-[10px] font-semibold text-gray-500">Error Rate</span>
+            <span className="text-2xl font-black text-orange-500">{MOCK_PERFORMANCE_METRICS.errorRate.value}<span className="text-xs font-normal text-gray-400 ml-0.5">%</span></span>
+            <TrendChip value={MOCK_PERFORMANCE_METRICS.errorRate.value} prev={MOCK_PERFORMANCE_METRICS.errorRate.prev} unit="%" lowerIsBetter />
+          </div>
+          {/* Consistency */}
+          <div className="col-span-2 flex items-center justify-between rounded-xl px-4 py-2.5 border" style={{ background: cc.bg, borderColor: `${cc.color}30` }}>
+            <span className="text-xs font-semibold text-gray-600">Consistency</span>
+            <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: cc.color }}>{MOCK_PERFORMANCE_METRICS.consistency}</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const consistencyConfig = {
-    Low:    { color: 'text-red-500',    bg: 'bg-red-50',    label: 'Low' },
-    Medium: { color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Medium' },
-    High:   { color: 'text-green-600',  bg: 'bg-green-50',  label: 'High' },
+  // ═══════════════════════════════════════════════════════════
+  // 4. SKILL COMPETENCY
+  // ═══════════════════════════════════════════════════════════
+  const SkillCompetencyCard = () => {
+    const lvlCfg = {
+      Beginner:     { color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+      Intermediate: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
+      Advanced:     { color: '#22c55e', bg: '#f0fdf4', border: '#bbf7d0' },
+    };
+    return (
+      <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+        <SectionLabel icon={Brain} color="#a78bfa" label="Skill Competency" badge="Mock Data" />
+        <div className="grid grid-cols-2 gap-2.5">
+          {MOCK_SKILL_COMPETENCY.map((s, i) => {
+            const cfg = lvlCfg[s.level] || lvlCfg.Intermediate;
+            return (
+              <div key={i} className="rounded-xl p-3 border" style={{ background: cfg.bg, borderColor: cfg.border }}>
+                <div className="flex items-start justify-between gap-1 mb-2">
+                  <span className="text-[10px] font-bold text-gray-700 leading-tight">{s.skill}</span>
+                  {s.trend === 'up'      && <ChevronUp   size={12} className="text-green-500 shrink-0 mt-0.5" />}
+                  {s.trend === 'down'    && <ChevronDown size={12} className="text-red-400 shrink-0 mt-0.5" />}
+                  {s.trend === 'neutral' && <Minus       size={12} className="text-gray-400 shrink-0 mt-0.5" />}
+                </div>
+                <div className="flex items-baseline gap-1 mb-2">
+                  <span className="text-2xl font-black leading-none" style={{ color: cfg.color }}>{s.score}</span>
+                  <span className="text-[10px] text-gray-400">/ 100</span>
+                </div>
+                <div className="w-full bg-white rounded-full h-1.5 border border-white">
+                  <div className="h-1.5 rounded-full" style={{ width: `${s.score}%`, background: cfg.color }} />
+                </div>
+                <div className="text-[9px] font-bold uppercase tracking-widest mt-1.5" style={{ color: cfg.color }}>{s.level}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
-  // ── Shared dropdown style ─────────────────────────────────
-  const selectCls = "text-sm border border-gray-200 rounded-md px-2 py-1.5 text-gray-600 bg-white focus:outline-none focus:ring-1 focus:ring-[#8DC63F] focus:border-[#8DC63F] cursor-pointer";
+  // ═══════════════════════════════════════════════════════════
+  // 5. LEARNING PATH — horizontal stepper
+  // ═══════════════════════════════════════════════════════════
+  const LearningPathCard = () => (
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+      <div className="flex items-center gap-2 mb-5">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8DC63F18' }}>
+          <TrendingUp size={14} style={{ color: '#8DC63F' }} />
+        </div>
+        <span className="text-sm font-semibold text-gray-700">Learning Path Progress</span>
+        {moduleCompletion.length > 0 && (
+          <span className="ml-auto text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+            {moduleCompletion.filter(m => { const t = Number(m.total_learning_resources) + Number(m.total_image_interpretations); const d = Number(m.completed_learning_resources) + Number(m.completed_image_interpretations); return t > 0 && d === t; }).length}/{moduleCompletion.length} done
+          </span>
+        )}
+      </div>
+      {loading ? <div className="flex justify-center py-6"><Spinner /></div>
+        : learningPathProgress.length === 0
+          ? <div className="text-sm text-gray-400 text-center py-6">No learning path data yet</div>
+          : (
+            <div className="flex flex-col gap-7">
+              {learningPathProgress.map((course, ci) => {
+                const allDone = course.modules.length > 0 && course.modules.every(m => getModuleStatus(m) === 'completed');
+                let foundActive = false;
+                const mods = course.modules.map(m => {
+                  const s = getModuleStatus(m);
+                  if (s === 'completed') return { ...m, status: 'completed' };
+                  if (!foundActive) { foundActive = true; return { ...m, status: 'active' }; }
+                  return { ...m, status: 'locked' };
+                });
+                return (
+                  <div key={ci}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookOpen size={11} className="text-blue-400" />
+                      <span className="text-xs font-semibold text-gray-500">{course.course_name}</span>
+                      {allDone && <span className="text-[9px] font-bold uppercase tracking-wider text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full ml-1">Complete ✓</span>}
+                    </div>
+                    <div className="flex items-start overflow-x-auto pb-1">
+                      {mods.map((mod, mi) => {
+                        const isLast = mi === mods.length - 1;
+                        const lbl = mod.unit_name || mod.module_name || `M${mi + 1}`;
+                        const { status } = mod;
+                        return (
+                          <div key={mi} className="flex items-start flex-1" style={{ minWidth: 64 }}>
+                            <div className="flex flex-col items-center" style={{ width: 48 }}>
+                              {status === 'completed' && (
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg,#8DC63F,#6aa629)' }}>
+                                  <CheckCircle size={18} color="white" strokeWidth={2.5} />
+                                </div>
+                              )}
+                              {status === 'active' && (
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white" style={{ border: '2.5px dashed #8DC63F' }}>
+                                  <RefreshCw size={15} style={{ color: '#8DC63F' }} />
+                                </div>
+                              )}
+                              {status === 'locked' && (
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 border-2 border-gray-200">
+                                  <Lock size={14} className="text-gray-300" />
+                                </div>
+                              )}
+                              <span className={`text-[10px] font-semibold text-center mt-2 leading-tight px-1 ${status === 'completed' ? 'text-gray-600' : status === 'active' ? 'text-[#8DC63F]' : 'text-gray-300'}`}
+                                style={{ maxWidth: 72, wordBreak: 'break-word' }}>
+                                {lbl}
+                              </span>
+                            </div>
+                            {!isLast && (
+                              <div className="flex-1 flex items-center" style={{ paddingTop: 20, minWidth: 8 }}>
+                                {status === 'completed'
+                                  ? <div className="w-full h-0.5" style={{ background: 'linear-gradient(90deg,#8DC63F,#a3d660)' }} />
+                                  : <div className="w-full" style={{ borderTop: '2px dashed #d1d5db' }} />}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+    </div>
+  );
 
-  // ── Render ────────────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════
+  // 6. RESOURCE PROGRESS (LR, Practice, II, Test)
+  // ═══════════════════════════════════════════════════════════
+  const ResourceSummaryCard = () => {
+    const items = [
+      { icon: BookOpen,      label: 'Learning Resources', done: completedLR,       total: totalLR,       color: '#3b82f6', bg: '#eff6ff' },
+      { icon: Dumbbell,      label: 'Practices',           done: completedPractice, total: totalPractice, color: '#8DC63F', bg: '#f0fde4' },
+      { icon: Eye,           label: 'Image Interp.',        done: completedIR,       total: totalIR,       color: '#a78bfa', bg: '#f5f3ff' },
+      { icon: ClipboardCheck,label: 'Tests',                done: completedTests,    total: totalTests,    color: '#f97316', bg: '#fff7ed' },
+    ];
+    return (
+      <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+        <SectionLabel icon={Target} color="#8DC63F" label="Resource Progress" />
+        <div className="grid grid-cols-2 gap-3">
+          {items.map(({ icon: Icon, label, done, total, color, bg }) => {
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+            return (
+              <div key={label} className="flex items-center gap-3 rounded-xl p-3 border border-gray-100" style={{ background: bg }}>
+                <RadialRing pct={pct} size={50} stroke={5} color={color} bg="#e5e7eb">
+                  <Icon size={13} style={{ color }} />
+                </RadialRing>
+                <div className="min-w-0">
+                  <div className="text-[10px] text-gray-500 font-medium leading-tight mb-0.5 truncate">{label}</div>
+                  <div className="text-lg font-black text-gray-800 leading-none">{done}<span className="text-xs text-gray-400 font-normal ml-0.5">/{total}</span></div>
+                  <div className="text-[9px] font-bold mt-0.5" style={{ color }}>{pct}% done</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // 7. QUERIES
+  // ═══════════════════════════════════════════════════════════
+  const QueriesCard = () => (
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+      <SectionLabel icon={MessageSquare} color="#6366f1" label="Queries Raised" />
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Total',    value: queries.total,    color: '#8DC63F', bg: '#f0fde4', Icon: null },
+          { label: 'Pending',  value: queries.pending,  color: '#f97316', bg: '#fff7ed', Icon: AlertCircle },
+          { label: 'Resolved', value: queries.resolved, color: '#22c55e', bg: '#f0fdf4', Icon: CheckCircle },
+        ].map(({ label, value, color, bg, Icon }) => (
+          <div key={label} className="rounded-xl px-3 py-3 border border-gray-100 flex flex-col gap-1.5" style={{ background: bg }}>
+            <div className="flex items-center gap-1.5">
+              {Icon && <Icon size={11} style={{ color }} />}
+              <span className="text-[10px] font-semibold text-gray-500">{label}</span>
+            </div>
+            <span className="text-2xl font-black" style={{ color }}>{queries.loading ? <Spinner color={color} size={4} /> : value}</span>
+          </div>
+        ))}
+      </div>
+      {queries.error && <div className="mt-2 text-[11px] text-red-500 bg-red-50 rounded-lg px-3 py-2">{queries.error}</div>}
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════
+  // 8. RE-ATTEMPTS
+  // ═══════════════════════════════════════════════════════════
+  const ReAttemptsCard = () => (
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+      <SectionLabel icon={IdentificationIcon} color="#8DC63F" label="LR Re-Attempts" />
+      <InteractionDonut data={interactionStats.data} loading={interactionStats.loading} error={interactionStats.error} totalAttempts={totalAttempts} />
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════
+  // SIDEBAR 9a: Overall Progress
+  // ═══════════════════════════════════════════════════════════
+  const OverallProgressCard = () => (
+    <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+      <div className="px-4 pt-4 pb-3" style={{ background: 'linear-gradient(135deg,#f0fde6,#e8fbd4)' }}>
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-xs font-bold text-gray-700">Overall Progress</span>
+          <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
+            <option value="">All</option>
+            {certificates.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+          </select>
+        </div>
+        <div className="flex justify-center">
+          <OverallCompletion data={{ totalResources, completed, attempted }} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
+        <div className="px-4 py-3 text-center">
+          <div className="text-[10px] text-gray-400 mb-0.5">Total</div>
+          <div className="text-xl font-black text-gray-700">{totalResources}</div>
+        </div>
+        <div className="px-4 py-3 text-center">
+          <div className="text-[10px] text-gray-400 mb-0.5">Completed</div>
+          <div className="text-xl font-black" style={{ color: '#8DC63F' }}>{completed}</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════
+  // SIDEBAR 9b: Next Module
+  // ═══════════════════════════════════════════════════════════
+  const NextModuleCard = () => (
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-4 py-4">
+      <SectionLabel icon={ArrowRight} color="#8DC63F" label="Next Module" />
+      {loading ? <div className="flex justify-center py-4"><Spinner /></div>
+        : nextModule ? (
+          <div className="flex flex-col gap-2">
+            {[
+              { label: 'Unit',   val: nextModule.unit_name },
+              { label: 'Module', val: nextModule.module_name },
+              { label: 'Course', val: nextModule.course_name },
+            ].map(({ label, val }) => (
+              <div key={label} className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2">
+                <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">{label}</div>
+                <div className="text-xs font-semibold text-gray-700">{val || 'N/A'}</div>
+              </div>
+            ))}
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div>
+                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Learning Resources</span><span>{nextModule.completed_learning_resources}/{nextModule.total_learning_resources}</span></div>
+                <MiniBar value={nextModuleLRPct} max={100} color="#8DC63F" />
+              </div>
+              <div>
+                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Image Interpretations</span><span>{nextModule.completed_image_interpretations}/{nextModule.total_image_interpretations}</span></div>
+                <MiniBar value={nextModuleIRPct} max={100} color="#a78bfa" />
+              </div>
+            </div>
+          </div>
+        ) : <div className="text-sm text-gray-400 text-center py-4">All modules completed! 🎉</div>
+      }
+    </div>
+  );
+
+  // ═══════════════════════════════════════════════════════════
+  // SIDEBAR 9c: Practice Streak
+  // ═══════════════════════════════════════════════════════════
+  const PracticeStreakCard = () => {
+    const maxCount = Math.max(...last8WeeksActivity.map(w => w.count), 1);
+    return (
+      <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+        <div className="px-4 pt-4 pb-3" style={{ background: 'linear-gradient(135deg,#fff7ed,#ffedd5)' }}>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <Flame size={16} className="text-orange-500" />
+              <span className="text-sm font-bold text-gray-700">Practice Streak</span>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-3xl font-black text-orange-500">{weeklyStreak}</span>
+              <span className="text-xs text-orange-400 font-semibold">wk{weeklyStreak !== 1 ? 's' : ''}</span>
+            </div>
+          </div>
+          {weeklyStreak >= 3 && (
+            <div className="text-[11px] text-orange-600 font-semibold">
+              {weeklyStreak >= 8 ? '🔥 Incredible streak!' : weeklyStreak >= 5 ? '💪 Great consistency!' : '👍 Keep it up!'}
+            </div>
+          )}
+        </div>
+        <div className="px-4 py-3 bg-white">
+          <div className="text-[10px] text-gray-400 mb-2">Last 8 weeks</div>
+          <div className="flex items-end gap-1 h-12">
+            {last8WeeksActivity.map((w, i) => {
+              const h = w.count === 0 ? 10 : Math.max(18, Math.round((w.count / maxCount) * 100));
+              return (
+                <div key={i} className="flex flex-col items-center flex-1 h-full justify-end">
+                  <div className={`w-full rounded-t-sm transition-all duration-500 ${w.isCurrentWeek ? 'ring-1 ring-orange-400' : ''}`}
+                    style={{ height: `${h}%`, backgroundColor: w.count === 0 ? '#e5e7eb' : w.count <= 3 ? '#fed7aa' : w.count <= 7 ? '#f97316' : '#ea580c' }}
+                    title={`${w.week}: ${w.count}`} />
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-1.5">
+            {last8WeeksActivity.map((w, i) => (
+              <span key={i} className={`flex-1 text-center text-[9px] ${w.isCurrentWeek ? 'text-orange-500 font-bold' : 'text-gray-400'}`}>{w.week.split(' ')[0]}</span>
+            ))}
+          </div>
+          {weeklyStreak === 0 && <div className="mt-2 text-[11px] text-center text-gray-400 bg-gray-50 rounded-lg py-1.5">Complete a resource to start!</div>}
+        </div>
+      </div>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════════════════════════════
   return (
     <div className="flex flex-col min-h-screen">
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -2978,687 +4438,54 @@ function TraineeDashboard() {
 
         <div className={`${buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
           <div className="p-4">
-            <div className="grid grid-cols-3 gap-5">
 
-              {/* ── LEFT + CENTRE COLUMN ────────────────────── */}
-              <div className="col-span-2 flex flex-col gap-4">
-
-                {/* Welcome */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="text-xl pt-1 font-semibold text-gray-700">
-                    Welcome Back, {individualTraineeProfile.data[0]?.user_name || 'NA'}
-                  </div>
+            {/* Welcome Banner */}
+            <div className="rounded-2xl px-5 py-4 mb-4 bg-white border border-gray-200 shadow-sm flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <div className="text-xl font-bold text-gray-800">
+                  Welcome Back, <span style={{ color: '#8DC63F' }}>{individualTraineeProfile.data[0]?.user_name || '—'}</span>
                 </div>
-
-                {/* Stat Cards */}
-                <div className="grid grid-cols-4 gap-3">
-                  <StatCard icon={BookOpen}      iconColor="text-blue-500"   label="Learning Resources"   completed={completedLR}       total={totalLR} />
-                  <StatCard icon={Dumbbell}       iconColor="text-green-500"  label="Practices"             completed={completedPractice} total={totalPractice} />
-                  <StatCard icon={ClipboardCheck} iconColor="text-orange-500" label="Tests"                 completed={completedTests}    total={totalTests} />
-                  <StatCard icon={Eye}            iconColor="text-purple-500" label="Image Interpretations" completed={completedIR}       total={totalIR} />
-                </div>
-
-                {/* Last Score */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center justify-between gap-2 mb-4">
-                    <div className="flex items-center gap-1">
-                      <Award size={16} className="text-[#8DC63F]" />
-                      <div className="text-base font-semibold text-gray-700">Last Score</div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <select className={selectCls}>
-                        <option value="">Certificate</option>
-                        <option value="btc">BTC</option>
-                        <option value="svt">SVT</option>
-                      </select>
-                      <select className={selectCls}>
-                        <option value="">Course</option>
-                        <option value="1st">1st Trimester</option>
-                        <option value="2nd">2nd Trimester</option>
-                        <option value="3rd">3rd Trimester</option>
-                      </select>
-                      <select className={selectCls}>
-                        <option value="">Module</option>
-                        <option value="bpd-hc">BPD &amp; HC</option>
-                        <option value="ac">AC</option>
-                        <option value="fl">FL</option>
-                      </select>
-                    </div>
-                    {testScores && (
-                      <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
-                        Last test: {formatDate(testScores.created_at)}
-                      </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-4 gap-3">
-                    <ScoreBadge
-                      label="MS"
-                      value={
-                        activityLastScores.loading
-                          ? null
-                          : msLastScoreSummary
-                          ? `${msLastScoreSummary.correct}/${msLastScoreSummary.totalQ}`
-                          : totalAttempts > 0 ? totalAttempts : '—'
-                      }
-                      color="#8DC63F"
-                      subLabel={
-                        msLastScoreSummary
-                          ? `MindSpark · ${msLastScoreSummary.resources} resource${msLastScoreSummary.resources > 1 ? 's' : ''} · ${msLastScoreSummary.wrong} wrong`
-                          : `MindSpark Attempts${msResourceCount > 0 ? ` (${msResourceCount} resources)` : ''}`
-                      }
-                    />
-                    <ScoreBadge
-                      label="OB"
-                      value={
-                        activityLastScores.loading
-                          ? null
-                          : obLastScoreSummary
-                          ? `${obLastScoreSummary.correct}/${obLastScoreSummary.totalQ}`
-                          : obResources.length > 0 ? `${obCompleted}/${obResources.length}` : '—'
-                      }
-                      color="#f97316"
-                      subLabel={
-                        obLastScoreSummary
-                          ? `OB Booster · ${obLastScoreSummary.resources} resource${obLastScoreSummary.resources > 1 ? 's' : ''} · ${obLastScoreSummary.wrong} wrong`
-                          : 'OB Booster'
-                      }
-                    />
-                    <ScoreBadge label="II" value={totalIR > 0 ? `${completedIR}/${totalIR}` : '—'} color="#a78bfa" subLabel="Image Interp." />
-                    <ScoreBadge label="T"  value={testScores ? `${calcAvgScore(testScores) ?? '—'}%` : '—'} color="#3b82f6" subLabel={testScores ? (testScores.resource_name || 'Last Test') : 'No test yet'} />
-                  </div>
-                  {testScores && (
-                    <div className="mt-4 pt-3 border-t border-gray-100">
-                      <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Last Test — Sub-Scores</div>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                        {[
-                          { key: 'plane_identification',      label: 'Plane Identification', color: '#3b82f6' },
-                          { key: 'image_optimization',        label: 'Image Optimization',   color: '#8b5cf6' },
-                          { key: 'measurement',               label: 'Measurement',          color: '#10b981' },
-                          { key: 'diagnostic_interpretation', label: 'Diagnostic Interp.',   color: '#f59e0b' },
-                        ].map(({ key, label, color }) => {
-                          const val = Number(testScores[key]);
-                          const pct = isNaN(val) ? 0 : Math.min(100, Math.round(val));
-                          return (
-                            <div key={key} className="flex flex-col gap-1">
-                              <div className="flex justify-between text-[10px] text-gray-500">
-                                <span>{label}</span>
-                                <span className="font-semibold" style={{ color }}>{isNaN(val) ? '—' : `${val}%`}</span>
-                              </div>
-                              <div className="w-full bg-gray-100 rounded-full h-1.5">
-                                <div className="h-1.5 rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Practice & Test Performance */}
-                {/* <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Target size={16} className="text-[#8DC63F]" />
-                    <div className="text-base font-semibold text-gray-700">Practice &amp; Test Performance</div>
-                  </div>
-                  {loading ? (
-                    <div className="flex justify-center py-6"><Spinner /></div>
-                  ) : resourcePerformanceItems.length > 0 ? (
-                    <>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm border-collapse">
-                          <thead>
-                            <tr className="border-b border-gray-100 bg-gray-50">
-                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">#</th>
-                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Resource</th>
-                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Type</th>
-                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Status</th>
-                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Last Attempted</th>
-                              <th className="text-left py-2 px-2 text-xs text-gray-400 font-semibold">Re-Attempts</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {resourcePerformanceItems.map((item, idx) => (
-                              <tr key={item.resource_id || idx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors duration-150">
-                                <td className="py-2 px-2">
-                                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${item.resource_type === 'Practice' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                                    {item.label}
-                                  </span>
-                                </td>
-                                <td className="py-2 px-2 text-gray-700 font-medium max-w-[180px] truncate" title={item.resource_name}>{item.resource_name || 'N/A'}</td>
-                                <td className="py-2 px-2">
-                                  <span className={`text-xs px-2 py-0.5 rounded-full ${item.resource_type === 'Practice' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                                    {item.resource_type}
-                                  </span>
-                                </td>
-                                <td className="py-2 px-2">
-                                  {item.is_completed ? (
-                                    <span className="flex items-center gap-1 text-xs text-green-600"><CheckCircle size={11} /> Done</span>
-                                  ) : item.updated_at ? (
-                                    <span className="text-xs text-orange-500">In Progress</span>
-                                  ) : (
-                                    <span className="text-xs text-gray-400">Not Started</span>
-                                  )}
-                                </td>
-                                <td className="py-2 px-2 text-xs text-gray-500">{item.updated_at ? formatDate(item.updated_at) : '—'}</td>
-                                <td className="py-2 px-2">
-                                  {item.reattempts > 0 ? (
-                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">{item.reattempts}×</span>
-                                  ) : (
-                                    <span className="text-xs text-gray-300">—</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      {testReattempts.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-gray-100">
-                          <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">Overall — No. of Re-Attempts</div>
-                          <div className="flex flex-wrap gap-2">
-                            {testReattempts.map((r, i) => (
-                              <div key={i} className="flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-lg px-3 py-1.5 text-xs">
-                                <span className="text-gray-600 font-medium truncate max-w-[140px]" title={r.resource_name}>{r.resource_name}</span>
-                                <span className="text-orange-600 font-bold">{r.attempt_count}×</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="text-sm text-gray-400 text-center py-6">No practice or test data available yet</div>
-                  )}
-                </div> */}
-
-                {/* Queries */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <MessageSquare size={16} className="text-[#8DC63F]" />
-                    <div className="text-base font-semibold text-gray-700">Queries Raised</div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="border shadow-sm rounded-lg p-4 flex justify-between items-center">
-                      <div className="text-sm text-gray-500">Total</div>
-                      <div className="text-2xl font-bold text-[#8DC63F]">{queries.loading ? <Spinner color="#8DC63F" /> : queries.total}</div>
-                    </div>
-                    <div className="border shadow-sm rounded-lg p-4 flex justify-between items-center">
-                      <div className="flex items-center gap-1.5">
-                        <AlertCircle size={14} className="text-orange-400" />
-                        <div className="text-sm text-gray-500">Pending</div>
-                      </div>
-                      <div className="text-2xl font-bold text-orange-500">{queries.loading ? <Spinner color="#f97316" /> : queries.pending}</div>
-                    </div>
-                    <div className="border shadow-sm rounded-lg p-4 flex justify-between items-center">
-                      <div className="flex items-center gap-1.5">
-                        <CheckCircle size={14} className="text-green-500" />
-                        <div className="text-sm text-gray-500">Resolved</div>
-                      </div>
-                      <div className="text-2xl font-bold text-green-600">{queries.loading ? <Spinner color="#16a34a" /> : queries.resolved}</div>
-                    </div>
-                  </div>
-                  {queries.error && (
-                    <div className="mt-3 p-3 bg-red-50 text-red-600 rounded text-xs border border-red-200">Error loading queries: {queries.error}</div>
-                  )}
-                </div>
-
-                {/* LR Re-Attempts */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <IdentificationIcon size={16} className="text-[#8DC63F]" />
-                    <div className="text-base font-semibold text-gray-700">LR — Re-Attempts Interactions</div>
-                  </div>
-                  <InteractionDonut data={interactionStats.data} loading={interactionStats.loading} error={interactionStats.error} totalAttempts={totalAttempts} />
-                </div>
-
-                {/* Learning Path Progress */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <TrendingUp size={16} className="text-[#8DC63F]" />
-                    <div className="text-base font-semibold text-gray-700">Learning Path Progress</div>
-                    {moduleCompletion.length > 0 && (
-                      <span className="ml-auto text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">
-                        {moduleCompletion.filter(m => {
-                          const total = Number(m.total_learning_resources) + Number(m.total_image_interpretations);
-                          const done  = Number(m.completed_learning_resources) + Number(m.completed_image_interpretations);
-                          return total > 0 && done === total;
-                        }).length} / {moduleCompletion.length} modules done
-                      </span>
-                    )}
-                  </div>
-                  {loading ? (
-                    <div className="flex justify-center py-6"><Spinner /></div>
-                  ) : learningPathProgress.length > 0 ? (
-                    <div className="flex flex-col gap-5">
-                      {learningPathProgress.map((course, ci) => (
-                        <div key={ci}>
-                          <div className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2 pb-1 border-b border-gray-100">
-                            <BookOpen size={13} className="text-blue-400" />
-                            {course.course_name}
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            {course.modules.map((mod, mi) => {
-                              const lrTotal = Number(mod.total_learning_resources)       || 0;
-                              const lrDone  = Number(mod.completed_learning_resources)   || 0;
-                              const iiTotal = Number(mod.total_image_interpretations)    || 0;
-                              const iiDone  = Number(mod.completed_image_interpretations) || 0;
-                              const total   = lrTotal + iiTotal;
-                              const done    = lrDone  + iiDone;
-                              const pct     = total > 0 ? Math.round((done / total) * 100) : 0;
-                              const isDone  = total > 0 && done === total;
-                              return (
-                                <div key={mi} className={`rounded-lg border p-3 transition-colors ${isDone ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
-                                  <div className="flex justify-between items-start mb-1.5">
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="text-xs font-semibold text-gray-700">{mod.unit_name || mod.module_name || 'Module'}</span>
-                                      {mod.unit_name && mod.module_name && (
-                                        <span className="text-[10px] text-gray-400">{mod.module_name}</span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-1.5 ml-2 shrink-0">
-                                      {isDone && <CheckCircle size={12} className="text-green-500" />}
-                                      <span className={`text-xs font-bold ${isDone ? 'text-green-600' : 'text-gray-600'}`}>{pct}%</span>
-                                    </div>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-1.5">
-                                    <div className="h-1.5 rounded-full transition-all duration-700"
-                                      style={{ width: `${pct}%`, backgroundColor: isDone ? '#22c55e' : '#8DC63F' }} />
-                                  </div>
-                                  <div className="flex gap-4 mt-1.5 text-[10px] text-gray-400">
-                                    <span>LR: <span className="text-gray-600 font-medium">{lrDone}/{lrTotal}</span></span>
-                                    <span>II: <span className="text-gray-600 font-medium">{iiDone}/{iiTotal}</span></span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400 text-center py-6">No learning path data available</div>
-                  )}
-                </div>
-              </div>
-
-              {/* ── RIGHT PANEL ──────────────────────────────── */}
-              <div className="col-span-1 flex flex-col gap-4">
-
-                {/* Associated Batch */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="text-gray-500 font-semibold mb-3">Associated Batch</div>
-                  {loading ? (
-                    <div className="flex justify-center py-4"><Spinner /></div>
-                  ) : individualTraineeProfile.currentBatches[0] ? (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Batch Name</div>
-                        <div className="font-semibold text-gray-700">{individualTraineeProfile.currentBatches[0]?.batch_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Valid Till</div>
-                        <div className="font-semibold text-gray-700">{formatDateTime(individualTraineeProfile.currentBatches[0]?.batch_end_date)}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Status</div>
-                        <div className="font-semibold">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${individualTraineeProfile.currentBatches[0]?.batch_status === 'current' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                            {individualTraineeProfile.currentBatches[0]?.batch_status || 'N/A'}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Instructors</div>
-                        <div className="font-semibold text-gray-700 text-xs">{individualTraineeProfile.currentBatches[0]?.instructors?.join(', ') || 'N/A'}</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400 text-center py-4">No batch assigned</div>
-                  )}
-                </div>
-
-                {/* ══════════════════════════════════════════════
-                    OVERALL PROGRESS — certificate-aware
-                    Dropdown is built from real API data.
-                    Selecting a cert filters ALL counts above too.
-                    ══════════════════════════════════════════════ */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="text-gray-500 font-semibold">Overall Progress</div>
-                    <select
-                      value={selectedCertificate}
-                      onChange={e => setSelectedCertificate(e.target.value)}
-                      className={selectCls}
-                    >
-                      <option value="">All Certificates</option>
-                      {certificates.map(cert => (
-                        <option key={cert.id} value={cert.id}>
-                          {cert.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex justify-center items-center">
-                    <OverallCompletion data={{ totalResources, completed, attempted }} />
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2 text-center">
-                    <div className="bg-gray-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-400">Total</div>
-                      <div className="text-lg font-bold text-gray-700">{totalResources}</div>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-2">
-                      <div className="text-xs text-gray-400">Completed</div>
-                      <div className="text-lg font-bold text-[#8DC63F]">{completed}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Performance Metrics (Mock) */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Activity size={16} className="text-[#8DC63F]" />
-                    <div className="text-gray-500 font-semibold">Performance Metrics</div>
-                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full">
-                      Mock Data
+                {individualTraineeProfile.currentBatches[0] && (
+                  <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 flex-wrap">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                      <strong className="text-gray-700">{individualTraineeProfile.currentBatches[0].batch_name}</strong>
+                    </span>
+                    <span>Valid till: <strong className="text-gray-700">{fmtD(individualTraineeProfile.currentBatches[0].batch_end_date)}</strong></span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${individualTraineeProfile.currentBatches[0].batch_status === 'current' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                      {individualTraineeProfile.currentBatches[0].batch_status}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-3">
-                    {/* Accuracy */}
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs text-gray-500 font-medium">Accuracy</span>
-                        <div className="flex items-center gap-1">
-                          <TrendIcon value={MOCK_PERFORMANCE_METRICS.accuracy.value} prev={MOCK_PERFORMANCE_METRICS.accuracy.prev} />
-                          <span className="text-xl font-bold text-[#8DC63F]">{MOCK_PERFORMANCE_METRICS.accuracy.value}%</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="h-2 rounded-full transition-all duration-700 bg-[#8DC63F]"
-                          style={{ width: `${MOCK_PERFORMANCE_METRICS.accuracy.value}%` }} />
-                      </div>
-                      <TrendLabel value={MOCK_PERFORMANCE_METRICS.accuracy.value} prev={MOCK_PERFORMANCE_METRICS.accuracy.prev} unit="%" />
-                    </div>
-                    {/* Time per Task */}
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <Clock size={12} className="text-blue-400" />
-                          <span className="text-xs text-gray-500 font-medium">Time per Task</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <TrendIcon value={MOCK_PERFORMANCE_METRICS.timePerTask.value} prev={MOCK_PERFORMANCE_METRICS.timePerTask.prev} lowerIsBetter />
-                          <span className="text-xl font-bold text-blue-500">{MOCK_PERFORMANCE_METRICS.timePerTask.value} min</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="h-2 rounded-full bg-blue-400 transition-all duration-700"
-                          style={{ width: `${Math.min(100, (MOCK_PERFORMANCE_METRICS.timePerTask.value / 10) * 100)}%` }} />
-                      </div>
-                      <TrendLabel value={MOCK_PERFORMANCE_METRICS.timePerTask.value} prev={MOCK_PERFORMANCE_METRICS.timePerTask.prev} unit=" min" lowerIsBetter />
-                    </div>
-                    {/* Error Rate */}
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs text-gray-500 font-medium">Error Rate</span>
-                        <div className="flex items-center gap-1">
-                          <TrendIcon value={MOCK_PERFORMANCE_METRICS.errorRate.value} prev={MOCK_PERFORMANCE_METRICS.errorRate.prev} lowerIsBetter />
-                          <span className="text-xl font-bold text-orange-500">{MOCK_PERFORMANCE_METRICS.errorRate.value}%</span>
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="h-2 rounded-full bg-orange-400 transition-all duration-700"
-                          style={{ width: `${MOCK_PERFORMANCE_METRICS.errorRate.value}%` }} />
-                      </div>
-                      <TrendLabel value={MOCK_PERFORMANCE_METRICS.errorRate.value} prev={MOCK_PERFORMANCE_METRICS.errorRate.prev} unit="%" lowerIsBetter />
-                    </div>
-                    {/* Consistency */}
-                    <div className="flex justify-between items-center rounded-lg border border-gray-100 bg-gray-50 p-3">
-                      <span className="text-xs text-gray-500 font-medium">Consistency</span>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${consistencyConfig[MOCK_PERFORMANCE_METRICS.consistency]?.bg} ${consistencyConfig[MOCK_PERFORMANCE_METRICS.consistency]?.color}`}>
-                        {MOCK_PERFORMANCE_METRICS.consistency}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Skill Competency (Mock) */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Brain size={16} className="text-[#8DC63F]" />
-                    <div className="text-gray-500 font-semibold">Skill Competency</div>
-                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full">
-                      Mock Data
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-2.5">
-                    {MOCK_SKILL_COMPETENCY.map((skill, i) => {
-                      const cfg = skillLevelConfig[skill.level] ?? skillLevelConfig['Intermediate'];
-                      return (
-                        <div key={i} className={`rounded-lg border p-3 ${cfg.bg} ${cfg.border}`}>
-                          <div className="flex justify-between items-center mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
-                              <span className="text-xs font-semibold text-gray-700">{skill.skill}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {skill.trend === 'up'      && <ChevronUp   size={13} className="text-green-500" />}
-                              {skill.trend === 'down'    && <ChevronDown size={13} className="text-red-400" />}
-                              {skill.trend === 'neutral' && <Minus       size={13} className="text-gray-400" />}
-                              <span className="text-xs font-bold" style={{ color: cfg.color }}>{skill.score}%</span>
-                            </div>
-                          </div>
-                          <div className="w-full bg-white rounded-full h-1.5 border border-gray-100">
-                            <div className="h-1.5 rounded-full transition-all duration-700"
-                              style={{ width: `${skill.score}%`, backgroundColor: cfg.color }} />
-                          </div>
-                          <div className="mt-1.5">
-                            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: cfg.color }}>
-                              {skill.level}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Last Session (Mock) */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Zap size={16} className="text-[#8DC63F]" />
-                    <div className="text-gray-500 font-semibold">Last Session</div>
-                    <span className="ml-auto text-[9px] font-semibold uppercase tracking-widest text-gray-300 bg-gray-50 px-2 py-0.5 rounded-full">
-                      Mock Data
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-400 mb-3">{formatDateTime(MOCK_LAST_SESSION.date)}</div>
-                  <div className="text-sm font-semibold text-gray-700 mb-3 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
-                    {MOCK_LAST_SESSION.module}
-                  </div>
-                  <div className="flex flex-col gap-2 mb-3">
-                    {MOCK_LAST_SESSION.checks.map((check, i) => (
-                      <div key={i} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium border ${
-                        check.passed ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-600'
-                      }`}>
-                        {check.passed
-                          ? <CheckCircle size={13} className="text-green-500 shrink-0" />
-                          : <XCircle    size={13} className="text-red-400 shrink-0" />
-                        }
-                        {check.label}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="rounded-lg border border-[#8DC63F]/30 bg-[#8DC63F]/5 p-3">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-[#8DC63F] mb-1">💡 Feedback</div>
-                    <div className="text-xs text-gray-600 leading-relaxed italic">
-                      "{MOCK_LAST_SESSION.feedback}"
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    <button className="text-xs font-semibold text-gray-600 border border-gray-200 rounded-lg py-2 hover:bg-gray-50 transition-colors">
-                      Replay Attempt
-                    </button>
-                    <button className="text-xs font-semibold text-white rounded-lg py-2 hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: '#8DC63F' }}>
-                      Practice Again
-                    </button>
-                  </div>
-                </div>
-
-                {/* Last Completed Module */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle size={16} className="text-[#8DC63F]" />
-                    <div className="text-gray-500 font-semibold">Last Completed Module</div>
-                  </div>
-                  {loading ? (
-                    <div className="flex justify-center py-4"><Spinner /></div>
-                  ) : lastCompletedModuleData ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="text-sm p-2 bg-green-50 rounded-lg border border-green-100">
-                        <div className="text-gray-400 text-xs mb-1">Unit</div>
-                        <div className="font-semibold text-gray-700">{lastCompletedModuleData.unit_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Module</div>
-                        <div className="font-semibold text-gray-700">{lastCompletedModuleData.module_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Course</div>
-                        <div className="font-semibold text-gray-700">{lastCompletedModuleData.course_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Last Activity</div>
-                        <div className="font-semibold text-gray-700">{formatDateTime(lastCompletedModuleData.lastDate)}</div>
-                      </div>
-                      <div className="flex flex-col gap-1 pt-1">
-                        <div className="flex justify-between text-[10px] text-gray-400">
-                          <span>Resources Completed</span>
-                          <span className="font-semibold text-gray-500">{lastCompletedModuleData.completedCount}/{lastCompletedModuleData.totalCount}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div className="h-1.5 rounded-full transition-all duration-500"
-                            style={{
-                              width: `${lastCompletedModuleData.totalCount > 0 ? Math.round((lastCompletedModuleData.completedCount / lastCompletedModuleData.totalCount) * 100) : 0}%`,
-                              backgroundColor: '#8DC63F',
-                            }} />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400 text-center py-4">No module activity yet</div>
-                  )}
-                </div>
-
-                {/* Practice Streak */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Flame size={16} className="text-orange-500" />
-                    <div className="text-gray-500 font-semibold">Practice Streak</div>
-                    <div className="ml-auto flex items-center gap-1">
-                      <span className="text-2xl font-bold text-orange-500">{weeklyStreak}</span>
-                      <span className="text-xs text-gray-400 leading-tight">week{weeklyStreak !== 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                  <div className="text-[10px] text-gray-400 mb-3">Weekly activity — last 8 weeks</div>
-                  {loading ? (
-                    <div className="flex justify-center py-4"><Spinner /></div>
-                  ) : (
-                    <>
-                      <div className="flex items-end gap-1 h-14">
-                        {last8WeeksActivity.map((week, i) => {
-                          const maxCount  = Math.max(...last8WeeksActivity.map(w => w.count), 1);
-                          const heightPct = week.count === 0 ? 15 : Math.max(20, Math.round((week.count / maxCount) * 100));
-                          return (
-                            <div key={i} className="flex flex-col items-center gap-1 flex-1 h-full justify-end">
-                              <div
-                                className={`w-full rounded-t transition-all duration-500 ${week.isCurrentWeek ? 'ring-1 ring-orange-400' : ''}`}
-                                style={{
-                                  height: `${heightPct}%`,
-                                  backgroundColor: week.count === 0 ? '#e5e7eb' : week.count <= 3 ? '#bbf7d0' : week.count <= 7 ? '#8DC63F' : '#16a34a',
-                                }}
-                                title={`${week.week}: ${week.count} completion${week.count !== 1 ? 's' : ''}`}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex justify-between mt-1.5 text-[9px] text-gray-400 px-0.5">
-                        {last8WeeksActivity.map((week, i) => (
-                          <span key={i} className={`flex-1 text-center ${week.isCurrentWeek ? 'text-orange-500 font-semibold' : ''}`}>
-                            {week.week.split(' ')[0]}
-                          </span>
-                        ))}
-                      </div>
-                      {weeklyStreak === 0 && (
-                        <div className="mt-2 text-xs text-center text-gray-400 bg-gray-50 rounded-lg py-2">
-                          Complete a resource this week to start your streak!
-                        </div>
-                      )}
-                      {weeklyStreak >= 3 && (
-                        <div className="mt-2 text-xs text-center text-orange-500 font-semibold bg-orange-50 rounded-lg py-2">
-                          {weeklyStreak >= 8 ? 'Incredible streak!' : weeklyStreak >= 5 ? 'Great consistency!' : 'Keep it up!'}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Next Module */}
-                <div className="border rounded-lg p-5 border-gray-300 bg-white">
-                  <div className="flex items-center gap-2 mb-3">
-                    <ArrowRight size={16} className="text-[#8DC63F]" />
-                    <div className="text-gray-500 font-semibold">Next Module</div>
-                  </div>
-                  {loading ? (
-                    <div className="flex justify-center py-4"><Spinner /></div>
-                  ) : nextModule ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Unit</div>
-                        <div className="font-semibold text-gray-700">{nextModule.unit_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Module</div>
-                        <div className="font-semibold text-gray-700">{nextModule.module_name || 'N/A'}</div>
-                      </div>
-                      <div className="text-sm p-2 bg-gray-50 rounded-lg">
-                        <div className="text-gray-400 text-xs mb-1">Course</div>
-                        <div className="font-semibold text-gray-700">{nextModule.course_name || 'N/A'}</div>
-                      </div>
-                      <div className="flex flex-col gap-1 pt-1">
-                        <div className="flex justify-between text-[10px] text-gray-400">
-                          <span>Learning Resources</span>
-                          <span>{nextModule.completed_learning_resources}/{nextModule.total_learning_resources}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div className="h-1.5 rounded-full transition-all duration-500"
-                            style={{ width: `${nextModuleLRPct}%`, backgroundColor: '#8DC63F' }} />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <div className="flex justify-between text-[10px] text-gray-400">
-                          <span>Image Interpretations</span>
-                          <span>{nextModule.completed_image_interpretations}/{nextModule.total_image_interpretations}</span>
-                        </div>
-                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                          <div className="h-1.5 rounded-full transition-all duration-500"
-                            style={{ width: `${nextModuleIRPct}%`, backgroundColor: '#a78bfa' }} />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400 text-center py-4">All modules completed!</div>
-                  )}
-                </div>
-
+                )}
               </div>
             </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              {/* ── MAIN COLUMN (order 1–8) ── */}
+              <div className="col-span-2 flex flex-col gap-4">
+                <LastSessionCard />       {/* 1 */}
+                <LastScoreCard />         {/* 2 */}
+                <PerformanceMetricsCard />{/* 3 */}
+                <SkillCompetencyCard />   {/* 4 */}
+                <LearningPathCard />      {/* 5 */}
+                <ResourceSummaryCard />   {/* 6 */}
+                <QueriesCard />           {/* 7 */}
+                <ReAttemptsCard />        {/* 8 */}
+              </div>
+
+              {/* ── SIDEBAR (9a, 9b, 9c) ── */}
+              <div className="col-span-1 flex flex-col gap-4">
+                <OverallProgressCard />   {/* 9a */}
+                <NextModuleCard />        {/* 9b */}
+                <PracticeStreakCard />     {/* 9c */}
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
     </div>
   );
 }
+
 export default TraineeDashboard;
