@@ -20,9 +20,6 @@ const vrModel = (requester, data_check) => {
         })
     })
 }
-
-
-
 // const streamData = async (requester, stageArn, userId, capabilities, attributes, duration) => {
 //     return new Promise((resolve, reject) => {
 //         const isPriviledged = [99,101,102,103].includes(Number(requester.role));

@@ -5140,7 +5140,7 @@ function TraineeDashboard() {
   // ═══════════════════════════════════════════════════════════
   const OverallProgressCard = () => (
     <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-      <div className="px-4 pt-4 pb-3" style={{ background: 'linear-gradient(135deg,#f0fde6,#e8fbd4)' }}>
+      <div className="px-4 pt-4 pb-3" >
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-bold text-gray-700">Overall Progress</span>
           <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
@@ -5152,7 +5152,7 @@ function TraineeDashboard() {
           <OverallCompletion data={{ totalResources, completed, attempted }} />
         </div>
       </div>
-      <div className="grid grid-cols-2 divide-x divide-gray-100 border-t border-gray-100">
+      <div className="grid grid-cols-2 divide-x divide-gray-200 border-t border-gray-200">
         <div className="px-4 py-3 text-center">
           <div className="text-[10px] text-gray-400 mb-0.5">Total</div>
           <div className="text-xl font-black text-gray-700">{totalResources}</div>
