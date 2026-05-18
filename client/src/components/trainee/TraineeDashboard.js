@@ -4638,18 +4638,110 @@ function TraineeDashboard() {
   // ── Derived Data ──────────────────────────────────────────
   const allResources = useMemo(() => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null), [individualTraineeProfile.data]);
 
-  const [selectedCertificate, setSelectedCertificate] = useState('');
+  const normalizeCertificateLabel = (value) => {
+    const label = String(value || '').trim();
+    if (!label) return '';
+    if (/\bbtc\b/i.test(label)) return 'BTC';
+    if (/\bufc\b/i.test(label)) return 'UFC';
+    return label;
+  };
+
+  const batchCertificateIds = useMemo(() => {
+    const ids = individualTraineeProfile?.currentBatches?.[0]?.certification_data;
+    return Array.isArray(ids) ? ids.filter(Boolean) : [];
+  }, [individualTraineeProfile.currentBatches]);
+
+  const certificateNameMap = useMemo(() => {
+    const map = new Map();
+
+    (individualTraineeProfile?.certificates ?? []).forEach(cert => {
+      const id = cert?.certificate_id || cert?.id;
+      const label = normalizeCertificateLabel(
+        cert?.certificate_name || cert?.label || cert?.name || cert?.course_name
+      );
+      if (id && label && !map.has(id)) map.set(id, label);
+    });
+
+    (individualTraineeProfile?.data ?? []).forEach(row => {
+      const id = row?.certificate_id;
+      const label = normalizeCertificateLabel(
+        row?.certificate_name || row?.certificate || row?.course_name
+      );
+      if (id && label && !map.has(id)) map.set(id, label);
+    });
+
+    return map;
+  }, [individualTraineeProfile.certificates, individualTraineeProfile.data]);
+
   const certificates = useMemo(() => {
+    const ids = batchCertificateIds.length
+      ? batchCertificateIds
+      : Array.from(new Set((individualTraineeProfile?.data ?? []).map(r => r?.certificate_id).filter(Boolean)));
+
+    return ids.map(id => ({
+      id,
+      label: certificateNameMap.get(id) || normalizeCertificateLabel(id) || id,
+    }));
+  }, [batchCertificateIds, certificateNameMap, individualTraineeProfile.data]);
+
+  const scopedResources = useMemo(() =>
+    batchCertificateIds.length
+      ? allResources.filter(r => batchCertificateIds.includes(r.certificate_id))
+      : allResources,
+    [allResources, batchCertificateIds]);
+
+  const [selectedCertificate, setSelectedCertificate] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
+
+  useEffect(() => {
+    if (selectedCertificate && !certificates.some(cert => cert.id === selectedCertificate)) {
+      setSelectedCertificate('');
+    }
+  }, [certificates, selectedCertificate]);
+
+  useEffect(() => {
+    setSelectedCourse('');
+  }, [selectedCertificate]);
+
+  const certificateResources = useMemo(() =>
+    selectedCertificate
+      ? scopedResources.filter(r => r.certificate_id === selectedCertificate)
+      : scopedResources,
+    [scopedResources, selectedCertificate]);
+
+  const courseOptions = useMemo(() => {
     const seen = new Set();
-    return (individualTraineeProfile?.data ?? []).filter(r => r.certificate_id).reduce((a, r) => {
-      if (!seen.has(r.certificate_id)) { seen.add(r.certificate_id); a.push({ id: r.certificate_id, label: r.course_name || r.certificate_id }); }
-      return a;
+    return certificateResources.reduce((acc, row) => {
+      const course = String(row?.course_name || '').trim();
+      if (!course || seen.has(course)) return acc;
+      seen.add(course);
+      acc.push(course);
+      return acc;
     }, []);
-  }, [individualTraineeProfile.data]);
+  }, [certificateResources]);
+
+  useEffect(() => {
+    if (selectedCourse && !courseOptions.includes(selectedCourse)) {
+      setSelectedCourse('');
+    }
+  }, [courseOptions, selectedCourse]);
 
   const filteredResources = useMemo(() =>
-    selectedCertificate ? allResources.filter(r => r.certificate_id === selectedCertificate) : allResources,
-    [allResources, selectedCertificate]);
+    selectedCourse
+      ? certificateResources.filter(r => String(r?.course_name || '').trim() === selectedCourse)
+      : certificateResources,
+    [certificateResources, selectedCourse]);
+
+  const overallProgressLabel = useMemo(() => {
+    if (selectedCertificate) {
+      return certificates.find(cert => cert.id === selectedCertificate)?.label || 'Certification';
+    }
+    if (!certificates.length) return 'All certifications';
+    if (certificates.length === 1) return certificates[0].label;
+    return certificates.map(cert => cert.label).join(' + ');
+  }, [certificates, selectedCertificate]);
+
+  const courseFilterLabel = selectedCourse || 'All courses';
 
   const totalLR           = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource').length, [filteredResources]);
   const totalPractice     = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice').length, [filteredResources]);
@@ -5143,10 +5235,16 @@ function TraineeDashboard() {
       <div className="px-4 pt-4 pb-3" >
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-bold text-gray-700">Overall Progress</span>
-          <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
-            <option value="">All</option>
-            {certificates.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
+          <div className="flex items-center gap-2">
+            <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
+              <option value="">{overallProgressLabel}</option>
+              {certificates.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+            </select>
+            <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className={selectCls}>
+              <option value="">{courseFilterLabel}</option>
+              {courseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+            </select>
+          </div>
         </div>
         <div className="flex justify-center">
           <OverallCompletion data={{ totalResources, completed, attempted }} />
