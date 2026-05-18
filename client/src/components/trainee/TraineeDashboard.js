@@ -4909,7 +4909,7 @@ function TraineeDashboard() {
     const cc = { Low: { color: '#ef4444', bg: '#fef2f2' }, Medium: { color: '#f59e0b', bg: '#fffbeb' }, High: { color: '#22c55e', bg: '#f0fdf4' } }[MOCK_PERFORMANCE_METRICS.consistency] || { color: '#f59e0b', bg: '#fffbeb' };
     return (
       <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
-        <SectionLabel icon={Activity} color="#8DC63F" label="Performance Metrics" badge="Mock Data" />
+        <SectionLabel icon={Activity} color="#8DC63F" label="Performance Metrics" />
         <div className="grid grid-cols-2 gap-3">
           {/* Accuracy — full width */}
           <div className="col-span-2 flex items-center gap-4 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
@@ -4954,7 +4954,7 @@ function TraineeDashboard() {
     };
     return (
       <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
-        <SectionLabel icon={Brain} color="#a78bfa" label="Skill Competency" badge="Mock Data" />
+        <SectionLabel icon={Brain} color="#a78bfa" label="Skill Competency"/>
         <div className="grid grid-cols-2 gap-2.5">
           {MOCK_SKILL_COMPETENCY.map((s, i) => {
             const cfg = lvlCfg[s.level] || lvlCfg.Intermediate;
