@@ -4243,6 +4243,10 @@ import APP_URL from '../API/config';
 
 const BASE_URL       = APP_URL || '';
 const BATCH_API_BASE = 'https://api.hticlab.org/api/v1/batch-individual';
+const CERT_LABEL_MAP = {
+  '8264bc83-1d80-47ac-aa6b-ca021ffb4ace': 'BTC',
+  '24d9e2c4-42b0-4133-b801-d8cace4600f5': 'UFC',
+};
 
 const RESOURCE_ORDER = {
   'BPD & HC::Transthalamic Plane': 1, 'BPD & HC::Bi-Parietal Diameter': 2,
@@ -4386,6 +4390,27 @@ const scoreMeta = pct => {
   return           { hex: '#EF4444', cls: 'text-red-500'    };
 };
 
+const normalizeCertTabLabel = (label = '', certificateId = '') => {
+  if (CERT_LABEL_MAP[certificateId]) return CERT_LABEL_MAP[certificateId];
+
+  const normalizedLabel = String(label).trim();
+  if (!normalizedLabel) return certificateId;
+
+  if (/\bbtc\b/i.test(normalizedLabel) || /second trimester/i.test(normalizedLabel)) {
+    return 'BTC';
+  }
+
+  if (
+    /\bufc\b/i.test(normalizedLabel) ||
+    /probe movements/i.test(normalizedLabel) ||
+    /principles? of ultrasound/i.test(normalizedLabel)
+  ) {
+    return 'UFC';
+  }
+
+  return normalizedLabel;
+};
+
 // ─── API CALLS ────────────────────────────────────────────────────────────────
 
 /**
@@ -4432,13 +4457,16 @@ async function fetchSubmissions(resourceId, token) {
  * one belonging to this batch, so we filter rawData by batchCert.certId first.
  * After that filter, the cert label is simply batchCert.certName — no guessing.
  */
-function transformApiData(apiResponse, batchCert = null) {
+function transformApiData(apiResponse, batchCert = null, batchCertificateIds = []) {
   const { data: rawData = [], reAttempts = [] } = apiResponse;
+  const scopedCertificateIds = new Set((batchCertificateIds || []).filter(Boolean));
 
   // ── Filter to batch certificate only ─────────────────────────────────────
   const data = batchCert
     ? rawData.filter(item => item.certificate_id === batchCert.certId)
-    : rawData;
+    : scopedCertificateIds.size > 0
+      ? rawData.filter(item => scopedCertificateIds.has(item.certificate_id))
+      : rawData;
 
   // ── Re-attempt lookup ─────────────────────────────────────────────────────
   const reAttemptMap = {};
@@ -4460,10 +4488,10 @@ function transformApiData(apiResponse, batchCert = null) {
   data.forEach(item => {
     if (!item.certificate_id || certSeen.has(item.certificate_id)) return;
     certSeen.add(item.certificate_id);
+    const rawLabel = batchCert?.certName ?? item.certificate_name ?? item.course_name ?? item.certificate_id;
     certOrder.push({
       id:    item.certificate_id,
-      // After filtering, batchCert.certName is always correct.
-      label: batchCert?.certName ?? item.course_name ?? item.certificate_id,
+      label: normalizeCertTabLabel(rawLabel, item.certificate_id),
     });
   });
 
@@ -5408,19 +5436,24 @@ function MyLearning() {
     setLoading(true);
     setError(null);
 
-    const batchId = localStorage.getItem('batch_id');
+    (async () => {
+      try {
+        const traineeJson = await fetchTraineeData(traineeId, token);
+        const currentBatch = traineeJson?.currentBatches?.[0];
+        const batchId = currentBatch?.batch_id || localStorage.getItem('batch_id');
+        const batchCertificateIds = Array.isArray(currentBatch?.certification_data)
+          ? currentBatch.certification_data.filter(Boolean)
+          : [];
 
-    // batchCert fetch is non-fatal: if it fails we still show data unfiltered
-    const batchCertPromise = batchId
-      ? fetchBatchCert(batchId, token).catch(() => null)
-      : Promise.resolve(null);
+        if (currentBatch?.batch_id) {
+          localStorage.setItem('batch_id', currentBatch.batch_id);
+        }
 
-    Promise.all([batchCertPromise, fetchTraineeData(traineeId, token)])
-      .then(([batchCert, traineeJson]) => {
-        // batchCert.certId filters rawData to only this batch's certificate rows,
-        // so certs like "Principle of Ultrasound" are excluded before any
-        // label or module logic runs.
-        const t = transformApiData(traineeJson, batchCert);
+        const batchCert = batchId
+          ? await fetchBatchCert(batchId, token).catch(() => null)
+          : null;
+
+        const t = transformApiData(traineeJson, batchCert, batchCertificateIds);
         setCerts(t.certs);
         setModules(t.modules);
         setResources(t.resources);
@@ -5431,10 +5464,16 @@ function MyLearning() {
           const mods     = t.modules[first.id] || [];
           const unlocked = mods.find(m => !m.locked);
           setActiveModule(unlocked?.id || mods[0]?.id || '');
+        } else {
+          setActiveCert('');
+          setActiveModule('');
         }
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [traineeId, token]);
 
   if (!decoded?.role) return <Navigate to="/" replace />;
