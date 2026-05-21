@@ -636,99 +636,158 @@ function InsideCertifications() {
                                                                 <table className="w-full bg-white rounded shadow-sm">
                                                                   <thead>
                                                                     <tr className="border-b bg-gray-100">
-                                                                      <th className="py-2 px-4 text-left text-gray-600">Resource Topic</th>
+                                                                      <th className="py-2 px-4 text-left text-gray-600">Resource Topic / Name</th>
                                                                       <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
                                                                       <th className="py-2 px-4 text-left text-gray-600">Actions</th>
                                                                     </tr>
                                                                   </thead>
                                                                   <tbody>
                                                                     {(() => {
-                                                                      const groupedByTopic = items.reduce((acc, item) => {
-                                                                        const topic = item.resource_topic && item.resource_topic.trim() !== "" 
-                                                                          ? item.resource_topic 
-                                                                          : "Uncategorized";
-                                                                        if (!acc[topic]) {
-                                                                          acc[topic] = [];
+                                                                      const orderedRows = [];
+                                                                      const topicGroups = new Map();
+
+                                                                      items.forEach((item) => {
+                                                                        const topic = item.resource_topic?.trim();
+
+                                                                        if (!topic) {
+                                                                          orderedRows.push({ kind: "resource", item });
+                                                                          return;
                                                                         }
-                                                                        acc[topic].push(item);
-                                                                        return acc;
-                                                                      }, {});
 
-                                                                      return Object.entries(groupedByTopic).map(([topic, topicItems]) => {
-                                                                        const topicCompleted = topicItems.reduce((sum, item) => 
-                                                                          sum + parseInt(item.trainee_completed || 0), 0
-                                                                        );
-                                                                        const topicKey = `${moduleId}-${type}-${topic}`;
+                                                                        if (!topicGroups.has(topic)) {
+                                                                          const group = { kind: "topic", topic, items: [] };
+                                                                          topicGroups.set(topic, group);
+                                                                          orderedRows.push(group);
+                                                                        }
 
-                                                                        return (
-                                                                          <React.Fragment key={topic}>
-                                                                            <tr className="border-b hover:bg-gray-50 cursor-pointer">
-                                                                              <td className="py-2 px-4 text-gray-800 font-medium">
-                                                                                {topic}
-                                                                              </td>
-                                                                              <td className="py-2 px-4 text-gray-700">
-                                                                                {topicCompleted}
-                                                                              </td>
-                                                                              <td className="py-2 px-4">
-                                                                                <button
-                                                                                  onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setExpandedTopic(
-                                                                                      expandedTopic === topicKey ? null : topicKey
-                                                                                    );
-                                                                                  }}
-                                                                                  className="text-[#8DC63F] hover:text-[#7ab52f]"
-                                                                                >
-                                                                                  <ChevronDown 
-                                                                                    size={20} 
-                                                                                    className={`transition-transform ${
-                                                                                      expandedTopic === topicKey ? "rotate-180" : ""
-                                                                                    }`} 
-                                                                                  />
-                                                                                </button>
-                                                                              </td>
-                                                                            </tr>
-                                                                            {expandedTopic === topicKey && (
-                                                                              <tr>
-                                                                                <td colSpan={3} className="p-0">
-                                                                                  <div className="bg-blue-50 p-3">
-                                                                                    <table className="w-full bg-white rounded">
-                                                                                      <thead>
-                                                                                        <tr className="border-b bg-gray-50">
-                                                                                          <th className="py-2 px-4 text-left text-gray-600 text-sm">Resource Name</th>
-                                                                                          <th className="py-2 px-4 text-left text-gray-600 text-sm">Trainees Completed</th>
-                                                                                        </tr>
-                                                                                      </thead>
-                                                                                      <tbody>
-                                                                                        {topicItems.map((item) => (
-                                                                                          <tr 
-                                                                                            key={item.resource_id} 
-                                                                                            className={`border-b last:border-0 hover:bg-gray-50 ${
-                                                                                              item.completed_by_names ? 'cursor-pointer' : ''
-                                                                                            }`}
-                                                                                            onClick={() => handleResourceClick(item)}
-                                                                                          >
-                                                                                            <td className="py-2 px-4 text-gray-800 text-sm">
-                                                                                              {item.resource_name}
-                                                                                            </td>
-                                                                                            <td className="py-2 px-4 text-sm">
-                                                                                              <span className={`${
-                                                                                                item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
-                                                                                              }`}>
-                                                                                                {item.trainee_completed}
-                                                                                              </span>
-                                                                                            </td>
-                                                                                          </tr>
-                                                                                        ))}
-                                                                                      </tbody>
-                                                                                    </table>
-                                                                                  </div>
-                                                                                </td>
-                                                                              </tr>
-                                                                            )}
-                                                                          </React.Fragment>
-                                                                        );
+                                                                        topicGroups.get(topic).items.push(item);
                                                                       });
+
+                                                                      return (
+                                                                        <>
+                                                                          {orderedRows.map((row) => {
+                                                                            if (row.kind === "resource") {
+                                                                              const { item } = row;
+
+                                                                              return (
+                                                                                <tr
+                                                                                  key={item.resource_id}
+                                                                                  className={`border-b last:border-0 hover:bg-gray-50 ${
+                                                                                    item.completed_by_names ? 'cursor-pointer' : ''
+                                                                                  }`}
+                                                                                  onClick={() => handleResourceClick(item)}
+                                                                                >
+                                                                                  <td className="py-2 px-4 text-gray-800 font-medium">
+                                                                                    {item.resource_name}
+                                                                                  </td>
+                                                                                  <td className="py-2 px-4">
+                                                                                    <span className={`${
+                                                                                      item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                                    }`}>
+                                                                                      {item.trainee_completed}
+                                                                                    </span>
+                                                                                  </td>
+                                                                                  <td className="py-2 px-4">
+                                                                                    {decoded.role == 99 && (
+                                                                                      <button
+                                                                                        className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs hover:bg-[#7ab52f]"
+                                                                                        onClick={(e) => {
+                                                                                          e.stopPropagation();
+                                                                                          handleAttachVolume();
+                                                                                          setResourcesData({
+                                                                                            resource_id: item.resource_id,
+                                                                                            resource_name: item.resource_name
+                                                                                          });
+                                                                                          setAttachFormData(prev => ({
+                                                                                            ...prev,
+                                                                                            resource_id: item.resource_id
+                                                                                          }));
+                                                                                        }}
+                                                                                      >
+                                                                                        Attach Volume
+                                                                                      </button>
+                                                                                    )}
+                                                                                  </td>
+                                                                                </tr>
+                                                                              );
+                                                                            }
+
+                                                                            const topicCompleted = row.items.reduce((sum, item) =>
+                                                                              sum + parseInt(item.trainee_completed || 0), 0
+                                                                            );
+                                                                            const topicKey = `${moduleId}-${type}-${row.topic}`;
+
+                                                                            return (
+                                                                              <React.Fragment key={row.topic}>
+                                                                                <tr className="border-b hover:bg-gray-50 cursor-pointer">
+                                                                                  <td className="py-2 px-4 text-gray-800 font-medium">
+                                                                                    {row.topic}
+                                                                                  </td>
+                                                                                  <td className="py-2 px-4 text-gray-700">
+                                                                                    {topicCompleted}
+                                                                                  </td>
+                                                                                  <td className="py-2 px-4">
+                                                                                    <button
+                                                                                      onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setExpandedTopic(
+                                                                                          expandedTopic === topicKey ? null : topicKey
+                                                                                        );
+                                                                                      }}
+                                                                                      className="text-[#8DC63F] hover:text-[#7ab52f]"
+                                                                                    >
+                                                                                      <ChevronDown
+                                                                                        size={20}
+                                                                                        className={`transition-transform ${
+                                                                                          expandedTopic === topicKey ? "rotate-180" : ""
+                                                                                        }`}
+                                                                                      />
+                                                                                    </button>
+                                                                                  </td>
+                                                                                </tr>
+                                                                                {expandedTopic === topicKey && (
+                                                                                  <tr>
+                                                                                    <td colSpan={3} className="p-0">
+                                                                                      <div className="bg-blue-50 p-3">
+                                                                                        <table className="w-full bg-white rounded">
+                                                                                          <thead>
+                                                                                            <tr className="border-b bg-gray-50">
+                                                                                              <th className="py-2 px-4 text-left text-gray-600 text-sm">Resource Name</th>
+                                                                                              <th className="py-2 px-4 text-left text-gray-600 text-sm">Trainees Completed</th>
+                                                                                            </tr>
+                                                                                          </thead>
+                                                                                          <tbody>
+                                                                                            {row.items.map((item) => (
+                                                                                              <tr
+                                                                                                key={item.resource_id}
+                                                                                                className={`border-b last:border-0 hover:bg-gray-50 ${
+                                                                                                  item.completed_by_names ? 'cursor-pointer' : ''
+                                                                                                }`}
+                                                                                                onClick={() => handleResourceClick(item)}
+                                                                                              >
+                                                                                                <td className="py-2 px-4 text-gray-800 text-sm">
+                                                                                                  {item.resource_name}
+                                                                                                </td>
+                                                                                                <td className="py-2 px-4 text-sm">
+                                                                                                  <span className={`${
+                                                                                                    item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                                                  }`}>
+                                                                                                    {item.trainee_completed}
+                                                                                                  </span>
+                                                                                                </td>
+                                                                                              </tr>
+                                                                                            ))}
+                                                                                          </tbody>
+                                                                                        </table>
+                                                                                      </div>
+                                                                                    </td>
+                                                                                  </tr>
+                                                                                )}
+                                                                              </React.Fragment>
+                                                                            );
+                                                                          })}
+                                                                        </>
+                                                                      );
                                                                     })()}
                                                                   </tbody>
                                                                 </table>
