@@ -1883,23 +1883,14 @@ const UNIT_ORDER = {
   'FL': 3,
 };
 
-const TOPIC_ORDER = [
-  'Fetal Head',
-  'Fetal abdomen',
-  'Fetal Femur',
-  'Anatomical Landmarks',
-  'Anatomical landmarks',
-  'Imaging the Plane',
-  'Imaging the Transthalamic Plane',
-  'Imaging the transabdominal plane',
-  'Imaging the transfemoral plane',
-  'Measurement',
-  'Measurements',
-  'Plane Acquisition Challenges and Common Measurement Errors',
-  'Pitfalls in Plane Acquisition and Measurement',
-  'Image Diagnosis',
-  'Image diagnosis',
-  'OB Boosters',
+const TOPIC_ORDER_ALIASES = [
+  { order: 1, aliases: ['Fetal Head', 'Fetal Head (BPD & HC)', 'Fetal abdomen', 'Fetal Femur', 'Introduction', 'FL Summary'] },
+  { order: 2, aliases: ['Anatomical Landmarks', 'Anatomical landmarks'] },
+  { order: 3, aliases: ['Imaging the Plane', 'Imaging the Transthalamic Plane', 'Imaging the transabdominal plane', 'Imaging the transfemoral plane'] },
+  { order: 4, aliases: ['Measurement', 'Measurements'] },
+  { order: 5, aliases: ['Plane Acquisition Challenges and Common Measurement Errors', 'Pitfalls in Plane Acquisition and Measurement', 'Pitfalls', 'Pit Falls'] },
+  { order: 6, aliases: ['Image Diagnosis', 'Image diagnosis', 'Diagnosis'] },
+  { order: 7, aliases: ['OB Boosters'] },
 ];
 
 const RESOURCE_ORDER = {
@@ -2010,14 +2001,103 @@ const IMAGE_INTERPRETATION_ORDER = {
   'Measurement': 4,
 };
 
+const normalizeOrderToken = (value = '') =>
+  String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+
+const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
+  for (const alias of entry.aliases) {
+    orderMap[normalizeOrderToken(alias)] = entry.order;
+  }
+  return orderMap;
+}, {});
+
+const makeResourceOrderKey = (unitName, topicName, resourceName) =>
+  `${normalizeOrderToken(unitName)}::${normalizeOrderToken(topicName)}::${normalizeOrderToken(resourceName)}`;
+
+const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Transthalamic Plane'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Bi-Parietal Diameter'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Head Circumference'], order: 3 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Significance'], order: 4 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical Landmarks and Significance', 'Anatomical Landmarks of the Transthalamic Plane'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Geometric Shapes, Key Landmarks & Significance', 'Geometric shapes of key landmarks and their significance', 'Geometric shapes, Key Landmarks and significance'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Mind Sparks - Anatomical Landmarks', 'MindSparks - Anatomical Landmarks'], order: 3 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['Finding the Fetal Presentation', 'Finding the fetal presentation'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['Mind Sparks - Picture Pick'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Measurement', 'Measurements'], resources: ['How to Measure BPD', 'How To Measure BPD'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Measurement', 'Measurements'], resources: ['How to measure HC', 'How To Measure HC'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Measurement', 'Measurements'], resources: ['Measurement quiz'], order: 3 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Plane Acquisition Challenges and Common Measurement Errors'], resources: ['Plane Acquisition Challenges & Common Errors', 'Plane Acquisition Challenges and Common Measurement Errors', 'Plane Acquisition Challenges'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Plane Acquisition Challenges and Common Measurement Errors'], resources: ['Common Measurement Errors'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Image Diagnosis'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Percentile Chart & Significance', 'Percentile Charts  & Significance', 'Percentile Chart and Significance'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['BPD Chart'], order: 3 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['HC Chart'], order: 4 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Mind Sparks - Chart Interpretation'], order: 5 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['OB Boosters'], resources: ['Picture Pick'], order: 1 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['OB Boosters'], resources: ['True / False', 'True/False'], order: 2 },
+  { units: ['BPD & HC', 'BPD/HC'], topics: ['OB Boosters'], resources: ['Wordsearch', 'Word Search'], order: 3 },
+
+  { units: ['AC'], topics: ['Fetal abdomen'], resources: ['Transabdominal plane & abdominal circumference', 'Transabdominal plane'], order: 1 },
+  { units: ['AC'], topics: ['Fetal abdomen'], resources: ['Abdominal circumference'], order: 2 },
+  { units: ['AC'], topics: ['Fetal abdomen'], resources: ['Significance'], order: 3 },
+  { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks', 'Anatomical landmarks of the transabdominal plane'], order: 1 },
+  { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Mind Sparks - Geometric landmarks', 'Geometric shapes of key landmarks and their significance', 'Mind Sparks - Anatomical Landmarks'], order: 2 },
+  { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['Imaging the plane', 'How to acquire the transabdominal plane'], order: 1 },
+  { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['Mind Sparks errors - Picture pic', 'Mind Sparks - Picture pick'], order: 2 },
+  { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Measurement', 'How to measure AC'], order: 1 },
+  { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Mind Sparks - Measurement', 'Mind Sparks - Picture Pick'], order: 2 },
+  { units: ['AC'], topics: ['Pitfalls', 'Pit Falls'], resources: ['Pit Falls', 'Plane Acquisition Challenges'], order: 1 },
+  { units: ['AC'], topics: ['Pitfalls', 'Pit Falls'], resources: ['Common Measurement Errors'], order: 2 },
+  { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Image Diagnosis'], order: 1 },
+  { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Mind Sparks - Chart Interpretation'], order: 2 },
+  { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Percentile Charts  & Significance'], order: 3 },
+  { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['AC chart'], order: 4 },
+  { units: ['AC'], topics: ['OB Boosters'], resources: ['ALM - Crossword', 'Crossword puzzle'], order: 1 },
+  { units: ['AC'], topics: ['OB Boosters'], resources: ['Imaging the plane'], order: 2 },
+  { units: ['AC'], topics: ['OB Boosters'], resources: ['Picture Pick'], order: 3 },
+
+  { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Fetal femur', 'Femur'], order: 1 },
+  { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Femur diaphysis'], order: 2 },
+  { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Significance'], order: 3 },
+  { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks', 'Anatomical landmarks of the femur diaphysis plane'], order: 1 },
+  { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks End card', 'Anatomical landmarks End Card'], order: 2 },
+  { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Mind sparks - Geometric Landmarks', 'Mind Sparks - Anatomical Landmarks'], order: 3 },
+  { units: ['FL'], topics: ['Imaging the Plane', 'Imaging the transfemoral plane'], resources: ['Imaging the plane', 'How to acquire the femur diaphysis plane'], order: 1 },
+  { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Measurements', 'Measurement', 'How to measure FL'], order: 1 },
+  { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Measurements End Card', 'Measurements End card'], order: 2 },
+  { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Mind Sparks - Measurements', 'MindSparks - Picture Pick'], order: 3 },
+  { units: ['FL'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Pitfalls', 'Pit Falls'], resources: ['Pit Falls', 'Plane Acquisition Challenges'], order: 1 },
+  { units: ['FL'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Pitfalls', 'Pit Falls'], resources: ['Mind Sparks - Errors - Picture pick', 'Common Measurement Errors'], order: 2 },
+  { units: ['FL'], topics: ['Image Diagnosis', 'Image diagnosis', 'Diagnosis'], resources: ['Diagnosis', 'Image Diagnosis', 'Image diagnosis'], order: 1 },
+  { units: ['FL'], topics: ['Image Diagnosis', 'Image diagnosis', 'Diagnosis'], resources: ['Diagnosis End card', 'Diagnosis End Card'], order: 2 },
+  { units: ['FL'], topics: ['Image Diagnosis', 'Image diagnosis', 'Diagnosis'], resources: ['Mind Sparks - Chart Interpretation', 'Percentile charts & significance', 'Percentile Charts  & Significance'], order: 3 },
+  { units: ['FL'], topics: ['Image Diagnosis', 'Image diagnosis', 'Diagnosis'], resources: ['FL chart', 'AC chart'], order: 4 },
+  { units: ['FL'], topics: ['OB Boosters'], resources: ['Image Diagnosis - Picture Pick', 'Picture Pick'], order: 1 },
+  { units: ['FL'], topics: ['OB Boosters'], resources: ['Imaging the plane - True/False', 'True/False'], order: 2 },
+];
+
+const RESOURCE_ORDER_BY_TOPIC = RESOURCE_ORDER_BY_TOPIC_ALIASES.reduce((orderMap, entry) => {
+  for (const unitName of entry.units) {
+    for (const topicName of entry.topics) {
+      for (const resourceName of entry.resources) {
+        orderMap[makeResourceOrderKey(unitName, topicName, resourceName)] = entry.order;
+      }
+    }
+  }
+  return orderMap;
+}, {});
+
 const getTopicOrder = (topic) => {
-  const idx = TOPIC_ORDER.indexOf(topic);
-  return idx === -1 ? 99 : idx;
+  return TOPIC_ORDER[normalizeOrderToken(topic)] ?? 99;
 };
 
-const getResourceOrder = (unit_name, resource_name) => {
-  return RESOURCE_ORDER[`${unit_name}::${resource_name}`] ?? 99;
-};
+const getResourceOrder = (unit_name, resource_topic, resource_name) =>
+  RESOURCE_ORDER_BY_TOPIC[makeResourceOrderKey(unit_name, resource_topic, resource_name)] ??
+  RESOURCE_ORDER[`${unit_name}::${resource_name}`] ??
+  99;
 
 const buildCertificateTree = (rows) => {
   const certMap = {};
@@ -2100,7 +2180,7 @@ const buildCertificateTree = (rows) => {
                 .map(topicGroup => ({
                   ...topicGroup,
                   resources: [...topicGroup.resources]
-                    .sort((a, b) => getResourceOrder(unit.unit_name, a.resource_name) - getResourceOrder(unit.unit_name, b.resource_name)),
+                    .sort((a, b) => getResourceOrder(unit.unit_name, topicGroup.resource_topic, a.resource_name) - getResourceOrder(unit.unit_name, topicGroup.resource_topic, b.resource_name)),
                 })),
             },
             practices: [...unit.practices].sort((a, b) => a.resource_name.localeCompare(b.resource_name)),
