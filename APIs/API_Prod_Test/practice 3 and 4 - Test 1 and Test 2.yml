@@ -35,111 +35,181 @@ http:
         type: text
         value: |-
           {
-            "planeIdentification": {
-              "timeTakenSeconds": {
-                "user": 45,
-                "expertExpected": 30,
-                "score": 8,
-                "maxScore": 10
-              },
-              "probePosition": {
-                "user": {
-                  "position": { "x": 1.2, "y": 0.5, "z": 3.1 },
-                  "rotation": { "x": 10.0, "y": 5.0, "z": 2.0 }
+             "planeIdentification":{
+                "timeTakenSeconds":{
+                   "user":20.63323211669922,
+                   "expertExpected":174.27001953125,
+                   "score":3.0,
+                   "maxScore":3.0
                 },
-                "expert": {
-                  "position": { "x": 1.0, "y": 0.4, "z": 3.0 },
-                  "rotation": { "x": 9.5, "y": 4.8, "z": 1.9 }
+                "probePosition":{
+                   "user":{
+                      "position":{
+                         "x":0.06048843264579773,
+                         "y":0.1780245453119278,
+                         "z":-0.048590876162052158
+                      },
+                      "rotation":{
+                         "x":334.6242370605469,
+                         "y":122.34333038330078,
+                         "z":356.3389892578125
+                      }
+                   },
+                   "expert":{
+                      "position":{
+                         "x":-0.005200866609811783,
+                         "y":0.21356962621212007,
+                         "z":-0.03960279002785683
+                      },
+                      "rotation":{
+                         "x":298.1012878417969,
+                         "y":9.347900390625,
+                         "z":358.62066650390627
+                      }
+                   },
+                   "score":0.0,
+                   "maxScore":2.5
                 },
-                "score": 7,
-                "maxScore": 10
-              },
-              "probeRotationScore": {
-                "score": 6,
-                "maxScore": 10
-              }
-            },
-            "imageOptimization": {
-              "gain": { "user": 50, "expert": 55, "score": 8, "maxScore": 10 },
-              "depth": { "user": 12, "expert": 14, "score": 7, "maxScore": 10 },
-              "zoom": { "user": 1.5, "expert": 1.8, "score": 6, "maxScore": 10 },
-              "focus": { "user": 3, "expert": 4, "score": 7, "maxScore": 10 },
-              "dynamicRange": { "user": 60, "expert": 65, "score": 8, "maxScore": 10 }
-            },
-            "measurements": [
-              {
-                "type": "BPD",
-                "caliperPlacement": {
-                  "method": "outer-to-outer",
-                  "userPoints": [{ "x": 10, "y": 20 }, { "x": 30, "y": 40 }],
-                  "expertPoints": [{ "x": 11, "y": 21 }, { "x": 31, "y": 41 }],
-                  "score": 8,
-                  "maxScore": 10
+                "probeRotationScore":{
+                   "score":0.0,
+                   "maxScore":2.5
+                }
+             },
+             "imageOptimization":{
+                "gain":{
+                   "user":100.0,
+                   "expertExpected":90.0,
+                   "score":0.0,
+                   "maxScore":1.0
                 },
-                "value": {
-                  "user": 45.2,
-                  "expert": 46.0,
-                  "unit": "mm",
-                  "error": 0.8,
-                  "score": 7,
-                  "maxScore": 10
+                "depth":{
+                   "user":21.0,
+                   "expertExpected":17.0,
+                   "score":0.0,
+                   "maxScore":1.0
                 },
-                "obtainedImage": {}
-              },
-              {
-                "type": "HC",
-                "caliperPlacement": {
-                  "method": "outer-to-outer",
-                  "userPoints": [{ "x": 15, "y": 25 }, { "x": 35, "y": 45 }],
-                  "expertPoints": [{ "x": 16, "y": 26 }, { "x": 36, "y": 46 }],
-                  "score": 7,
-                  "maxScore": 10
+                "zoom":{
+                   "user":0.0,
+                   "expertExpected":0.0,
+                   "score":0.0,
+                   "maxScore":1.0
                 },
-                "value": {
-                  "user": 160.5,
-                  "expert": 162.0,
-                  "unit": "mm",
-                  "error": 1.5,
-                  "score": 6,
-                  "maxScore": 10
+                "focus":{
+                   "user":5.0,
+                   "expertExpected":5.0,
+                   "score":0.0,
+                   "maxScore":1.0
                 },
-                "obtainedImage": {}
-              }
-            ],
-            "diagnosticInterpretation": {
-              "chartInterpretation": {
-                "user": "normal",
-                "expert": "normal",
-                "score": 5,
-                "maxScore": 5
-              },
-              "rangeInterpretation": {
-                "user": "within range",
-                "expert": "within range",
-                "score": 5,
-                "maxScore": 5
-              }
-            },
-            "scores": {
-              "planeIdentification": 21,
-              "imageOptimization": 36,
-              "measurement": 28,
-              "diagnosticInterpretation": 10,
-              "totalScore": 95,
-              "maxScore": 120,
-              "percentage": 79.17
-            },
-            "feedback": {
-              "overall": "Good performance overall, needs improvement in probe positioning.",
-              "needsPractice": ["probePosition", "zoom"]
-            }
+                "dynamicRange":{
+                   "user":5.0,
+                   "expertExpected":5.0,
+                   "score":0.0,
+                   "maxScore":1.0
+                }
+             },
+             "measurements":[
+                {
+                   "type":"BPD",
+                   "caliperPlacement":{
+                      "method":"two_point",
+                      "userPoints":[
+                         
+                      ],
+                      "expertPoints":[
+                         {
+                            "x":9.692850112915039,
+                            "y":86.35881042480469
+                         },
+                         {
+                            "x":9.692696571350098,
+                            "y":-70.7812271118164
+                         }
+                      ],
+                      "score":0.0,
+                      "maxScore":1.0
+                   },
+                   "value":{
+                      "user":0.0,
+                      "expertExpected":4.9984588623046879,
+                      "unit":"mm",
+                      "error":4.9984588623046879,
+                      "score":0.0,
+                      "maxScore":1.0
+                   }
+                },
+                {
+                   "type":"HC",
+                   "caliperPlacement":{
+                      "method":"ellipse",
+                      "userPoints":[
+                         
+                      ],
+                      "expertPoints":[
+                         {
+                            "x":111.04984283447266,
+                            "y":0.0000629425048828125
+                         },
+                         {
+                            "x":-93.47435760498047,
+                            "y":22.16275405883789
+                         },
+                         {
+                            "x":18.41888999938965,
+                            "y":94.30778503417969
+                         },
+                         {
+                            "x":-0.843425452709198,
+                            "y":-72.14492797851563
+                         }
+                      ],
+                      "score":0.0,
+                      "maxScore":1.0
+                   },
+                   "value":{
+                      "user":0.0,
+                      "expertExpected":18.3536319732666,
+                      "unit":"mm",
+                      "error":18.3536319732666,
+                      "score":0.0,
+                      "maxScore":1.0
+                   }
+                }
+             ],
+             "diagnosticInterpretation":{
+                "chartInterpretation":{
+                   "user":"Not Selected",
+                   "expertExpected":"Normal",
+                   "score":0.0,
+                   "maxScore":1.0
+                },
+                "rangeInterpretation":{
+                   "user":"Normal | Normal",
+                   "expertExpected":"Normal | Normal",
+                   "score":0.0,
+                   "maxScore":2.0
+                }
+             },
+             "scores":{
+                "planeIdentification":3.0,
+                "imageOptimization":0.0,
+                "measurement":0.0,
+                "diagnosticInterpretation":0.0,
+                "totalScore":3.0,
+                "maxScore":20.0,
+                "percentage":15.0
+             },
+             "feedback":{
+                "overall":"Feedback will be provided in upcoming updates.",
+                "needsPractice":[   
+                ]
+             }
           }
       - name: resource_id
         type: text
         value: 9f4f8613-64bc-4c3d-a871-daa401d8896b
       - name: session_id
         type: text
-        value: a66dec6c-b702-481f-b1e0-dfea3e7888b5
+        value: a33dec6c-b702-481f-b1e0-dfea3e7888b5
   auth:
     type: bearer
     token: "{{user_token}}"
