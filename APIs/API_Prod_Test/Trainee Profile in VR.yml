@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: http://{{local_base_url}}/api/v1/trainee/b6baabec-3423-4131-8e6f-f59494f397c2?isVr=false
+  url: https://api.hticlab.org/api/v1/trainee/b6baabec-3423-4131-8e6f-f59494f397c2?isVr=true
   params:
     - name: isVr
-      value: "false"
+      value: "true"
       type: query
   auth:
     type: bearer
