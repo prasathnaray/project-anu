@@ -4447,6 +4447,15 @@ async function fetchSubmissions(resourceId, token) {
   return Array.isArray(json) ? json : (json.data ?? []);
 }
 
+async function fetchPracTestAttemptDetails(resourceId, token) {
+  const res = await fetch(`${BASE_URL}/api/v1/prac-test-attempt-details/${resourceId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Attempt details API HTTP ${res.status}`);
+  const json = await res.json();
+  return Array.isArray(json?.data) ? json.data : [];
+}
+
 // ─── DATA TRANSFORMATION ──────────────────────────────────────────────────────
 
 /**
@@ -4847,6 +4856,343 @@ function ImageInterpretModal({ r, token, onClose }) {
 
 // ─── PRACTICE EXPANDED PANEL ──────────────────────────────────────────────────
 
+const formatAttemptValue = (value, decimals = 2) => {
+  if (value === null || value === undefined || value === '') return '—';
+  const num = Number(value);
+  if (Number.isFinite(num)) return Number.isInteger(num) ? String(num) : num.toFixed(decimals);
+  return String(value);
+};
+
+function SubmittedAttemptCard({ attempt, isLatest }) {
+  const [open, setOpen] = React.useState(isLatest);
+  const { payload } = attempt;
+  const score = payload?.scores?.percentage ?? null;
+  const scoreText = score !== null ? `${formatAttemptValue(score)}%` : '—';
+  const imageMetrics = payload?.imageOptimization
+    ? [
+        ['Gain', payload.imageOptimization.gain],
+        ['Depth', payload.imageOptimization.depth],
+        ['Zoom', payload.imageOptimization.zoom],
+        ['Focus', payload.imageOptimization.focus],
+        ['Dynamic Range', payload.imageOptimization.dynamicRange],
+      ]
+    : [];
+
+  return (
+    <div className={`border rounded-xl overflow-hidden ${isLatest ? 'border-[#8DC63F]/40' : 'border-gray-200'}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${open ? 'bg-gray-50' : 'bg-white hover:bg-gray-50'}`}
+      >
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm ${isLatest ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-500'}`}>
+          {attempt.attemptNumber}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-gray-700">
+              {attempt.attemptNumber === 1 ? 'First Attempt' : `Re-attempt ${attempt.attemptNumber - 1}`}
+            </span>
+            {isLatest && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#8DC63F]/15 text-[#8DC63F]">Latest</span>
+            )}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-0.5">
+            {attempt.attemptedAt ? formatDateTime(attempt.attemptedAt) : 'Attempt details'}
+          </p>
+        </div>
+        <div className="text-right flex-shrink-0 mr-2">
+          <p className="text-lg font-bold leading-none text-gray-700">{scoreText}</p>
+          <p className="text-[10px] text-gray-400">{attempt.sessionType} {attempt.sessionNumber}</p>
+        </div>
+        <ChevronDown size={15} className={`flex-shrink-0 transition-transform ${open ? 'rotate-180 text-[#8DC63F]' : 'text-gray-300'}`} />
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 pt-2 space-y-4 bg-white border-t border-gray-100">
+          {payload?.scores && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Target size={12} className="text-[#8DC63F]" />
+                <span className="text-xs font-semibold text-gray-600">Scores</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                {[
+                  ['Plane', payload.scores.planeIdentification],
+                  ['Image', payload.scores.imageOptimization],
+                  ['Measure', payload.scores.measurement],
+                  ['Diagnosis', payload.scores.diagnosticInterpretation],
+                  ['Total', `${formatAttemptValue(payload.scores.totalScore)}/${formatAttemptValue(payload.scores.maxScore)}`],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                    <p className="text-[10px] text-gray-400">{label}</p>
+                    <p className="text-sm font-semibold text-gray-700">{typeof value === 'string' ? value : formatAttemptValue(value)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {payload?.planeIdentification && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Target size={12} className="text-blue-500" />
+                <span className="text-xs font-semibold text-gray-600">Plane Identification</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Time User</p>
+                  <p className="text-sm font-semibold text-gray-700">{formatAttemptValue(payload.planeIdentification.timeTakenSeconds.user)} s</p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Time Expert</p>
+                  <p className="text-sm font-semibold text-gray-700">{formatAttemptValue(payload.planeIdentification.timeTakenSeconds.expertExpected)} s</p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Probe Position</p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    {formatAttemptValue(payload.planeIdentification.probePosition.score)}/{formatAttemptValue(payload.planeIdentification.probePosition.maxScore)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Probe Rotation</p>
+                  <p className="text-sm font-semibold text-gray-700">
+                    {formatAttemptValue(payload.planeIdentification.probeRotationScore.score)}/{formatAttemptValue(payload.planeIdentification.probeRotationScore.maxScore)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {imageMetrics.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <FileText size={12} className="text-amber-500" />
+                <span className="text-xs font-semibold text-gray-600">Image Optimization</span>
+              </div>
+              <div className="space-y-2">
+                {imageMetrics.map(([label, metric]) => (
+                  <div key={label} className="grid grid-cols-4 gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 text-xs">
+                    <div>
+                      <p className="text-[10px] text-gray-400">{label}</p>
+                      <p className="font-semibold text-gray-700">{formatAttemptValue(metric.user)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400">Expert</p>
+                      <p className="font-semibold text-gray-700">{formatAttemptValue(metric.expertExpected)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400">Score</p>
+                      <p className="font-semibold text-gray-700">{formatAttemptValue(metric.score)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400">Max</p>
+                      <p className="font-semibold text-gray-700">{formatAttemptValue(metric.maxScore)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {payload?.measurements?.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Ruler size={12} className="text-purple-500" />
+                <span className="text-xs font-semibold text-gray-600">Measurements</span>
+              </div>
+              <div className="space-y-2">
+                {payload.measurements.map((measurement) => (
+                  <div key={`${attempt.sessionId}-${measurement.type}`} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-3">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-semibold text-gray-700">{measurement.type}</span>
+                      <span className="text-[10px] text-gray-400">{measurement.caliperPlacement.method}</span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                      <div>
+                        <p className="text-[10px] text-gray-400">Value User</p>
+                        <p className="font-semibold text-gray-700">{formatAttemptValue(measurement.value.user)} {measurement.value.unit}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400">Value Expert</p>
+                        <p className="font-semibold text-gray-700">{formatAttemptValue(measurement.value.expertExpected)} {measurement.value.unit}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400">Value Score</p>
+                        <p className="font-semibold text-gray-700">{formatAttemptValue(measurement.value.score)}/{formatAttemptValue(measurement.value.maxScore)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-gray-400">Caliper Score</p>
+                        <p className="font-semibold text-gray-700">{formatAttemptValue(measurement.caliperPlacement.score)}/{formatAttemptValue(measurement.caliperPlacement.maxScore)}</p>
+                      </div>
+                    </div>
+                    {(measurement.userImageUrl || measurement.expertImageUrl) && (
+                      <div className="flex flex-wrap gap-3 mt-2">
+                        {measurement.userImageUrl && (
+                          <a href={measurement.userImageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-blue-500 hover:underline">
+                            <Eye size={10} /> User image
+                          </a>
+                        )}
+                        {measurement.expertImageUrl && (
+                          <a href={measurement.expertImageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] text-blue-500 hover:underline">
+                            <Eye size={10} /> Expert image
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {payload?.diagnosticInterpretation && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <FileText size={12} className="text-pink-500" />
+                <span className="text-xs font-semibold text-gray-600">Diagnostic Interpretation</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Chart</p>
+                  <p className="font-semibold text-gray-700">
+                    {payload.diagnosticInterpretation.chartInterpretation.user} / {payload.diagnosticInterpretation.chartInterpretation.expertExpected}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Range</p>
+                  <p className="font-semibold text-gray-700">
+                    {payload.diagnosticInterpretation.rangeInterpretation.user} / {payload.diagnosticInterpretation.rangeInterpretation.expertExpected}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {payload?.feedback && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare size={12} className="text-blue-500" />
+                <span className="text-xs font-semibold text-gray-600">Submitted Feedback Payload</span>
+              </div>
+              <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-3 py-3">
+                <p className="text-xs text-gray-700">{payload.feedback.overall || 'No overall feedback'}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {(payload.feedback.needsPractice || []).length > 0 ? (
+                    payload.feedback.needsPractice.map((item, idx) => (
+                      <span key={`${attempt.sessionId}-need-${idx}`} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white border border-blue-200 text-blue-600">
+                        {item}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-[10px] text-gray-400">No needs-practice items</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubmittedContentPanel({ r, token }) {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [attempts, setAttempts] = React.useState([]);
+
+  React.useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    fetchPracTestAttemptDetails(r.id, token)
+      .then((data) => {
+        if (active) setAttempts(data);
+      })
+      .catch((err) => {
+        if (active) setError(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [r.id, token]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-10 text-gray-400">
+        <Loader2 size={18} className="animate-spin mr-2" />
+        <span className="text-sm">Loading submitted content…</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-red-400">
+        <p className="text-sm font-medium">Failed to load submitted content</p>
+        <p className="text-xs mt-1 text-gray-400">{error}</p>
+      </div>
+    );
+  }
+
+  if (attempts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+        <FileText size={28} className="mb-2 text-gray-300" />
+        <p className="text-sm font-medium">No submitted content found</p>
+        <p className="text-xs mt-1">This user has no saved session payload for this resource yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {attempts.map((attempt, idx) => (
+        <SubmittedAttemptCard key={attempt.sessionId} attempt={attempt} isLatest={idx === 0} />
+      ))}
+    </div>
+  );
+}
+
+function AttemptHistoryModal({ r, showFeedback, onClose, token, showSubmission }) {
+  const meta = TYPE_META[r.type] || TYPE_META.practice;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
+          <div className={`w-9 h-9 rounded-lg border flex items-center justify-center flex-shrink-0 ${meta.bg} ${meta.border}`}>
+            <History size={16} className={meta.color} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-bold text-gray-800 truncate">{r.name}</h2>
+            <p className="text-[11px] text-gray-400 mt-0.5">Attempt history</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <X size={16} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
+          <PracticeExpandedPanel r={r} showFeedback={showFeedback} showSubmission={showSubmission} token={token} className="mt-0" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ReattemptLog({ reAttempts, updatedAt }) {
   const attempts = reAttempts.length > 0
     ? reAttempts
@@ -5012,17 +5358,18 @@ function FeedbackPanel({ reAttempts }) {
   );
 }
 
-function PracticeExpandedPanel({ r, showFeedback }) {
+function PracticeExpandedPanel({ r, showFeedback, showSubmission = false, token, className = '' }) {
   const [activeTab, setActiveTab] = React.useState('log');
   const tabs = [
     { id: 'log',      label: 'Attempt Log', icon: History       },
     ...(showFeedback ? [{ id: 'feedback', label: 'Feedback', icon: MessageSquare }] : []),
+    ...(showSubmission ? [{ id: 'submission', label: 'Submitted Content', icon: FileText }] : []),
   ];
   const totalAttempts  = r.reAttempts.length || (r.done ? 1 : 0);
   const reattemptCount = Math.max(0, totalAttempts - 1);
 
   return (
-    <div className="mt-2 border border-gray-100 rounded-xl bg-gray-50/60 overflow-hidden">
+    <div className={`border border-gray-100 rounded-xl bg-gray-50/60 overflow-hidden ${className}`.trim()}>
       <div className="flex items-center gap-4 px-4 py-2.5 bg-white border-b border-gray-100 text-xs text-gray-500">
         <div className="flex items-center gap-1.5">
           <Target size={12} className="text-[#8DC63F]" />
@@ -5065,6 +5412,7 @@ function PracticeExpandedPanel({ r, showFeedback }) {
       <div className="p-3">
         {activeTab === 'log'      && <ReattemptLog reAttempts={r.reAttempts} updatedAt={r.updatedAt} />}
         {activeTab === 'feedback' && <FeedbackPanel reAttempts={r.reAttempts} />}
+        {activeTab === 'submission' && <SubmittedContentPanel r={r} token={token} />}
       </div>
     </div>
   );
@@ -5238,7 +5586,7 @@ function ResourceTypeBadge({ r }) {
 // }
 
 //working good
-function ResourceRow({ r, token, onOpenInterpretModal }) {
+function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal }) {
   const done           = isResourceDone(r);
   const isPractice     = r.type === 'practice';
   const isInterpret    = r.type === 'interpret';
@@ -5246,14 +5594,13 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
 
   const showLog      = (isPractice && practiceShowsLog(r.name))      || (isTest && testShowsLog(r.name));
   const showFeedback = (isPractice && practiceShowsFeedback(r.name))  || (isTest && testShowsFeedback(r.name));
+  const showSubmission = (isPractice && practiceShowsFeedback(r.name)) || isTest;
 
-  const isClickable    = isInterpret || showLog;
+  const isClickable    = isInterpret;
   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
-  const [expanded, setExpanded] = React.useState(false);
 
   const handleClick = () => {
     if (isInterpret) onOpenInterpretModal(r);
-    else if (showLog) setExpanded(p => !p);
   };
 
   return (
@@ -5286,26 +5633,23 @@ function ResourceRow({ r, token, onOpenInterpretModal }) {
             <Eye size={9} /> View Scores
           </span>
         )}
-        {showFeedback && (
-          <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-500 border border-blue-200 flex-shrink-0">
-            <MessageSquare size={9} /> Feedback
-          </span>
+        {showLog && (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onOpenAttemptModal({ resource: r, showFeedback, showSubmission });
+            }}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200 hover:border-[#8DC63F] hover:text-[#8DC63F] transition-colors flex-shrink-0"
+          >
+            <History size={10} /> View
+          </button>
         )}
         <CompletionStatus r={r} />
         {isInterpret && (
           <ChevronRight size={15} className="text-purple-300 group-hover:text-purple-500 transition-colors flex-shrink-0" />
         )}
-        {showLog && (
-          <div className={`flex-shrink-0 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
-            <ChevronDown size={15} className={expanded ? 'text-[#8DC63F]' : 'text-gray-300'} />
-          </div>
-        )}
       </div>
-      {showLog && expanded && (
-        <div className="px-3 pb-3">
-          <PracticeExpandedPanel r={r} showFeedback={showFeedback} />
-        </div>
-      )}
     </div>
   );
 }
@@ -5319,7 +5663,7 @@ const getTestNumber = (name = '') => {
 
 const testShowsLog      = name => { const n = getTestNumber(name); return n !== null; };
 const testShowsFeedback = name => { const n = getTestNumber(name); return n !== null; };
-function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal }) {
+function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal, onOpenAttemptModal }) {
   const TopicIcon = TOPIC_ICONS[topic] || BookOpen;
   const topicDone = items.filter(isResourceDone).length;
   const pct       = items.length ? Math.round((topicDone / items.length) * 100) : 0;
@@ -5352,7 +5696,7 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
       {isOpen && (
         <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
           {items.map(r => (
-            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} />
+            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} />
           ))}
         </div>
       )}
@@ -5362,7 +5706,7 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
 
 // ─── TYPE SECTION ─────────────────────────────────────────────────────────────
 
-function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, onToggleTopic, token, onOpenInterpretModal }) {
+function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, onToggleTopic, token, onOpenInterpretModal, onOpenAttemptModal }) {
   const meta  = TYPE_META[typeKey] || TYPE_META.resource;
   const Icon  = meta.icon;
   const total = accordions.reduce((s, g) => s + g.items.length, 0) + directRows.length;
@@ -5378,7 +5722,7 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
       {flatList ? (
         <div className="flex flex-col gap-2">
           {directRows.map(r => (
-            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} />
+            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} />
           ))}
         </div>
       ) : (
@@ -5392,12 +5736,13 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
               onToggle={() => onToggleTopic(`${typeKey}::${topic}`)}
               token={token}
               onOpenInterpretModal={onOpenInterpretModal}
+              onOpenAttemptModal={onOpenAttemptModal}
             />
           ))}
           {directRows.length > 0 && (
             <div className="flex flex-col gap-2 mt-1">
               {directRows.map(r => (
-                <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} />
+                <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} />
               ))}
             </div>
           )}
@@ -5422,6 +5767,7 @@ function MyLearning() {
   const [search,         setSearch]         = React.useState('');
   const [openTopics,     setOpenTopics]     = React.useState({});
   const [interpretModal, setInterpretModal] = React.useState(null);
+  const [attemptModal,   setAttemptModal]   = React.useState(null);
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   const token = localStorage.getItem('user_token');
@@ -5539,6 +5885,16 @@ function MyLearning() {
           r={interpretModal}
           token={token}
           onClose={() => setInterpretModal(null)}
+        />
+      )}
+
+      {attemptModal && (
+        <AttemptHistoryModal
+          r={attemptModal.resource}
+          showFeedback={attemptModal.showFeedback}
+          showSubmission={attemptModal.showSubmission}
+          token={token}
+          onClose={() => setAttemptModal(null)}
         />
       )}
 
@@ -5695,6 +6051,7 @@ function MyLearning() {
                         onToggleTopic={toggleTopic}
                         token={token}
                         onOpenInterpretModal={setInterpretModal}
+                        onOpenAttemptModal={setAttemptModal}
                       />
                     ))}
                   </div>

@@ -870,5 +870,299 @@ const submitSession = async (
   }
 };
 
-module.exports = { submitSession };
+const isValidUUID = (value) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+const getPublicUrl = (storagePath) => {
+  if (!storagePath) return null;
+  const { data } = supabase.storage.from(process.env.BUCKET_NAME).getPublicUrl(storagePath);
+  return data?.publicUrl || null;
+};
+
+const parseJson = (value, fallback = null) => {
+  if (value == null) return fallback;
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch (_) {
+    return fallback;
+  }
+};
+
+const getPracTestAttemptDetails = async (requester, resource_id) => {
+  const PRIVILEGED_ROLES = [103];
+  if (!PRIVILEGED_ROLES.includes(Number(requester.role))) {
+    return {
+      status: 'Unauthorized',
+      code: 401,
+      message: 'You do not have permission to view session details.',
+    };
+  }
+
+  if (!isValidUUID(resource_id)) {
+    return {
+      status: 'Bad Request',
+      code: 400,
+      message: 'resource_id must be a valid UUID.',
+    };
+  }
+
+  const userId = requester.user_mail;
+  const { rows: columnRows } = await client.query(
+    `SELECT EXISTS (
+       SELECT 1
+       FROM information_schema.columns
+       WHERE table_schema = 'public'
+         AND table_name = 'sessions'
+         AND column_name = 'created_at'
+     ) AS has_created_at`
+  );
+  const hasCreatedAt = columnRows[0]?.has_created_at === true;
+
+  const sessionQuery = `
+    SELECT
+      id AS session_id,
+      user_id,
+      session_type,
+      session_number,
+      resource_id
+      ${hasCreatedAt ? ', created_at' : ''}
+    FROM sessions
+    WHERE resource_id = $1
+      AND user_id = $2
+    ORDER BY
+      ${hasCreatedAt ? 'created_at DESC,' : ''}
+      session_number DESC,
+      id DESC
+  `;
+
+  const { rows: sessions } = await client.query(sessionQuery, [resource_id, userId]);
+  if (sessions.length === 0) {
+    return {
+      status: 'Success',
+      code: 200,
+      data: [],
+    };
+  }
+
+  const sessionIds = sessions.map((row) => row.session_id);
+
+  const [
+    planeResult,
+    imageResult,
+    measurementResult,
+    diagnosticResult,
+    scoreResult,
+    feedbackResult,
+  ] = await Promise.all([
+    client.query(
+      `SELECT *
+       FROM plane_identification
+       WHERE session_id = ANY($1::uuid[])
+         AND resource_id = $2
+         AND id = $3`,
+      [sessionIds, resource_id, userId]
+    ),
+    client.query(
+      `SELECT *
+       FROM image_optimization
+       WHERE session_id = ANY($1::uuid[])
+         AND resource_id = $2
+         AND id = $3`,
+      [sessionIds, resource_id, userId]
+    ),
+    client.query(
+      `SELECT *
+       FROM measurements
+       WHERE session_id = ANY($1::uuid[])
+         AND resource_id = $2
+         AND id = $3
+       ORDER BY session_id, measurement_type`,
+      [sessionIds, resource_id, userId]
+    ),
+    client.query(
+      `SELECT *
+       FROM diagnostic_interpretation
+       WHERE session_id = ANY($1::uuid[])
+         AND resource_id = $2
+         AND id = $3`,
+      [sessionIds, resource_id, userId]
+    ),
+    client.query(
+      `SELECT *
+       FROM session_scores
+       WHERE session_id = ANY($1::uuid[])
+         AND resource_id = $2
+         AND id = $3`,
+      [sessionIds, resource_id, userId]
+    ),
+    client.query(
+      `SELECT *
+       FROM session_feedback
+       WHERE session_id = ANY($1::uuid[])
+         AND resource_id = $2
+         AND id = $3`,
+      [sessionIds, resource_id, userId]
+    ),
+  ]);
+
+  const planeMap = Object.fromEntries(planeResult.rows.map((row) => [row.session_id, row]));
+  const imageMap = Object.fromEntries(imageResult.rows.map((row) => [row.session_id, row]));
+  const diagnosticMap = Object.fromEntries(diagnosticResult.rows.map((row) => [row.session_id, row]));
+  const scoreMap = Object.fromEntries(scoreResult.rows.map((row) => [row.session_id, row]));
+  const feedbackMap = Object.fromEntries(feedbackResult.rows.map((row) => [row.session_id, row]));
+
+  const measurementsBySession = {};
+  for (const row of measurementResult.rows) {
+    if (!measurementsBySession[row.session_id]) measurementsBySession[row.session_id] = [];
+    measurementsBySession[row.session_id].push({
+      type: row.measurement_type,
+      caliperPlacement: {
+        method: row.caliper_method,
+        userPoints: parseJson(row.caliper_user_points, []),
+        expertPoints: parseJson(row.caliper_expert_points, []),
+        score: Number(row.caliper_placement_score ?? 0),
+        maxScore: Number(row.caliper_placement_max ?? 0),
+      },
+      value: {
+        user: Number(row.value_user ?? 0),
+        expertExpected: Number(row.value_expert ?? 0),
+        unit: row.value_unit,
+        error: Number(row.value_error ?? 0),
+        score: Number(row.value_score ?? 0),
+        maxScore: Number(row.value_max_score ?? 0),
+      },
+      userImagePath: row.user_image_id || null,
+      expertImagePath: row.expert_image_id || null,
+      userImageUrl: getPublicUrl(row.user_image_id),
+      expertImageUrl: getPublicUrl(row.expert_image_id),
+    });
+  }
+
+  const data = sessions.map((session, index) => {
+    const plane = planeMap[session.session_id];
+    const image = imageMap[session.session_id];
+    const diagnostic = diagnosticMap[session.session_id];
+    const scores = scoreMap[session.session_id];
+    const feedback = feedbackMap[session.session_id];
+
+    return {
+      sessionId: session.session_id,
+      sessionType: session.session_type,
+      sessionNumber: session.session_number,
+      attemptNumber: sessions.length - index,
+      attemptedAt: hasCreatedAt ? session.created_at : null,
+      payload: {
+        planeIdentification: plane ? {
+          timeTakenSeconds: {
+            user: Number(plane.time_taken_user ?? 0),
+            expertExpected: Number(plane.time_taken_expert ?? 0),
+            score: Number(plane.time_taken_score ?? 0),
+            maxScore: Number(plane.time_taken_max_score ?? 0),
+          },
+          probePosition: {
+            user: {
+              position: {
+                x: Number(plane.probe_pos_user_x ?? 0),
+                y: Number(plane.probe_pos_user_y ?? 0),
+                z: Number(plane.probe_pos_user_z ?? 0),
+              },
+              rotation: {
+                x: Number(plane.probe_rot_user_x ?? 0),
+                y: Number(plane.probe_rot_user_y ?? 0),
+                z: Number(plane.probe_rot_user_z ?? 0),
+              },
+            },
+            expert: {
+              position: {
+                x: Number(plane.probe_pos_expert_x ?? 0),
+                y: Number(plane.probe_pos_expert_y ?? 0),
+                z: Number(plane.probe_pos_expert_z ?? 0),
+              },
+              rotation: {
+                x: Number(plane.probe_rot_expert_x ?? 0),
+                y: Number(plane.probe_rot_expert_y ?? 0),
+                z: Number(plane.probe_rot_expert_z ?? 0),
+              },
+            },
+            score: Number(plane.probe_position_score ?? 0),
+            maxScore: Number(plane.probe_position_max ?? 0),
+          },
+          probeRotationScore: {
+            score: Number(plane.probe_rotation_score ?? 0),
+            maxScore: Number(plane.probe_rotation_max ?? 0),
+          },
+        } : null,
+        imageOptimization: image ? {
+          gain: {
+            user: Number(image.gain_user ?? 0),
+            expertExpected: Number(image.gain_expert ?? 0),
+            score: Number(image.gain_score ?? 0),
+            maxScore: Number(image.gain_max_score ?? 0),
+          },
+          depth: {
+            user: Number(image.depth_user ?? 0),
+            expertExpected: Number(image.depth_expert ?? 0),
+            score: Number(image.depth_score ?? 0),
+            maxScore: Number(image.depth_max_score ?? 0),
+          },
+          zoom: {
+            user: Number(image.zoom_user ?? 0),
+            expertExpected: Number(image.zoom_expert ?? 0),
+            score: Number(image.zoom_score ?? 0),
+            maxScore: Number(image.zoom_max_score ?? 0),
+          },
+          focus: {
+            user: Number(image.focus_user ?? 0),
+            expertExpected: Number(image.focus_expert ?? 0),
+            score: Number(image.focus_score ?? 0),
+            maxScore: Number(image.focus_max_score ?? 0),
+          },
+          dynamicRange: {
+            user: Number(image.dynamic_range_user ?? 0),
+            expertExpected: Number(image.dynamic_range_expert ?? 0),
+            score: Number(image.dynamic_range_score ?? 0),
+            maxScore: Number(image.dynamic_range_max_score ?? 0),
+          },
+        } : null,
+        measurements: measurementsBySession[session.session_id] || [],
+        diagnosticInterpretation: diagnostic ? {
+          chartInterpretation: {
+            user: diagnostic.chart_interp_user,
+            expertExpected: diagnostic.chart_interp_expert,
+            score: Number(diagnostic.chart_interp_score ?? 0),
+            maxScore: Number(diagnostic.chart_interp_max_score ?? 0),
+          },
+          rangeInterpretation: {
+            user: diagnostic.range_interp_user,
+            expertExpected: diagnostic.range_interp_expert,
+            score: Number(diagnostic.range_interp_score ?? 0),
+            maxScore: Number(diagnostic.range_interp_max_score ?? 0),
+          },
+        } : null,
+        scores: scores ? {
+          planeIdentification: Number(scores.plane_identification_score ?? 0),
+          imageOptimization: Number(scores.image_optimization_score ?? 0),
+          measurement: Number(scores.measurement_score ?? 0),
+          diagnosticInterpretation: Number(scores.diagnostic_interpretation_score ?? 0),
+          totalScore: Number(scores.total_score ?? 0),
+          maxScore: Number(scores.max_score ?? 0),
+          percentage: Number(scores.percentage ?? 0),
+        } : null,
+        feedback: feedback ? {
+          overall: feedback.overall_feedback,
+          needsPractice: parseJson(feedback.needs_practice, []),
+        } : null,
+      },
+    };
+  });
+
+  return {
+    status: 'Success',
+    code: 200,
+    data,
+  };
+};
+
+module.exports = { submitSession, getPracTestAttemptDetails };
 // module.exports = { submitSession };

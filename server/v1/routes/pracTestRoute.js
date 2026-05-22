@@ -18,7 +18,7 @@ const express = require('express');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const pracTestRouter = express.Router();
-const { pracTestController } = require('../controller/pracTestController');
+const { pracTestController, getPracTestAttemptDetailsController } = require('../controller/pracTestController');
 
 pracTestRouter.post(
     '/submit-prac-test',
@@ -29,5 +29,10 @@ pracTestRouter.post(
         { name: 'expertImages_2', maxCount: 1 },
     ]),
     pracTestController
+);
+
+pracTestRouter.get(
+    '/prac-test-attempt-details/:resource_id',
+    getPracTestAttemptDetailsController
 );
 module.exports = pracTestRouter;

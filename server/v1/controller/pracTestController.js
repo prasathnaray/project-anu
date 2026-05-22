@@ -1,4 +1,4 @@
-const { submitSession } = require("../model/pracTestModel");
+const { submitSession, getPracTestAttemptDetails } = require("../model/pracTestModel");
 
 // const pracTestController = async (req, res) => {
 //     const requester = req.user;
@@ -171,4 +171,18 @@ const pracTestController = async (req, res) => {
         return res.status(500).json({ status: 'Error', message: err.message });
     }
 };
-module.exports = { pracTestController };
+
+const getPracTestAttemptDetailsController = async (req, res) => {
+    const requester = req.user;
+    const { resource_id } = req.params;
+
+    try {
+        const result = await getPracTestAttemptDetails(requester, resource_id);
+        return res.status(result.code).json(result);
+    } catch (err) {
+        console.error('getPracTestAttemptDetailsController error:', err);
+        return res.status(500).json({ status: 'Error', message: err.message });
+    }
+};
+
+module.exports = { pracTestController, getPracTestAttemptDetailsController };
