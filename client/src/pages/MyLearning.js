@@ -4461,6 +4461,8 @@ const TYPE_META = {
 
 const TOPIC_ORDER = [
   'FL Summary',
+  'AC - Learning Resource',
+  'AC - ISUOG Learning Resource',
   'Fetal Head',
   'Fetal Abdomen',
   'Fetal abdomen',
