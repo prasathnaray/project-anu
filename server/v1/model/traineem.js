@@ -2017,11 +2017,32 @@ const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
 }, {});
 
 const UNIT_TOPIC_ORDER = {
+  AC: {
+    [normalizeOrderToken('AC - Learning Resource')]: 1,
+    [normalizeOrderToken('AC- Learning Resource')]: 1,
+    [normalizeOrderToken('AC Learning Resource')]: 1,
+    [normalizeOrderToken('AC - ISUOG Learning Resource')]: 2,
+    [normalizeOrderToken('Fetal Abdomen')]: 3,
+    [normalizeOrderToken('Fetal abdomen')]: 3,
+    [normalizeOrderToken('Anatomical Landmarks')]: 4,
+    [normalizeOrderToken('Anatomical landmarks')]: 4,
+    [normalizeOrderToken('Imaging the Plane')]: 5,
+    [normalizeOrderToken('Imaging the transabdominal plane')]: 5,
+    [normalizeOrderToken('Measurement')]: 6,
+    [normalizeOrderToken('Measurements')]: 6,
+    [normalizeOrderToken('Pitfalls')]: 7,
+    [normalizeOrderToken('Pit Falls')]: 7,
+    [normalizeOrderToken('Image Diagnosis')]: 8,
+    [normalizeOrderToken('Image diagnosis')]: 8,
+    [normalizeOrderToken('OB Boosters')]: 9,
+  },
   FL: {
     [normalizeOrderToken('Introduction')]: 1,
     [normalizeOrderToken('Fetal Femur')]: 2,
     [normalizeOrderToken('Significance')]: 3,
     [normalizeOrderToken('FL Summary')]: 4,
+    [normalizeOrderToken('Anatomical Landmarks')]: 5,
+    [normalizeOrderToken('Anatomical landmarks')]: 5,
   },
 };
 
