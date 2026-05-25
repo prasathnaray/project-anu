@@ -1996,7 +1996,10 @@ const RESOURCE_ORDER = {
 
 const IMAGE_INTERPRETATION_ORDER = {
   'Find the Image': 1,
+  'Find the Image (Upload)': 1,
+  'Annotation: Drag and Drop': 2,
   'Annotation 1': 2,
+  'Annotation: Label and Name': 3,
   'Annotation 2': 3,
   'Measurement': 4,
 };
@@ -2012,6 +2015,15 @@ const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
   }
   return orderMap;
 }, {});
+
+const UNIT_TOPIC_ORDER = {
+  FL: {
+    [normalizeOrderToken('Introduction')]: 1,
+    [normalizeOrderToken('Fetal Femur')]: 2,
+    [normalizeOrderToken('Significance')]: 3,
+    [normalizeOrderToken('FL Summary')]: 4,
+  },
+};
 
 const makeResourceOrderKey = (unitName, topicName, resourceName) =>
   `${normalizeOrderToken(unitName)}::${normalizeOrderToken(topicName)}::${normalizeOrderToken(resourceName)}`;
@@ -2059,7 +2071,8 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['AC'], topics: ['OB Boosters'], resources: ['Imaging the plane'], order: 2 },
   { units: ['AC'], topics: ['OB Boosters'], resources: ['Picture Pick'], order: 3 },
 
-  { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Fetal femur', 'Femur'], order: 1 },
+  { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Introduction'], order: 1 },
+  { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Fetal Femur', 'Fetal femur', 'Femur'], order: 2 },
   { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Femur diaphysis'], order: 2 },
   { units: ['FL'], topics: ['Introduction', 'Fetal Femur', 'FL Summary'], resources: ['Significance'], order: 3 },
   { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks', 'Anatomical landmarks of the femur diaphysis plane'], order: 1 },
@@ -2090,8 +2103,16 @@ const RESOURCE_ORDER_BY_TOPIC = RESOURCE_ORDER_BY_TOPIC_ALIASES.reduce((orderMap
   return orderMap;
 }, {});
 
-const getTopicOrder = (topic) => {
-  return TOPIC_ORDER[normalizeOrderToken(topic)] ?? 99;
+const getTopicOrder = (unitName, topic) => {
+  const normalizedUnitName = String(unitName || '').trim();
+  const normalizedTopic = normalizeOrderToken(topic);
+  const unitTopicOrder = UNIT_TOPIC_ORDER[normalizedUnitName];
+
+  if (unitTopicOrder && unitTopicOrder[normalizedTopic] !== undefined) {
+    return unitTopicOrder[normalizedTopic];
+  }
+
+  return TOPIC_ORDER[normalizedTopic] ?? 99;
 };
 
 const getResourceOrder = (unit_name, resource_topic, resource_name) =>
@@ -2176,7 +2197,7 @@ const buildCertificateTree = (rows) => {
             learning_resources: {
               ...unit.learning_resources,
               items: Object.values(unit.learning_resources.items)
-                .sort((a, b) => getTopicOrder(a.resource_topic) - getTopicOrder(b.resource_topic))
+                .sort((a, b) => getTopicOrder(unit.unit_name, a.resource_topic) - getTopicOrder(unit.unit_name, b.resource_topic))
                 .map(topicGroup => ({
                   ...topicGroup,
                   resources: [...topicGroup.resources]
