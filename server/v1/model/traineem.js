@@ -2152,6 +2152,45 @@ const getResourceOrder = (unit_name, resource_topic, resource_name) =>
   RESOURCE_ORDER[`${unit_name}::${resource_name}`] ??
   99;
 
+const COURSE_ORDER_BY_CERTIFICATE = {
+  [normalizeOrderToken('UFC')]: {
+    [normalizeOrderToken('Principles of Ultrasound')]: 1,
+    [normalizeOrderToken('Probe Movements')]: 2,
+    [normalizeOrderToken('Knobology')]: 3,
+    [normalizeOrderToken('Morphology')]: 4,
+  },
+  [normalizeOrderToken('24d9e2c4-42b0-4133-b801-d8cace4600f5')]: {
+    [normalizeOrderToken('Principles of Ultrasound')]: 1,
+    [normalizeOrderToken('Probe Movements')]: 2,
+    [normalizeOrderToken('Knobology')]: 3,
+    [normalizeOrderToken('Morphology')]: 4,
+  },
+};
+
+const sortCoursesForCertificate = (certificate, courses) => {
+  const orderMap =
+    COURSE_ORDER_BY_CERTIFICATE[normalizeOrderToken(certificate.certificate_id)] ||
+    COURSE_ORDER_BY_CERTIFICATE[normalizeOrderToken(certificate.certificate_name)];
+
+  if (!orderMap) {
+    return courses;
+  }
+
+  return courses
+    .map((course, index) => ({ course, index }))
+    .sort((a, b) => {
+      const aOrder = orderMap[normalizeOrderToken(a.course.course_name)] ?? Number.MAX_SAFE_INTEGER;
+      const bOrder = orderMap[normalizeOrderToken(b.course.course_name)] ?? Number.MAX_SAFE_INTEGER;
+
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+      }
+
+      return a.index - b.index;
+    })
+    .map(({ course }) => course);
+};
+
 const buildCertificateTree = (rows) => {
   const certMap = {};
 
@@ -2216,9 +2255,8 @@ const buildCertificateTree = (rows) => {
     }
   }
 
-  return Object.values(certMap).map(cert => ({
-    ...cert,
-    courses: Object.values(cert.courses).map(course => ({
+  return Object.values(certMap).map(cert => {
+    const courses = Object.values(cert.courses).map(course => ({
       ...course,
       modules: Object.values(course.modules).map(mod => ({
         ...mod,
@@ -2249,8 +2287,13 @@ const buildCertificateTree = (rows) => {
             tests: [...unit.tests].sort((a, b) => a.resource_name.localeCompare(b.resource_name)),
           })),
       })),
-    })),
-  }));
+    }));
+
+    return {
+      ...cert,
+      courses: sortCoursesForCertificate(cert, courses),
+    };
+  });
 };
 
 //pakka va work agudhu

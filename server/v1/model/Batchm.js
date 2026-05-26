@@ -675,41 +675,57 @@ const individualBatchStats = (requester, batch_id) => {
                     });
                 }
 
+                const certificates = Array.from(
+                    new Map(
+                        rows
+                            .filter(row => row.certificate_id)
+                            .map(row => [
+                                row.certificate_id,
+                                {
+                                    certificate_id: row.certificate_id,
+                                    certificate_name: row.certificate_name,
+                                    certificate_status: null
+                                }
+                            ])
+                    ).values()
+                );
+
+                const firstCertificate = certificates[0] || {
+                    certificate_id: null,
+                    certificate_name: null,
+                    certificate_status: null
+                };
+
                 // Batch meta (same for all rows) 
                 const batchInfo = {
                     batch_id: rows[0]?.batch_id || null,
                     batch_name: rows[0]?.batch_name || null,
                     batch_start_date: rows[0]?.batch_start_date || null,
                     batch_end_date: rows[0]?.batch_end_date || null,
-                    certificate: {
-                        certificate_id: rows[0]?.certificate_id || null,
-                        certificate_name: rows[0]?.certificate_name || null,
-                        certificate_status: rows[0]?.certificate_status || null,
-                    }
+                    certificate: firstCertificate,
+                    certificates
                 };
 
-                // Split instructors and trainees 
-                const instructors = rows
-                    .filter(row => row.user_role === "102")
-                    .map(row => ({
-                        user_email: row.user_email,
-                        full_name: row.full_name,
-                        user_profile_photo: row.user_profile_photo,
-                        user_created_at: row.user_created_at,
-                        last_login: row.last_login,
-                        user_role: row.user_role
-                    }));
+                const uniquePeopleByRole = (role) => Array.from(
+                    new Map(
+                        rows
+                            .filter(row => row.user_role === role && row.user_email)
+                            .map(row => [
+                                row.user_email,
+                                {
+                                    user_email: row.user_email,
+                                    full_name: row.full_name,
+                                    user_profile_photo: row.user_profile_photo,
+                                    user_created_at: row.user_created_at,
+                                    last_login: row.last_login,
+                                    user_role: row.user_role
+                                }
+                            ])
+                    ).values()
+                );
 
-                const trainees = rows
-                    .filter(row => row.user_role === "103")
-                    .map(row => ({
-                        user_email: row.user_email,
-                        full_name: row.full_name,
-                        user_profile_photo: row.user_profile_photo,
-                        user_created_at: row.user_created_at,
-                        last_login: row.last_login,
-                        user_role: row.user_role
-                    }));
+                const instructors = uniquePeopleByRole("102");
+                const trainees = uniquePeopleByRole("103");
 
                 resolve({
                     batchInfo,

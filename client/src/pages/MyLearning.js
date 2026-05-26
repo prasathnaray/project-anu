@@ -4462,6 +4462,12 @@ const TYPE_META = {
 const TOPIC_ORDER = [
   'FL Summary',
   'Fetal Head',
+  'AC Learning Resource',
+  'AC- Learning Resource',
+  'AC - Learning Resource',
+  'AC ISUOG Learning Resource',
+  'AC- ISUOG Learning Resource',
+  'AC - ISUOG Learning Resource',
   'Fetal Abdomen',
   'Fetal abdomen',
   'Fetal Femur',
@@ -4496,6 +4502,12 @@ const TOPIC_ICONS = Object.fromEntries(
   Object.entries({
     'FL Summary': Brain,
     'Fetal Head': Brain,
+    'AC Learning Resource': BookOpen,
+    'AC- Learning Resource': BookOpen,
+    'AC - Learning Resource': BookOpen,
+    'AC ISUOG Learning Resource': BookOpen,
+    'AC- ISUOG Learning Resource': BookOpen,
+    'AC - ISUOG Learning Resource': BookOpen,
     'Fetal Abdomen': Brain,
     'Fetal abdomen': Brain,
     'Fetal Femur': Brain,
@@ -4640,6 +4652,15 @@ async function fetchPracTestAttemptDetails(resourceId, token) {
   return Array.isArray(json?.data) ? json.data : [];
 }
 
+async function fetchActivityLastScores(token) {
+  const res = await fetch(`${BASE_URL}/api/v1/activity-last-scores`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Activity last scores API HTTP ${res.status}`);
+  const json = await res.json();
+  return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+}
+
 // ─── DATA TRANSFORMATION ──────────────────────────────────────────────────────
 
 /**
@@ -4650,9 +4671,14 @@ async function fetchPracTestAttemptDetails(resourceId, token) {
  * one belonging to this batch, so we filter rawData by batchCert.certId first.
  * After that filter, the cert label is simply batchCert.certName — no guessing.
  */
-function transformApiData(apiResponse, batchCert = null, batchCertificateIds = []) {
+function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [], activityLastScores = []) {
   const { data: rawData = [], reAttempts = [] } = apiResponse;
   const scopedCertificateIds = new Set((batchCertificateIds || []).filter(Boolean));
+  const activityScoreMap = new Map(
+    (activityLastScores || [])
+      .filter(row => row?.resource_id)
+      .map(row => [row.resource_id, row])
+  );
 
   // ── Filter to batch certificate only ─────────────────────────────────────
   const data = batchCert
@@ -4717,6 +4743,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       ? deriveCompletionSource(item.resource_name, item.resource_topic)
       : null;
     const isDone = completionMap[item.resource_id] === true;
+    const activityScore = activityScoreMap.get(item.resource_id);
 
     resourcesByLMID[learning_module_id].push({
       id:               item.resource_id,
@@ -4728,7 +4755,19 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       updatedAt:        item.updated_at || null,
       reAttempts:       reAttemptMap[item.resource_id] || [],
       activityData:     completionSource === 'activity'
-        ? { attempts: isDone ? 1 : 0, correct: isDone ? 1 : 0, total: 1 }
+        ? {
+            attempts: activityScore ? 1 : (isDone ? 1 : 0),
+            correct: activityScore ? Number(activityScore.correct_answers || 0) : (isDone ? 1 : 0),
+            wrong: activityScore ? Number(activityScore.wrong_answers || 0) : 0,
+            total: activityScore ? Number(activityScore.total_questions || 0) : (isDone ? 1 : 0),
+            scorePercentage: activityScore?.score_percentage !== null && activityScore?.score_percentage !== undefined
+              ? Number(activityScore.score_percentage)
+              : (isDone ? 100 : null),
+            sessionDate: activityScore?.session_date || null,
+            sessionId: activityScore?.session_id || null,
+            resourceType: activityScore?.resource_type || item.resource_type || null,
+            resourceTopic: activityScore?.resource_topic || item.resource_topic || '',
+          }
         : undefined,
     });
   });
@@ -5351,8 +5390,89 @@ function SubmittedContentPanel({ r, token }) {
   );
 }
 
+function ActivityAttemptPanel({ r }) {
+  const activity = r.activityData || {};
+  const attempts = Number(activity.attempts || 0);
+  const correct = Number(activity.correct || 0);
+  const wrong = Number(activity.wrong || 0);
+  const total = Number(activity.total || 0);
+  const scorePercentage = activity.scorePercentage;
+
+  if (attempts === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+        <Zap size={28} className="mb-2 text-gray-300" />
+        <p className="text-sm font-medium">No activity attempt found</p>
+        <p className="text-xs mt-1">This resource has not been attempted yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-gray-100 rounded-xl bg-gray-50/60 overflow-hidden">
+      <div className="flex items-center gap-4 px-4 py-2.5 bg-white border-b border-gray-100 text-xs text-gray-500">
+        <div className="flex items-center gap-1.5">
+          <Target size={12} className="text-[#8DC63F]" />
+          <span><span className="font-semibold text-gray-700">{correct}</span>/<span className="font-semibold text-gray-700">{total}</span> correct</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <History size={12} className="text-slate-500" />
+          <span><span className="font-semibold text-gray-700">{attempts}</span> attempt{attempts !== 1 ? 's' : ''}</span>
+        </div>
+        {activity.sessionDate && (
+          <div className="flex items-center gap-1.5 ml-auto">
+            <Calendar size={11} className="text-gray-400" />
+            <span>Last: {formatDate(activity.sessionDate)}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="p-3 space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+            <p className="text-[10px] text-gray-400">Score</p>
+            <p className="text-sm font-semibold text-gray-700">
+              {scorePercentage !== null && scorePercentage !== undefined ? `${Math.round(scorePercentage)}%` : '—'}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+            <p className="text-[10px] text-gray-400">Correct</p>
+            <p className="text-sm font-semibold text-[#8DC63F]">{correct}</p>
+          </div>
+          <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+            <p className="text-[10px] text-gray-400">Wrong</p>
+            <p className="text-sm font-semibold text-red-500">{wrong}</p>
+          </div>
+          <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+            <p className="text-[10px] text-gray-400">Questions</p>
+            <p className="text-sm font-semibold text-gray-700">{total}</p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            {isMindSpark(r.name)
+              ? <Zap size={12} className="text-yellow-500" />
+              : <Puzzle size={12} className="text-pink-500" />
+            }
+            <span className="text-xs font-semibold text-gray-600">Latest activity snapshot</span>
+          </div>
+          <div className="space-y-1.5 text-xs text-gray-600">
+            <p>Resource: <span className="font-medium text-gray-700">{r.name}</span></p>
+            <p>Topic: <span className="font-medium text-gray-700">{activity.resourceTopic || r.topic || '—'}</span></p>
+            <p>Source: <span className="font-medium text-gray-700">{activity.resourceType || 'Activity Submission'}</span></p>
+            <p>Session ID: <span className="font-medium text-gray-700 break-all">{activity.sessionId || '—'}</span></p>
+            <p>Attempted At: <span className="font-medium text-gray-700">{activity.sessionDate ? formatDateTime(activity.sessionDate) : '—'}</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AttemptHistoryModal({ r, showFeedback, onClose, token, showSubmission }) {
   const meta = TYPE_META[r.type] || TYPE_META.practice;
+  const isActivity = r.completionSource === 'activity';
 
   return (
     <div
@@ -5366,7 +5486,7 @@ function AttemptHistoryModal({ r, showFeedback, onClose, token, showSubmission }
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-bold text-gray-800 truncate">{r.name}</h2>
-            <p className="text-[11px] text-gray-400 mt-0.5">Attempt history</p>
+            <p className="text-[11px] text-gray-400 mt-0.5">{isActivity ? 'Activity attempt details' : 'Attempt history'}</p>
           </div>
           <button
             onClick={onClose}
@@ -5377,7 +5497,10 @@ function AttemptHistoryModal({ r, showFeedback, onClose, token, showSubmission }
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
-          <PracticeExpandedPanel r={r} showFeedback={showFeedback} showSubmission={showSubmission} token={token} className="mt-0" />
+          {isActivity
+            ? <ActivityAttemptPanel r={r} />
+            : <PracticeExpandedPanel r={r} showFeedback={showFeedback} showSubmission={showSubmission} token={token} className="mt-0" />
+          }
         </div>
       </div>
     </div>
@@ -5782,10 +5905,12 @@ function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal }) {
   const isPractice     = r.type === 'practice';
   const isInterpret    = r.type === 'interpret';
   const isTest         = r.type === 'test';
+  const isActivity     = r.completionSource === 'activity';
 
   const showLog      = (isPractice && practiceShowsLog(r.name))      || (isTest && testShowsLog(r.name));
   const showFeedback = (isPractice && practiceShowsFeedback(r.name))  || (isTest && testShowsFeedback(r.name));
   const showSubmission = (isPractice && practiceShowsFeedback(r.name)) || isTest;
+  const showActivityView = isActivity;
 
   const isClickable    = isInterpret;
   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
@@ -5824,7 +5949,7 @@ function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal }) {
             <Eye size={9} /> View Scores
           </span>
         )}
-        {showLog && (
+        {(showLog || showActivityView) && (
           <button
             type="button"
             onClick={e => {
@@ -5975,7 +6100,10 @@ function MyLearning() {
 
     (async () => {
       try {
-        const traineeJson = await fetchTraineeData(traineeId, token);
+        const [traineeJson, activityLastScores] = await Promise.all([
+          fetchTraineeData(traineeId, token),
+          fetchActivityLastScores(token).catch(() => []),
+        ]);
         const currentBatch = traineeJson?.currentBatches?.[0];
         const batchId = currentBatch?.batch_id || localStorage.getItem('batch_id');
         const batchCertificateIds = Array.isArray(currentBatch?.certification_data)
@@ -5990,7 +6118,7 @@ function MyLearning() {
           ? await fetchBatchCert(batchId, token).catch(() => null)
           : null;
 
-        const t = transformApiData(traineeJson, batchCert, batchCertificateIds);
+        const t = transformApiData(traineeJson, batchCert, batchCertificateIds, activityLastScores);
         setCerts(t.certs);
         setModules(t.modules);
         setResources(t.resources);

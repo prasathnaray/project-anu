@@ -5,14 +5,14 @@ info:
 
 http:
   method: GET
-  url: https://api.hticlab.org/api/v1/trainee/b6baabec-3423-4131-8e6f-f59494f397c2?isVr=true
+  url: http://{{local_base_url}}/api/v1/trainee/ffe5c81a-aff5-409b-b5b8-2c9f0f3b2fdc?isVr=true
   params:
     - name: isVr
       value: "true"
       type: query
   auth:
     type: bearer
-    token: "{{token}}"
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiaWF0IjoxNzc5Nzg2MjA2fQ.XDDDMxJAQVjD5lrMJyh-1RSDSFXvUOyLjEYKq-5quiU
 
 settings:
   encodeUrl: true
