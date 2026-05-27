@@ -2017,6 +2017,36 @@ const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
 }, {});
 
 const UNIT_TOPIC_ORDER = {
+  'Principles of ultrasound': {
+    [normalizeOrderToken('Ultrasound wave physics')]: 1,
+    [normalizeOrderToken('Generation of ultrasound waves')]: 2,
+    [normalizeOrderToken('Ultrasound wave properties')]: 3,
+    [normalizeOrderToken('Image formation')]: 4,
+    [normalizeOrderToken('Imaging modes')]: 5,
+    [normalizeOrderToken('Interaction of ultrasound waves')]: 6,
+    [normalizeOrderToken('Echogenicity')]: 7,
+    [normalizeOrderToken('Interaction')]: 8,
+    [normalizeOrderToken('Artifacts')]: 9,
+  },
+  'Probe Movements': {
+    [normalizeOrderToken('Anatomy planes')]: 1,
+    [normalizeOrderToken('Types of probe')]: 2,
+    [normalizeOrderToken('Probe orientation')]: 3,
+    [normalizeOrderToken('Probe movements')]: 4,
+    [normalizeOrderToken('Echo Dose')]: 5,
+  },
+  Knobology: {
+    [normalizeOrderToken('Ultrasound machine')]: 1,
+    [normalizeOrderToken('Functions of knobs')]: 2,
+    [normalizeOrderToken('Imaging modes')]: 3,
+    [normalizeOrderToken('Echo Dose')]: 4,
+  },
+  Morphology: {
+    [normalizeOrderToken('Image Formation & Sector Orientation')]: 1,
+    [normalizeOrderToken('3D to 2D Imaging')]: 2,
+    [normalizeOrderToken('2D to 3D Imaging')]: 3,
+    [normalizeOrderToken('Echo Dose')]: 4,
+  },
   AC: {
     [normalizeOrderToken('AC - Learning Resource')]: 1,
     [normalizeOrderToken('AC- Learning Resource')]: 1,
@@ -2057,10 +2087,44 @@ const UNIT_TOPIC_ORDER = {
   },
 };
 
+const NORMALIZED_UNIT_TOPIC_ORDER = Object.entries(UNIT_TOPIC_ORDER).reduce((orderMap, [scopeName, topicOrder]) => {
+  orderMap[normalizeOrderToken(scopeName)] = topicOrder;
+  return orderMap;
+}, {});
+
 const makeResourceOrderKey = (unitName, topicName, resourceName) =>
   `${normalizeOrderToken(unitName)}::${normalizeOrderToken(topicName)}::${normalizeOrderToken(resourceName)}`;
 
 const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
+  { units: ['Probe Movements'], topics: ['Anatomy planes'], resources: ['Anatomy planes'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Anatomy planes'], resources: ['Mindsparks - Drag & Drop'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Types of probe'], resources: ['Types of probe'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Types of probe'], resources: ['Mindsparks - Quiz'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Probe orientation'], resources: ['Probe Orientation'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Probe orientation'], resources: ['Mindsparks - Picture Pick'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Probe movements'], resources: ['Probe Movements'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Drag & Drop - Directional terms'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['True or False - Probe Orientation'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Probe movements - Real-time'], order: 3 },
+  { units: ['Knobology'], topics: ['Ultrasound machine'], resources: ['Ultrasound machine'], order: 1 },
+  { units: ['Knobology'], topics: ['Ultrasound machine'], resources: ['Mindsparks - Quiz'], order: 2 },
+  { units: ['Knobology'], topics: ['Functions of knobs'], resources: ['Functions of knobs'], order: 1 },
+  { units: ['Knobology'], topics: ['Functions of knobs'], resources: ['Mindsparks - Drag & Drop'], order: 2 },
+  { units: ['Knobology'], topics: ['Imaging modes'], resources: ['Imaging Modes'], order: 1 },
+  { units: ['Knobology'], topics: ['Imaging modes'], resources: ['Mindsparks - True/False'], order: 2 },
+  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Match'], order: 1 },
+  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Crossword'], order: 2 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Image formation & sector orientation'], order: 1 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - MCQ'], order: 2 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Need for understanding sector orientation'], order: 3 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - ChatBot'], order: 4 },
+  { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['3D to 2D Imaging'], order: 1 },
+  { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['Mind Sparks - Scanning'], order: 2 },
+  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['2D to 3D Imaging'], order: 1 },
+  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['Mind Sparks - Picture Pick'], order: 2 },
+  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['Interaction - Spin Wheel'], order: 3 },
+  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['Sector Orientation'], order: 1 },
+  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['3D to 2D Prediction'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Transthalamic Plane'], order: 1 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Bi-Parietal Diameter'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Head Circumference'], order: 3 },
@@ -2136,9 +2200,9 @@ const RESOURCE_ORDER_BY_TOPIC = RESOURCE_ORDER_BY_TOPIC_ALIASES.reduce((orderMap
 }, {});
 
 const getTopicOrder = (unitName, topic) => {
-  const normalizedUnitName = String(unitName || '').trim();
+  const normalizedUnitName = normalizeOrderToken(unitName);
   const normalizedTopic = normalizeOrderToken(topic);
-  const unitTopicOrder = UNIT_TOPIC_ORDER[normalizedUnitName];
+  const unitTopicOrder = NORMALIZED_UNIT_TOPIC_ORDER[normalizedUnitName];
 
   if (unitTopicOrder && unitTopicOrder[normalizedTopic] !== undefined) {
     return unitTopicOrder[normalizedTopic];
@@ -2267,11 +2331,17 @@ const buildCertificateTree = (rows) => {
             learning_resources: {
               ...unit.learning_resources,
               items: Object.values(unit.learning_resources.items)
-                .sort((a, b) => getTopicOrder(unit.unit_name, a.resource_topic) - getTopicOrder(unit.unit_name, b.resource_topic))
+                .sort((a, b) => {
+                  const orderScope = unit.unit_name || course.course_name;
+                  return getTopicOrder(orderScope, a.resource_topic) - getTopicOrder(orderScope, b.resource_topic);
+                })
                 .map(topicGroup => ({
                   ...topicGroup,
                   resources: [...topicGroup.resources]
-                    .sort((a, b) => getResourceOrder(unit.unit_name, topicGroup.resource_topic, a.resource_name) - getResourceOrder(unit.unit_name, topicGroup.resource_topic, b.resource_name)),
+                    .sort((a, b) => {
+                      const orderScope = unit.unit_name || course.course_name;
+                      return getResourceOrder(orderScope, topicGroup.resource_topic, a.resource_name) - getResourceOrder(orderScope, topicGroup.resource_topic, b.resource_name);
+                    }),
                 })),
             },
             practices: [...unit.practices].sort((a, b) => a.resource_name.localeCompare(b.resource_name)),
