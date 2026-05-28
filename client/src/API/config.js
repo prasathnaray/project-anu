@@ -3,4 +3,4 @@
 //const APP_URL = 'http://13.205.207.179:4004';
 // const APP_URL = 'http://api.hticlab.org';
 const APP_URL = 'http://localhost:4004';
-export default APP_URL;
+export default APP_URL;   
