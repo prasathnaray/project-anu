@@ -5,10 +5,10 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/resource-completion?r_id=8fb5a33a-3076-4b57-855b-daed94ace933&is_completed=true
+  url: http://{{base_url_prod}}/api/v1/resource-completion?r_id=43805277-5412-4094-add9-c7e705600617&is_completed=true
   params:
     - name: r_id
-      value: 8fb5a33a-3076-4b57-855b-daed94ace933
+      value: 43805277-5412-4094-add9-c7e705600617
       type: query
     - name: is_completed
       value: "true"
