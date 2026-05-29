@@ -11,7 +11,7 @@ http:
     data:
       - name: sessionType
         type: text
-        value: test
+        value: practice
       - name: sessionNumber
         type: text
         value: "1"
@@ -206,10 +206,10 @@ http:
           }
       - name: resource_id
         type: text
-        value: 9f4f8613-64bc-4c3d-a871-daa401d8896b
+        value: b0f54440-ffaa-4f85-9dba-6c8347052208
       - name: session_id
         type: text
-        value: a33dec6c-b702-481f-b1e0-dfea3e7888b5
+        value: a37eec6c-b702-481f-b1e0-dfea3e7888b5
   auth:
     type: bearer
     token: "{{user_token}}"

@@ -3176,19 +3176,28 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         pd.resourse_id,
         pd.is_completed,
         pd.updated_at,
+        rd.resource_id,
         rd.resource_name,
         rd.resource_type,
         rd.resource_topic,
         rd.learning_module_id,
-        rd.created_at AS resource_created_at
+        rd.created_at AS resource_created_at,
+        lm.module_name,
+        lm.unit_name,
+        lm.course_name,
+        lm.certificate_id,
+        cd.certificate_name
       FROM progress_data pd
       LEFT JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+      LEFT JOIN learning_module lm ON rd.learning_module_id = lm.learning_module_id
+      LEFT JOIN certification_data cd ON lm.certificate_id = cd.certificate_id
       WHERE pd.user_id = (
         SELECT user_email 
         FROM user_data 
         WHERE people_id = $1
       )
-      ORDER BY pd.updated_at DESC
+      AND pd.is_completed = TRUE
+      ORDER BY pd.updated_at DESC NULLS LAST, rd.created_at DESC NULLS LAST
       LIMIT 1;
     `;
 

@@ -5,11 +5,14 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/trainee/ffe5c81a-aff5-409b-b5b8-2c9f0f3b2fdc?isVr=true
+  url: http://{{base_url_prod}}/api/v1/trainee/43921b1f-1cca-4df5-853d-6491b9317ecc?isVr=false
   params:
     - name: isVr
-      value: "true"
+      value: "false"
       type: query
+  body:
+    type: json
+    data: ""
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiaWF0IjoxNzc5Nzg2MjA2fQ.XDDDMxJAQVjD5lrMJyh-1RSDSFXvUOyLjEYKq-5quiU

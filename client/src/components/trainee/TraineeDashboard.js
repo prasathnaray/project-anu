@@ -4368,7 +4368,8 @@
 //               </div>
 //             </div>
 //           </div>
-//         ) : <div className="text-sm text-gray-400 text-center py-4">All modules completed! 🎉</div>
+//           );
+//         })() : <div className="text-sm text-gray-400 text-center py-4">All learning items completed.</div>
 //       }
 //     </div>
 //   );
@@ -4495,14 +4496,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import NavBar from '../navBar';
 import SideBar from '../sideBar';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
 import {
   BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare,
   CheckCircle, AlertCircle, Award, ArrowRight, Flame,
   TrendingUp, Activity, Zap, Brain, ChevronUp, ChevronDown,
-  Minus, Clock, XCircle, Lock, RefreshCw, Target,
+  Minus, Clock, Lock, RefreshCw, Target,
 } from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
@@ -4526,16 +4527,6 @@ const MOCK_SKILL_COMPETENCY = [
   { skill: 'Fetal Biometry',         level: 'Intermediate', score: 58, trend: 'neutral' },
   { skill: 'Anatomy Identification', level: 'Beginner',     score: 34, trend: 'down' },
 ];
-const MOCK_LAST_SESSION = {
-  module: 'Biometry — AC, P3',
-  date: '2025-04-30T10:22:00',
-  checks: [
-    { label: 'Correct Plane Acquired',    passed: true },
-    { label: 'Landmark Misidentified',    passed: false },
-    { label: 'Measurement Offset +2.3mm', passed: false },
-  ],
-  feedback: 'Adjust probe tilt slightly inferiorly to get a cleaner abdominal circumference plane.',
-};
 
 // ─── Radial Progress Ring ─────────────────────────────────────
 const RadialRing = ({ pct = 0, size = 56, stroke = 5, color = '#8DC63F', bg = '#e5e7eb', children }) => {
@@ -4574,6 +4565,304 @@ const SectionLabel = ({ icon: Icon, color, label, badge }) => (
   </div>
 );
 
+const normalizeSortKey = value =>
+  String(value || '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*::\s*/g, '::')
+    .trim()
+    .toLowerCase();
+
+const normalizeModuleSortLabel = value => {
+  const normalized = normalizeSortKey(value).replace(/\s*&\s*/g, ' & ');
+
+  if (/\b(bpd|hc)\b/.test(normalized) || /fetal head/.test(normalized)) {
+    return 'BPD & HC';
+  }
+  if (/^ac\b/.test(normalized) || /abdominal circumference/.test(normalized) || /fetal abdomen/.test(normalized)) {
+    return 'AC';
+  }
+  if (/^fl\b/.test(normalized) || /femur/.test(normalized)) {
+    return 'FL';
+  }
+
+  return String(value || '').trim();
+};
+
+const NEXT_RESOURCE_ORDER = Object.fromEntries(
+  Object.entries({
+    'BPD & HC::Transthalamic Plane': 1,
+    'BPD & HC::Bi-Parietal Diameter': 2,
+    'BPD & HC::Head Circumference': 3,
+    'BPD & HC::Significance': 4,
+
+    'BPD & HC::Anatomical Landmarks and Significance': 1,
+    'BPD & HC::Anatomical Landmarks of the Transthalamic Plane': 1,
+    'BPD & HC::Geometric Shapes, Key Landmarks & Significance': 2,
+    'BPD & HC::Geometric shapes of key landmarks and their significance': 2,
+    'BPD & HC::Mind Sparks - Anatomical Landmarks': 3,
+
+    'BPD & HC::Finding the Fetal Presentation': 1,
+    'BPD & HC::Finding the fetal presentation': 1,
+    'BPD & HC::Mind Sparks - Picture Pick': 2,
+    'BPD & HC:: How To Image The Plane': 3,
+    'BPD & HC::Mind Sparks - Probe Movements': 4,
+    'BPD & HC::Mind Sparks - Probe movements': 4,
+    'BPD & HC::How To Acquire The Transthalamic Plane': 5,
+    'BPD & HC::How to acquire the transthalamic plane': 5,
+
+    'BPD & HC::How to Measure BPD': 1,
+    'BPD & HC::How To Measure BPD': 1,
+    'BPD & HC::How to Measure HC': 2,
+    'BPD & HC::How To Measure HC': 2,
+    'BPD & HC::Measurement quiz': 3,
+
+    'BPD & HC::Plane Acquisition Challenges & Common Errors': 1,
+    'BPD & HC::Plane Acquisition Challenges': 1,
+    'BPD & HC::Common Measurement Errors': 2,
+
+    'BPD & HC::Image Diagnosis': 1,
+    'BPD & HC::Percentile Chart & Significance': 2,
+    'BPD & HC::Percentile Charts & Significance': 2,
+    'BPD & HC::Percentile Charts  & Significance': 2,
+    'BPD & HC::BPD Chart': 3,
+    'BPD & HC::HC Chart': 4,
+    'BPD & HC::Mind Sparks - Chart Interpretation': 5,
+
+    'BPD & HC::Picture Pick': 1,
+    'BPD & HC::True / False': 2,
+    'BPD & HC::True/False': 2,
+    'BPD & HC::Wordsearch': 3,
+    'BPD & HC::Word Search': 3,
+
+    'AC::AC - Learning Resource': 1,
+    'AC::AC - ISUOG Learning Resource': 2,
+    'AC::Fetal Abdomen': 3,
+    'AC::Transabdominal plane & abdominal circumference': 4,
+    'AC::Transabdominal plane': 4,
+    'AC::Abdominal circumference': 5,
+    'AC::Significance': 6,
+
+    'AC::Anatomical landmarks': 1,
+    'AC::Anatomical landmarks of the transabdominal plane': 1,
+    'AC::Mind Sparks - Geometric landmarks': 2,
+    'AC::Geometric shapes of key landmarks and their significance': 2,
+    'AC::Mind Sparks - Anatomical Landmarks': 3,
+
+    'AC::Imaging the plane': 1,
+    'AC::How to acquire the transabdominal plane': 1,
+    'AC::Mind Sparks errors - Picture pic': 2,
+    'AC::Mind Sparks - Picture pick': 2,
+    'AC::Mind Sparks - Probe movements': 3,
+
+    'AC::Measurement': 1,
+    'AC::How to measure AC': 1,
+    'AC::Mind Sparks - Measurement': 2,
+    'AC::Mind Sparks - Picture Pick': 2,
+
+    'AC::Pitfalls': 1,
+    'AC::Pit Falls': 1,
+    'AC::Plane Acquisition Challenges': 1,
+    'AC::Common Measurement Errors': 2,
+
+    'AC::Image Diagnosis': 1,
+    'AC::Mind Sparks - Chart Interpretation': 2,
+    'AC::Percentile Charts & Significance': 3,
+    'AC::Percentile Charts  & Significance': 3,
+    'AC::AC chart': 4,
+
+    'AC::ALM - Crossword': 1,
+    'AC::Crossword puzzle': 1,
+    'AC::Picture Pick': 3,
+    'AC::True/False': 4,
+
+    'FL::FL Summary': 1,
+    'FL::Introduction': 2,
+    'FL::Fetal femur': 3,
+    'FL::Femur': 3,
+    'FL::Femur diaphysis': 4,
+    'FL::Significance': 4,
+
+    'FL::Anatomical landmarks': 1,
+    'FL::Anatomical landmarks End card': 2,
+    'FL::Anatomical landmarks of the femur diaphysis plane': 1,
+    'FL::Mind sparks - Geometric Landmarks': 3,
+    'FL::Geometric shapes of key landmarks and their significance': 3,
+    'FL::Mind Sparks - Anatomical Landmarks': 3,
+
+    'FL::Imaging the plane': 1,
+    'FL::How to acquire the femur diaphysis plane': 1,
+    'FL::Mind Sparks - Probe movements': 2,
+    'FL::Mind Sparks - Picture pick': 3,
+
+    'FL::Measurements': 1,
+    'FL::Measurement': 1,
+    'FL::How to measure FL': 1,
+    'FL::Measurements End Card': 2,
+    'FL::Mind Sparks - Measurements': 3,
+    'FL::MindSparks - Picture Pick': 3,
+
+    'FL::Pitfalls in plane acquisition and measurement': 1,
+    'FL::Pit Falls': 1,
+    'FL::Plane Acquisition Challenges': 1,
+    'FL::Mind Sparks - Errors - Picture pick': 2,
+    'FL::Common Measurement Errors': 3,
+
+    'FL::Diagnosis': 1,
+    'FL::Diagnosis End card': 2,
+    'FL::Image Diagnosis': 1,
+    'FL::Image diagnosis': 1,
+    'FL::Mind Sparks - Chart Interpretation': 3,
+    'FL::Percentile Charts & Significance': 4,
+    'FL::Percentile Charts  & Significance': 4,
+    'FL::Percentile charts & significance': 4,
+    'FL::FL chart': 5,
+    'FL::AC chart': 5,
+
+    'FL::Image Diagnosis - Picture Pick': 1,
+    'FL::Picture Pick': 1,
+    'FL::Imaging the plane - True/False': 2,
+    'FL::True/False': 2,
+    'FL::Crossword puzzle': 3,
+  }).map(([key, value]) => [normalizeSortKey(key), value])
+);
+
+const NEXT_NON_RESOURCE_ORDER = {
+  interpret: Object.fromEntries(
+    Object.entries({
+      'Find the Image': 1,
+      'Annotation: Drag and Drop': 2,
+      'Annotation 1': 2,
+      'Annotation: Label and Name': 3,
+      'Annotation 2': 3,
+      Measurement: 4,
+    }).map(([key, value]) => [normalizeSortKey(key), value])
+  ),
+  practice: Object.fromEntries(
+    Object.entries({
+      'Practice 1': 1,
+      'Practice 2': 2,
+      'Practice 3': 3,
+      'Practice 4': 4,
+    }).map(([key, value]) => [normalizeSortKey(key), value])
+  ),
+  test: Object.fromEntries(
+    Object.entries({
+      'Test 1': 1,
+      'Test 2': 2,
+    }).map(([key, value]) => [normalizeSortKey(key), value])
+  ),
+};
+
+const NEXT_RESOURCE_TYPE_MAP = {
+  'Learning Resource': 'resource',
+  Practice: 'practice',
+  'Image Interpretation': 'interpret',
+  Test: 'test',
+};
+
+const NEXT_TOPIC_ORDER = [
+  'FL Summary',
+  'Fetal Head',
+  'AC Learning Resource',
+  'AC- Learning Resource',
+  'AC - Learning Resource',
+  'AC ISUOG Learning Resource',
+  'AC- ISUOG Learning Resource',
+  'AC - ISUOG Learning Resource',
+  'Fetal Abdomen',
+  'Fetal abdomen',
+  'Fetal Femur',
+  'Fetal femur',
+  'Anatomical Landmarks',
+  'Anatomical landmarks',
+  'Imaging the Plane',
+  'Imaging the plane',
+  'Imaging the Transthalamic Plane',
+  'Imaging the transabdominal plane',
+  'Imaging the transfemoral plane',
+  'Measurement',
+  'Measurements',
+  'Pitfalls in Plane Acquisition and Measurement',
+  'Pitfalls in plane acquisition and measurement',
+  'Plane Acquisition Challenges and Common Errors',
+  'Plane Acquisition Challenges and Common Measurement Errors',
+  'Pitfalls',
+  'Pit Falls',
+  'Image Diagnosis',
+  'Image diagnosis',
+  'OB Boosters',
+];
+
+const NEXT_TOPIC_ORDER_INDEX = Object.fromEntries(
+  NEXT_TOPIC_ORDER.map((topic, index) => [normalizeSortKey(topic), index])
+);
+
+const NEXT_MODULE_ORDER = ['BPD & HC', 'AC', 'FL'];
+const NEXT_SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
+
+const normalizeResourceText = value => String(value || '').trim().toLowerCase();
+const isMindSparkRecord = row => {
+  const name = normalizeResourceText(row?.resource_name);
+  return name.includes('mind spark') || name.includes('mindspark');
+};
+const isOBRecord = row =>
+  ['resource_topic', 'resource_name', 'resource_type'].some(key => {
+    const value = normalizeResourceText(row?.[key]);
+    return value.includes('ob booster') || value.includes('ob boosters');
+  });
+const isEchoDoseRecord = row =>
+  ['resource_topic', 'resource_name', 'resource_type', 'unit_name', 'module_name'].some(key => {
+    const value = normalizeResourceText(row?.[key]);
+    return value.includes('echo dose') || value.includes('echodose');
+  });
+const getScoreTopicValue = row => String(row?.unit_name || row?.module_name || '').trim();
+const summarizeActivityScores = rows => {
+  if (!rows.length) return null;
+  const totalQ = rows.reduce((sum, row) => sum + Number(row?.total_questions || 0), 0);
+  const correct = rows.reduce((sum, row) => sum + Number(row?.correct_answers || 0), 0);
+  const wrong = rows.reduce((sum, row) => sum + Number(row?.wrong_answers || 0), 0);
+  return { totalQ, correct, wrong, resources: rows.length };
+};
+const getTimeValue = value => {
+  if (!value) return 0;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+const getLatestItem = (rows, dateKey) =>
+  [...rows].sort((a, b) => getTimeValue(b?.[dateKey]) - getTimeValue(a?.[dateKey]))[0] || null;
+const getLearningTypeKey = resourceType => NEXT_RESOURCE_TYPE_MAP[resourceType] || 'resource';
+const isActivityDrivenLearningItem = row =>
+  getLearningTypeKey(row?.resource_type) === 'resource' && (isMindSparkRecord(row) || isOBRecord(row));
+const isLearningItemDone = (row, activityScoreMap) =>
+  isActivityDrivenLearningItem(row)
+    ? activityScoreMap.has(row?.resource_id)
+    : Boolean(row?.is_completed);
+const getNextItemMeta = item => {
+  if (!item) {
+    return { label: 'Learning Resource', shortLabel: 'LR', accentColor: '#3b82f6', cardBg: '#eff6ff', ringBg: '#dbeafe', Icon: BookOpen };
+  }
+  if (isMindSparkRecord(item)) {
+    return { label: 'MindSpark', shortLabel: 'MS', accentColor: '#8DC63F', cardBg: '#f0fde4', ringBg: '#d9f99d', Icon: Zap };
+  }
+  if (isOBRecord(item)) {
+    return { label: 'OB Booster', shortLabel: 'OB', accentColor: '#f97316', cardBg: '#fff7ed', ringBg: '#fed7aa', Icon: Brain };
+  }
+  if (isEchoDoseRecord(item)) {
+    return { label: 'EchoDose', shortLabel: 'ED', accentColor: '#ec4899', cardBg: '#fdf2f8', ringBg: '#fbcfe8', Icon: Brain };
+  }
+
+  switch (getLearningTypeKey(item?.resource_type)) {
+    case 'practice':
+      return { label: 'Practice', shortLabel: 'P', accentColor: '#8DC63F', cardBg: '#f7fee7', ringBg: '#d9f99d', Icon: Dumbbell };
+    case 'interpret':
+      return { label: 'Image Interpretation', shortLabel: 'II', accentColor: '#a855f7', cardBg: '#faf5ff', ringBg: '#e9d5ff', Icon: Eye };
+    case 'test':
+      return { label: 'Test', shortLabel: 'T', accentColor: '#f97316', cardBg: '#fff7ed', ringBg: '#fed7aa', Icon: ClipboardCheck };
+    default:
+      return { label: 'Learning Resource', shortLabel: 'LR', accentColor: '#3b82f6', cardBg: '#eff6ff', ringBg: '#dbeafe', Icon: BookOpen };
+  }
+};
+
 function TraineeDashboard() {
   const { people_id } = useParams();
   const [buttonOpen, setButtonOpen] = useState(true);
@@ -4595,7 +4884,7 @@ function TraineeDashboard() {
       if (b) localStorage.setItem('batch_id', b);
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
-  useEffect(() => { handleApiCall(people_id || localStorage.getItem('people_id')); }, []);
+  useEffect(() => { handleApiCall(people_id || localStorage.getItem('people_id')); }, [people_id]);
 
   // ── Queries ───────────────────────────────────────────────
   const [queries, setQueries] = useState({ pending: 0, resolved: 0, total: 0, loading: false, error: null });
@@ -4638,11 +4927,21 @@ function TraineeDashboard() {
   // ── Derived Data ──────────────────────────────────────────
   const allResources = useMemo(() => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null), [individualTraineeProfile.data]);
 
-  const normalizeCertificateLabel = (value) => {
+  const normalizeCertificateLabel = (value, certificateId = '') => {
+    const id = String(certificateId || '').trim();
+    if (id === '8264bc83-1d80-47ac-aa6b-ca021ffb4ace') return 'BTC';
+    if (id === '24d9e2c4-42b0-4133-b801-d8cace4600f5') return 'UFC';
+
     const label = String(value || '').trim();
-    if (!label) return '';
-    if (/\bbtc\b/i.test(label)) return 'BTC';
-    if (/\bufc\b/i.test(label)) return 'UFC';
+    if (!label) return id;
+    if (/\bbtc\b/i.test(label) || /second trimester/i.test(label)) return 'BTC';
+    if (
+      /\bufc\b/i.test(label) ||
+      /probe movements/i.test(label) ||
+      /principles? of ultrasound/i.test(label)
+    ) {
+      return 'UFC';
+    }
     return label;
   };
 
@@ -4657,7 +4956,8 @@ function TraineeDashboard() {
     (individualTraineeProfile?.certificates ?? []).forEach(cert => {
       const id = cert?.certificate_id || cert?.id;
       const label = normalizeCertificateLabel(
-        cert?.certificate_name || cert?.label || cert?.name || cert?.course_name
+        cert?.certificate_name || cert?.label || cert?.name || cert?.course_name,
+        id
       );
       if (id && label && !map.has(id)) map.set(id, label);
     });
@@ -4665,7 +4965,8 @@ function TraineeDashboard() {
     (individualTraineeProfile?.data ?? []).forEach(row => {
       const id = row?.certificate_id;
       const label = normalizeCertificateLabel(
-        row?.certificate_name || row?.certificate || row?.course_name
+        row?.certificate_name || row?.certificate || row?.course_name,
+        id
       );
       if (id && label && !map.has(id)) map.set(id, label);
     });
@@ -4743,22 +5044,393 @@ function TraineeDashboard() {
 
   const courseFilterLabel = selectedCourse || 'All courses';
 
-  const totalLR           = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource').length, [filteredResources]);
-  const totalPractice     = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice').length, [filteredResources]);
-  const totalTests        = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test').length, [filteredResources]);
-  const totalIR           = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation').length, [filteredResources]);
-  const completedLR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Learning Resource'    && r.is_completed).length, [filteredResources]);
-  const completedPractice = useMemo(() => filteredResources.filter(r => r.resource_type === 'Practice'             && r.is_completed).length, [filteredResources]);
-  const completedTests    = useMemo(() => filteredResources.filter(r => r.resource_type === 'Test'                 && r.is_completed).length, [filteredResources]);
-  const completedIR       = useMemo(() => filteredResources.filter(r => r.resource_type === 'Image Interpretation' && r.is_completed).length, [filteredResources]);
+  const [selectedScoreCertificate, setSelectedScoreCertificate] = useState('');
+  const [selectedScoreCourse, setSelectedScoreCourse] = useState('');
+  const [selectedScoreTopic, setSelectedScoreTopic] = useState('');
+
+  useEffect(() => {
+    if (!certificates.length) {
+      setSelectedScoreCertificate('');
+      return;
+    }
+    if (!selectedScoreCertificate || !certificates.some(cert => cert.id === selectedScoreCertificate)) {
+      setSelectedScoreCertificate(certificates[0].id);
+    }
+  }, [certificates, selectedScoreCertificate]);
+
+  const selectedScoreCertificateLabel = useMemo(
+    () => certificates.find(cert => cert.id === selectedScoreCertificate)?.label || '',
+    [certificates, selectedScoreCertificate]
+  );
+
+  const scoreCertificateResources = useMemo(() =>
+    selectedScoreCertificate
+      ? scopedResources.filter(r => r.certificate_id === selectedScoreCertificate)
+      : scopedResources,
+    [scopedResources, selectedScoreCertificate]
+  );
+
+  const scoreCourseOptions = useMemo(() => {
+    const seen = new Set();
+    return scoreCertificateResources.reduce((acc, row) => {
+      const course = String(row?.course_name || '').trim();
+      if (!course || seen.has(course)) return acc;
+      seen.add(course);
+      acc.push(course);
+      return acc;
+    }, []);
+  }, [scoreCertificateResources]);
+
+  useEffect(() => {
+    if (!scoreCourseOptions.length) {
+      setSelectedScoreCourse('');
+      return;
+    }
+    if (selectedScoreCourse && scoreCourseOptions.includes(selectedScoreCourse)) return;
+    setSelectedScoreCourse(scoreCourseOptions.length === 1 ? scoreCourseOptions[0] : '');
+  }, [scoreCourseOptions, selectedScoreCourse]);
+
+  const scoreNeedsTopic = selectedScoreCertificateLabel === 'BTC';
+
+  const scoreCourseResources = useMemo(() =>
+    selectedScoreCourse
+      ? scoreCertificateResources.filter(r => String(r?.course_name || '').trim() === selectedScoreCourse)
+      : scoreCertificateResources,
+    [scoreCertificateResources, selectedScoreCourse]
+  );
+
+  const scoreTopicOptions = useMemo(() => {
+    const seen = new Set();
+    return scoreCourseResources.reduce((acc, row) => {
+      const topic = getScoreTopicValue(row);
+      if (!topic || seen.has(topic)) return acc;
+      seen.add(topic);
+      acc.push(topic);
+      return acc;
+    }, []);
+  }, [scoreCourseResources]);
+
+  useEffect(() => {
+    if (!scoreNeedsTopic) {
+      setSelectedScoreTopic('');
+      return;
+    }
+    if (selectedScoreTopic && scoreTopicOptions.includes(selectedScoreTopic)) return;
+    setSelectedScoreTopic('');
+  }, [scoreNeedsTopic, scoreTopicOptions, selectedScoreTopic]);
+
+  const scoreScopedResources = useMemo(() =>
+    scoreNeedsTopic && selectedScoreTopic
+      ? scoreCourseResources.filter(r => getScoreTopicValue(r) === selectedScoreTopic)
+      : scoreCourseResources,
+    [scoreCourseResources, scoreNeedsTopic, selectedScoreTopic]
+  );
+
+  const [selectedResourceCertificate, setSelectedResourceCertificate] = useState('');
+  const [selectedResourceCourse, setSelectedResourceCourse] = useState('');
+  const [selectedResourceTopic, setSelectedResourceTopic] = useState('');
+
+  useEffect(() => {
+    if (!certificates.length) {
+      setSelectedResourceCertificate('');
+      return;
+    }
+    if (!selectedResourceCertificate || !certificates.some(cert => cert.id === selectedResourceCertificate)) {
+      setSelectedResourceCertificate(certificates[0].id);
+    }
+  }, [certificates, selectedResourceCertificate]);
+
+  const selectedResourceCertificateLabel = useMemo(
+    () => certificates.find(cert => cert.id === selectedResourceCertificate)?.label || '',
+    [certificates, selectedResourceCertificate]
+  );
+
+  const resourceCertificateResources = useMemo(() =>
+    selectedResourceCertificate
+      ? scopedResources.filter(r => r.certificate_id === selectedResourceCertificate)
+      : scopedResources,
+    [scopedResources, selectedResourceCertificate]
+  );
+
+  const resourceCourseOptions = useMemo(() => {
+    const seen = new Set();
+    return resourceCertificateResources.reduce((acc, row) => {
+      const course = String(row?.course_name || '').trim();
+      if (!course || seen.has(course)) return acc;
+      seen.add(course);
+      acc.push(course);
+      return acc;
+    }, []);
+  }, [resourceCertificateResources]);
+
+  useEffect(() => {
+    if (!resourceCourseOptions.length) {
+      setSelectedResourceCourse('');
+      return;
+    }
+    if (selectedResourceCourse && resourceCourseOptions.includes(selectedResourceCourse)) return;
+    setSelectedResourceCourse(resourceCourseOptions.length === 1 ? resourceCourseOptions[0] : '');
+  }, [resourceCourseOptions, selectedResourceCourse]);
+
+  const resourceNeedsTopic = selectedResourceCertificateLabel === 'BTC';
+
+  const resourceCourseResources = useMemo(() =>
+    selectedResourceCourse
+      ? resourceCertificateResources.filter(r => String(r?.course_name || '').trim() === selectedResourceCourse)
+      : resourceCertificateResources,
+    [resourceCertificateResources, selectedResourceCourse]
+  );
+
+  const resourceTopicOptions = useMemo(() => {
+    const seen = new Set();
+    return resourceCourseResources.reduce((acc, row) => {
+      const topic = getScoreTopicValue(row);
+      if (!topic || seen.has(topic)) return acc;
+      seen.add(topic);
+      acc.push(topic);
+      return acc;
+    }, []);
+  }, [resourceCourseResources]);
+
+  useEffect(() => {
+    if (!resourceNeedsTopic) {
+      setSelectedResourceTopic('');
+      return;
+    }
+    if (selectedResourceTopic && resourceTopicOptions.includes(selectedResourceTopic)) return;
+    setSelectedResourceTopic('');
+  }, [resourceNeedsTopic, resourceTopicOptions, selectedResourceTopic]);
+
+  const resourceProgressResources = useMemo(() =>
+    resourceNeedsTopic && selectedResourceTopic
+      ? resourceCourseResources.filter(r => getScoreTopicValue(r) === selectedResourceTopic)
+      : resourceCourseResources,
+    [resourceCourseResources, resourceNeedsTopic, selectedResourceTopic]
+  );
+
+  const resourceMetaById = useMemo(() => {
+    const map = new Map();
+    (allResources ?? []).forEach(row => {
+      if (row?.resource_id && !map.has(row.resource_id)) {
+        map.set(row.resource_id, row);
+      }
+    });
+    return map;
+  }, [allResources]);
+
+  const scoreScopedActivityLastScores = useMemo(() =>
+    activityLastScores.data
+      .map(row => {
+        const resourceMeta = resourceMetaById.get(row?.resource_id);
+        const certificateId = resourceMeta?.certificate_id || '';
+        return {
+          ...row,
+          certificate_id: certificateId,
+          certificate_label: normalizeCertificateLabel(
+            resourceMeta?.certificate_name || certificateNameMap.get(certificateId) || certificateId,
+            certificateId
+          ),
+          course_name: String(resourceMeta?.course_name || '').trim(),
+          unit_name: getScoreTopicValue(resourceMeta),
+          module_name: String(resourceMeta?.module_name || '').trim(),
+        };
+      })
+      .filter(row => {
+        if (selectedScoreCertificate && row.certificate_id !== selectedScoreCertificate) return false;
+        if (selectedScoreCourse && row.course_name !== selectedScoreCourse) return false;
+        if (scoreNeedsTopic && selectedScoreTopic && row.unit_name !== selectedScoreTopic) return false;
+        return true;
+      }),
+    [
+      activityLastScores.data,
+      certificateNameMap,
+      resourceMetaById,
+      scoreNeedsTopic,
+      selectedScoreCertificate,
+      selectedScoreCourse,
+      selectedScoreTopic,
+    ]
+  );
+
+  const scoreIRResources = useMemo(
+    () => scoreScopedResources.filter(row => row.resource_type === 'Image Interpretation'),
+    [scoreScopedResources]
+  );
+
+  const latestMindSparkScore = useMemo(
+    () => getLatestItem(scoreScopedActivityLastScores.filter(row => isMindSparkRecord(row)), 'session_date'),
+    [scoreScopedActivityLastScores]
+  );
+  const latestOBScore = useMemo(
+    () => getLatestItem(scoreScopedActivityLastScores.filter(row => isOBRecord(row)), 'session_date'),
+    [scoreScopedActivityLastScores]
+  );
+  const latestEchoDoseScore = useMemo(
+    () => getLatestItem(scoreScopedActivityLastScores.filter(row => isEchoDoseRecord(row)), 'session_date'),
+    [scoreScopedActivityLastScores]
+  );
+
+  const latestImageInterpretation = useMemo(() => {
+    const updatedRows = scoreIRResources.filter(row => row.updated_at);
+    if (updatedRows.length) return getLatestItem(updatedRows, 'updated_at');
+    return scoreIRResources[0] || null;
+  }, [scoreIRResources]);
+
+  const selectedScoreTest = useMemo(
+    () =>
+      (individualTraineeProfile?.testQuery ?? []).find(row => {
+        const certificateLabel = normalizeCertificateLabel(
+          row?.certificate_name || row?.course_name,
+          selectedScoreCertificate
+        );
+        if (selectedScoreCertificateLabel && certificateLabel !== selectedScoreCertificateLabel) return false;
+        if (selectedScoreCourse && String(row?.course_name || '').trim() !== selectedScoreCourse) return false;
+        if (scoreNeedsTopic && selectedScoreTopic && getScoreTopicValue(row) !== selectedScoreTopic) return false;
+        return true;
+      }) || null,
+    [
+      individualTraineeProfile.testQuery,
+      scoreNeedsTopic,
+      selectedScoreCertificate,
+      selectedScoreCertificateLabel,
+      selectedScoreCourse,
+      selectedScoreTopic,
+    ]
+  );
+
   const totalResources    = filteredResources.length;
   const completed         = useMemo(() => filteredResources.filter(r => r.is_completed).length, [filteredResources]);
   const attempted         = (individualTraineeProfile?.testQuery ?? []).length;
   const totalAttempts     = interactionStats.data.reduce((s, r) => s + Number(r.attempt_count), 0);
 
-  const nextModule      = individualTraineeProfile?.nextModule ?? null;
-  const nextModuleLRPct = nextModule ? Math.round((Number(nextModule.completed_learning_resources) / Number(nextModule.total_learning_resources)) * 100) || 0 : 0;
-  const nextModuleIRPct = nextModule ? Math.round((Number(nextModule.completed_image_interpretations) / Number(nextModule.total_image_interpretations)) * 100) || 0 : 0;
+  const activityScoreByResourceId = useMemo(
+    () =>
+      new Map(
+        (activityLastScores.data ?? [])
+          .filter(row => row?.resource_id)
+          .map(row => [row.resource_id, row])
+      ),
+    [activityLastScores.data]
+  );
+
+  const resourceProgressTotalLR = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Learning Resource').length,
+    [resourceProgressResources]
+  );
+  const resourceProgressTotalPractice = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Practice').length,
+    [resourceProgressResources]
+  );
+  const resourceProgressTotalTests = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Test').length,
+    [resourceProgressResources]
+  );
+  const resourceProgressTotalIR = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Image Interpretation').length,
+    [resourceProgressResources]
+  );
+
+  const resourceProgressCompletedLR = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Learning Resource' && isLearningItemDone(r, activityScoreByResourceId)).length,
+    [activityScoreByResourceId, resourceProgressResources]
+  );
+  const resourceProgressCompletedPractice = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Practice' && isLearningItemDone(r, activityScoreByResourceId)).length,
+    [activityScoreByResourceId, resourceProgressResources]
+  );
+  const resourceProgressCompletedTests = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Test' && isLearningItemDone(r, activityScoreByResourceId)).length,
+    [activityScoreByResourceId, resourceProgressResources]
+  );
+  const resourceProgressCompletedIR = useMemo(
+    () => resourceProgressResources.filter(r => r.resource_type === 'Image Interpretation' && isLearningItemDone(r, activityScoreByResourceId)).length,
+    [activityScoreByResourceId, resourceProgressResources]
+  );
+
+  const orderedLearningItems = useMemo(() => {
+    const certificateIndex = new Map(certificates.map((cert, index) => [cert.id, index]));
+
+    return filteredResources
+      .filter(row => row?.resource_id)
+      .map((row, originalIndex) => {
+        const typeKey = getLearningTypeKey(row?.resource_type);
+        const rawModuleLabel = String(
+          row?.unit_name || row?.module_name || row?.course_name || row?.learning_module_id || ''
+        ).trim();
+        const moduleLabel = normalizeModuleSortLabel(rawModuleLabel);
+        const topic = String(row?.resource_topic || '').trim();
+        const resourceName = String(row?.resource_name || '').trim();
+        const moduleSortIndex = NEXT_MODULE_ORDER.indexOf(moduleLabel);
+        const sectionSortIndex = NEXT_SECTION_ORDER.indexOf(typeKey);
+        const topicSortIndex =
+          typeKey === 'interpret'
+            ? 999
+            : topic
+              ? (NEXT_TOPIC_ORDER_INDEX[normalizeSortKey(topic)] ?? 999)
+              : -1;
+        const itemSortIndex = typeKey === 'resource'
+          ? (NEXT_RESOURCE_ORDER[normalizeSortKey(`${moduleLabel}::${resourceName}`)] ?? 999)
+          : (NEXT_NON_RESOURCE_ORDER[typeKey]?.[normalizeSortKey(resourceName)] ?? 999);
+
+        return {
+          ...row,
+          done: isLearningItemDone(row, activityScoreByResourceId),
+          typeKey,
+          moduleLabel,
+          topic,
+          resourceName,
+          certificateSortIndex: certificateIndex.get(row?.certificate_id) ?? 999,
+          moduleSortIndex: moduleSortIndex === -1 ? 999 : moduleSortIndex,
+          sectionSortIndex: sectionSortIndex === -1 ? 999 : sectionSortIndex,
+          topicSortIndex,
+          itemSortIndex,
+          originalIndex,
+        };
+      })
+      .sort((a, b) =>
+        (a.certificateSortIndex - b.certificateSortIndex) ||
+        (a.moduleSortIndex - b.moduleSortIndex) ||
+        (a.sectionSortIndex - b.sectionSortIndex) ||
+        (a.topicSortIndex - b.topicSortIndex) ||
+        (a.itemSortIndex - b.itemSortIndex) ||
+        (a.originalIndex - b.originalIndex)
+      );
+  }, [activityScoreByResourceId, certificates, filteredResources]);
+
+  const nextLearningItem = useMemo(
+    () => orderedLearningItems.find(item => !item.done) || null,
+    [orderedLearningItems]
+  );
+
+  const nextLearningModuleData = useMemo(() => {
+    if (!nextLearningItem) return null;
+
+    const belongsToSameModule = item => {
+      if (nextLearningItem.learning_module_id && item.learning_module_id) {
+        return item.learning_module_id === nextLearningItem.learning_module_id;
+      }
+      return (
+        item.certificate_id === nextLearningItem.certificate_id &&
+        String(item.course_name || '').trim() === String(nextLearningItem.course_name || '').trim() &&
+        String(item.moduleLabel || '').trim() === String(nextLearningItem.moduleLabel || '').trim()
+      );
+    };
+
+    const moduleItems = orderedLearningItems.filter(belongsToSameModule);
+    const learningResourceItems = moduleItems.filter(item => item.typeKey === 'resource');
+    const imageInterpretationItems = moduleItems.filter(item => item.typeKey === 'interpret');
+    const currentStep = moduleItems.findIndex(item => item.resource_id === nextLearningItem.resource_id) + 1;
+
+    return {
+      totalCount: moduleItems.length,
+      completedCount: moduleItems.filter(item => item.done).length,
+      lrTotal: learningResourceItems.length,
+      lrDone: learningResourceItems.filter(item => item.done).length,
+      irTotal: imageInterpretationItems.length,
+      irDone: imageInterpretationItems.filter(item => item.done).length,
+      currentStep: currentStep > 0 ? currentStep : null,
+    };
+  }, [nextLearningItem, orderedLearningItems]);
 
   const lastCompletedModuleData = useMemo(() => {
     const map = {};
@@ -4797,26 +5469,7 @@ function TraineeDashboard() {
     });
   }, [filteredResources]);
 
-  const testScores       = (individualTraineeProfile?.testQuery ?? [])[0] ?? null;
-  const testReattempts   = useMemo(() => individualTraineeProfile?.reAttempts ?? [], [individualTraineeProfile.reAttempts]);
   const moduleCompletion = useMemo(() => individualTraineeProfile?.moduleCompletion ?? [], [individualTraineeProfile.moduleCompletion]);
-  const msResourceCount  = interactionStats.data.length;
-
-  const isOBRecord = r => ['resource_topic', 'resource_name', 'resource_type'].some(k => (r[k] || '').toLowerCase().includes('ob booster'));
-  const obResources = useMemo(() => filteredResources.filter(r => isOBRecord(r)), [filteredResources]);
-  const obCompleted = obResources.filter(r => r.is_completed).length;
-
-  const msLastScores      = useMemo(() => activityLastScores.data.filter(r => !isOBRecord(r)), [activityLastScores.data]);
-  const msLastScoreSummary = useMemo(() => {
-    if (!msLastScores.length) return null;
-    return { totalQ: msLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0), correct: msLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0), wrong: msLastScores.reduce((s, r) => s + Number(r.wrong_answers || 0), 0), resources: msLastScores.length };
-  }, [msLastScores]);
-
-  const obLastScores      = useMemo(() => activityLastScores.data.filter(r => isOBRecord(r)), [activityLastScores.data]);
-  const obLastScoreSummary = useMemo(() => {
-    if (!obLastScores.length) return null;
-    return { totalQ: obLastScores.reduce((s, r) => s + Number(r.total_questions || 0), 0), correct: obLastScores.reduce((s, r) => s + Number(r.correct_answers || 0), 0), wrong: obLastScores.reduce((s, r) => s + Number(r.wrong_answers || 0), 0), resources: obLastScores.length };
-  }, [obLastScores]);
 
   const learningPathProgress = useMemo(() => {
     const ids = new Set(filteredResources.map(r => r.learning_module_id));
@@ -4825,6 +5478,104 @@ function TraineeDashboard() {
     filtered.forEach(m => { const k = m.course_name || 'Unknown'; if (!map[k]) map[k] = { course_name: k, modules: [] }; map[k].modules.push(m); });
     return Object.values(map);
   }, [moduleCompletion, filteredResources, selectedCertificate]);
+
+  const latestProgress = individualTraineeProfile?.latestProgress ?? null;
+  const lastSessionData = useMemo(() => {
+    if (!latestProgress) return null;
+
+    const resourceName = String(latestProgress.resource_name || '').trim();
+    const resourceTopic = String(latestProgress.resource_topic || '').trim();
+    const resourceType = String(latestProgress.resource_type || '').trim();
+    const nameLower = resourceName.toLowerCase();
+    const topicLower = resourceTopic.toLowerCase();
+    const typeLower = resourceType.toLowerCase();
+    const searchText = `${resourceName} ${resourceTopic}`;
+
+    const isMindSpark = nameLower.includes('mind spark') || nameLower.includes('mindspark');
+    const isOBBooster =
+      topicLower.includes('ob booster') ||
+      topicLower.includes('ob boosters') ||
+      nameLower.includes('ob booster') ||
+      nameLower.includes('ob boosters') ||
+      typeLower.includes('ob booster');
+
+    const explicitCode = searchText.match(/\b(p[1-4]|t[1-4])\b/i)?.[1]?.toUpperCase() || null;
+    const practiceCode = searchText.match(/\bpractice\s*([1-4])\b/i)?.[1] || null;
+    const testCode = searchText.match(/\btest\s*([1-4])\b/i)?.[1] || null;
+    const sessionCode = explicitCode || (practiceCode ? `P${practiceCode}` : null) || (testCode ? `T${testCode}` : null);
+
+    let kindLabel = 'Learning Resource';
+    let shortLabel = 'LR';
+    let accentColor = '#3b82f6';
+    let cardBg = '#eff6ff';
+    let ringBg = '#dbeafe';
+    let Icon = BookOpen;
+    let summary = 'Completed learning resource';
+
+    if (isMindSpark) {
+      kindLabel = 'Mind Sparks';
+      shortLabel = 'MS';
+      accentColor = '#eab308';
+      cardBg = '#fefce8';
+      ringBg = '#fde68a';
+      Icon = Zap;
+      summary = 'Completed MindSpark';
+    } else if (isOBBooster) {
+      kindLabel = 'OB Booster';
+      shortLabel = 'OB';
+      accentColor = '#ec4899';
+      cardBg = '#fdf2f8';
+      ringBg = '#fbcfe8';
+      Icon = Brain;
+      summary = 'Completed OB Booster';
+    } else if (resourceType === 'Image Interpretation') {
+      kindLabel = 'Image Interpretation';
+      shortLabel = 'II';
+      accentColor = '#a855f7';
+      cardBg = '#faf5ff';
+      ringBg = '#e9d5ff';
+      Icon = Eye;
+      summary = 'Completed image interpretation';
+    } else if (resourceType === 'Practice') {
+      kindLabel = sessionCode ? `${sessionCode} Practice` : 'Practice';
+      shortLabel = sessionCode || 'P';
+      accentColor = '#8DC63F';
+      cardBg = '#f7fee7';
+      ringBg = '#d9f99d';
+      Icon = Dumbbell;
+      summary = sessionCode ? `Completed ${sessionCode}` : 'Completed practice';
+    } else if (resourceType === 'Test') {
+      kindLabel = sessionCode ? `${sessionCode} Test` : 'Test';
+      shortLabel = sessionCode || 'T';
+      accentColor = '#f97316';
+      cardBg = '#fff7ed';
+      ringBg = '#fed7aa';
+      Icon = ClipboardCheck;
+      summary = sessionCode ? `Completed ${sessionCode}` : 'Completed test';
+    } else if (resourceType) {
+      kindLabel = resourceType;
+      shortLabel = resourceType.slice(0, 2).toUpperCase();
+      summary = `Completed ${resourceType.toLowerCase()}`;
+    }
+
+    return {
+      resourceName: resourceName || 'Unnamed resource',
+      resourceTopic,
+      moduleName: latestProgress.module_name || '',
+      unitName: latestProgress.unit_name || '',
+      courseName: latestProgress.course_name || '',
+      certificateName: latestProgress.certificate_name || '',
+      completedAt: latestProgress.updated_at || null,
+      kindLabel,
+      shortLabel,
+      accentColor,
+      cardBg,
+      ringBg,
+      Icon,
+      summary,
+      isCompleted: Boolean(latestProgress.is_completed),
+    };
+  }, [latestProgress]);
 
   // ── Helpers ───────────────────────────────────────────────
   const fmtDT = ds => { if (!ds || ds === 'N/A') return 'N/A'; const d = new Date(ds); if (isNaN(d)) return 'N/A'; return d.toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }); };
@@ -4853,48 +5604,92 @@ function TraineeDashboard() {
   // 1. LAST SESSION CARD
   // ═══════════════════════════════════════════════════════════
   const LastSessionCard = () => {
-    const passCount = MOCK_LAST_SESSION.checks.filter(c => c.passed).length;
-    const pct = Math.round((passCount / MOCK_LAST_SESSION.checks.length) * 100);
+    if (loading && !lastSessionData) {
+      return (
+        <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+          <div className="px-5 py-10 flex justify-center">
+            <Spinner />
+          </div>
+        </div>
+      );
+    }
+
+    if (!lastSessionData) {
+      return (
+        <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+          <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg,#f0fde6 0%,#e8fbd4 60%,#f7fef0 100%)' }}>
+            <div className="flex items-center gap-2">
+              <Zap size={12} style={{ color: '#8DC63F' }} />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#6aa629]">Last Session</span>
+            </div>
+            <div className="text-base font-bold text-gray-800 mt-2">No LMS completion yet</div>
+            <div className="text-[11px] text-gray-500 mt-1">Your latest completed LMS resource will appear here.</div>
+          </div>
+        </div>
+      );
+    }
+
+    const pct = lastSessionData.isCompleted ? 100 : 0;
+    const pathLabel = [lastSessionData.unitName, lastSessionData.moduleName].filter(Boolean).join(' · ');
+    const metaLabel = [lastSessionData.courseName, lastSessionData.certificateName].filter(Boolean).join(' · ');
+    const SessionIcon = lastSessionData.Icon;
+
     return (
       <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-        {/* gradient header */}
         <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg,#f0fde6 0%,#e8fbd4 60%,#f7fef0 100%)' }}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-1">
                 <Zap size={12} style={{ color: '#8DC63F' }} />
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#6aa629]">Last Session</span>
-                <span className="text-[9px] bg-white/70 text-gray-400 px-2 py-0.5 rounded-full border border-white ml-1">Mock</span>
+                <span className="text-[9px] bg-white/70 text-gray-600 px-2 py-0.5 rounded-full border border-white ml-1">{lastSessionData.kindLabel}</span>
               </div>
-              <div className="text-base font-bold text-gray-800 leading-snug">{MOCK_LAST_SESSION.module}</div>
-              <div className="text-[11px] text-gray-500 mt-0.5">{fmtDT(MOCK_LAST_SESSION.date)}</div>
+              <div className="text-base font-bold text-gray-800 leading-snug">{lastSessionData.resourceName}</div>
+              <div className="text-[11px] text-gray-500 mt-0.5">{fmtDT(lastSessionData.completedAt)}</div>
             </div>
-            <RadialRing pct={pct} size={62} stroke={6} color="#8DC63F" bg="#d1fae5">
+            <RadialRing pct={pct} size={62} stroke={6} color={lastSessionData.accentColor} bg={lastSessionData.ringBg}>
               <div className="flex flex-col items-center">
-                <span className="text-sm font-black text-gray-700">{pct}%</span>
+                <span className="text-sm font-black text-gray-700">{lastSessionData.shortLabel}</span>
               </div>
             </RadialRing>
           </div>
         </div>
 
         <div className="px-5 py-4 flex flex-col gap-3">
-          {/* checks */}
-          <div className="flex flex-col gap-1.5">
-            {MOCK_LAST_SESSION.checks.map((c, i) => (
-              <div key={i} className={`flex items-center gap-2 text-xs rounded-lg px-3 py-2 ${c.passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                {c.passed ? <CheckCircle size={12} className="shrink-0" /> : <XCircle size={12} className="shrink-0" />}
-                {c.label}
+          <div className="flex items-center gap-3 rounded-xl px-3 py-3 border" style={{ backgroundColor: lastSessionData.cardBg, borderColor: `${lastSessionData.accentColor}33` }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${lastSessionData.accentColor}18` }}>
+              <SessionIcon size={18} style={{ color: lastSessionData.accentColor }} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: lastSessionData.accentColor }}>
+                {lastSessionData.kindLabel}
               </div>
-            ))}
+              <div className="text-xs font-semibold text-gray-700">{lastSessionData.summary}</div>
+            </div>
+            <div className="ml-auto flex items-center gap-1 text-[#8DC63F]">
+              <CheckCircle size={14} />
+              <span className="text-[11px] font-semibold">Completed</span>
+            </div>
           </div>
 
-          {/* feedback */}
-          <div className="flex gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
-            <span className="text-base leading-none mt-0.5">💡</span>
-            <p className="text-[11px] text-amber-800 leading-relaxed italic">{MOCK_LAST_SESSION.feedback}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5">
+              <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Unit / Module</div>
+              <div className="text-xs font-semibold text-gray-700 mt-1">{pathLabel || 'N/A'}</div>
+            </div>
+            <div className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2.5">
+              <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Course / Certificate</div>
+              <div className="text-xs font-semibold text-gray-700 mt-1">{metaLabel || 'N/A'}</div>
+            </div>
           </div>
 
-          {/* last completed module inline */}
+          {lastSessionData.resourceTopic && (
+            <div className="rounded-xl bg-white border border-gray-100 px-3 py-2.5">
+              <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">Topic</div>
+              <div className="text-xs font-semibold text-gray-700 mt-1">{lastSessionData.resourceTopic}</div>
+            </div>
+          )}
+
           {lastCompletedModuleData && (
             <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#8DC63F18' }}>
@@ -4912,12 +5707,6 @@ function TraineeDashboard() {
               </RadialRing>
             </div>
           )}
-
-          {/* actions */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button className="text-xs font-semibold text-gray-600 border border-gray-200 rounded-xl py-2 hover:bg-gray-50 transition-colors">Replay Attempt</button>
-            <button className="text-xs font-semibold text-white rounded-xl py-2 hover:opacity-90 transition-opacity" style={{ backgroundColor: '#8DC63F' }}>Practice Again</button>
-          </div>
         </div>
       </div>
     );
@@ -4927,12 +5716,67 @@ function TraineeDashboard() {
   // 2. LAST SCORE CARD
   // ═══════════════════════════════════════════════════════════
   const LastScoreCard = () => {
+    const isBTCCertificate = selectedScoreCertificateLabel === 'BTC';
+    const isUFCCertificate = selectedScoreCertificateLabel === 'UFC';
+    const activeTestScore = isBTCCertificate ? selectedScoreTest : null;
+    const latestMindSparkSummary = latestMindSparkScore ? summarizeActivityScores([latestMindSparkScore]) : null;
+    const latestOBSummary = latestOBScore ? summarizeActivityScores([latestOBScore]) : null;
+    const latestEchoDoseSummary = latestEchoDoseScore ? summarizeActivityScores([latestEchoDoseScore]) : null;
     const scoreItems = [
-      { label: 'MS', value: msLastScoreSummary ? `${msLastScoreSummary.correct}/${msLastScoreSummary.totalQ}` : totalAttempts > 0 ? totalAttempts : '—', sub: 'MindSpark', color: '#8DC63F', ring: msLastScoreSummary ? Math.round((msLastScoreSummary.correct / Math.max(msLastScoreSummary.totalQ, 1)) * 100) : 0 },
-      { label: 'OB', value: obLastScoreSummary ? `${obLastScoreSummary.correct}/${obLastScoreSummary.totalQ}` : obResources.length > 0 ? `${obCompleted}/${obResources.length}` : '—', sub: 'OB Booster', color: '#f97316', ring: obLastScoreSummary ? Math.round((obLastScoreSummary.correct / Math.max(obLastScoreSummary.totalQ, 1)) * 100) : 0 },
-      { label: 'II', value: totalIR > 0 ? `${completedIR}/${totalIR}` : '—', sub: 'Image Interp.', color: '#a78bfa', ring: totalIR > 0 ? Math.round((completedIR / totalIR) * 100) : 0 },
-      { label: 'T',  value: testScores ? `${calcAvgScore(testScores) ?? '—'}%` : '—', sub: 'Last Test', color: '#3b82f6', ring: testScores ? calcAvgScore(testScores) ?? 0 : 0 },
-    ];
+      {
+        label: 'MS',
+        value: latestMindSparkSummary ? `${latestMindSparkSummary.correct}/${latestMindSparkSummary.totalQ}` : '—',
+        sub: latestMindSparkScore?.resource_name || 'MindSpark',
+        color: '#8DC63F',
+        ring: latestMindSparkSummary
+          ? Math.round((latestMindSparkSummary.correct / Math.max(latestMindSparkSummary.totalQ, 1)) * 100)
+          : 0,
+      },
+      ...(isBTCCertificate
+        ? [
+            {
+              label: 'OB',
+              value: latestOBSummary ? `${latestOBSummary.correct}/${latestOBSummary.totalQ}` : '—',
+              sub: latestOBScore?.resource_name || 'OB Booster',
+              color: '#f97316',
+              ring: latestOBSummary
+                ? Math.round((latestOBSummary.correct / Math.max(latestOBSummary.totalQ, 1)) * 100)
+                : 0,
+            },
+            {
+              label: 'II',
+              value: latestImageInterpretation
+                ? `${latestImageInterpretation.is_completed ? 1 : 0}/1`
+                : '—',
+              sub: latestImageInterpretation?.resource_name || 'Image Interp.',
+              color: '#a78bfa',
+              ring: latestImageInterpretation
+                ? (latestImageInterpretation.is_completed ? 100 : 0)
+                : 0,
+            },
+            {
+              label: 'T',
+              value: activeTestScore ? `${calcAvgScore(activeTestScore) ?? '—'}%` : '—',
+              sub: activeTestScore ? (activeTestScore.resource_name || 'Last Test') : 'Last Test',
+              color: '#3b82f6',
+              ring: activeTestScore ? calcAvgScore(activeTestScore) ?? 0 : 0,
+            },
+          ]
+        : []),
+      ...(isUFCCertificate
+        ? [
+            {
+              label: 'ED',
+              value: latestEchoDoseSummary ? `${latestEchoDoseSummary.correct}/${latestEchoDoseSummary.totalQ}` : '—',
+              sub: latestEchoDoseScore?.resource_name || 'EchoDose',
+              color: '#ec4899',
+              ring: latestEchoDoseSummary
+                ? Math.round((latestEchoDoseSummary.correct / Math.max(latestEchoDoseSummary.totalQ, 1)) * 100)
+                : 0,
+            },
+          ]
+        : []),
+    ].filter(Boolean);
     const subScores = [
       { key: 'plane_identification',      label: 'Plane ID',    color: '#3b82f6' },
       { key: 'image_optimization',        label: 'Image Opt.',  color: '#8b5cf6' },
@@ -4944,21 +5788,47 @@ function TraineeDashboard() {
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <SectionLabel icon={Award} color="#f59e0b" label="Last Score" />
           <div className="flex items-center gap-2 flex-wrap">
-            {[
-              { label: 'Certificate', opts: [{ v: 'btc', l: 'BTC' }, { v: 'svt', l: 'SVT' }] },
-              { label: 'Course', opts: [{ v: '1st', l: '1st Trim.' }, { v: '2nd', l: '2nd Trim.' }, { v: '3rd', l: '3rd Trim.' }] },
-              { label: 'Module', opts: [{ v: 'bpd-hc', l: 'BPD & HC' }, { v: 'ac', l: 'AC' }, { v: 'fl', l: 'FL' }] },
-            ].map(({ label, opts }) => (
-              <select key={label} className={selectCls}>
-                <option value="">{label}</option>
-                {opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+            <select
+              value={selectedScoreCertificate}
+              onChange={e => setSelectedScoreCertificate(e.target.value)}
+              className={selectCls}
+            >
+              {!selectedScoreCertificate && <option value="">Certificate</option>}
+              {certificates.map(cert => (
+                <option key={cert.id} value={cert.id}>{cert.label}</option>
+              ))}
+            </select>
+            <select
+              value={selectedScoreCourse}
+              onChange={e => setSelectedScoreCourse(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">Course</option>
+              {scoreCourseOptions.map(course => (
+                <option key={course} value={course}>{course}</option>
+              ))}
+            </select>
+            {scoreNeedsTopic && (
+              <select
+                value={selectedScoreTopic}
+                onChange={e => setSelectedScoreTopic(e.target.value)}
+                className={selectCls}
+                disabled={!selectedScoreCourse}
+              >
+                <option value="">Topic</option>
+                {scoreTopicOptions.map(topic => (
+                  <option key={topic} value={topic}>{topic}</option>
+                ))}
               </select>
-            ))}
+            )}
           </div>
         </div>
 
         {/* 4 ring scores */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div
+          className="grid gap-3 mb-4"
+          style={{ gridTemplateColumns: `repeat(${Math.max(1, Math.min(scoreItems.length, 4))}, minmax(0, 1fr))` }}
+        >
           {scoreItems.map(({ label, value, sub, color, ring }) => (
             <div key={label} className="flex flex-col items-center gap-2 p-3 rounded-xl bg-gray-50 border border-gray-100">
               <RadialRing pct={ring} size={54} stroke={5} color={color} bg="#e5e7eb">
@@ -4971,12 +5841,12 @@ function TraineeDashboard() {
         </div>
 
         {/* sub-score bars */}
-        {testScores && (
+        {activeTestScore && (
           <div className="pt-3 border-t border-gray-100">
             <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Test Sub-Scores</div>
             <div className="grid grid-cols-2 gap-x-5 gap-y-2.5">
               {subScores.map(({ key, label, color }) => {
-                const val = Number(testScores[key]); const pct = isNaN(val) ? 0 : Math.min(100, Math.round(val));
+                const val = Number(activeTestScore[key]); const pct = isNaN(val) ? 0 : Math.min(100, Math.round(val));
                 return (
                   <div key={key}>
                     <div className="flex justify-between text-[10px] mb-1">
@@ -5162,17 +6032,56 @@ function TraineeDashboard() {
   // 6. RESOURCE PROGRESS (LR, Practice, II, Test)
   // ═══════════════════════════════════════════════════════════
   const ResourceSummaryCard = () => {
+    const showOnlyAvailableTypes = selectedResourceCertificateLabel !== 'BTC';
     const items = [
-      { icon: BookOpen,      label: 'Learning Resources', done: completedLR,       total: totalLR,       color: '#3b82f6', bg: '#eff6ff' },
-      { icon: Dumbbell,      label: 'Practices',           done: completedPractice, total: totalPractice, color: '#8DC63F', bg: '#f0fde4' },
-      { icon: Eye,           label: 'Image Interp.',        done: completedIR,       total: totalIR,       color: '#a78bfa', bg: '#f5f3ff' },
-      { icon: ClipboardCheck,label: 'Tests',                done: completedTests,    total: totalTests,    color: '#f97316', bg: '#fff7ed' },
-    ];
+      { icon: BookOpen,      label: 'Learning Resources', done: resourceProgressCompletedLR,       total: resourceProgressTotalLR,       color: '#3b82f6', bg: '#eff6ff' },
+      { icon: Dumbbell,      label: 'Practices',          done: resourceProgressCompletedPractice, total: resourceProgressTotalPractice, color: '#8DC63F', bg: '#f0fde4' },
+      { icon: Eye,           label: 'Image Interp.',      done: resourceProgressCompletedIR,       total: resourceProgressTotalIR,       color: '#a78bfa', bg: '#f5f3ff' },
+      { icon: ClipboardCheck,label: 'Tests',              done: resourceProgressCompletedTests,    total: resourceProgressTotalTests,    color: '#f97316', bg: '#fff7ed' },
+    ].filter(item => !showOnlyAvailableTypes || item.total > 0);
+
+    const visibleItems = items.length
+      ? items
+      : [{ icon: BookOpen, label: 'Learning Resources', done: 0, total: 0, color: '#3b82f6', bg: '#eff6ff' }];
+
     return (
       <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
-        <SectionLabel icon={Target} color="#8DC63F" label="Resource Progress" />
-        <div className="grid grid-cols-2 gap-3">
-          {items.map(({ icon: Icon, label, done, total, color, bg }) => {
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <SectionLabel icon={Target} color="#8DC63F" label="Resource Progress" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={selectedResourceCertificate}
+              onChange={e => setSelectedResourceCertificate(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">{selectedResourceCertificateLabel || 'Certification'}</option>
+              {certificates.map(cert => <option key={cert.id} value={cert.id}>{cert.label}</option>)}
+            </select>
+
+            <select
+              value={selectedResourceCourse}
+              onChange={e => setSelectedResourceCourse(e.target.value)}
+              className={selectCls}
+            >
+              <option value="">{selectedResourceCourse || 'All courses'}</option>
+              {resourceCourseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+            </select>
+
+            {resourceNeedsTopic && (
+              <select
+                value={selectedResourceTopic}
+                onChange={e => setSelectedResourceTopic(e.target.value)}
+                className={selectCls}
+              >
+                <option value="">{selectedResourceTopic || 'All topics'}</option>
+                {resourceTopicOptions.map(topic => <option key={topic} value={topic}>{topic}</option>)}
+              </select>
+            )}
+          </div>
+        </div>
+
+        <div className={`grid gap-3 ${visibleItems.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          {visibleItems.map(({ icon: Icon, label, done, total, color, bg }) => {
             const pct = total > 0 ? Math.round((done / total) * 100) : 0;
             return (
               <div key={label} className="flex items-center gap-3 rounded-xl p-3 border border-gray-100" style={{ background: bg }}>
@@ -5270,12 +6179,44 @@ function TraineeDashboard() {
     <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-4 py-4">
       <SectionLabel icon={ArrowRight} color="#8DC63F" label="Next Module" />
       {loading ? <div className="flex justify-center py-4"><Spinner /></div>
-        : nextModule ? (
-          <div className="flex flex-col gap-2">
+        : nextLearningItem ? (() => {
+          const meta = getNextItemMeta(nextLearningItem);
+          const NextIcon = meta.Icon;
+          const modulePct = nextLearningModuleData?.totalCount
+            ? Math.round((nextLearningModuleData.completedCount / nextLearningModuleData.totalCount) * 100)
+            : 0;
+
+          return (
+            <div className="flex flex-col gap-3">
+              <div
+                className="rounded-xl border px-3 py-3"
+                style={{ backgroundColor: meta.cardBg, borderColor: `${meta.accentColor}33` }}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${meta.accentColor}18` }}
+                  >
+                    <NextIcon size={17} style={{ color: meta.accentColor }} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: meta.accentColor }}>
+                      {meta.label}
+                    </div>
+                    <div className="text-sm font-bold text-gray-800 mt-1 leading-snug">
+                      {nextLearningItem.resourceName || nextLearningItem.resource_name || 'Next resource'}
+                    </div>
+                    <div className="text-[11px] text-gray-500 mt-1">
+                      First pending item in your My Learning order
+                    </div>
+                  </div>
+                  <span className="text-xs font-black" style={{ color: meta.accentColor }}>{modulePct}%</span>
+                </div>
+              </div>
             {[
-              { label: 'Unit',   val: nextModule.unit_name },
-              { label: 'Module', val: nextModule.module_name },
-              { label: 'Course', val: nextModule.course_name },
+              { label: 'Topic',  val: nextLearningItem.topic || nextLearningItem.resource_topic },
+              { label: 'Module', val: nextLearningItem.moduleLabel || nextLearningItem.module_name || nextLearningItem.unit_name },
+              { label: 'Course', val: nextLearningItem.course_name },
             ].map(({ label, val }) => (
               <div key={label} className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2">
                 <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">{label}</div>
@@ -5284,16 +6225,17 @@ function TraineeDashboard() {
             ))}
             <div className="flex flex-col gap-1.5 pt-1">
               <div>
-                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Learning Resources</span><span>{nextModule.completed_learning_resources}/{nextModule.total_learning_resources}</span></div>
-                <MiniBar value={nextModuleLRPct} max={100} color="#8DC63F" />
+                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Learning Resources</span><span>{nextLearningModuleData?.lrDone ?? 0}/{nextLearningModuleData?.lrTotal ?? 0}</span></div>
+                <MiniBar value={nextLearningModuleData?.lrDone ?? 0} max={Math.max(nextLearningModuleData?.lrTotal ?? 0, 1)} color="#8DC63F" />
               </div>
               <div>
-                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Image Interpretations</span><span>{nextModule.completed_image_interpretations}/{nextModule.total_image_interpretations}</span></div>
-                <MiniBar value={nextModuleIRPct} max={100} color="#a78bfa" />
+                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Image Interpretations</span><span>{nextLearningModuleData?.irDone ?? 0}/{nextLearningModuleData?.irTotal ?? 0}</span></div>
+                <MiniBar value={nextLearningModuleData?.irDone ?? 0} max={Math.max(nextLearningModuleData?.irTotal ?? 0, 1)} color="#a78bfa" />
               </div>
             </div>
           </div>
-        ) : <div className="text-sm text-gray-400 text-center py-4">All modules completed! 🎉</div>
+          );
+        })() : <div className="text-sm text-gray-400 text-center py-4">All learning items completed.</div>
       }
     </div>
   );
@@ -5433,3 +6375,5 @@ function TraineeDashboard() {
 }
 
 export default TraineeDashboard;
+
+

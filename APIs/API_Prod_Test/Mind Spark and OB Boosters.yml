@@ -11,7 +11,7 @@ http:
     data: |-
       {
           "resourceType": "PROBEMOVEMENTS",
-          "resourceId": "3a4fc0c8-052e-42fc-bda2-a35e373289ce",
+          "resourceId": "d205a94c-cdfc-4e04-986f-0fe5e9432cc5",
           "totalTimeTaken": 90
       }
   auth:
