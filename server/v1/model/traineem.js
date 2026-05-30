@@ -3140,7 +3140,6 @@ const indDatauuid = (requester, people_id, isVr = true) => {
             error: err,
           });
         });
-
       return;
     }
 
