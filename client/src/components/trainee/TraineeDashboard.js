@@ -4831,6 +4831,13 @@ const getTimeValue = value => {
 const getLatestItem = (rows, dateKey) =>
   [...rows].sort((a, b) => getTimeValue(b?.[dateKey]) - getTimeValue(a?.[dateKey]))[0] || null;
 const getLearningTypeKey = resourceType => NEXT_RESOURCE_TYPE_MAP[resourceType] || 'resource';
+const getTrimesterSortIndex = value => {
+  const normalized = normalizeSortKey(value);
+  if (normalized.includes('first trimester') || normalized.includes('1st trimester')) return 1;
+  if (normalized.includes('second trimester') || normalized.includes('2nd trimester')) return 2;
+  if (normalized.includes('third trimester') || normalized.includes('3rd trimester')) return 3;
+  return 99;
+};
 const isActivityDrivenLearningItem = row =>
   getLearningTypeKey(row?.resource_type) === 'resource' && (isMindSparkRecord(row) || isOBRecord(row));
 const isLearningItemDone = (row, activityScoreMap) =>
@@ -5042,7 +5049,20 @@ function TraineeDashboard() {
     return certificates.map(cert => cert.label).join(' + ');
   }, [certificates, selectedCertificate]);
 
-  const courseFilterLabel = selectedCourse || 'All courses';
+  const selectedCertificateLabel = useMemo(
+    () => certificates.find(cert => cert.id === selectedCertificate)?.label || '',
+    [certificates, selectedCertificate]
+  );
+
+  const usesTrimesterFilter = useMemo(
+    () =>
+      selectedCertificateLabel === 'BTC' ||
+      courseOptions.some(course => /trimester/i.test(String(course || ''))),
+    [courseOptions, selectedCertificateLabel]
+  );
+
+  const secondaryFilterLabel = selectedCourse || (usesTrimesterFilter ? 'All trimesters' : 'All courses');
+  const secondaryFilterTitle = usesTrimesterFilter ? 'Trimester' : 'Course';
 
   const [selectedScoreCertificate, setSelectedScoreCertificate] = useState('');
   const [selectedScoreCourse, setSelectedScoreCourse] = useState('');
@@ -5471,13 +5491,41 @@ function TraineeDashboard() {
 
   const moduleCompletion = useMemo(() => individualTraineeProfile?.moduleCompletion ?? [], [individualTraineeProfile.moduleCompletion]);
 
+  const filteredLearningPathModules = useMemo(() => {
+    const visibleModuleIds = new Set(
+      filteredResources
+        .map(row => row?.learning_module_id)
+        .filter(Boolean)
+    );
+
+    return moduleCompletion
+      .filter(module => visibleModuleIds.has(module?.learning_module_id))
+      .sort((a, b) => {
+        const courseOrder = getTrimesterSortIndex(a?.course_name) - getTrimesterSortIndex(b?.course_name);
+        if (courseOrder !== 0) return courseOrder;
+
+        const aModuleIndex = NEXT_MODULE_ORDER.indexOf(normalizeModuleSortLabel(a?.unit_name || a?.module_name || ''));
+        const bModuleIndex = NEXT_MODULE_ORDER.indexOf(normalizeModuleSortLabel(b?.unit_name || b?.module_name || ''));
+        const moduleOrder = (aModuleIndex === -1 ? 999 : aModuleIndex) - (bModuleIndex === -1 ? 999 : bModuleIndex);
+        if (moduleOrder !== 0) return moduleOrder;
+
+        return String(a?.unit_name || a?.module_name || '').localeCompare(String(b?.unit_name || b?.module_name || ''));
+      });
+  }, [filteredResources, moduleCompletion]);
+
   const learningPathProgress = useMemo(() => {
-    const ids = new Set(filteredResources.map(r => r.learning_module_id));
-    const filtered = selectedCertificate ? moduleCompletion.filter(m => ids.has(m.learning_module_id)) : moduleCompletion;
     const map = {};
-    filtered.forEach(m => { const k = m.course_name || 'Unknown'; if (!map[k]) map[k] = { course_name: k, modules: [] }; map[k].modules.push(m); });
+
+    filteredLearningPathModules.forEach(module => {
+      const courseKey = String(module?.course_name || 'Unknown').trim() || 'Unknown';
+      if (!map[courseKey]) {
+        map[courseKey] = { course_name: courseKey, modules: [] };
+      }
+      map[courseKey].modules.push(module);
+    });
+
     return Object.values(map);
-  }, [moduleCompletion, filteredResources, selectedCertificate]);
+  }, [filteredLearningPathModules]);
 
   const latestProgress = individualTraineeProfile?.latestProgress ?? null;
   const lastSessionData = useMemo(() => {
@@ -5949,16 +5997,34 @@ function TraineeDashboard() {
   // ═══════════════════════════════════════════════════════════
   const LearningPathCard = () => (
     <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
-      <div className="flex items-center gap-2 mb-5">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8DC63F18' }}>
-          <TrendingUp size={14} style={{ color: '#8DC63F' }} />
+      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8DC63F18' }}>
+            <TrendingUp size={14} style={{ color: '#8DC63F' }} />
+          </div>
+          <span className="text-sm font-semibold text-gray-700">Learning Path Progress</span>
+          {filteredLearningPathModules.length > 0 && (
+            <span className="text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+              {
+                filteredLearningPathModules.filter(m => {
+                  const total = Number(m.total_learning_resources) + Number(m.total_image_interpretations);
+                  const done = Number(m.completed_learning_resources) + Number(m.completed_image_interpretations);
+                  return total > 0 && done === total;
+                }).length
+              }/{filteredLearningPathModules.length} done
+            </span>
+          )}
         </div>
-        <span className="text-sm font-semibold text-gray-700">Learning Path Progress</span>
-        {moduleCompletion.length > 0 && (
-          <span className="ml-auto text-[10px] text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
-            {moduleCompletion.filter(m => { const t = Number(m.total_learning_resources) + Number(m.total_image_interpretations); const d = Number(m.completed_learning_resources) + Number(m.completed_image_interpretations); return t > 0 && d === t; }).length}/{moduleCompletion.length} done
-          </span>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
+            <option value="">{overallProgressLabel}</option>
+            {certificates.map(cert => <option key={cert.id} value={cert.id}>{cert.label}</option>)}
+          </select>
+          <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className={selectCls} aria-label={`${secondaryFilterTitle} filter`}>
+            <option value="">{secondaryFilterLabel}</option>
+            {courseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+          </select>
+        </div>
       </div>
       {loading ? <div className="flex justify-center py-6"><Spinner /></div>
         : learningPathProgress.length === 0
@@ -5979,12 +6045,12 @@ function TraineeDashboard() {
                     <div className="flex items-center gap-2 mb-4">
                       <BookOpen size={11} className="text-blue-400" />
                       <span className="text-xs font-semibold text-gray-500">{course.course_name}</span>
-                      {allDone && <span className="text-[9px] font-bold uppercase tracking-wider text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full ml-1">Complete ✓</span>}
+                      {allDone && <span className="text-[9px] font-bold uppercase tracking-wider text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full ml-1">Complete</span>}
                     </div>
                     <div className="flex items-start overflow-x-auto pb-1">
                       {mods.map((mod, mi) => {
                         const isLast = mi === mods.length - 1;
-                        const lbl = mod.unit_name || mod.module_name || `M${mi + 1}`;
+                        const lbl = normalizeModuleSortLabel(mod.unit_name || mod.module_name || `M${mi + 1}`);
                         const { status } = mod;
                         return (
                           <div key={mi} className="flex items-start flex-1" style={{ minWidth: 64 }}>
@@ -6149,8 +6215,8 @@ function TraineeDashboard() {
               <option value="">{overallProgressLabel}</option>
               {certificates.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
-            <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className={selectCls}>
-              <option value="">{courseFilterLabel}</option>
+            <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className={selectCls} aria-label={`${secondaryFilterTitle} filter`}>
+              <option value="">{secondaryFilterLabel}</option>
               {courseOptions.map(course => <option key={course} value={course}>{course}</option>)}
             </select>
           </div>
