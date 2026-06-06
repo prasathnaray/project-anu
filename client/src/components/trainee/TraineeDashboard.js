@@ -6398,10 +6398,10 @@ function TraineeDashboard() {
               {/* ── MAIN COLUMN (col-span-2) ── */}
               <div className="col-span-2 flex flex-col gap-3">
 
-                {/* Row A: Last Session + Last Score side by side */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Row A: Last Session full width */}
+                <div className="grid grid-cols-1 gap-3">
                   <LastSessionCard />   {/* 1 */}
-                  <LastScoreCard />     {/* 2 */}
+                  {/* <LastScoreCard /> */}
                 </div>
 
                 {/* Row B: Performance Metrics + Skill Competency side by side */}
