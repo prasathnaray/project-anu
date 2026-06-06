@@ -4509,24 +4509,14 @@ import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
 import getInteractionsAttemptStats from '../../API/InteractionAttemptAPI';
 import getActivityLastScores from '../../API/ActivityLastScoresAPI';
+import getSkillCompetency from '../../API/SkillCompetencyAPI';
+import getPerformanceMetrics from '../../API/PerformanceMetricsAPI';
 import InteractionDonut from '../../charts/InteractionDonut';
 import {
   startOfWeek, endOfWeek, subWeeks, isWithinInterval, format,
 } from 'date-fns';
 
 // ─── MOCK DATA ────────────────────────────────────────────────
-const MOCK_PERFORMANCE_METRICS = {
-  accuracy:    { value: 78, prev: 70, unit: '%' },
-  timePerTask: { value: 4.2, prev: 5.1, unit: ' min' },
-  errorRate:   { value: 18, prev: 24, unit: '%' },
-  consistency: 'Medium',
-};
-const MOCK_SKILL_COMPETENCY = [
-  { skill: 'Probe Handling',         level: 'Intermediate', score: 62, trend: 'up' },
-  { skill: 'Plane Acquisition',      level: 'Advanced',     score: 84, trend: 'up' },
-  { skill: 'Fetal Biometry',         level: 'Intermediate', score: 58, trend: 'neutral' },
-  { skill: 'Anatomy Identification', level: 'Beginner',     score: 34, trend: 'down' },
-];
 
 // ─── Radial Progress Ring ─────────────────────────────────────
 const RadialRing = ({ pct = 0, size = 56, stroke = 5, color = '#8DC63F', bg = '#e5e7eb', children }) => {
@@ -4928,6 +4918,33 @@ function TraineeDashboard() {
         const data = Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data : [];
         setActivityLastScores({ data, loading: false, error: null });
       } catch (e) { setActivityLastScores(p => ({ ...p, loading: false, error: e.message })); }
+    })();
+  }, []);
+
+  // ── Skill Competency ────────────────────────────────────────
+  const [performanceMetrics, setPerformanceMetrics] = useState({ data: null, loading: false, error: null });
+  useEffect(() => {
+    (async () => {
+      try {
+        setPerformanceMetrics(p => ({ ...p, loading: true }));
+        const data = await getPerformanceMetrics();
+        setPerformanceMetrics({ data, loading: false, error: null });
+      } catch (e) {
+        setPerformanceMetrics(p => ({ ...p, loading: false, error: e.message }));
+      }
+    })();
+  }, []);
+
+  const [skillCompetency, setSkillCompetency] = useState({ data: null, loading: false, error: null });
+  useEffect(() => {
+    (async () => {
+      try {
+        setSkillCompetency(p => ({ ...p, loading: true }));
+        const data = await getSkillCompetency();
+        setSkillCompetency({ data, loading: false, error: null });
+      } catch (e) {
+        setSkillCompetency(p => ({ ...p, loading: false, error: e.message }));
+      }
     })();
   }, []);
 
@@ -5916,7 +5933,15 @@ function TraineeDashboard() {
   // 3. PERFORMANCE METRICS
   // ═══════════════════════════════════════════════════════════
   const PerformanceMetricsCard = () => {
-    const cc = { Low: { color: '#ef4444', bg: '#fef2f2' }, Medium: { color: '#f59e0b', bg: '#fffbeb' }, High: { color: '#22c55e', bg: '#f0fdf4' } }[MOCK_PERFORMANCE_METRICS.consistency] || { color: '#f59e0b', bg: '#fffbeb' };
+    const metrics = performanceMetrics.data?.metrics ?? null;
+    const consistency = metrics?.consistency ?? null;
+    const cc = { Low: { color: '#ef4444', bg: '#fef2f2' }, Medium: { color: '#f59e0b', bg: '#fffbeb' }, High: { color: '#22c55e', bg: '#f0fdf4' } }[consistency?.label] || { color: '#f59e0b', bg: '#fffbeb' };
+    const MOCK_PERFORMANCE_METRICS = {
+      accuracy: metrics?.accuracy ?? { value: 0, prev: 0, unit: '%' },
+      timePerTask: metrics?.timePerTask ?? { value: 0, prev: 0, unit: ' min' },
+      errorRate: metrics?.errorRate ?? { value: 0, prev: 0, unit: '%' },
+      consistency: consistency?.label || 'Medium',
+    };
     return (
       <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
         <SectionLabel icon={Activity} color="#8DC63F" label="Performance Metrics" />
@@ -5953,41 +5978,161 @@ function TraineeDashboard() {
     );
   };
 
+  const PerformanceMetricsLiveCard = () => {
+    const metrics = performanceMetrics.data?.metrics ?? null;
+    const consistency = metrics?.consistency ?? null;
+    const cc = { Low: { color: '#ef4444', bg: '#fef2f2' }, Medium: { color: '#f59e0b', bg: '#fffbeb' }, High: { color: '#22c55e', bg: '#f0fdf4' } }[consistency?.label] || { color: '#f59e0b', bg: '#fffbeb' };
+
+    return (
+      <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+        <SectionLabel icon={Activity} color="#8DC63F" label="Performance Metrics" badge={performanceMetrics.data?.attemptsConsidered ? `${performanceMetrics.data.attemptsConsidered} attempts` : null} />
+        {performanceMetrics.loading ? (
+          <div className="flex justify-center py-8"><Spinner /></div>
+        ) : performanceMetrics.error ? (
+          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-500">
+            {performanceMetrics.error}
+          </div>
+        ) : !metrics || !performanceMetrics.data?.attemptsConsidered ? (
+          <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-6 text-sm text-gray-400 text-center">
+            No Practice 3, Practice 4, Test 1, or Test 2 performance data yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2 flex items-center gap-4 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+              <RadialRing pct={metrics.accuracy.value} size={58} stroke={6} color="#8DC63F" bg="#e5e7eb">
+                <span className="text-sm font-bold text-gray-700">{metrics.accuracy.value}%</span>
+              </RadialRing>
+              <div className="flex-1">
+                <div className="text-xs font-semibold text-gray-600 mb-1">Accuracy</div>
+                <TrendChip value={metrics.accuracy.value} prev={metrics.accuracy.prev} unit="%" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5 bg-blue-50 rounded-xl px-3 py-3 border border-blue-100">
+              <div className="flex items-center gap-1"><Clock size={11} className="text-blue-400" /><span className="text-[10px] font-semibold text-gray-500">Time / Task</span></div>
+              <span className="text-2xl font-black text-blue-500">{metrics.timePerTask.value}<span className="text-xs font-normal text-gray-400 ml-1">min</span></span>
+              <TrendChip value={metrics.timePerTask.value} prev={metrics.timePerTask.prev} unit=" min" lowerIsBetter />
+            </div>
+            <div className="flex flex-col gap-1.5 bg-orange-50 rounded-xl px-3 py-3 border border-orange-100">
+              <span className="text-[10px] font-semibold text-gray-500">Error Rate</span>
+              <span className="text-2xl font-black text-orange-500">{metrics.errorRate.value}<span className="text-xs font-normal text-gray-400 ml-0.5">%</span></span>
+              <TrendChip value={metrics.errorRate.value} prev={metrics.errorRate.prev} unit="%" lowerIsBetter />
+            </div>
+            <div className="col-span-2 flex items-center justify-between rounded-xl px-4 py-2.5 border" style={{ background: cc.bg, borderColor: `${cc.color}30` }}>
+              <span className="text-xs font-semibold text-gray-600">Consistency</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-400">{consistency?.value ?? 0}/100</span>
+                <span className="text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: cc.color }}>{consistency?.label || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ═══════════════════════════════════════════════════════════
   // 4. SKILL COMPETENCY
   // ═══════════════════════════════════════════════════════════
   const SkillCompetencyCard = () => {
     const lvlCfg = {
       Beginner:     { color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+      Basic:        { color: '#f97316', bg: '#fff7ed', border: '#fdba74' },
       Intermediate: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
       Advanced:     { color: '#22c55e', bg: '#f0fdf4', border: '#bbf7d0' },
+      Expert:       { color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
     };
+    const confidenceCfg = {
+      Low: { color: '#ef4444', bg: '#fef2f2' },
+      Medium: { color: '#f59e0b', bg: '#fffbeb' },
+      High: { color: '#22c55e', bg: '#f0fdf4' },
+    };
+    const competencyData = skillCompetency.data;
+    const skills = competencyData?.skills ?? [];
+    const overall = competencyData?.overall ?? null;
+    const weakestSkill = competencyData?.weakestSkill ?? null;
+
     return (
       <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
-        <SectionLabel icon={Brain} color="#a78bfa" label="Skill Competency"/>
-        <div className="grid grid-cols-2 gap-2.5">
-          {MOCK_SKILL_COMPETENCY.map((s, i) => {
-            const cfg = lvlCfg[s.level] || lvlCfg.Intermediate;
-            return (
-              <div key={i} className="rounded-xl p-3 border" style={{ background: cfg.bg, borderColor: cfg.border }}>
-                <div className="flex items-start justify-between gap-1 mb-2">
-                  <span className="text-[10px] font-bold text-gray-700 leading-tight">{s.skill}</span>
-                  {s.trend === 'up'      && <ChevronUp   size={12} className="text-green-500 shrink-0 mt-0.5" />}
-                  {s.trend === 'down'    && <ChevronDown size={12} className="text-red-400 shrink-0 mt-0.5" />}
-                  {s.trend === 'neutral' && <Minus       size={12} className="text-gray-400 shrink-0 mt-0.5" />}
+        <SectionLabel
+          icon={Brain}
+          color="#2563eb"
+          label="Skill Competency"
+          badge={competencyData?.attemptsConsidered ? `${competencyData.attemptsConsidered} attempts` : null}
+        />
+
+        {skillCompetency.loading ? (
+          <div className="flex justify-center py-8"><Spinner color="#2563eb" /></div>
+        ) : skillCompetency.error ? (
+          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-500 flex items-start gap-2">
+            <RefreshCw size={14} className="mt-0.5 shrink-0" />
+            <span>{skillCompetency.error}</span>
+          </div>
+        ) : skills.length === 0 ? (
+          <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-6 text-sm text-gray-400 text-center">
+            No Practice 3, Practice 4, Test 1, or Test 2 competency attempts yet.
+          </div>
+        ) : (
+          <>
+            {overall && (
+              <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Overall competency</div>
+                  <div className="flex items-baseline gap-1 mt-1">
+                    <span className="text-2xl font-black text-gray-800">{overall.score}</span>
+                    <span className="text-[10px] text-gray-400">/ 100</span>
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-2xl font-black leading-none" style={{ color: cfg.color }}>{s.score}</span>
-                  <span className="text-[10px] text-gray-400">/ 100</span>
+                <div className="text-right">
+                  <div className="text-xs font-bold text-gray-700">{overall.level}</div>
+                  <div className="text-[10px] text-gray-400 mt-1">Confidence: <span className="font-semibold text-gray-600">{overall.confidence?.level || 'N/A'}</span></div>
                 </div>
-                <div className="w-full bg-white rounded-full h-1.5 border border-white">
-                  <div className="h-1.5 rounded-full" style={{ width: `${s.score}%`, background: cfg.color }} />
-                </div>
-                <div className="text-[9px] font-bold uppercase tracking-widest mt-1.5" style={{ color: cfg.color }}>{s.level}</div>
               </div>
-            );
-          })}
-        </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {skills.map((s) => {
+                const cfg = lvlCfg[s.level] || lvlCfg.Intermediate;
+                const confidence = confidenceCfg[s.confidence?.level] || confidenceCfg.Medium;
+                return (
+                  <div key={s.key} className="rounded-xl p-3 border" style={{ background: cfg.bg, borderColor: cfg.border }}>
+                    <div className="flex items-start justify-between gap-1 mb-2">
+                      <span className="text-[10px] font-bold text-gray-700 leading-tight">{s.skill}</span>
+                      {s.trend === 'up' && <ChevronUp size={12} className="text-green-500 shrink-0 mt-0.5" />}
+                      {s.trend === 'down' && <ChevronDown size={12} className="text-red-400 shrink-0 mt-0.5" />}
+                      {s.trend === 'neutral' && <Minus size={12} className="text-gray-400 shrink-0 mt-0.5" />}
+                    </div>
+                    <div className="flex items-baseline gap-1 mb-2">
+                      <span className="text-2xl font-black leading-none" style={{ color: cfg.color }}>{s.score}</span>
+                      <span className="text-[10px] text-gray-400">/ 100</span>
+                    </div>
+                    <div className="w-full bg-white rounded-full h-1.5 border border-white">
+                      <div className="h-1.5 rounded-full" style={{ width: `${s.score}%`, background: cfg.color }} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-1.5">
+                      <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: cfg.color }}>{s.level}</div>
+                      <div
+                        className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                        style={{ color: confidence.color, backgroundColor: confidence.bg }}
+                        title={`${s.confidence?.score || 0}% confidence from attempt volume and consistency`}
+                      >
+                        {s.confidence?.level || 'N/A'} confidence
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {weakestSkill && (
+              <div className="mt-3 rounded-xl border border-orange-100 bg-orange-50 px-4 py-2.5 flex items-center justify-between gap-2">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-orange-500">Skill gap</div>
+                <div className="text-xs text-right text-orange-700">
+                  <span className="font-bold">{weakestSkill.skill}</span> at {weakestSkill.score}/100
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     );
   };
@@ -6406,7 +6551,7 @@ function TraineeDashboard() {
 
                 {/* Row B: Performance Metrics + Skill Competency side by side */}
                 <div className="grid grid-cols-2 gap-3">
-                  <PerformanceMetricsCard /> {/* 3 */}
+                  <PerformanceMetricsLiveCard /> {/* 3 */}
                   <SkillCompetencyCard />    {/* 4 */}
                 </div>
 
