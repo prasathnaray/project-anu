@@ -4268,6 +4268,18 @@ const normalizeModuleSortLabel = (value = '') => {
   if (/^fl\b/.test(normalized) || /femur/.test(normalized)) {
     return 'FL';
   }
+  if (/principles? of ultrasound/.test(normalized)) {
+    return 'Principles of ultrasound';
+  }
+  if (/probe movements?/.test(normalized)) {
+    return 'Probe Movements';
+  }
+  if (/knobology/.test(normalized)) {
+    return 'Knobology';
+  }
+  if (/morphology/.test(normalized)) {
+    return 'Morphology';
+  }
 
   return String(value).trim();
 };
@@ -4407,6 +4419,49 @@ const RESOURCE_ORDER = Object.fromEntries(
     'FL::Imaging the plane - True/False': 2,
     'FL::True/False': 2,
     'FL::Crossword puzzle': 3,
+
+    'Principles of ultrasound::Ultrasound wave physics': 1,
+    'Principles of ultrasound::Generation of ultrasound waves': 2,
+    'Principles of ultrasound::Ultrasound wave properties': 3,
+    'Principles of ultrasound::Image formation': 4,
+    'Principles of ultrasound::Imaging modes': 5,
+    'Principles of ultrasound::Interaction of ultrasound waves': 6,
+    'Principles of ultrasound::Echogenicity': 7,
+    'Principles of ultrasound::Interaction': 8,
+    'Principles of ultrasound::Artifacts': 9,
+
+    'Probe Movements::Anatomy planes': 1,
+    'Probe Movements::Mindsparks - Drag & Drop': 2,
+    'Probe Movements::Types of probe': 3,
+    'Probe Movements::Mindsparks - Quiz': 4,
+    'Probe Movements::Probe Orientation': 5,
+    'Probe Movements::Probe orientation': 5,
+    'Probe Movements::Mindsparks - Picture Pick': 6,
+    'Probe Movements::Probe Movements': 7,
+    'Probe Movements::Drag & Drop - Directional terms': 8,
+    'Probe Movements::True or False - Probe Orientation': 9,
+    'Probe Movements::Probe movements - Real-time': 10,
+
+    'Knobology::Ultrasound machine': 1,
+    'Knobology::Mindsparks - Quiz': 2,
+    'Knobology::Functions of knobs': 3,
+    'Knobology::Mindsparks - Drag & Drop': 4,
+    'Knobology::Imaging Modes': 5,
+    'Knobology::Mindsparks - True/False': 6,
+    'Knobology::Echo Dose - Match': 7,
+    'Knobology::Echo Dose - Crossword': 8,
+
+    'Morphology::Image formation & sector orientation': 1,
+    'Morphology::Mind Sparks - MCQ': 2,
+    'Morphology::Need for understanding sector orientation': 3,
+    'Morphology::Mind Sparks - ChatBot': 4,
+    'Morphology::3D to 2D Imaging': 5,
+    'Morphology::Mind Sparks - Scanning': 6,
+    'Morphology::2D to 3D Imaging': 7,
+    'Morphology::Mind Sparks - Picture Pick': 8,
+    'Morphology::Interaction - Spin Wheel': 9,
+    'Morphology::Sector Orientation': 10,
+    'Morphology::3D to 2D Prediction': 11,
   }).map(([key, value]) => [normalizeSortKey(key), value])
 );
 
@@ -4490,13 +4545,70 @@ const TOPIC_ORDER = [
   'Image Diagnosis',
   'Image diagnosis',
   'OB Boosters',
+  'Ultrasound wave physics',
+  'Generation of ultrasound waves',
+  'Ultrasound wave properties',
+  'Image formation',
+  'Imaging modes',
+  'Interaction of ultrasound waves',
+  'Echogenicity',
+  'Interaction',
+  'Artifacts',
+  'Anatomy planes',
+  'Types of probe',
+  'Probe orientation',
+  'Probe movements',
+  'Echo Dose',
+  'Ultrasound machine',
+  'Functions of knobs',
+  'Image Formation & Sector Orientation',
+  '3D to 2D Imaging',
+  '2D to 3D Imaging',
 ];
 
 const TOPIC_ORDER_INDEX = Object.fromEntries(
   TOPIC_ORDER.map((topic, index) => [normalizeSortKey(topic), index])
 );
 
-const MODULE_ORDER = ['BPD & HC', 'AC', 'FL'];
+const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
+  Object.entries({
+    'Principles of ultrasound': [
+      'Ultrasound wave physics',
+      'Generation of ultrasound waves',
+      'Ultrasound wave properties',
+      'Image formation',
+      'Imaging modes',
+      'Interaction of ultrasound waves',
+      'Echogenicity',
+      'Interaction',
+      'Artifacts',
+    ],
+    'Probe Movements': [
+      'Anatomy planes',
+      'Types of probe',
+      'Probe orientation',
+      'Probe movements',
+      'Echo Dose',
+    ],
+    Knobology: [
+      'Ultrasound machine',
+      'Functions of knobs',
+      'Imaging modes',
+      'Echo Dose',
+    ],
+    Morphology: [
+      'Image Formation & Sector Orientation',
+      '3D to 2D Imaging',
+      '2D to 3D Imaging',
+      'Echo Dose',
+    ],
+  }).map(([moduleName, topics]) => [
+    normalizeSortKey(moduleName),
+    Object.fromEntries(topics.map((topic, index) => [normalizeSortKey(topic), index])),
+  ])
+);
+
+const MODULE_ORDER = ['BPD & HC', 'AC', 'FL', 'Principles of ultrasound', 'Probe Movements', 'Knobology', 'Morphology'];
 
 const TOPIC_ICONS = Object.fromEntries(
   Object.entries({
@@ -4865,9 +4977,10 @@ function sessionSummary(session) {
 
 // ─── TOPIC GROUPS ─────────────────────────────────────────────────────────────
 
-function buildTopicGroups(items) {
+function buildTopicGroups(items, orderScope = '') {
   const topicMap   = {};
   const directRows = [];
+  const scopedTopicOrder = TOPIC_ORDER_BY_MODULE[normalizeSortKey(orderScope)] || TOPIC_ORDER_INDEX;
   items.forEach(r => {
     if (!r.topic) { directRows.push(r); return; }
     if (!topicMap[r.topic]) topicMap[r.topic] = [];
@@ -4876,8 +4989,8 @@ function buildTopicGroups(items) {
   const accordions = Object.entries(topicMap)
     .map(([topic, topicItems]) => ({ topic, items: topicItems }))
     .sort((a, b) => {
-      const ai = TOPIC_ORDER_INDEX[normalizeSortKey(a.topic)] ?? 999;
-      const bi = TOPIC_ORDER_INDEX[normalizeSortKey(b.topic)] ?? 999;
+      const ai = scopedTopicOrder[normalizeSortKey(a.topic)] ?? 999;
+      const bi = scopedTopicOrder[normalizeSortKey(b.topic)] ?? 999;
       return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
     });
   return { accordions, directRows };
@@ -6210,7 +6323,7 @@ function MyLearning() {
       //down variable is working fine
       //const isFlat = typeKey === 'interpret' || typeKey === 'test';
       if (isFlat) return { typeKey, flatList: true, accordions: [], directRows: byType[typeKey] };
-      const { accordions, directRows } = buildTopicGroups(byType[typeKey]);
+      const { accordions, directRows } = buildTopicGroups(byType[typeKey], activeModMeta?.label || '');
       return { typeKey, flatList: false, accordions, directRows };
     });
 
