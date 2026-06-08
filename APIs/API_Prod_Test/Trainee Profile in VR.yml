@@ -5,17 +5,17 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/trainee/43921b1f-1cca-4df5-853d-6491b9317ecc?isVr=false
+  url: http://{{base_url_prod}}/api/v1/trainee/4ef474a4-3dd3-4d35-bfdf-40039b8a5be9?isVr=true
   params:
     - name: isVr
-      value: "false"
+      value: "true"
       type: query
   body:
     type: json
     data: ""
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiaWF0IjoxNzc5Nzg2MjA2fQ.XDDDMxJAQVjD5lrMJyh-1RSDSFXvUOyLjEYKq-5quiU
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJzaGFoQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3ODA4OTYzNzN9.EWRuynvATbSi7sLmovAQSzxf-wbwG0H2p6SxHGoSr9Q
 
 settings:
   encodeUrl: true

@@ -4619,9 +4619,28 @@ async function fetchBatchCert(batchId, token) {
   });
   if (!res.ok) throw new Error(`Batch API HTTP ${res.status}`);
   const json = await res.json();
+  const certificates = Array.isArray(json?.batchInfo?.certificates)
+    ? json.batchInfo.certificates.filter(cert => cert?.certificate_id)
+    : [];
+
+  if (certificates.length > 0) {
+    return {
+      certIds: certificates.map(cert => cert.certificate_id),
+      certById: certificates.reduce((acc, cert) => {
+        acc[cert.certificate_id] = cert.certificate_name || cert.certificate_id;
+        return acc;
+      }, {}),
+    };
+  }
+
   const cert = json?.batchInfo?.certificate;
-  if (cert?.certificate_id && cert?.certificate_name) {
-    return { certId: cert.certificate_id, certName: cert.certificate_name };
+  if (cert?.certificate_id) {
+    return {
+      certIds: [cert.certificate_id],
+      certById: {
+        [cert.certificate_id]: cert.certificate_name || cert.certificate_id,
+      },
+    };
   }
   return null;
 }
@@ -4673,7 +4692,9 @@ async function fetchActivityLastScores(token) {
  */
 function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [], activityLastScores = []) {
   const { data: rawData = [], reAttempts = [] } = apiResponse;
+  const batchCertIds = new Set((batchCert?.certIds || []).filter(Boolean));
   const scopedCertificateIds = new Set((batchCertificateIds || []).filter(Boolean));
+  const allowedCertificateIds = batchCertIds.size > 0 ? batchCertIds : scopedCertificateIds;
   const activityScoreMap = new Map(
     (activityLastScores || [])
       .filter(row => row?.resource_id)
@@ -4681,11 +4702,9 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
   );
 
   // ── Filter to batch certificate only ─────────────────────────────────────
-  const data = batchCert
-    ? rawData.filter(item => item.certificate_id === batchCert.certId)
-    : scopedCertificateIds.size > 0
-      ? rawData.filter(item => scopedCertificateIds.has(item.certificate_id))
-      : rawData;
+  const data = allowedCertificateIds.size > 0
+    ? rawData.filter(item => allowedCertificateIds.has(item.certificate_id))
+    : [];
 
   // ── Re-attempt lookup ─────────────────────────────────────────────────────
   const reAttemptMap = {};
@@ -4707,7 +4726,11 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
   data.forEach(item => {
     if (!item.certificate_id || certSeen.has(item.certificate_id)) return;
     certSeen.add(item.certificate_id);
-    const rawLabel = batchCert?.certName ?? item.certificate_name ?? item.course_name ?? item.certificate_id;
+    const rawLabel =
+      batchCert?.certById?.[item.certificate_id] ??
+      item.certificate_name ??
+      item.course_name ??
+      item.certificate_id;
     certOrder.push({
       id:    item.certificate_id,
       label: normalizeCertTabLabel(rawLabel, item.certificate_id),
@@ -6105,14 +6128,10 @@ function MyLearning() {
           fetchActivityLastScores(token).catch(() => []),
         ]);
         const currentBatch = traineeJson?.currentBatches?.[0];
-        const batchId = currentBatch?.batch_id || localStorage.getItem('batch_id');
+        const batchId = currentBatch?.batch_id || null;
         const batchCertificateIds = Array.isArray(currentBatch?.certification_data)
           ? currentBatch.certification_data.filter(Boolean)
           : [];
-
-        if (currentBatch?.batch_id) {
-          localStorage.setItem('batch_id', currentBatch.batch_id);
-        }
 
         const batchCert = batchId
           ? await fetchBatchCert(batchId, token).catch(() => null)
