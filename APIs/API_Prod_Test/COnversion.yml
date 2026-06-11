@@ -1,0 +1,17 @@
+info:
+  name: COnversion
+  type: http
+  seq: 14
+
+http:
+  method: PUT
+  url: http://localhost:4004/api/v1/convert-vol/6982d3f3-8617-49a7-9b0d-d160db9adf6c
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJha2lsQGdtYWlsLmNvbSIsInJvbGUiOiIxMDIiLCJpYXQiOjE3ODA5OTE1MTZ9.TXfb0n2_qtNofpTlzICQZ_QvF0oLJr6uV9KQr98mb4c
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

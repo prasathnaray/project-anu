@@ -1,0 +1,36 @@
+info:
+  name: Volume upload
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: http://localhost:4004/api/v1/sv-upload
+  body:
+    type: multipart-form
+    data:
+      - name: volume_type
+        type: text
+        value: asd
+      - name: volume_name
+        type: text
+        value: adfa
+      - name: volume_ga
+        type: text
+        value: "2"
+      - name: volume_fetal_presentation
+        type: text
+        value: adcxac
+      - name: file
+        type: file
+        value:
+          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-26 111401.png
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJha2lsQGdtYWlsLmNvbSIsInJvbGUiOiIxMDIiLCJpYXQiOjE3ODA5ODYzOTF9.88Uo121g23FuOGLxW5PeysjnAyQpBY6-gGUo5dOBfQk
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
