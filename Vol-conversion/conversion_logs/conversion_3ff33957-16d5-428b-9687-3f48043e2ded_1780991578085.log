@@ -1,0 +1,94 @@
+[2026-06-09T07:52:58.401Z] Starting conversion for volume: 3ff33957-16d5-428b-9687-3f48043e2ded
+[STDERR] When loading module  "CropVolume" , the dependency "ResampleScalarVectorDWIVolume" failed to be loaded.
+
+[STDOUT] qSlicerMarkupsModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDOUT] qSlicerSequencesModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDERR] Traceback (most recent call last):
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/ValveAnnulusAnalysis.py", line 115, in initializeHeartValveLib
+
+[STDERR]     HeartValveLib.setup(usPresetsScenePath)
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 22, in setup
+
+[STDERR]     registerCustomLayouts()
+
+[STDERR]   File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 132, in registerCustomLayouts
+
+[STDERR]     layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(CardiacFourUpViewLayoutId, customLayout)
+
+[STDERR]     ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDERR] Traceback (most recent call last):
+
+[STDERR]   File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 57, in onStartupCompleted
+    VirtualCathLabLogic.addViewLayouts()
+
+[STDERR]   File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 654, in addViewLayouts
+
+[STDERR]     layoutLogic = layoutManager.layoutLogic()
+
+[STDERR]                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+[STDERR] AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDOUT] [2026-06-09 13:23:19] Script starting...
+
+[STDOUT] [2026-06-09 13:23:19] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
+
+[STDOUT] [2026-06-09 13:23:19] Volume ID: 3ff33957-16d5-428b-9687-3f48043e2ded
+
+[STDOUT] [2026-06-09 13:23:19] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.png
+
+[STDOUT] [2026-06-09 13:23:19] Volume name: adfa
+
+[STDOUT] [2026-06-09 13:23:19] Available Kretz-related modules: ['kretzfilereader']
+
+[STDOUT] [2026-06-09 13:23:19] ✅ Kretz file reader modules foun
+[STDOUT] [2026-06-09 13:23:19] Input file size: 469501 bytes
+[2026-06-09 13:23:19] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.nii
+[2026-06-09 13:23:19] Attempting to load Kretz VOL file...
+
+[STDOUT] [2026-06-09 13:23:19] Kretz loader not available: Failed to load node from file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.png
+Error: Loading C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.png -  load failed.
+
+
+[STDOUT] [2026-06-09 13:23:19] Trying generic volume loader...
+
+[STDOUT] "Volume" Reader has successfully read the file "C:\\Users\\igrs\\project-anu\\Vol-conversion\\temp_downloads\\3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.png" "[0.09s]"
+
+[STDOUT] [2026-06-09 13:23:19] ✅ Successfully loaded: 3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 11140
+[STDOUT] [2026-06-09 13:23:19] Node class: vtkMRMLVectorVolumeNode
+
+[STDOUT] [2026-06-09 13:23:19] Image dimensions: (1491, 644, 1)
+
+[STDOUT] [2026-06-09 13:23:19] Saving as NIFTI...
+
+[STDERR] ** ERROR (nifti_image_write_engine): cannot open output file 'C:/Users/igrs/project-anu/Vol-conversion/temp_nifti/TempWrite3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401/3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.nii'
+
+[STDERR] 
+itk::ExceptionObject (00000012ED2F9500)
+Location: "unknown" 
+File: C:\D\S\S-0-build\ITK\Modules\IO\NIFTI\src\itkNiftiImageIO.cxx
+
+[STDERR] Line: 2386
+Description: ITK ERROR: NiftiImageIO(0000018FDA8959D0): ERROR: nifti library failed to write image: C:/Users/igrs/project-anu/Vol-conversion/temp_nifti/TempWrite3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401/3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.nii
+
+
+[STDERR] vtkMRMLVolumeArchetypeStorageNode::UpdateFileList: Failed to write 'C:/Users/igrs/project-anu/Vol-conversion/temp_nifti/TempWrite3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401/3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.nii'
+
+
+
+[STDERR] bool __cdecl qSlicerCoreIOManager::saveNodes(class QString,const class QMap<class QString,class QVariant> &,class vtkMRMLMessageCollection *,class vtkMRMLScene *) error: Saving failed with all writers found for file "C:\\Users\\igrs\\project-anu\\Vol-conversion\\temp_nifti\\3ff33957-16d5-428b-9687-3f48043e2ded_3ff33957-16d5-428b-9687-3f48043e2ded_Screenshot 2025-06-26 111401.nii" of type "VolumeFile"
+
+[STDOUT] [2026-06-09 13:23:19] Cleaned up volume node
+
+[STDOUT] [2026-06-09 13:23:19] ❌ Save failed or file not create
+[STDOUT] {"success": false, "error": "Failed to save NIFTI file"}
+
+[STDOUT] [2026-06-09 13:23:19] Script completed: False
+
+[STDOUT] 
+
+[2026-06-09T07:53:20.258Z] Process exited with code: 1
