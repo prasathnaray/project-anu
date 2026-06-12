@@ -1,6 +1,15 @@
 const client = require('../utils/conn.js');
 const {startVolumeConversion} = require('../utils/startPythonProcess.js');
-const svUploadModel = (requester, volume_type, volume_name, volume_ga, volume_fetal_presentation, volume_file) => {
+const svUploadModel = (
+    requester,
+    volume_type,
+    volume_name,
+    volume_ga,
+    volume_fetal_presentation,
+    trimester,
+    description,
+    volume_file
+) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [101, 102, 103].includes(Number(requester.role));
         if (!isPrivileged) {
@@ -12,12 +21,33 @@ const svUploadModel = (requester, volume_type, volume_name, volume_ga, volume_fe
         }
 
         const query = `
-            INSERT INTO volumes (volume_type, volume_name, volume_ga, volume_fetal_presentation, volume_file, added_by)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO volumes (
+                volume_type,
+                volume_name,
+                volume_ga,
+                volume_fetal_presentation,
+                trimester,
+                description,
+                volume_file,
+                added_by
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *;
         `;
 
-        client.query(query, [volume_type, volume_name, volume_ga, volume_fetal_presentation, volume_file, requester.user_mail], (err, result) => {
+        client.query(
+            query,
+            [
+                volume_type,
+                volume_name,
+                volume_ga,
+                volume_fetal_presentation,
+                trimester,
+                description,
+                volume_file,
+                requester.user_mail
+            ],
+            (err, result) => {
             if (err) {
                 return reject(err);
             } else {

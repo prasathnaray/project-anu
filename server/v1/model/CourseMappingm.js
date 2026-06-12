@@ -52,7 +52,7 @@ const ensureCourseMappingTable = async () => {
 };
 
 const resolveVolume = async (trimester, anatomy_type, volume_name) => {
-    const query = `
+    const exactQuery = `
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
@@ -60,23 +60,45 @@ const resolveVolume = async (trimester, anatomy_type, volume_name) => {
           AND LOWER(TRIM(trimester)) = LOWER(TRIM($3));
     `;
 
-    const result = await client.query(query, [volume_name, anatomy_type, trimester]);
+    const exactResult = await client.query(exactQuery, [volume_name, anatomy_type, trimester]);
 
-    if (result.rows.length === 0) {
-        return {
-            code: 404,
-            message: 'No volume found for the provided trimester, anatomy type, and volume name.'
-        };
+    if (exactResult.rows.length === 1) {
+        return { data: exactResult.rows[0] };
     }
 
-    if (result.rows.length > 1) {
+    if (exactResult.rows.length > 1) {
         return {
             code: 409,
             message: 'Multiple volumes match the provided trimester, anatomy type, and volume name. Use more specific data.'
         };
     }
 
-    return { data: result.rows[0] };
+    // Fallback for legacy rows created before trimester started being persisted.
+    const fallbackQuery = `
+        SELECT volume_id, volume_name, volume_type, trimester
+        FROM public.volumes
+        WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
+          AND LOWER(TRIM(volume_type)) = LOWER(TRIM($2))
+        ORDER BY created_at DESC NULLS LAST;
+    `;
+
+    const fallbackResult = await client.query(fallbackQuery, [volume_name, anatomy_type]);
+
+    if (fallbackResult.rows.length === 0) {
+        return {
+            code: 404,
+            message: 'No volume found for the provided anatomy type and volume name.'
+        };
+    }
+
+    if (fallbackResult.rows.length > 1) {
+        return {
+            code: 409,
+            message: 'Multiple legacy volumes match the provided anatomy type and volume name. Update the volume data or use a unique volume name.'
+        };
+    }
+
+    return { data: fallbackResult.rows[0] };
 };
 
 const validateRecording = async (recordingId, volumeId, recordingType, fieldName) => {
@@ -84,25 +106,52 @@ const validateRecording = async (recordingId, volumeId, recordingType, fieldName
         return null;
     }
 
+    const typePrefix = recordingType === 'shadow' ? 'shadow%' : 'step%';
+
     const query = `
-        SELECT recording_id
+        SELECT recording_id, recording_type
         FROM public.vol_recordings
         WHERE recording_id = $1
           AND volume_id = $2
-          AND recording_type = $3
+          AND LOWER(TRIM(recording_type)) LIKE $3
         LIMIT 1;
     `;
 
-    const result = await client.query(query, [recordingId, volumeId, recordingType]);
+    const result = await client.query(query, [recordingId, volumeId, typePrefix]);
 
-    if (result.rows.length === 0) {
+    if (result.rows.length === 1) {
+        return null;
+    }
+
+    const fallbackQuery = `
+        SELECT recording_id, recording_type, volume_id
+        FROM public.vol_recordings
+        WHERE recording_id = $1
+        LIMIT 1;
+    `;
+
+    const fallbackResult = await client.query(fallbackQuery, [recordingId]);
+
+    if (fallbackResult.rows.length === 0) {
         return {
             code: 404,
-            message: `${fieldName} does not exist for the selected volume with recording_type='${recordingType}'.`
+            message: `${fieldName} does not exist in vol_recordings.`
         };
     }
 
-    return null;
+    const matchedRecording = fallbackResult.rows[0];
+
+    if (matchedRecording.volume_id !== volumeId) {
+        return {
+            code: 409,
+            message: `${fieldName} belongs to a different volume.`
+        };
+    }
+
+    return {
+        code: 409,
+        message: `${fieldName} exists for this volume, but its recording_type is '${matchedRecording.recording_type}', not '${recordingType}'.`
+    };
 };
 
 const createCourseMappingModel = async (
