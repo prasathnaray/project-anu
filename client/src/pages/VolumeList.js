@@ -6,17 +6,20 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { MoreVertical, X } from 'lucide-react';
 import UploadVol from '../components/Instructors/UploadVol';
 import { TextField, Menu, MenuItem } from '@mui/material';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axios from 'axios';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
+import GetVolumeDataAPI from '../API/GetVolumeDataAPI';
 import volumeConvAPI from '../API/volumeConvAPI';
 import CustomCloseButton from '../utils/CustomCloseButton'
 
 function VolumeList() {
   const navigate = useNavigate();
+  const token = localStorage.getItem('user_token');
+  const decoded = jwtDecode(token);
+  const isSuperAdmin = decoded.role === 99;
   const fileInputRef = React.useRef(null);
   const [fileName, setFileName] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
@@ -36,31 +39,41 @@ function VolumeList() {
   const [buttonOpen, setButtonOpen] = useState(true);
   const [openUploadVol, setOpenUploadVol] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(false);
   const [formData, setFormData] = useState({
     volume_name: '',
     volume_type: '',
     volume_fetal_presentation: '',
+    trimester: '',
     volume_ga: '',
+    description: '',
     file: null,
   });
   const [volumesDatumm, setVolumesDatumm] = useState([]);
 
-  const handleAPICall = async () => {
+  const handleAPICall = React.useCallback(async () => {
+    setListLoading(true);
     try {
-      const result = await GetVolInsAPI();
-      console.log(result.data);
-      setVolumesDatumm(result.data);
+      const result = isSuperAdmin
+        ? await GetVolumeDataAPI(token)
+        : await GetVolInsAPI();
+
+      setVolumesDatumm(Array.isArray(result?.data) ? result.data : []);
     } catch (err) {
       console.log(err);
+      toast.error('Failed to load volumes.');
+      setVolumesDatumm([]);
+    } finally {
+      setListLoading(false);
     }
-  };
+  }, [isSuperAdmin, token]);
 
   React.useEffect(() => {
     handleAPICall();
-  }, []);
+  }, [handleAPICall]);
 
-  let decoded = jwtDecode(localStorage.getItem('user_token'));
-  if (decoded.role != 102 && decoded.role != 103 && decoded.role !=99) {
+  const uploaderName = sessionStorage.getItem('user_name') || decoded.user_mail || '';
+  if (![99, 102, 103].includes(decoded.role)) {
     return <Navigate to="/" replace />;
   }
 
@@ -72,7 +85,9 @@ function VolumeList() {
       volume_name: '',
       volume_type: '',
       volume_fetal_presentation: '',
+      trimester: '',
       volume_ga: '',
+      description: '',
       file: null,
     });
     setFileName("");
@@ -90,19 +105,28 @@ function VolumeList() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { volume_name, volume_type, volume_fetal_presentation, volume_ga, file } = formData;
-    if (!volume_name || !volume_type || !volume_fetal_presentation || !volume_ga || !file) {
+    const {
+      volume_name,
+      volume_type,
+      volume_fetal_presentation,
+      trimester,
+      volume_ga,
+      description,
+      file
+    } = formData;
+    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description || !file) {
       toast.error('Please fill all fields and select a file.');
       return;
     }
     try {
       setLoading(true);
-      const token = localStorage.getItem('user_token');
       const data = new FormData();
       data.append('volume_name', volume_name);
       data.append('volume_type', volume_type);
       data.append('volume_fetal_presentation', volume_fetal_presentation);
+      data.append('trimester', trimester);
       data.append('volume_ga', volume_ga);
+      data.append('description', description);
       data.append('file', file);
       const response = await VolumeUploadAPI(token, data);
       if (response.status === 200 || response.status === 201) {
@@ -112,7 +136,9 @@ function VolumeList() {
           volume_name: '',
           volume_type: '',
           volume_fetal_presentation: '',
+          trimester: '',
           volume_ga: '',
+          description: '',
           file: null,
         });
         setFileName("");
@@ -147,7 +173,7 @@ function VolumeList() {
       
       const response = await volumeConvAPI(selectedVolume.volume_id);
       
-      if (response.status == 200 || response.status == 201) {
+      if (response.status === 200 || response.status === 201) {
         toast.success(`Conversion Started!`, {
           autoClose: 3000,
           toastId: 'convert-success',
@@ -216,9 +242,9 @@ function VolumeList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? (
+                  {listLoading ? (
                     <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500">
+                      <td colSpan={5} className="py-4 text-center text-gray-500">
                         <ClipLoader
                           color="#8DC63F"
                           size={24}
@@ -228,7 +254,7 @@ function VolumeList() {
                     </tr>
                   ) : volumesDatumm.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-4 text-center text-gray-500">
+                      <td colSpan={5} className="py-4 text-center text-gray-500">
                         No volumes found
                       </td>
                     </tr>
@@ -327,7 +353,7 @@ function VolumeList() {
                 fullWidth
                 variant="outlined"
                 size="small"
-                label="Volume Type"
+                label="Anatomy Type"
                 name="volume_type"
                 value={formData.volume_type}
                 onChange={handleChange}
@@ -342,13 +368,49 @@ function VolumeList() {
                 onChange={handleChange}
               />
               <TextField
+                select
                 fullWidth
                 variant="outlined"
                 size="small"
-                label="GA"
+                label="Trimester"
+                name="trimester"
+                value={formData.trimester}
+                onChange={handleChange}
+              >
+                <MenuItem value="">Select Trimester</MenuItem>
+                <MenuItem value="First Trimester">First Trimester</MenuItem>
+                <MenuItem value="Second Trimester">Second Trimester</MenuItem>
+                <MenuItem value="Third Trimester">Third Trimester</MenuItem>
+              </TextField>
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Gestational Age"
                 name="volume_ga"
+                type="number"
                 value={formData.volume_ga}
                 onChange={handleChange}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Uploader Name"
+                value={uploaderName}
+                InputProps={{ readOnly: true }}
+              />
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                variant="outlined"
+                size="small"
+                label="Case Details"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="col-span-2"
               />
             </div>
 

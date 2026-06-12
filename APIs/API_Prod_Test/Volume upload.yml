@@ -21,6 +21,12 @@ http:
       - name: volume_fetal_presentation
         type: text
         value: adcxac
+      - name: trimester
+        type: text
+        value: Second Trimester
+      - name: description
+        type: text
+        value: Sample fetal anatomy case details
       - name: file
         type: file
         value:

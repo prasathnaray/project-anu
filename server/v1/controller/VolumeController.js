@@ -13,8 +13,15 @@ const VolumeController = async(req, res) => {
                 })
         }
         const file = req.file;
-        const {volume_type, volume_name, volume_ga, volume_fetal_presentation} = req.body;
-        if(!volume_type||!volume_name || !volume_ga || !volume_fetal_presentation)
+        const {
+            volume_type,
+            volume_name,
+            volume_ga,
+            volume_fetal_presentation,
+            trimester,
+            description
+        } = req.body;
+        if(!volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester || !description)
         {
           
             return res.status(406).json({
@@ -32,7 +39,16 @@ const VolumeController = async(req, res) => {
         if (error) {
             return res.status(500).json({ status: 'Error', message: error.message });
         }
-        const result = await svUploadModel(requester, volume_type, volume_name, volume_ga, volume_fetal_presentation, filePath)
+        const result = await svUploadModel(
+            requester,
+            volume_type,
+            volume_name,
+            volume_ga,
+            volume_fetal_presentation,
+            trimester,
+            description,
+            filePath
+        )
         if(result.rowCount == 1)
         {
             res.status(200).json({
