@@ -19,7 +19,8 @@ function VolumeList() {
   const navigate = useNavigate();
   const token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
-  const isSuperAdmin = decoded.role === 99;
+  const userRole = Number(decoded.role);
+  const isSuperAdmin = userRole === 99;
   const fileInputRef = React.useRef(null);
   const [fileName, setFileName] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
@@ -40,6 +41,9 @@ function VolumeList() {
   const [openUploadVol, setOpenUploadVol] = useState(false);
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [approvalFilter, setApprovalFilter] = useState('all');
+  const [conversionFilter, setConversionFilter] = useState('all');
   const [formData, setFormData] = useState({
     volume_name: '',
     volume_type: '',
@@ -73,9 +77,30 @@ function VolumeList() {
   }, [handleAPICall]);
 
   const uploaderName = sessionStorage.getItem('user_name') || decoded.user_mail || '';
-  if (![99, 102, 103].includes(decoded.role)) {
+  if (![99, 102, 103].includes(userRole)) {
     return <Navigate to="/" replace />;
   }
+
+  const filteredVolumes = volumesDatumm.filter((volume) => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      normalizedQuery === '' ||
+      volume.volume_name?.toLowerCase().includes(normalizedQuery) ||
+      volume.volume_id?.toLowerCase().includes(normalizedQuery) ||
+      volume.volume_type?.toLowerCase().includes(normalizedQuery);
+
+    const matchesApproval =
+      approvalFilter === 'all' ||
+      (approvalFilter === 'approved' && volume.status) ||
+      (approvalFilter === 'pending' && !volume.status);
+
+    const matchesConversion =
+      conversionFilter === 'all' ||
+      (conversionFilter === 'completed' && volume.conversion_completion) ||
+      (conversionFilter === 'pending' && !volume.conversion_completion);
+
+    return matchesSearch && matchesApproval && matchesConversion;
+  });
 
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
 
@@ -222,7 +247,41 @@ function VolumeList() {
             </div>
           </div>
           <div className="m-5 bg-white border-b">
-            <div className="flex justify-end items-center p-4">
+            <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:flex-1 md:max-w-4xl">
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Search volumes"
+                  placeholder="Search by ID, name, or anatomy type"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Approval Status"
+                  value={approvalFilter}
+                  onChange={(e) => setApprovalFilter(e.target.value)}
+                >
+                  <MenuItem value="all">All</MenuItem>
+                  <MenuItem value="approved">Approved</MenuItem>
+                  <MenuItem value="pending">Pending</MenuItem>
+                </TextField>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Conversion Status"
+                  value={conversionFilter}
+                  onChange={(e) => setConversionFilter(e.target.value)}
+                >
+                  <MenuItem value="all">All</MenuItem>
+                  <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="pending">Pending</MenuItem>
+                </TextField>
+              </div>
               <button
                 className="px-2 p-1 bg-[#8DC63F] text-white rounded text-sm"
                 onClick={() => setOpenUploadVol(true)}
@@ -252,14 +311,14 @@ function VolumeList() {
                         />
                       </td>
                     </tr>
-                  ) : volumesDatumm.length === 0 ? (
+                  ) : filteredVolumes.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-4 text-center text-gray-500">
                         No volumes found
                       </td>
                     </tr>
                   ) : (
-                    volumesDatumm.map((volume) => (
+                    filteredVolumes.map((volume) => (
                       <tr key={volume.volume_id} className="text-sm text-gray-700 border-b hover:bg-gray-50">
                         <td className="py-2 px-4 font-medium text-[#8DC63F]">
                           {volume.volume_id.slice(0, 8).toUpperCase()}
