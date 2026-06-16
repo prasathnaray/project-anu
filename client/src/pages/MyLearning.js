@@ -4783,6 +4783,15 @@ async function fetchPracTestAttemptDetails(resourceId, token) {
   return Array.isArray(json?.data) ? json.data : [];
 }
 
+async function fetchPractice12Results(resourceId, token) {
+  const res = await fetch(`${BASE_URL}/api/v1/practice-i-ii?resource_id=${encodeURIComponent(resourceId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Practice results API HTTP ${res.status}`);
+  const json = await res.json();
+  return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+}
+
 async function fetchActivityLastScores(token) {
   const res = await fetch(`${BASE_URL}/api/v1/activity-last-scores`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -5228,6 +5237,144 @@ const formatAttemptValue = (value, decimals = 2) => {
   if (Number.isFinite(num)) return Number.isInteger(num) ? String(num) : num.toFixed(decimals);
   return String(value);
 };
+
+const parsePractice12ResultList = (rawResults) => {
+  let results = rawResults;
+
+  if (typeof results === 'string') {
+    try {
+      results = JSON.parse(results);
+    } catch {
+      results = [];
+    }
+  }
+
+  if (!Array.isArray(results)) return [];
+
+  return results
+    .map((item, idx) => ({
+      index: item?.index ?? idx + 1,
+      time: Number(item?.time ?? item?.Time ?? 0),
+    }))
+    .filter(item => Number.isFinite(item.time) && item.time >= 0)
+    .sort((a, b) => Number(a.index) - Number(b.index));
+};
+
+function Practice12VisualizationPanel({ r, token }) {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [rows, setRows] = React.useState([]);
+
+  React.useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    fetchPractice12Results(r.id, token)
+      .then(data => {
+        if (active) setRows(data);
+      })
+      .catch(err => {
+        if (active) setError(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [r.id, token]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-10 text-gray-400">
+        <Loader2 size={18} className="animate-spin mr-2" />
+        <span className="text-sm">Loading practice data...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-red-400">
+        <p className="text-sm font-medium">Failed to load practice data</p>
+        <p className="text-xs mt-1 text-gray-400">{error}</p>
+      </div>
+    );
+  }
+
+  const latest = rows[0] || null;
+  const points = parsePractice12ResultList(latest?.results);
+
+  if (points.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+        <Target size={28} className="mb-2 text-gray-300" />
+        <p className="text-sm font-medium">No practice data found</p>
+        <p className="text-xs mt-1">This resource has no saved timing data yet</p>
+      </div>
+    );
+  }
+
+  const totalTime = points.reduce((sum, item) => sum + item.time, 0);
+  const averageTime = totalTime / points.length;
+  const fastest = Math.min(...points.map(item => item.time));
+  const slowest = Math.max(...points.map(item => item.time));
+  const maxTime = Math.max(slowest, 1);
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {[
+          ['Steps', points.length],
+          ['Total Time', `${formatAttemptValue(totalTime)} s`],
+          ['Average', `${formatAttemptValue(averageTime)} s`],
+          ['Fastest', `${formatAttemptValue(fastest)} s`],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+            <p className="text-[10px] text-gray-400">{label}</p>
+            <p className="text-sm font-semibold text-gray-700">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-gray-100 bg-white p-3">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <Target size={13} className="text-[#8DC63F]" />
+            <span className="text-xs font-semibold text-gray-600">Time by step</span>
+          </div>
+          <span className="text-[10px] text-gray-400">
+            Practice {latest?.practice_number || getPracticeNumber(r.name) || ''}
+          </span>
+        </div>
+
+        <div className="space-y-2.5">
+          {points.map(point => {
+            const width = `${Math.max(5, Math.round((point.time / maxTime) * 100))}%`;
+            return (
+              <div key={point.index} className="grid grid-cols-[64px_1fr_58px] items-center gap-2 text-xs">
+                <span className="text-gray-500 font-medium">Step {point.index}</span>
+                <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full rounded-full bg-[#8DC63F]" style={{ width }} />
+                </div>
+                <span className="text-right font-semibold text-gray-700">{formatAttemptValue(point.time)} s</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-blue-100 bg-blue-50/40 px-3 py-3">
+        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+          <p>Slowest: <span className="font-semibold text-gray-700">{formatAttemptValue(slowest)} s</span></p>
+          <p>Resource: <span className="font-semibold text-gray-700">{r.name}</span></p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SubmittedAttemptCard({ attempt, isLatest }) {
   const [open, setOpen] = React.useState(isLatest);
@@ -5809,9 +5956,12 @@ function FeedbackPanel({ reAttempts }) {
 }
 
 function PracticeExpandedPanel({ r, showFeedback, showSubmission = false, token, className = '' }) {
-  const [activeTab, setActiveTab] = React.useState('log');
+  const practiceNumber = getPracticeNumber(r.name);
+  const showVisualization = r.type === 'practice' && (practiceNumber === 1 || practiceNumber === 2);
+  const [activeTab, setActiveTab] = React.useState(showVisualization ? 'visualization' : 'log');
   const tabs = [
     { id: 'log',      label: 'Attempt Log', icon: History       },
+    ...(showVisualization ? [{ id: 'visualization', label: 'Visualization', icon: Target }] : []),
     ...(showFeedback ? [{ id: 'feedback', label: 'Feedback', icon: MessageSquare }] : []),
     ...(showSubmission ? [{ id: 'submission', label: 'Submitted Content', icon: FileText }] : []),
   ];
@@ -5861,6 +6011,7 @@ function PracticeExpandedPanel({ r, showFeedback, showSubmission = false, token,
 
       <div className="p-3">
         {activeTab === 'log'      && <ReattemptLog reAttempts={r.reAttempts} updatedAt={r.updatedAt} />}
+        {activeTab === 'visualization' && <Practice12VisualizationPanel r={r} token={token} />}
         {activeTab === 'feedback' && <FeedbackPanel reAttempts={r.reAttempts} />}
         {activeTab === 'submission' && <SubmittedContentPanel r={r} token={token} />}
       </div>

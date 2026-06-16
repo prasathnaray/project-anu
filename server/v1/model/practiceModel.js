@@ -161,7 +161,7 @@ const bulkCreatePracticeResults = async (requester, practice_id, resource_id, pr
     throw err;
   }
 };
-const getPractice12ByUserId = async (user_id, requester) => {
+const getPractice12ByUserId = async (requester, resource_id = null) => {
   const isPrivileged = PRIVILEGED_ROLES.includes(Number(requester.role));
   if (!isPrivileged) {
     return {
@@ -170,6 +170,31 @@ const getPractice12ByUserId = async (user_id, requester) => {
       message: 'You do not have permission to access this profile.',
     };
   }
+  const userId = requester.user_id ?? requester.id ?? requester.sub ?? requester.user_mail ?? null;
+
+  if (!userId) {
+    return {
+      status: 'Bad Request',
+      code: 400,
+      message: 'Could not resolve user identity from request token.',
+    };
+  }
+
+  const values = [userId];
+  let resourceFilter = '';
+
+  if (resource_id) {
+    if (!isValidUUID(resource_id)) {
+      return {
+        status: 'Bad Request',
+        code: 400,
+        message: 'resource_id must be a valid UUID',
+      };
+    }
+    values.push(resource_id);
+    resourceFilter = 'AND pr.resource_id = $2';
+  }
+
   const result = await client.query(
     `SELECT 
         rd.resource_id,
@@ -177,12 +202,14 @@ const getPractice12ByUserId = async (user_id, requester) => {
         rd.resource_type,
         pr.user_id,
         pr.practice_id,
-        pr.practice_number,W
+        pr.practice_number,
         pr.results
      FROM practice_results pr
      JOIN resource_data rd ON rd.resource_id = pr.resource_id
-     WHERE pr.user_id = $1`,
-    [user_id]
+     WHERE pr.user_id = $1
+     ${resourceFilter}
+     ORDER BY pr.practice_number, rd.resource_name`,
+    values
   );
   return result.rows;
 };
