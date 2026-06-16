@@ -34,6 +34,8 @@ import Academics from '../pages/Academics';
 import MyLearning from '../pages/MyLearning';
 import MyProgress from '../pages/MyProgress';
 import TraineeDashboard from '../components/trainee/TraineeDashboard';
+import CourseMapping from '../pages/CourseMapping';
+import CustomCourse from '../pages/CustomCourse';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -68,6 +70,8 @@ function RoutesPath() {
                             <Route path="/cert-course/:certificate_id" element={<InsideCertifications />} />
                             <Route path="/reports" element={<Reports />} />
                             <Route path="/academics" element={<Academics />} />
+                            <Route path="/course-mapping" element={<CourseMapping />} />
+                            <Route path="/custom-course" element={<CustomCourse />} />
                             <Route path="/my-learning" element={<MyLearning />} />
                             <Route path="/my-progress" element={<MyProgress />} />
                      </Route>

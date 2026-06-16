@@ -23,7 +23,7 @@ import {
 import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie, Notebook} from 'lucide-react';
+import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie, Notebook, Network} from 'lucide-react';
 function SideBar({ handleButtonOpen, buttonOpen }) {
   const navigate = useNavigate();
   const ripple = new MaterialRipple();
@@ -73,6 +73,21 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     >
                       <MessageSquareText size={20} />
                       <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Volumes</div>
+                    </button>
+                  </li>
+                  <li className="mb-1 mt-2">
+                    <button
+                      onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                      onClick={() => navigate("/course-mapping")}
+                      className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200
+                        ${
+                          data === "/course-mapping"
+                            ? "bg-[#8DC63F] text-white"
+                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                        }`}
+                    >
+                      <Network size={20} />
+                      <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Course Mapping</div>
                     </button>
                   </li>
                   <li className="mb-1 mt-2">
@@ -361,6 +376,22 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
       >
         <BookText size={20} />
         <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certifications</div>
+      </button>
+    </li>
+
+    <li className="mb-1 mt-2">
+      <button
+        onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+        onClick={() => navigate("/custom-course")}
+        className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200
+          ${
+            data === "/custom-course"
+              ? "bg-[#8DC63F] text-white"
+              : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+          }`}
+      >
+        <Notebook size={20} />
+        <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>SVT Course</div>
       </button>
     </li>
 

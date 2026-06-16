@@ -11,7 +11,7 @@ const svUploadModel = (
     volume_file
 ) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [101, 102, 103].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
@@ -58,7 +58,7 @@ const svUploadModel = (
 };
 const getUploadedVolume = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [101, 102, 103].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
@@ -251,6 +251,7 @@ const getVolumeInstructorViewModel = (requester) => {
                 v.volume_id,
                 v.volume_type,
                 v.volume_name,
+                v.trimester,
                 v.volume_ga,
                 v.volume_fetal_presentation,
                 v.status,

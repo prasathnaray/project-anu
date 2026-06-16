@@ -29,6 +29,9 @@ const ensureCourseMappingTable = async () => {
             anatomy_type character varying(100) NOT NULL,
             volume_id uuid NOT NULL,
             volume_name character varying(255) NOT NULL,
+            course_name character varying(255) NULL,
+            description text NULL,
+            doctor_name character varying(255) NULL,
             module_name character varying(100) NOT NULL,
             course_type character varying(50) NOT NULL,
             shadow_recording_id uuid NULL,
@@ -46,6 +49,15 @@ const ensureCourseMappingTable = async () => {
 
         CREATE INDEX IF NOT EXISTS idx_course_mapping_module_name
             ON public.course_mapping(module_name);
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS course_name character varying(255);
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS description text;
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS doctor_name character varying(255);
     `;
 
     await client.query(query);
@@ -162,7 +174,10 @@ const createCourseMappingModel = async (
     module_name,
     course_type,
     shadow_recording_id,
-    step_recording_id
+    step_recording_id,
+    course_name,
+    description,
+    doctor_name
 ) => {
     if (!isPrivilegedUser(requester)) {
         return {
@@ -242,13 +257,16 @@ const createCourseMappingModel = async (
             anatomy_type,
             volume_id,
             volume_name,
+            course_name,
+            description,
+            doctor_name,
             module_name,
             course_type,
             shadow_recording_id,
             step_recording_id,
             created_by
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *;
     `;
 
@@ -258,6 +276,9 @@ const createCourseMappingModel = async (
         anatomy_type,
         volume.volume_id,
         volume.volume_name,
+        course_name || null,
+        description || null,
+        doctor_name || null,
         module_name,
         course_type,
         shadow_recording_id || null,
@@ -285,6 +306,11 @@ const getCourseMappingsModel = async (requester, filters = {}) => {
 
     const conditions = [];
     const values = [];
+
+    if (Number(requester.role) === 102) {
+        values.push(requester.user_mail);
+        conditions.push(`cm.created_by = $${values.length}`);
+    }
 
     if (filters.trimester) {
         values.push(filters.trimester);

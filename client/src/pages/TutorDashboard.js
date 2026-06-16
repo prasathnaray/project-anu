@@ -6,8 +6,10 @@ import BasicPie from '../charts/PieChart';
 import VolumeChart from '../charts/VolumeChart';
 import getDashboardAPI from '../API/dashboardAPI';
 import BatchProgressBarChart from '../charts/BatchProgressBarChart';
+import { useNavigate } from 'react-router-dom';
 
 function TutorDashboard() {
+    const navigate = useNavigate();
     const [dateTime, setDateTime] = React.useState("");
     const [buttonOpen, setButtonOpen] = React.useState(true);
     const [apiData, setApiData] = React.useState({});
@@ -85,6 +87,12 @@ function TutorDashboard() {
                                                 <LayoutDashboard size={21} />
                                             </div>
                                             <span className="text-lg font-semibold text-gray-700">Instructor Dashboard</span>
+                                            <button
+                                                className="ml-auto bg-[#8DC63F] text-white rounded px-4 py-2 text-sm font-semibold"
+                                                onClick={() => navigate('/custom-course')}
+                                            >
+                                                Add Course
+                                            </button>
                                     </div>
 
                                     <div className="p-4 bg-[#8DC63F] mt-4 rounded text-white flex justify-between items-center shadow-inner">

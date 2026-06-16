@@ -15,7 +15,10 @@ const createCourseMappingController = async (req, res) => {
         module_name,
         course_type,
         shadow_recording_id,
-        step_recording_id
+        step_recording_id,
+        course_name,
+        description,
+        doctor_name
     } = req.body;
 
     if (!trimester || !anatomy_type || !volume_name || !module_name || !course_type) {
@@ -59,7 +62,10 @@ const createCourseMappingController = async (req, res) => {
             module_name,
             course_type,
             shadow_recording_id,
-            step_recording_id
+            step_recording_id,
+            course_name,
+            description,
+            doctor_name
         );
 
         if (result.code && result.code !== 201) {
