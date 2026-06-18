@@ -1,25 +1,30 @@
-=== Kretz conversion started at 2026-02-13 13:24:14 ===
-[2026-02-13 13:24:14] Script starting...
-[2026-02-13 13:24:14] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
-[2026-02-13 13:24:14] Volume ID: a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb
-[2026-02-13 13:24:14] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_FL - I0000004.vol
-[2026-02-13 13:24:14] Volume name: FL
-[2026-02-13 13:24:14] Available Kretz-related modules: ['kretzfilereader']
-[2026-02-13 13:24:14] ✅ Kretz file reader modules found
-[2026-02-13 13:24:14] Input file size: 35542728 bytes
-[2026-02-13 13:24:14] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_FL - I0000004.nii
-[2026-02-13 13:24:14] Attempting to load Kretz VOL file...
-[2026-02-13 13:24:21] ✅ Successfully loaded: FL
-[2026-02-13 13:24:21] Node class: vtkMRMLScalarVolumeNode
-[2026-02-13 13:24:21] Image dimensions: (320, 282, 230)
-[2026-02-13 13:24:21] Saving as NIFTI...
-[2026-02-13 13:24:21] Cleaned up volume node
-[2026-02-13 13:24:21] ✅ NIFTI saved locally: 20755552 bytes
-[2026-02-13 13:24:21] 📤 Starting upload to Supabase...
-[2026-02-13 13:24:21] Initializing Supabase client...
-[2026-02-13 13:24:21] Uploading to Supabase: converted_vol_files/a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_FL - I0000004.nii
-[2026-02-13 13:24:25] ✅ Upload successful: converted_vol_files/a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_FL - I0000004.nii
-[2026-02-13 13:24:25] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_FL%20-%20I0000004.nii
-[2026-02-13 13:24:25] File size: 20755552 bytes (20269.09 KB, 19.79 MB)
-[2026-02-13 13:24:25] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_a2034dc7-6648-42e9-a1cc-71ecfe8fd4bb_FL - I0000004.nii
-[2026-02-13 13:24:25] Script completed: True
+=== Kretz conversion started at 2026-06-17 12:46:09 ===
+[2026-06-17 12:46:09] Script starting...
+[2026-06-17 12:46:09] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
+[2026-06-17 12:46:09] Volume ID: d0f5092d-cd14-4594-b647-0b048525ee00
+[2026-06-17 12:46:09] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.vol
+[2026-06-17 12:46:09] Volume name: qdd
+[2026-06-17 12:46:09] Available Kretz-related modules: ['kretzfilereader']
+[2026-06-17 12:46:09] ✅ Kretz file reader modules found
+[2026-06-17 12:46:09] Input file size: 46839091 bytes
+[2026-06-17 12:46:09] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii
+[2026-06-17 12:46:09] Attempting to load Kretz VOL file...
+[2026-06-17 12:46:19] ✅ Successfully loaded: qdd
+[2026-06-17 12:46:19] Node class: vtkMRMLScalarVolumeNode
+[2026-06-17 12:46:19] Image dimensions: (384, 350, 295)
+[2026-06-17 12:46:19] Saving as NIFTI...
+[2026-06-17 12:46:19] Cleaned up volume node
+[2026-06-17 12:46:19] ✅ NIFTI saved locally: 39648352 bytes
+[2026-06-17 12:46:19] 📤 Starting upload to Supabase...
+[2026-06-17 12:46:19] Initializing Supabase client...
+[2026-06-17 12:46:20] Uploading to Supabase: converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii
+[2026-06-17 12:50:17] ✅ Upload successful: converted_vol_files/081c2ca3-0d43-4d8e-8d25-e735a2d954b1_081c2ca3-0d43-4d8e-8d25-e735a2d954b1_Face Profile_I0000085.nii
+[2026-06-17 12:50:17] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/081c2ca3-0d43-4d8e-8d25-e735a2d954b1_081c2ca3-0d43-4d8e-8d25-e735a2d954b1_Face%20Profile_I0000085.nii
+[2026-06-17 12:50:17] File size: 39648352 bytes (38719.09 KB, 37.81 MB)
+[2026-06-17 12:50:17] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\081c2ca3-0d43-4d8e-8d25-e735a2d954b1_081c2ca3-0d43-4d8e-8d25-e735a2d954b1_Face Profile_I0000085.nii
+[2026-06-17 12:50:17] Script completed: True
+[2026-06-17 12:51:30] ✅ Upload successful: converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii
+[2026-06-17 12:51:30] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face%20Profile_I0000085.nii
+[2026-06-17 12:51:30] File size: 39648352 bytes (38719.09 KB, 37.81 MB)
+[2026-06-17 12:51:30] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii
+[2026-06-17 12:51:30] Script completed: True

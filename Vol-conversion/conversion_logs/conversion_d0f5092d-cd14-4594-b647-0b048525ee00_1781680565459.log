@@ -1,0 +1,78 @@
+[2026-06-17T07:16:05.466Z] Starting conversion for volume: d0f5092d-cd14-4594-b647-0b048525ee00
+[STDERR] When loading module  "CropVolume" , the dependency "ResampleScalarVectorDWIVolume" failed to be loaded.
+
+[STDOUT] qSlicerMarkupsModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDOUT] qSlicerSequencesModulePrivate::addToolBar: no main window is available, toolbar is not added
+
+[STDERR] Traceback (most recent call last):
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/ValveAnnulusAnalysis.py", line 115, in initializeHeartValveLib
+
+[STDERR]     HeartValveLib.setup(usPresetsScenePath)
+
+[STDERR]   File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 22, in setup
+    registerCustomLayouts()
+  File "C:\Users\igrs\AppData\Local\slicer.org\3D Slicer 5.10.0\slicer.org\Extensions-34045\SlicerHeart\lib\Slicer-5.10\qt-scripted-modules\HeartValveLib\HeartValves.py", line 132, in registerCustomLayouts
+
+[STDERR]     layoutManager.layoutLogic().GetLayoutNode().AddLayoutDescription(CardiacFourUpViewLayoutId, customLayout)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDERR] Traceback (most recent call last):
+
+[STDERR]   File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 57, in onStartupCompleted
+    VirtualCathLabLogic.addViewLayouts()
+  File "C:/Users/igrs/AppData/Local/slicer.org/3D Slicer 5.10.0/slicer.org/Extensions-34045/SlicerHeart/lib/Slicer-5.10/qt-scripted-modules/VirtualCathLab.py", line 654, in addViewLayouts
+
+[STDERR]     layoutLogic = layoutManager.layoutLogic()
+
+[STDERR]                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'layoutLogic'
+
+[STDOUT] [2026-06-17 12:46:09] Script starting...
+
+[STDOUT] [2026-06-17 12:46:09] === Kretz VOL to NIFTI Conversion (with Supabase Upload) ===
+
+[STDOUT] [2026-06-17 12:46:09] Volume ID: d0f5092d-cd14-4594-b647-0b048525ee00
+[2026-06-17 12:46:09] Input file: C:\Users\igrs\project-anu\Vol-conversion\temp_downloads\d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.vol
+[2026-06-17 12:46:09] Volume name: qdd
+
+[STDOUT] [2026-06-17 12:46:09] Available Kretz-related modules: ['kretzfilereader']
+
+[STDOUT] [2026-06-17 12:46:09] ✅ Kretz file reader modules foun
+[STDOUT] [2026-06-17 12:46:09] Input file size: 46839091 bytes
+
+[STDOUT] [2026-06-17 12:46:09] Temporary output: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii
+
+[STDOUT] [2026-06-17 12:46:09] Attempting to load Kretz VOL file...
+
+[STDOUT] "GE Kretz ultrasound volume" Reader has successfully read the file "C:\\Users\\igrs\\project-anu\\Vol-conversion\\temp_downloads\\d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.vol" "[10.69s]"
+
+[STDOUT] [2026-06-17 12:46:19] ✅ Successfully loaded: qd
+[STDOUT] [2026-06-17 12:46:19] Node class: vtkMRMLScalarVolumeNode
+
+[STDOUT] [2026-06-17 12:46:19] Image dimensions: (384, 350, 295)
+
+[STDOUT] [2026-06-17 12:46:19] Saving as NIFTI...
+
+[STDOUT] [2026-06-17 12:46:19] Cleaned up volume node
+
+[STDOUT] [2026-06-17 12:46:19] ✅ NIFTI saved locally: 39648352 byte
+[STDOUT] [2026-06-17 12:46:19] 📤 Starting upload to Supabase..
+[STDOUT] [2026-06-17 12:46:19] Initializing Supabase client...
+
+[STDOUT] [2026-06-17 12:46:20] Uploading to Supabase: converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii
+
+[STDOUT] Storage endpoint URL should have a trailing slash.
+
+[STDOUT] [2026-06-17 12:51:30] ✅ Upload successful: converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.ni
+[STDOUT] [2026-06-17 12:51:30] Public URL: https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face%20Profile_I0000085.nii
+
+[STDOUT] [2026-06-17 12:51:30] File size: 39648352 bytes (38719.09 KB, 37.81 MB)
+
+[STDOUT] [2026-06-17 12:51:30] 🗑️ Deleted local file: C:\Users\igrs\project-anu\Vol-conversion\temp_nifti\d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.
+[STDOUT] CONVERSION_RESULT:{"success": true, "storage_path": "converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face Profile_I0000085.nii", "public_url": "https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/converted_vol_files/d0f5092d-cd14-4594-b647-0b048525ee00_d0f5092d-cd14-4594-b647-0b048525ee00_Face%20Profile_I0000085.nii", "file_size_bytes": 39648352, "file_size_kb": 38719.09, "file_size_mb": 37.81, "volume_id": "d0f5092d-cd14-4594-b647-0b048525ee00"}
+
+[STDOUT] [2026-06-17 12:51:30] Script completed: True
+
+[2026-06-17T07:21:31.399Z] Process exited with code: 0
