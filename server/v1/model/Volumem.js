@@ -255,6 +255,7 @@ const getVolumeInstructorViewModel = (requester) => {
                 v.volume_ga,
                 v.volume_fetal_presentation,
                 v.status,
+                v.conversion_process_status,
                 v.volume_file,
                 v.added_by,
                 v.approver_id,
@@ -662,6 +663,59 @@ const shadowRecoringDataModel = (requester, volume_id) => {
         })
     })
 }
+const getVolumeRecordingCountsModel = (requester) => {
+    return new Promise((resolve, reject) => {
+        const userRole = Number(requester.role);
+        const isPrivileged = [99, 101, 102, 103].includes(userRole);
+        if (!isPrivileged)
+        {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view volume recordings',
+            })
+        }
+
+        const canViewAllVolumes = [99, 101].includes(userRole);
+        const query = `
+            SELECT 
+                vr.volume_id,
+                COUNT(*) FILTER (
+                    WHERE LOWER(TRIM(vr.recording_type)) LIKE '%shadow%'
+                )::int AS shadow_recording_count,
+                COALESCE(
+                    jsonb_agg(DISTINCT step_files.file_url) FILTER (
+                        WHERE step_files.file_url IS NOT NULL
+                    ),
+                    '[]'::jsonb
+                ) AS step_recording_files
+            FROM vol_recordings vr
+            JOIN volumes v
+                ON v.volume_id = vr.volume_id
+            LEFT JOIN LATERAL jsonb_array_elements_text(vr.rec_files) AS step_files(file_url)
+                ON LOWER(TRIM(vr.recording_type)) LIKE '%step%'
+            WHERE vr.volume_id IS NOT NULL
+              ${!canViewAllVolumes ? 'AND v.added_by = $1' : ''}
+            GROUP BY vr.volume_id;
+        `;
+        const queryParams = canViewAllVolumes ? [] : [requester.user_mail];
+
+        client.query(query, queryParams, (err, result) => {
+            if (err)
+            {
+                return reject(err);
+            }
+            else
+            {
+                return resolve({
+                    status: 'Success',
+                    code: 200,
+                    data: result.rows
+                });
+            }
+        })
+    })
+}
 const getAssociatedVolumeModel = (requester, r_id) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
@@ -709,4 +763,4 @@ const getAssociatedVolumeModel = (requester, r_id) => {
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getAssociatedVolumeModel};
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel};

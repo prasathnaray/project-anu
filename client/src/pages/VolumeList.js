@@ -13,6 +13,7 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
 import GetVolumeDataAPI from '../API/GetVolumeDataAPI';
 import volumeConvAPI from '../API/volumeConvAPI';
+import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
 import CustomCloseButton from '../utils/CustomCloseButton'
 
 function VolumeList() {
@@ -42,6 +43,7 @@ function VolumeList() {
   const [loading, setLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [anatomyFilter, setAnatomyFilter] = useState('all');
   const [approvalFilter, setApprovalFilter] = useState('all');
   const [conversionFilter, setConversionFilter] = useState('all');
   const [formData, setFormData] = useState({
@@ -54,27 +56,81 @@ function VolumeList() {
     file: null,
   });
   const [volumesDatumm, setVolumesDatumm] = useState([]);
+  const [volumeRecordingCounts, setVolumeRecordingCounts] = useState({});
 
-  const handleAPICall = React.useCallback(async () => {
-    setListLoading(true);
+  const handleAPICall = React.useCallback(async ({ showLoading = true } = {}) => {
+    if (showLoading) {
+      setListLoading(true);
+    }
     try {
-      const result = isSuperAdmin
-        ? await GetVolumeDataAPI(token)
-        : await GetVolInsAPI();
+      const [result, shadowCountResult] = await Promise.all([
+        isSuperAdmin
+          ? GetVolumeDataAPI(token)
+          : GetVolInsAPI(),
+        GetShadowRecordingCountsAPI()
+      ]);
 
-      setVolumesDatumm(Array.isArray(result?.data) ? result.data : []);
+      const volumes = Array.isArray(result?.data) ? result.data : [];
+      const counts = Array.isArray(shadowCountResult?.data) ? shadowCountResult.data : [];
+      setVolumesDatumm(volumes);
+      setVolumeRecordingCounts(
+        counts.reduce((acc, item) => ({
+          ...acc,
+          [item.volume_id]: {
+            shadow: Number(item.shadow_recording_count) || 0,
+            stepFiles: Array.isArray(item.step_recording_files) ? item.step_recording_files : []
+          }
+        }), {})
+      );
     } catch (err) {
       console.log(err);
-      toast.error('Failed to load volumes.');
-      setVolumesDatumm([]);
+      if (showLoading) {
+        toast.error('Failed to load volumes.');
+        setVolumesDatumm([]);
+      }
     } finally {
-      setListLoading(false);
+      if (showLoading) {
+        setListLoading(false);
+      }
     }
   }, [isSuperAdmin, token]);
 
   React.useEffect(() => {
     handleAPICall();
   }, [handleAPICall]);
+
+  const getConversionStatus = React.useCallback((volume) => {
+    if (volume?.conversion_completion) return 'completed';
+    if (volume?.conversion_process_status) return 'converting';
+    return 'pending';
+  }, []);
+
+  const hasActiveConversion = React.useMemo(
+    () => volumesDatumm.some((volume) => getConversionStatus(volume) === 'converting'),
+    [getConversionStatus, volumesDatumm]
+  );
+
+  const isImageFile = React.useCallback((fileUrl) => (
+    /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(fileUrl || '')
+  ), []);
+
+  React.useEffect(() => {
+    if (!hasActiveConversion) return undefined;
+
+    const pollId = window.setInterval(() => {
+      handleAPICall({ showLoading: false });
+    }, 5000);
+
+    return () => window.clearInterval(pollId);
+  }, [handleAPICall, hasActiveConversion]);
+
+  const anatomyOptions = React.useMemo(() => (
+    [...new Set(
+      volumesDatumm
+        .map((volume) => volume.volume_type)
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b))
+  ), [volumesDatumm]);
 
   const uploaderName = sessionStorage.getItem('user_name') || decoded.user_mail || '';
   if (![99, 102, 103].includes(userRole)) {
@@ -94,12 +150,16 @@ function VolumeList() {
       (approvalFilter === 'approved' && volume.status) ||
       (approvalFilter === 'pending' && !volume.status);
 
+    const matchesAnatomy =
+      anatomyFilter === 'all' ||
+      volume.volume_type === anatomyFilter;
+
+    const conversionStatus = getConversionStatus(volume);
     const matchesConversion =
       conversionFilter === 'all' ||
-      (conversionFilter === 'completed' && volume.conversion_completion) ||
-      (conversionFilter === 'pending' && !volume.conversion_completion);
+      conversionFilter === conversionStatus;
 
-    return matchesSearch && matchesApproval && matchesConversion;
+    return matchesSearch && matchesAnatomy && matchesApproval && matchesConversion;
   });
 
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
@@ -199,13 +259,19 @@ function VolumeList() {
       const response = await volumeConvAPI(selectedVolume.volume_id);
       
       if (response.status === 200 || response.status === 201) {
+        const volumeId = selectedVolume.volume_id;
+        setVolumesDatumm((previousVolumes) => previousVolumes.map((volume) => (
+          volume.volume_id === volumeId
+            ? { ...volume, conversion_process_status: true, conversion_completion: false }
+            : volume
+        )));
         toast.success(`Conversion Started!`, {
           autoClose: 3000,
           toastId: 'convert-success',
           icon: false,
           closeButton: CustomCloseButton
         });
-        handleAPICall(); // Refresh the list to show updated status
+        handleAPICall({ showLoading: false }); // Refresh the list to show updated status
       } else {
         //toast.error(response.data?.error || 'Conversion failed. Please try again.');
         toast.error("Conversion failed. Please try again." , {
@@ -248,7 +314,7 @@ function VolumeList() {
           </div>
           <div className="m-5 bg-white border-b">
             <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:flex-1 md:max-w-4xl">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:flex-1 md:max-w-5xl">
                 <TextField
                   fullWidth
                   size="small"
@@ -257,6 +323,21 @@ function VolumeList() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Anatomy Type"
+                  value={anatomyFilter}
+                  onChange={(e) => setAnatomyFilter(e.target.value)}
+                >
+                  <MenuItem value="all">All</MenuItem>
+                  {anatomyOptions.map((anatomyType) => (
+                    <MenuItem key={anatomyType} value={anatomyType}>
+                      {anatomyType}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField
                   select
                   fullWidth
@@ -279,6 +360,7 @@ function VolumeList() {
                 >
                   <MenuItem value="all">All</MenuItem>
                   <MenuItem value="completed">Completed</MenuItem>
+                  <MenuItem value="converting">Converting</MenuItem>
                   <MenuItem value="pending">Pending</MenuItem>
                 </TextField>
               </div>
@@ -297,13 +379,15 @@ function VolumeList() {
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
                     <th className="py-2 px-4 font-semibold">Approval Status</th>
                     <th className="py-2 px-4 font-semibold">Conversion Status</th>
+                    <th className="py-2 px-4 font-semibold">Shadow Recordings</th>
+                    <th className="py-2 px-4 font-semibold">Step Recording Image</th>
                     <th className="py-2 px-4 font-semibold"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {listLoading ? (
                     <tr>
-                      <td colSpan={5} className="py-4 text-center text-gray-500">
+                      <td colSpan={7} className="py-4 text-center text-gray-500">
                         <ClipLoader
                           color="#8DC63F"
                           size={24}
@@ -313,13 +397,16 @@ function VolumeList() {
                     </tr>
                   ) : filteredVolumes.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-4 text-center text-gray-500">
+                      <td colSpan={7} className="py-4 text-center text-gray-500">
                         No volumes found
                       </td>
                     </tr>
                   ) : (
-                    filteredVolumes.map((volume) => (
-                      <tr key={volume.volume_id} className="text-sm text-gray-700 border-b hover:bg-gray-50">
+                    filteredVolumes.map((volume) => {
+                      const conversionStatus = getConversionStatus(volume);
+                      const volumeProcessing = conversionStatus === 'converting';
+                      return (
+                      <tr key={volume.volume_id} className={`text-sm text-gray-700 border-b hover:bg-gray-50 ${volumeProcessing ? 'bg-yellow-50' : ''}`}>
                         <td className="py-2 px-4 font-medium text-[#8DC63F]">
                           {volume.volume_id.slice(0, 8).toUpperCase()}
                         </td>
@@ -335,24 +422,80 @@ function VolumeList() {
                         </td>
                         <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
-                            volume.conversion_completion 
+                            conversionStatus === 'completed'
                               ? 'bg-green-100 text-green-700' 
-                              : 'bg-red-100 text-red-700'
+                              : conversionStatus === 'converting'
+                                ? 'bg-yellow-100 text-yellow-700 animate-pulse'
+                                : 'bg-red-100 text-red-700'
                           }`}>
-                            {volume.conversion_completion ? 'Completed' : 'Pending'}
+                            {conversionStatus === 'completed' ? (
+                              'Completed'
+                            ) : conversionStatus === 'converting' ? (
+                              <span className="inline-flex items-center gap-2">
+                                <ClipLoader
+                                  color="#A16207"
+                                  size={12}
+                                  cssOverride={{ borderWidth: '2px' }}
+                                />
+                                Converting...
+                              </span>
+                            ) : (
+                              'Pending'
+                            )}
                           </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
+                            {volumeRecordingCounts[volume.volume_id]?.shadow || 0}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          {(volumeRecordingCounts[volume.volume_id]?.stepFiles || []).length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {volumeRecordingCounts[volume.volume_id].stepFiles.map((fileUrl, index) => (
+                                isImageFile(fileUrl) ? (
+                                  <a
+                                    key={`${volume.volume_id}-step-${index}`}
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    <img
+                                      src={fileUrl}
+                                      alt={`Step recording ${index + 1}`}
+                                      className="h-10 w-10 rounded object-cover border"
+                                    />
+                                  </a>
+                                ) : (
+                                  <a
+                                    key={`${volume.volume_id}-step-${index}`}
+                                    href={fileUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 hover:bg-blue-100"
+                                  >
+                                    View {index + 1}
+                                  </a>
+                                )
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-500">
+                              No image
+                            </span>
+                          )}
                         </td>
                         <td className="py-2 px-4 font-medium">
                           <button 
-                            className="text-[#8DC63F] hover:bg-gray-100 rounded p-1"
+                            className="text-[#8DC63F] hover:bg-gray-100 rounded p-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={(e) => handleMenuOpen(e, volume)}
-                            disabled={converting}
+                            disabled={converting || volumeProcessing}
                           >
                             <MoreVertical size={20} />
                           </button>
                         </td>
                       </tr>
-                    ))
+                    )})
                   )}
                 </tbody>
               </table>
@@ -377,10 +520,10 @@ function VolumeList() {
       >
         <MenuItem 
           onClick={handleRequestConversion}
-          disabled={converting || selectedVolume?.conversion_completion}
+          disabled={converting || getConversionStatus(selectedVolume) !== 'pending'}
         >
           {/* {converting ? 'Converting...' : 'Convert'} */}
-              {converting ? 'Converting...' : selectedVolume?.conversion_completion ? 'Already Converted' : 'Convert'}
+              {converting || getConversionStatus(selectedVolume) === 'converting' ? 'Converting...' : getConversionStatus(selectedVolume) === 'completed' ? 'Already Converted' : 'Convert'}
         </MenuItem>
         <MenuItem>
             Edit

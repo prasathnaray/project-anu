@@ -1,5 +1,5 @@
 const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getAssociatedVolumeModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel} = require("../model/Volumem");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const VolumeController = async(req, res) => {
@@ -812,6 +812,23 @@ const shadowRecordingDataController = async(req, res) => {
         res.status(500).send(err)
     }
 }
+const volumeRecordingCountsController = async(req, res) => {
+    const requester = req.user;
+    try
+    {
+        const result = await getVolumeRecordingCountsModel(requester);
+        if (result.code === 401) {
+            return res.status(401).json({
+                error: result.message
+            });
+        }
+        res.status(200).send(result.data);
+    }
+    catch(err)
+    {
+        res.status(500).send(err)
+    }
+}
 const getAssociatedVolumeController = async(req, res) => {
     const requester = req.user;
     const {r_id} = req.query;
@@ -825,4 +842,4 @@ const getAssociatedVolumeController = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, volRecordingC, assocVolumeController, shadowRecordingDataController, getAssociatedVolumeController}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, volRecordingC, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}
