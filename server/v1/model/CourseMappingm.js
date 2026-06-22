@@ -14,6 +14,12 @@ const ALLOWED_MODULES = [
 ];
 
 const ALLOWED_COURSE_TYPES = [
+    'p1',
+    'p2',
+    'p3',
+    'p4',
+    't1',
+    't2',
     'Practice',
     'Test',
     'Free scan'
@@ -68,20 +74,27 @@ const resolveVolume = async (trimester, anatomy_type, volume_name) => {
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
-          AND LOWER(TRIM(volume_type)) = LOWER(TRIM($2))
-          AND LOWER(TRIM(trimester)) = LOWER(TRIM($3));
+          AND LOWER(TRIM(trimester)) = LOWER(TRIM($2));
     `;
 
-    const exactResult = await client.query(exactQuery, [volume_name, anatomy_type, trimester]);
+    const exactResult = await client.query(exactQuery, [volume_name, trimester]);
 
     if (exactResult.rows.length === 1) {
         return { data: exactResult.rows[0] };
     }
 
     if (exactResult.rows.length > 1) {
+        const unitMatch = exactResult.rows.find(
+            (row) => row.volume_type?.trim().toLowerCase() === anatomy_type.trim().toLowerCase()
+        );
+
+        if (unitMatch) {
+            return { data: unitMatch };
+        }
+
         return {
             code: 409,
-            message: 'Multiple volumes match the provided trimester, anatomy type, and volume name. Use more specific data.'
+            message: 'Multiple volumes match the provided trimester and volume name. Use a volume with a matching unit/type.'
         };
     }
 
@@ -90,23 +103,30 @@ const resolveVolume = async (trimester, anatomy_type, volume_name) => {
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
-          AND LOWER(TRIM(volume_type)) = LOWER(TRIM($2))
         ORDER BY created_at DESC NULLS LAST;
     `;
 
-    const fallbackResult = await client.query(fallbackQuery, [volume_name, anatomy_type]);
+    const fallbackResult = await client.query(fallbackQuery, [volume_name]);
 
     if (fallbackResult.rows.length === 0) {
         return {
             code: 404,
-            message: 'No volume found for the provided anatomy type and volume name.'
+            message: 'No volume found for the provided volume name.'
         };
     }
 
     if (fallbackResult.rows.length > 1) {
+        const unitMatch = fallbackResult.rows.find(
+            (row) => row.volume_type?.trim().toLowerCase() === anatomy_type.trim().toLowerCase()
+        );
+
+        if (unitMatch) {
+            return { data: unitMatch };
+        }
+
         return {
             code: 409,
-            message: 'Multiple legacy volumes match the provided anatomy type and volume name. Update the volume data or use a unique volume name.'
+            message: 'Multiple legacy volumes match the provided volume name. Update the volume data or use a unique volume name.'
         };
     }
 

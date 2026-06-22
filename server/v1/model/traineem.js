@@ -2262,7 +2262,7 @@ const buildCertificateTree = (rows) => {
     const {
       certificate_id, certificate_name,
       course_name, module_name, unit_name,
-      resource_type, resource_topic, resource_name, resource_id, is_completed
+      resource_type, resource_topic, resource_name, resource_id, is_completed, reattempt_count
     } = row;
 
     if (!resource_id) continue;
@@ -2315,7 +2315,10 @@ const buildCertificateTree = (rows) => {
       unit.practices.push(leaf);
 
     } else if (resource_type === 'Test') {
-      unit.tests.push(leaf);
+      unit.tests.push({
+        ...leaf,
+        reattempt_count: Number(reattempt_count ?? 0),
+      });
     }
   }
 
@@ -3054,6 +3057,12 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           SELECT pd.resourse_id, pd.user_id, pd.is_completed, pd.updated_at
           FROM progress_data pd
           WHERE pd.user_id IN (SELECT user_email FROM user_info)
+        ),
+        test_reattempts AS (
+          SELECT t.r_id AS resource_id, COUNT(*)::int AS reattempt_count
+          FROM test_attempts_logs t
+          WHERE t.user_id IN (SELECT user_email FROM user_info)
+          GROUP BY t.r_id
         )
         SELECT
           ac.certificate_id,
@@ -3067,11 +3076,13 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.resource_topic,
           up.user_id AS progress_user_id,
           up.is_completed,
-          up.updated_at
+          up.updated_at,
+          COALESCE(tr.reattempt_count, 0) AS reattempt_count
         FROM active_certificates ac
         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
         JOIN resource_data rd ON rd.learning_module_id = lm.learning_module_id
         LEFT JOIN user_progress up ON up.resourse_id = rd.resource_id
+        LEFT JOIN test_reattempts tr ON tr.resource_id = rd.resource_id
         ORDER BY
           ac.certificate_name,
           lm.course_name,

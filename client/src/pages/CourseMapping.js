@@ -13,7 +13,8 @@ import { CreateCourseMappingAPI, GetCourseMappingsAPI } from '../API/CourseMappi
 
 const TRIMESTERS = ['First Trimester', 'Second Trimester', 'Third Trimester'];
 const MODULES = ['Biometry', 'Six Step', '20 + 2 planes'];
-const COURSE_TYPES = ['Practice', 'Test', 'Free scan'];
+const UNITS = ['BPD & HC', 'AC', 'FL'];
+const COURSE_TYPES = ['p1', 'p2', 'p3', 'p4', 't1', 't2'];
 
 const emptyForm = {
   volume_id: '',
@@ -28,6 +29,7 @@ const emptyForm = {
 
 const emptyFilters = {
   trimester: '',
+  anatomy_type: '',
   module_name: '',
   course_type: '',
   volume_name: '',
@@ -61,6 +63,11 @@ function CourseMapping() {
     const uniqueTrimesters = Array.from(new Set(existingTrimesters));
     return uniqueTrimesters.length > 0 ? uniqueTrimesters : TRIMESTERS;
   }, [volumes]);
+
+  const normalizeUnit = useCallback((value = '') => {
+    const unit = UNITS.find((item) => item.toLowerCase() === value.trim().toLowerCase());
+    return unit || '';
+  }, []);
 
   const shadowRecordings = useMemo(
     () => recordings.filter((recording) => recording.recording_type?.toLowerCase().includes('shadow')),
@@ -132,13 +139,13 @@ function CourseMapping() {
     setFormData((prev) => ({
       ...prev,
       trimester: selectedVolume.trimester || prev.trimester,
-      anatomy_type: selectedVolume.volume_type || '',
+      anatomy_type: normalizeUnit(selectedVolume.volume_type || prev.anatomy_type),
       volume_name: selectedVolume.volume_name || '',
       shadow_recording_id: '',
       step_recording_id: '',
     }));
     fetchRecordings(selectedVolume.volume_id);
-  }, [fetchRecordings, selectedVolume]);
+  }, [fetchRecordings, normalizeUnit, selectedVolume]);
 
   if (userRole !== 99) {
     return <Navigate to="/dashboard" replace />;
@@ -171,7 +178,7 @@ function CourseMapping() {
     e.preventDefault();
 
     if (!formData.trimester || !formData.anatomy_type || !formData.volume_name || !formData.module_name || !formData.course_type) {
-      toast.error('Please select volume, module, and course type.');
+      toast.error('Please select volume, module, unit, and course type.');
       return;
     }
 
@@ -237,7 +244,7 @@ function CourseMapping() {
               <div className="p-4 border-b flex items-center justify-between">
                 <div>
                   <div className="font-semibold text-gray-800">Create Mapping</div>
-                  <div className="text-xs text-gray-500 mt-1">Link a volume to module, course type, and recordings.</div>
+                  <div className="text-xs text-gray-500 mt-1">Link a volume to module, unit, course type, and recordings.</div>
                 </div>
                 <BookOpenCheck className="text-[#8DC63F]" size={22} />
               </div>
@@ -256,38 +263,28 @@ function CourseMapping() {
                   <MenuItem value="">Select Volume</MenuItem>
                   {volumes.map((volume) => (
                     <MenuItem key={volume.volume_id} value={volume.volume_id}>
-                      {volume.volume_name} - {volume.volume_type || 'Anatomy not set'}
+                      {volume.volume_name} - {volume.volume_type || 'Unit not set'}
                     </MenuItem>
                   ))}
                 </TextField>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    label="Trimester"
-                    name="trimester"
-                    value={formData.trimester}
-                    onChange={handleFormChange}
-                    disabled={volumeLoading}
-                  >
-                    <MenuItem value="">Select Trimester</MenuItem>
-                    {trimesterOptions.map((trimester) => (
-                      <MenuItem key={trimester} value={trimester}>
-                        {trimester}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Anatomy Type"
-                    name="anatomy_type"
-                    value={formData.anatomy_type}
-                    InputProps={{ readOnly: true }}
-                  />
-                </div>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Trimester"
+                  name="trimester"
+                  value={formData.trimester}
+                  onChange={handleFormChange}
+                  disabled={volumeLoading}
+                >
+                  <MenuItem value="">Select Trimester</MenuItem>
+                  {trimesterOptions.map((trimester) => (
+                    <MenuItem key={trimester} value={trimester}>
+                      {trimester}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
                 <TextField
                   select
@@ -302,6 +299,23 @@ function CourseMapping() {
                   {MODULES.map((module) => (
                     <MenuItem key={module} value={module}>
                       {module}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Unit"
+                  name="anatomy_type"
+                  value={formData.anatomy_type}
+                  onChange={handleFormChange}
+                >
+                  <MenuItem value="">Select Unit</MenuItem>
+                  {UNITS.map((unit) => (
+                    <MenuItem key={unit} value={unit}>
+                      {unit}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -404,7 +418,7 @@ function CourseMapping() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-4">
                   <TextField
                     fullWidth
                     size="small"
@@ -426,6 +440,22 @@ function CourseMapping() {
                     {TRIMESTERS.map((trimester) => (
                       <MenuItem key={trimester} value={trimester}>
                         {trimester}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    label="Unit"
+                    name="anatomy_type"
+                    value={filters.anatomy_type}
+                    onChange={handleFilterChange}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    {UNITS.map((unit) => (
+                      <MenuItem key={unit} value={unit}>
+                        {unit}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -485,7 +515,7 @@ function CourseMapping() {
                       <th className="py-2 px-4 font-semibold">Mapping ID</th>
                       <th className="py-2 px-4 font-semibold">Volume</th>
                       <th className="py-2 px-4 font-semibold">Trimester</th>
-                      <th className="py-2 px-4 font-semibold">Anatomy</th>
+                      <th className="py-2 px-4 font-semibold">Unit</th>
                       <th className="py-2 px-4 font-semibold">Module</th>
                       <th className="py-2 px-4 font-semibold">Course Type</th>
                       <th className="py-2 px-4 font-semibold">Shadow</th>
