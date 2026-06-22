@@ -1,0 +1,37 @@
+info:
+  name: Upload Volume Recording
+  type: http
+  seq: 20
+
+http:
+  method: POST
+  url: http://{{base_url_prod}}/api/v1/uploadvolumerecording
+  body:
+    type: multipart-form
+    data:
+      - name: volume_id
+        type: text
+        value: 6982d3f3-8617-49a7-9b0d-d160db9adf6c
+      - name: recording_name
+        type: text
+        value: Shadow Demo
+      - name: recording_type
+        type: text
+        value: shadow
+      - name: recording_file
+        type: file
+        value:
+          - C:\path\to\shadow.json
+      - name: audio_file
+        type: file
+        value:
+          - C:\path\to\shadow.wav
+  auth:
+    type: bearer
+    token: "{{token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
