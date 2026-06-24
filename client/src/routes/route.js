@@ -36,6 +36,7 @@ import MyProgress from '../pages/MyProgress';
 import TraineeDashboard from '../components/trainee/TraineeDashboard';
 import CourseMapping from '../pages/CourseMapping';
 import CustomCourse from '../pages/CustomCourse';
+import ReattData from '../pages/ReattData';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -72,6 +73,7 @@ function RoutesPath() {
                             <Route path="/academics" element={<Academics />} />
                             <Route path="/course-mapping" element={<CourseMapping />} />
                             <Route path="/custom-course" element={<CustomCourse />} />
+                            <Route path="/reatt-data" element={<ReattData />} />
                             <Route path="/my-learning" element={<MyLearning />} />
                             <Route path="/my-progress" element={<MyProgress />} />
                      </Route>

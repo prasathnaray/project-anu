@@ -2262,7 +2262,7 @@ const buildCertificateTree = (rows) => {
     const {
       certificate_id, certificate_name,
       course_name, module_name, unit_name,
-      resource_type, resource_topic, resource_name, resource_id, is_completed, reattempt_count
+      resource_type, resource_topic, resource_name, resource_id, is_completed, reattempt_count, max_reattempt_count
     } = row;
 
     if (!resource_id) continue;
@@ -2318,6 +2318,7 @@ const buildCertificateTree = (rows) => {
       unit.tests.push({
         ...leaf,
         reattempt_count: Number(reattempt_count ?? 0),
+        max_reattempt_count: Number(max_reattempt_count ?? 0),
       });
     }
   }
@@ -3063,10 +3064,23 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           FROM test_attempts_logs t
           WHERE t.user_id IN (SELECT user_email FROM user_info)
           GROUP BY t.r_id
+        ),
+        reatt_config AS (
+          SELECT DISTINCT ON (resource_id)
+            certificate_id,
+            course_id,
+            unit_name,
+            resource_type,
+            resource_id,
+            max_reattempt_count
+          FROM reatt_data
+          WHERE resource_type IS NULL OR resource_type = 'Test'
+          ORDER BY resource_id, created_at DESC
         )
         SELECT
           ac.certificate_id,
           ac.certificate_name,
+          lm.learning_module_id,
           lm.course_name,
           lm.module_name,
           lm.unit_name,
@@ -3077,12 +3091,19 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           up.user_id AS progress_user_id,
           up.is_completed,
           up.updated_at,
-          COALESCE(tr.reattempt_count, 0) AS reattempt_count
+          COALESCE(tr.reattempt_count, 0) AS reattempt_count,
+          COALESCE(NULLIF(rc.max_reattempt_count::text, '')::int, 0) AS max_reattempt_count
         FROM active_certificates ac
         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
         JOIN resource_data rd ON rd.learning_module_id = lm.learning_module_id
         LEFT JOIN user_progress up ON up.resourse_id = rd.resource_id
         LEFT JOIN test_reattempts tr ON tr.resource_id = rd.resource_id
+        LEFT JOIN reatt_config rc
+          ON rc.resource_id = rd.resource_id
+          AND (rc.certificate_id IS NULL OR rc.certificate_id = ac.certificate_id)
+          AND (rc.course_id IS NULL OR rc.course_id = lm.learning_module_id)
+          AND (rc.unit_name IS NULL OR rc.unit_name = lm.unit_name)
+          AND (rc.resource_type IS NULL OR rc.resource_type = rd.resource_type)
         ORDER BY
           ac.certificate_name,
           lm.course_name,

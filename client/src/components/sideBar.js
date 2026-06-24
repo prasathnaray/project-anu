@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, Scan, School } from 'lucide-react';
+import { BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, RotateCcw, Scan, School } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import MaterialRipple from "material-ripple-effects";
 import {
@@ -88,6 +88,21 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     >
                       <Network size={20} />
                       <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Course Mapping</div>
+                    </button>
+                  </li>
+                  <li className="mb-1 mt-2">
+                    <button
+                      onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                      onClick={() => navigate("/reatt-data")}
+                      className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200
+                        ${
+                          data === "/reatt-data"
+                            ? "bg-[#8DC63F] text-white"
+                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                        }`}
+                    >
+                      <RotateCcw size={20} />
+                      <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Reattempts</div>
                     </button>
                   </li>
                   <li className="mb-1 mt-2">
