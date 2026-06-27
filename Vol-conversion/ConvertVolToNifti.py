@@ -1,490 +1,305 @@
-# import os
-# import sys
-# import time
-# import json
-# import slicer
-
-# # FIXED: Changed from D: drive to C: drive
-# log_file = r"C:\Users\igrs\project-anu\Vol-conversion\conversion_logs\conversion_kretz_log.txt"
-
-# def log_message(message):
-#     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-#     full_message = f"[{timestamp}] {message}"
-#     print(full_message)
-#     sys.stdout.flush()
-    
-#     try:
-#         # Ensure log directory exists
-#         os.makedirs(os.path.dirname(log_file), exist_ok=True)
-#         with open(log_file, "a", encoding="utf-8") as f:
-#             f.write(full_message + "\n")
-#             f.flush()
-#     except Exception as e:
-#         print(f"Warning: Could not write to log file: {e}")
-
-# def main():
-#     log_message("=== Kretz VOL to NIFTI Conversion ===")
-    
-#     # Get arguments from Node.js
-#     if len(sys.argv) < 4:
-#         log_message("ERROR: Missing arguments. Expected: volumeId, inputPath, volumeName")
-#         return False
-    
-#     volume_id = sys.argv[1]
-#     input_path = sys.argv[2]
-#     volume_name = sys.argv[3]
-    
-#     log_message(f"Volume ID: {volume_id}")
-#     log_message(f"Input file: {input_path}")
-#     log_message(f"Volume name: {volume_name}")
-    
-#     # Output folder - store in conversion_logs directory
-#     output_folder = r"C:\Users\igrs\project-anu\Vol-conversion\nifti_output"
-    
-#     # Check if Kretz file reader is available
-#     try:
-#         module_names = [name for name in dir(slicer.modules) if not name.startswith('_')]
-#         kretz_modules = [name for name in module_names if 'kretz' in name.lower()]
-        
-#         log_message(f"Available Kretz-related modules: {kretz_modules}")
-        
-#         if kretz_modules:
-#             log_message("✅ Kretz file reader modules found")
-#         else:
-#             log_message("⚠️ No Kretz file reader modules found, will try generic loading")
-            
-#     except Exception as e:
-#         log_message(f"Error checking modules: {e}")
-    
-#     # Check input file
-#     if not os.path.exists(input_path):
-#         log_message(f"❌ Input file does not exist: {input_path}")
-#         return False
-    
-#     file_size = os.path.getsize(input_path)
-#     log_message(f"Input file size: {file_size} bytes")
-    
-#     # Create output folder
-#     if not os.path.exists(output_folder):
-#         os.makedirs(output_folder)
-#         log_message("✅ Created output folder")
-    
-#     # Generate output filename
-#     base_name = os.path.splitext(os.path.basename(input_path))[0]
-#     output_filename = f"{volume_id}_{base_name}.nii"
-#     output_path = os.path.join(output_folder, output_filename)
-    
-#     log_message(f"Output will be: {output_path}")
-    
-#     try:
-#         # Try loading with Kretz-specific properties first
-#         log_message("Attempting to load Kretz VOL file...")
-        
-#         properties = {
-#             'fileName': input_path,
-#             'name': volume_name,
-#             'scanConvert': True,
-#             'outputSpacing': 0.5
-#         }
-        
-#         volumeNode = None
-        
-#         # Try Kretz-specific loader
-#         try:
-#             volumeNode = slicer.util.loadNodeFromFile(input_path, "KretzFile", properties)
-#         except Exception as e:
-#             log_message(f"Kretz loader not available: {e}")
-        
-#         # Fallback to generic volume loader
-#         if volumeNode is None:
-#             log_message("Trying generic volume loader...")
-#             volumeNode = slicer.util.loadVolume(input_path)
-        
-#         if volumeNode is None:
-#             log_message("❌ All loading methods failed")
-#             print(json.dumps({
-#                 "success": False,
-#                 "error": "Failed to load volume file"
-#             }))
-#             return False
-        
-#         log_message(f"✅ Successfully loaded: {volumeNode.GetName()}")
-#         log_message(f"Node class: {volumeNode.GetClassName()}")
-        
-#         # Check image data
-#         if not volumeNode.GetImageData():
-#             log_message("❌ No image data in loaded volume")
-#             slicer.mrmlScene.RemoveNode(volumeNode)
-#             print(json.dumps({
-#                 "success": False,
-#                 "error": "No image data in volume"
-#             }))
-#             return False
-        
-#         dimensions = volumeNode.GetImageData().GetDimensions()
-#         log_message(f"Image dimensions: {dimensions}")
-        
-#         # Save as NIFTI
-#         log_message("Saving as NIFTI...")
-#         success = slicer.util.saveNode(volumeNode, output_path, {"fileType": "NIFTI"})
-        
-#         if success and os.path.exists(output_path):
-#             output_size = os.path.getsize(output_path)
-#             log_message(f"✅ SUCCESS: Saved {output_size} bytes")
-            
-#             # Clean up
-#             slicer.mrmlScene.RemoveNode(volumeNode)
-#             log_message("Cleaned up volume node")
-            
-#             # Print result for Node.js to parse
-#             result = {
-#                 "success": True,
-#                 "output_path": output_path,
-#                 "output_size": output_size,
-#                 "volume_id": volume_id
-#             }
-#             print(f"CONVERSION_RESULT:{json.dumps(result)}")
-#             return True
-            
-#         else:
-#             log_message("❌ Save failed or file not created")
-#             slicer.mrmlScene.RemoveNode(volumeNode)
-#             print(json.dumps({
-#                 "success": False,
-#                 "error": "Failed to save NIFTI file"
-#             }))
-#             return False
-        
-#     except Exception as e:
-#         log_message(f"❌ Error: {str(e)}")
-#         import traceback
-#         log_message(f"Traceback: {traceback.format_exc()}")
-#         print(json.dumps({
-#             "success": False,
-#             "error": str(e)
-#         }))
-#         return False
-
-# if __name__ == "__main__":
-#     # Initialize log
-#     try:
-#         os.makedirs(os.path.dirname(log_file), exist_ok=True)
-#         with open(log_file, "w", encoding="utf-8") as f:
-#             f.write(f"=== Kretz conversion started at {time.strftime('%Y-%m-%d %H:%M:%S')} ===\n")
-#     except Exception as e:
-#         print(f"Warning: Could not initialize log file: {e}")
-    
-#     try:
-#         log_message("Script starting...")
-#         success = main()
-#         log_message(f"Script completed: {success}")
-#         sys.exit(0 if success else 1)
-#     except Exception as e:
-#         log_message(f"💥 Fatal error: {str(e)}")
-#         import traceback
-#         log_message(traceback.format_exc())
-#         sys.exit(1)
-    
-#     log_message("=== Script finished ===")
-
-# working fine as of now 
+import json
 import os
+import posixpath
+import re
+import shutil
 import sys
 import time
-import json
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+
 import slicer
+from supabase import Client, create_client
 
-# Auto-install supabase if not available
-def ensure_supabase_installed():
-    try:
-        import supabase
-        return True
-    except ImportError:
-        log_message("⚠️ supabase module not found, attempting to install...")
-        try:
-            import subprocess
-            python_exe = sys.executable
-            subprocess.check_call([python_exe, "-m", "pip", "install", "supabase"], 
-                                stdout=subprocess.PIPE, 
-                                stderr=subprocess.PIPE)
-            log_message("✅ supabase module installed successfully")
-            import supabase
-            return True
-        except Exception as e:
-            log_message(f"❌ Failed to install supabase: {e}")
-            return False
 
-# Log file path
-log_file = r"C:\Users\igrs\project-anu\Vol-conversion\conversion_logs\conversion_kretz_log.txt"
+DEFAULT_BUCKET = "projectanu"
+INPUT_DIR = Path(os.environ.get("VOL_INPUT_DIR", "/tmp/vol-input"))
+OUTPUT_DIR = Path(os.environ.get("NIFTI_OUTPUT_DIR", "/tmp/nifti-output"))
+
 
 def log_message(message):
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
-    full_message = f"[{timestamp}] {message}"
-    print(full_message)
-    sys.stdout.flush()
-    
+    print(f"[{timestamp}] {message}", flush=True)
+
+
+def emit_result(result):
+    print(f"CONVERSION_RESULT:{json.dumps(result, separators=(',', ':'))}", flush=True)
+
+
+def require_env(name):
+    value = os.environ.get(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+
+def get_supabase_client():
+    return create_client(require_env("SUPABASE_URL"), require_env("SUPABASE_KEY"))
+
+
+def get_bucket_name():
+    return os.environ.get("SUPABASE_BUCKET") or os.environ.get("BUCKET_NAME") or DEFAULT_BUCKET
+
+
+def normalize_storage_path(value, bucket_name):
+    parsed = urlparse(value)
+    if parsed.scheme and parsed.netloc:
+        marker = f"/storage/v1/object/public/{bucket_name}/"
+        if marker in parsed.path:
+            return unquote(parsed.path.split(marker, 1)[1])
+
+        signed_marker = f"/storage/v1/object/sign/{bucket_name}/"
+        if signed_marker in parsed.path:
+            return unquote(parsed.path.split(signed_marker, 1)[1])
+
+        raise RuntimeError("Input URL is not a Supabase Storage URL for the configured bucket")
+
+    return value.lstrip("/")
+
+
+def safe_filename(storage_path):
+    name = posixpath.basename(storage_path.rstrip("/"))
+    name = unquote(name) or "volume.vol"
+    return re.sub(r"[^A-Za-z0-9._ -]+", "_", name)
+
+
+def download_input(supabase: Client, bucket_name, storage_path, volume_id):
+    INPUT_DIR.mkdir(parents=True, exist_ok=True)
+    local_path = INPUT_DIR / f"{volume_id}_{safe_filename(storage_path)}"
+
+    log_message(f"Downloading input from Supabase: {bucket_name}/{storage_path}")
+    response = supabase.storage.from_(bucket_name).download(storage_path)
+
+    if isinstance(response, str):
+        file_bytes = response.encode("utf-8")
+    else:
+        file_bytes = bytes(response)
+
+    local_path.write_bytes(file_bytes)
+    log_message(f"Downloaded {local_path.stat().st_size} bytes to {local_path}")
+    return local_path
+
+
+def upload_output(supabase: Client, bucket_name, local_path, volume_id):
+    file_bytes = local_path.read_bytes()
+    storage_path = f"converted_vol_files/{local_path.name}"
+
+    log_message(f"Uploading output to Supabase: {bucket_name}/{storage_path}")
+    supabase.storage.from_(bucket_name).upload(
+        path=storage_path,
+        file=file_bytes,
+        file_options={
+            "content-type": "application/octet-stream",
+            "upsert": "true",
+        },
+    )
+
+    public_url = supabase.storage.from_(bucket_name).get_public_url(storage_path)
+    file_size_bytes = len(file_bytes)
+    file_size_kb = round(file_size_bytes / 1024, 2)
+    file_size_mb = round(file_size_kb / 1024, 2)
+
+    return {
+        "success": True,
+        "volume_id": volume_id,
+        "storage_path": storage_path,
+        "public_url": public_url,
+        "file_size_bytes": file_size_bytes,
+        "file_size_kb": file_size_kb,
+        "file_size_mb": file_size_mb,
+    }
+
+
+def update_conversion_success(supabase: Client, volume_id, result):
+    log_message("Updating conversion status: success")
+    completed_at = datetime.now(timezone.utc).isoformat()
+    supabase.table("volume_conv_logs").update(
+        {
+            "conversion_completion": True,
+            "completed_at": completed_at,
+            "error_message": None,
+            "output_file": result["storage_path"],
+            "output_size": result["file_size_bytes"],
+            "output_size_kb": result["file_size_kb"],
+            "output_size_mb": result["file_size_mb"],
+            "public_url": result["public_url"],
+        }
+    ).eq("volume_id", volume_id).execute()
+
+    supabase.table("volumes").update(
+        {
+            "conversion_process_status": False,
+            "converted_file_path": result["storage_path"],
+        }
+    ).eq("volume_id", volume_id).execute()
+
+
+def update_conversion_failure(supabase: Client, volume_id, error_message):
+    log_message("Updating conversion status: failure")
+    completed_at = datetime.now(timezone.utc).isoformat()
+    supabase.table("volume_conv_logs").update(
+        {
+            "conversion_completion": False,
+            "completed_at": completed_at,
+            "error_message": error_message[:1000],
+        }
+    ).eq("volume_id", volume_id).execute()
+
+    supabase.table("volumes").update(
+        {"conversion_process_status": False}
+    ).eq("volume_id", volume_id).execute()
+
+
+def convert_to_nifti(input_path, volume_id, volume_name):
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    log_message("Checking available Kretz modules")
     try:
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        with open(log_file, "a", encoding="utf-8") as f:
-            f.write(full_message + "\n")
-            f.flush()
-    except Exception as e:
-        print(f"Warning: Could not write to log file: {e}")
+        module_names = [name for name in dir(slicer.modules) if not name.startswith("_")]
+        kretz_modules = [name for name in module_names if "kretz" in name.lower()]
+        log_message(f"Available Kretz-related modules: {kretz_modules}")
+    except Exception as exc:
+        log_message(f"Could not inspect Slicer modules: {exc}")
 
-# Ensure supabase is available before importing
-if not ensure_supabase_installed():
-    print(json.dumps({
-        "success": False,
-        "error": "Failed to install required supabase module"
-    }))
-    sys.exit(1)
+    output_name = f"{volume_id}_{input_path.stem}.nii"
+    output_path = OUTPUT_DIR / output_name
 
-from supabase import create_client, Client
+    properties = {
+        "fileName": str(input_path),
+        "name": volume_name,
+        "scanConvert": True,
+        "outputSpacing": 0.5,
+    }
 
-# Supabase configuration
-SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://rnrnzmqtvcyqhpakynls.supabase.co')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJucm56bXF0dmN5cWhwYWt5bmxzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjIxNDkzMCwiZXhwIjoyMDY3NzkwOTMwfQ.1HU9POYv9RonEgV8gERh1kNpUeCIGaetLO7o0ySUk9o')
-BUCKET_NAME = 'projectanu'
-
-def upload_to_supabase(local_path, volume_id, volume_name):
-    """Upload converted NIFTI file to Supabase Storage"""
+    volume_node = None
     try:
-        log_message("Initializing Supabase client...")
-        supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-        
-        # Create storage path: converted_vol_files/volume_id_filename.nii
-        filename = os.path.basename(local_path)
-        storage_path = f"converted_vol_files/{filename}"
-        
-        log_message(f"Uploading to Supabase: {storage_path}")
-        
-        # Read file as binary
-        with open(local_path, 'rb') as f:
-            file_data = f.read()
-        
-        # Upload to Supabase Storage
-        response = supabase.storage.from_(BUCKET_NAME).upload(
-            path=storage_path,
-            file=file_data,
-            file_options={
-                "content-type": "application/octet-stream",
-                "upsert": "true"
-            }
-        )
-        
-        log_message(f"✅ Upload successful: {storage_path}")
-        
-        # Get public URL
-        public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(storage_path)
-        log_message(f"Public URL: {public_url}")
-        
-        # Calculate file sizes
-        file_size_bytes = len(file_data)
-        file_size_kb = file_size_bytes / 1024
-        file_size_mb = file_size_kb / 1024
-        
-        log_message(f"File size: {file_size_bytes} bytes ({file_size_kb:.2f} KB, {file_size_mb:.2f} MB)")
-        
-        # Delete local file after successful upload
+        log_message("Attempting KretzFile load")
         try:
-            os.remove(local_path)
-            log_message(f"🗑️ Deleted local file: {local_path}")
-        except Exception as e:
-            log_message(f"Warning: Could not delete local file: {e}")
-        
-        return {
-            "success": True,
-            "storage_path": storage_path,
-            "public_url": public_url,
-            "file_size_bytes": file_size_bytes,
-            "file_size_kb": round(file_size_kb, 2),
-            "file_size_mb": round(file_size_mb, 2)
-        }
-        
-    except Exception as e:
-        log_message(f"❌ Supabase upload failed: {str(e)}")
-        import traceback
-        log_message(traceback.format_exc())
-        return {
-            "success": False,
-            "error": str(e)
-        }
+            volume_node = slicer.util.loadNodeFromFile(str(input_path), "KretzFile", properties)
+        except Exception as exc:
+            log_message(f"Kretz loader failed or is unavailable: {exc}")
+
+        if volume_node is None:
+            log_message("Trying generic volume loader")
+            volume_node = slicer.util.loadVolume(str(input_path))
+
+        if volume_node is None:
+            raise RuntimeError("Failed to load volume file")
+
+        if not volume_node.GetImageData():
+            raise RuntimeError("Loaded volume does not contain image data")
+
+        dimensions = volume_node.GetImageData().GetDimensions()
+        log_message(f"Image dimensions: {dimensions}")
+        log_message(f"Saving NIFTI to {output_path}")
+
+        saved = slicer.util.saveNode(volume_node, str(output_path), {"fileType": "NIFTI"})
+        if not saved or not output_path.exists():
+            raise RuntimeError("Failed to save NIFTI file")
+
+        log_message(f"NIFTI saved locally: {output_path.stat().st_size} bytes")
+        return output_path
+    finally:
+        if volume_node is not None:
+            slicer.mrmlScene.RemoveNode(volume_node)
+            log_message("Cleaned up Slicer volume node")
+
+
+def cleanup():
+    for folder in (INPUT_DIR, OUTPUT_DIR):
+        try:
+            shutil.rmtree(folder, ignore_errors=True)
+        except Exception as exc:
+            log_message(f"Cleanup warning for {folder}: {exc}")
+
+
+def exit_slicer(exit_code):
+    try:
+        slicer.util.exit(exit_code)
+    except Exception as exc:
+        log_message(f"Slicer util exit warning: {exc}")
+
+    try:
+        slicer.app.exit(exit_code)
+    except Exception as exc:
+        log_message(f"Slicer app exit warning: {exc}")
+
+    sys.exit(exit_code)
+
+
+def get_job_inputs():
+    volume_id = os.environ.get("VOLUME_ID")
+    raw_input_path = os.environ.get("SUPABASE_INPUT_PATH") or os.environ.get("VOL_INPUT_PATH")
+    volume_name = os.environ.get("VOLUME_NAME")
+
+    if not volume_id and len(sys.argv) > 1:
+        volume_id = sys.argv[1]
+    if not raw_input_path and len(sys.argv) > 2:
+        raw_input_path = sys.argv[2]
+    if not volume_name and len(sys.argv) > 3:
+        volume_name = sys.argv[3]
+
+    missing = []
+    if not volume_id:
+        missing.append("VOLUME_ID")
+    if not raw_input_path:
+        missing.append("SUPABASE_INPUT_PATH")
+
+    if missing:
+        raise RuntimeError(f"Missing job input: {', '.join(missing)}")
+
+    return volume_id, raw_input_path, volume_name or "volume"
+
 
 def main():
-    log_message("=== Kretz VOL to NIFTI Conversion (with Supabase Upload) ===")
-    
-    # Get arguments from Node.js
-    if len(sys.argv) < 4:
-        log_message("ERROR: Missing arguments. Expected: volumeId, inputPath, volumeName")
-        return False
-    
-    volume_id = sys.argv[1]
-    input_path = sys.argv[2]
-    volume_name = sys.argv[3]
-    
+    volume_id, raw_input_path, volume_name = get_job_inputs()
+
+    log_message("=== Kretz VOL to NIFTI Conversion ===")
     log_message(f"Volume ID: {volume_id}")
-    log_message(f"Input file: {input_path}")
+    log_message(f"Input: {raw_input_path}")
     log_message(f"Volume name: {volume_name}")
-    
-    # Temporary output folder (will be deleted after upload)
-    output_folder = r"C:\Users\igrs\project-anu\Vol-conversion\temp_nifti"
-    
-    # Check if Kretz file reader is available
-    try:
-        module_names = [name for name in dir(slicer.modules) if not name.startswith('_')]
-        kretz_modules = [name for name in module_names if 'kretz' in name.lower()]
-        
-        log_message(f"Available Kretz-related modules: {kretz_modules}")
-        
-        if kretz_modules:
-            log_message("✅ Kretz file reader modules found")
-        else:
-            log_message("⚠️ No Kretz file reader modules found, will try generic loading")
-            
-    except Exception as e:
-        log_message(f"Error checking modules: {e}")
-    
-    # Check input file
-    if not os.path.exists(input_path):
-        log_message(f"❌ Input file does not exist: {input_path}")
-        return False
-    
-    file_size = os.path.getsize(input_path)
-    log_message(f"Input file size: {file_size} bytes")
-    
-    # Create temporary output folder
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-        log_message("✅ Created temporary output folder")
-    
-    # Generate output filename
-    base_name = os.path.splitext(os.path.basename(input_path))[0]
-    output_filename = f"{volume_id}_{base_name}.nii"
-    output_path = os.path.join(output_folder, output_filename)
-    
-    log_message(f"Temporary output: {output_path}")
-    
-    try:
-        # Try loading with Kretz-specific properties first
-        log_message("Attempting to load Kretz VOL file...")
-        
-        properties = {
-            'fileName': input_path,
-            'name': volume_name,
-            'scanConvert': True,
-            'outputSpacing': 0.5
-        }
-        
-        volumeNode = None
-        
-        # Try Kretz-specific loader
-        try:
-            volumeNode = slicer.util.loadNodeFromFile(input_path, "KretzFile", properties)
-        except Exception as e:
-            log_message(f"Kretz loader not available: {e}")
-        
-        # Fallback to generic volume loader
-        if volumeNode is None:
-            log_message("Trying generic volume loader...")
-            volumeNode = slicer.util.loadVolume(input_path)
-        
-        if volumeNode is None:
-            log_message("❌ All loading methods failed")
-            print(json.dumps({
-                "success": False,
-                "error": "Failed to load volume file"
-            }))
-            return False
-        
-        log_message(f"✅ Successfully loaded: {volumeNode.GetName()}")
-        log_message(f"Node class: {volumeNode.GetClassName()}")
-        
-        # Check image data
-        if not volumeNode.GetImageData():
-            log_message("❌ No image data in loaded volume")
-            slicer.mrmlScene.RemoveNode(volumeNode)
-            print(json.dumps({
-                "success": False,
-                "error": "No image data in volume"
-            }))
-            return False
-        
-        dimensions = volumeNode.GetImageData().GetDimensions()
-        log_message(f"Image dimensions: {dimensions}")
-        
-        # Save as NIFTI (temporarily)
-        log_message("Saving as NIFTI...")
-        success = slicer.util.saveNode(volumeNode, output_path, {"fileType": "NIFTI"})
-        
-        # Clean up Slicer node
-        slicer.mrmlScene.RemoveNode(volumeNode)
-        log_message("Cleaned up volume node")
-        
-        if success and os.path.exists(output_path):
-            local_size = os.path.getsize(output_path)
-            log_message(f"✅ NIFTI saved locally: {local_size} bytes")
-            
-            # Upload to Supabase
-            log_message("📤 Starting upload to Supabase...")
-            upload_result = upload_to_supabase(output_path, volume_id, volume_name)
-            
-            if upload_result["success"]:
-                # Print result for Node.js to parse
-                result = {
-                    "success": True,
-                    "storage_path": upload_result["storage_path"],
-                    "public_url": upload_result["public_url"],
-                    "file_size_bytes": upload_result["file_size_bytes"],
-                    "file_size_kb": upload_result["file_size_kb"],
-                    "file_size_mb": upload_result["file_size_mb"],
-                    "volume_id": volume_id
-                }
-                print(f"CONVERSION_RESULT:{json.dumps(result)}")
-                return True
-            else:
-                log_message("❌ Upload to Supabase failed")
-                print(json.dumps({
-                    "success": False,
-                    "error": f"Upload failed: {upload_result.get('error', 'Unknown error')}"
-                }))
-                return False
-            
-        else:
-            log_message("❌ Save failed or file not created")
-            print(json.dumps({
-                "success": False,
-                "error": "Failed to save NIFTI file"
-            }))
-            return False
-        
-    except Exception as e:
-        log_message(f"❌ Error: {str(e)}")
-        import traceback
-        log_message(f"Traceback: {traceback.format_exc()}")
-        print(json.dumps({
-            "success": False,
-            "error": str(e)
-        }))
-        return False
+
+    supabase = get_supabase_client()
+    bucket_name = get_bucket_name()
+    storage_path = normalize_storage_path(raw_input_path, bucket_name)
+
+    local_input = download_input(supabase, bucket_name, storage_path, volume_id)
+    local_output = convert_to_nifti(local_input, volume_id, volume_name)
+    result = upload_output(supabase, bucket_name, local_output, volume_id)
+    update_conversion_success(supabase, volume_id, result)
+    emit_result(result)
+
 
 if __name__ == "__main__":
-    # Initialize log
+    supabase_client = None
+    current_volume_id = os.environ.get("VOLUME_ID") or (sys.argv[1] if len(sys.argv) > 1 else None)
+    exit_code = 0
+
     try:
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        with open(log_file, "w", encoding="utf-8") as f:
-            f.write(f"=== Kretz conversion started at {time.strftime('%Y-%m-%d %H:%M:%S')} ===\n")
-    except Exception as e:
-        print(f"Warning: Could not initialize log file: {e}")
-    
-    try:
-        log_message("Script starting...")
-        success = main()
-        log_message(f"Script completed: {success}")
-        sys.exit(0 if success else 1)
-    except Exception as e:
-        log_message(f"💥 Fatal error: {str(e)}")
-        import traceback
+        log_message(f"Starting converter script. argv={sys.argv}")
+
+        if os.environ.get("CONVERSION_DRY_RUN") == "1":
+            log_message("Dry run requested; Slicer script launch is healthy")
+            exit_slicer(0)
+
+        supabase_client = get_supabase_client()
+        main()
+    except Exception as exc:
+        exit_code = 1
+        error_message = str(exc)
+        log_message(f"ERROR: {error_message}")
         log_message(traceback.format_exc())
-        sys.exit(1)
-        
-    log_message("=== Script finished ===")
+
+        if supabase_client is not None and current_volume_id:
+            try:
+                update_conversion_failure(supabase_client, current_volume_id, error_message)
+            except Exception as status_exc:
+                log_message(f"Failed to update conversion failure status: {status_exc}")
+
+        emit_result({"success": False, "volume_id": current_volume_id, "error": error_message})
+    finally:
+        cleanup()
+
+    exit_slicer(exit_code)

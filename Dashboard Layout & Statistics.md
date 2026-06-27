@@ -1,3 +1,5 @@
+Calculation guide: `APIs/Trainee_Dashboard_Calculations.md`
+
 Dashboard:
 
 1. Last completed module  
@@ -141,4 +143,3 @@ This ensures:
 * Trainee understands current state  
 * Knows what’s wrong  
 * Knows what to do next
-

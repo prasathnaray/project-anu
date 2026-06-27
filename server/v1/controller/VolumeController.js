@@ -158,6 +158,7 @@ const updateVolumeConController = async (req, res) => {
         res.status(200).json({
             success: true,
             volume_id: volume_id,
+            job_id: result.job_id,
             status: "RUNNING",
             message: "Volume conversion started successfully",
             timestamp: new Date().toISOString()

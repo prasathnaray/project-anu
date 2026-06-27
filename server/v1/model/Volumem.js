@@ -408,15 +408,15 @@ const volumeConversionModel = (requester, volume_id) => {
                 `,
                 [volume_id, false, startedBy]
             );
-            startVolumeConversion(volume_id).catch(err => {
-                console.error(`Error in conversion process for ${volume_id}:`, err);
-            });
+            const conversionJob = await startVolumeConversion(volume_id);
             resolve({
                 success: true,
                 code: 200,
                 message: "Volume conversion started",
                 volume_id: volume_id,
-                status: "RUNNING"
+                status: "RUNNING",
+                job_id: conversionJob.jobId,
+                job_queue: conversionJob.jobQueue
             });
         } catch (err) {
             try {

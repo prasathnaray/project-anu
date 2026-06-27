@@ -1,0 +1,10 @@
+Nifti_files/
+USVolume/
+conversion_logs/
+nifti_output/
+temp_downloads/
+temp_nifti/
+*.nii
+*.vol
+*.log
+conversion_kretz_log.txt
