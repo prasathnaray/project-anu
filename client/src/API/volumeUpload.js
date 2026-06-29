@@ -6,7 +6,6 @@ function VolumeUploadAPI(token, data) {
   return axios.post(`${APP_URL}/api/v1/sv-upload`, data, {
     headers: {
       Authorization: `Bearer ${token}`,
-      'Content-Type': 'multipart/form-data',
     },
   });
 }

@@ -16,6 +16,9 @@ import volumeConvAPI from '../API/volumeConvAPI';
 import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
 import CustomCloseButton from '../utils/CustomCloseButton'
 
+const MAX_VOLUME_UPLOAD_SIZE_MB = 100;
+const MAX_VOLUME_UPLOAD_SIZE_BYTES = MAX_VOLUME_UPLOAD_SIZE_MB * 1024 * 1024;
+
 function VolumeList() {
   const navigate = useNavigate();
   const token = localStorage.getItem('user_token');
@@ -33,6 +36,11 @@ function VolumeList() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > MAX_VOLUME_UPLOAD_SIZE_BYTES) {
+        toast.error(`File is too large. Maximum allowed size is ${MAX_VOLUME_UPLOAD_SIZE_MB}MB.`);
+        e.target.value = '';
+        return;
+      }
       setFormData({ ...formData, file });
       setFileName(file.name);
     }
@@ -201,6 +209,10 @@ function VolumeList() {
     } = formData;
     if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description || !file) {
       toast.error('Please fill all fields and select a file.');
+      return;
+    }
+    if (file.size > MAX_VOLUME_UPLOAD_SIZE_BYTES) {
+      toast.error(`File is too large. Maximum allowed size is ${MAX_VOLUME_UPLOAD_SIZE_MB}MB.`);
       return;
     }
     try {

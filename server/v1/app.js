@@ -132,8 +132,8 @@ app.get('/health', (req, res) => {
     });
 });
 //enables
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: process.env.REQUEST_BODY_LIMIT || '100mb' }));
 //Auth route
 //routes
 app.use(deviceMiddleware);
