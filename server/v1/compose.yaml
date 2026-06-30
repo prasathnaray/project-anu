@@ -13,6 +13,8 @@ services:
       context: .
     environment:
       NODE_ENV: production
+      REQUEST_BODY_LIMIT: 100mb
+      MAX_VOLUME_UPLOAD_SIZE_MB: 100
     ports:
       - 4004:4004
 
@@ -48,4 +50,3 @@ services:
 # secrets:
 #   db-password:
 #     file: db/password.txt
-
