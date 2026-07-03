@@ -264,7 +264,6 @@ app.use('/api/v1/', Authenticate, activityLastScoresRouter);
 app.use('/api/v1/', Authenticate, skillCompetencyRouter);
 app.use('/api/v1/', Authenticate, performanceMetricsRouter);
 app.use('/api/v1/', Authenticate, reattRouter);
-
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         const maxUploadSizeMb = Number(process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100);
@@ -279,14 +278,11 @@ app.use((err, req, res, next) => {
             error: err.message
         });
     }
-
     if (err?.type === 'entity.too.large' || err?.status === 413) {
         return res.status(413).json({
             error: `Request body is too large. Maximum allowed size is ${process.env.REQUEST_BODY_LIMIT || '100mb'}.`
         });
     }
-
     return next(err);
 });
-
 module.exports = app;

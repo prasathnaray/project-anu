@@ -112,6 +112,7 @@ const getResourcesModel = (requester, module_id) => {
     rd.created_at,
     rd.resource_type,
     rd.learning_module_id,
+    rd.display_order,
     COUNT(DISTINCT pd.user_id) AS trainee_completed,
     COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource,
     STRING_AGG(ud.user_name, ', ') AS completed_by_names,
@@ -128,8 +129,9 @@ GROUP BY
     rd.resource_type,
     rd.learning_module_id,
     rd.resource_topic,
-    rd.created_at
-ORDER BY rd.created_at ASC`;
+    rd.created_at,
+    rd.display_order
+ORDER BY rd.display_order ASC NULLS LAST, rd.created_at ASC`;
       params = [module_id];
     }
     client.query(query, params, (err, result) => {
