@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   ListTodo,
   Plus,
+  Settings,
   X,
 } from "lucide-react";
 import {
@@ -30,6 +31,7 @@ import AttachVolume from "../components/AttachVolume";
 import getConvertedVolumeListApi from "../API/GetConvertedVolumeList";
 import GetShadowRecordingsAPI from "../API/GetShadowRecordingsAPI";
 import AssoVolumeAPI from "../API/AssoVolumeAPI";
+import MindSparkQuestionModal from "../components/MindSparkQuestionModal";
 
 function InsideCertifications() {
   const navigate = useNavigate();
@@ -61,6 +63,8 @@ function InsideCertifications() {
   // Completion Popup States
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [selectedResourceForPopup, setSelectedResourceForPopup] = useState(null);
+  const [mindSparkQuestionOpen, setMindSparkQuestionOpen] = useState(false);
+  const [selectedMindSparkResource, setSelectedMindSparkResource] = useState(null);
   
   //set volume list 
   const [volumeList, setVolumeList] = useState([]);
@@ -358,6 +362,16 @@ function InsideCertifications() {
     setSelectedResourceForPopup(null);
   };
 
+  const openMindSparkQuestions = (resource) => {
+    setSelectedMindSparkResource(resource);
+    setMindSparkQuestionOpen(true);
+  };
+
+  const closeMindSparkQuestions = () => {
+    setMindSparkQuestionOpen(false);
+    setSelectedMindSparkResource(null);
+  };
+
   let decoded = null;
   try {
     if (token) decoded = jwtDecode(token);
@@ -604,25 +618,37 @@ function InsideCertifications() {
                                                                               {item.trainee_completed}
                                                                             </span>
                                                                           </td>
-                                                                          <td>
+                                                                          <td className="py-2 px-4">
                                                                             {decoded.role == 99 && (
-                                                                              <button 
-                                                                                className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs hover:bg-[#7ab52f]" 
-                                                                                onClick={(e) => {
-                                                                                  e.stopPropagation();
-                                                                                  handleAttachVolume();
-                                                                                  setResourcesData({
-                                                                                    resource_id: item.resource_id,
-                                                                                    resource_name: item.resource_name
-                                                                                  });
-                                                                                  setAttachFormData(prev => ({
-                                                                                    ...prev,
-                                                                                    resource_id: item.resource_id
-                                                                                  }));
-                                                                                }}
-                                                                              >
-                                                                                Attach Volume
-                                                                              </button>
+                                                                              <div className="flex flex-wrap gap-2">
+                                                                                <button 
+                                                                                  className="bg-[#8DC63F] rounded-xl text-white px-2 py-1 text-xs hover:bg-[#7ab52f]" 
+                                                                                  onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    handleAttachVolume();
+                                                                                    setResourcesData({
+                                                                                      resource_id: item.resource_id,
+                                                                                      resource_name: item.resource_name
+                                                                                    });
+                                                                                    setAttachFormData(prev => ({
+                                                                                      ...prev,
+                                                                                      resource_id: item.resource_id
+                                                                                    }));
+                                                                                  }}
+                                                                                >
+                                                                                  Attach Volume
+                                                                                </button>
+                                                                                <button
+                                                                                  className="border border-[#8DC63F] rounded-xl text-[#5d8f20] px-2 py-1 text-xs hover:bg-[#8DC63F] hover:text-white flex items-center gap-1"
+                                                                                  onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    openMindSparkQuestions(item);
+                                                                                  }}
+                                                                                >
+                                                                                  <Settings size={13} />
+                                                                                  Mindspark
+                                                                                </button>
+                                                                              </div>
                                                                             )}
                                                                           </td>
                                                                         </tr>
@@ -689,23 +715,35 @@ function InsideCertifications() {
                                                                                   </td>
                                                                                   <td className="py-2 px-4">
                                                                                     {decoded.role == 99 && (
-                                                                                      <button
-                                                                                        className="bg-[#8DC63F] rounded-xl text-white px-1 py-1 text-xs hover:bg-[#7ab52f]"
-                                                                                        onClick={(e) => {
-                                                                                          e.stopPropagation();
-                                                                                          handleAttachVolume();
-                                                                                          setResourcesData({
-                                                                                            resource_id: item.resource_id,
-                                                                                            resource_name: item.resource_name
-                                                                                          });
-                                                                                          setAttachFormData(prev => ({
-                                                                                            ...prev,
-                                                                                            resource_id: item.resource_id
-                                                                                          }));
-                                                                                        }}
-                                                                                      >
-                                                                                        Attach Volume
-                                                                                      </button>
+                                                                                      <div className="flex flex-wrap gap-2">
+                                                                                        <button
+                                                                                          className="bg-[#8DC63F] rounded-xl text-white px-2 py-1 text-xs hover:bg-[#7ab52f]"
+                                                                                          onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            handleAttachVolume();
+                                                                                            setResourcesData({
+                                                                                              resource_id: item.resource_id,
+                                                                                              resource_name: item.resource_name
+                                                                                            });
+                                                                                            setAttachFormData(prev => ({
+                                                                                              ...prev,
+                                                                                              resource_id: item.resource_id
+                                                                                            }));
+                                                                                          }}
+                                                                                        >
+                                                                                          Attach Volume
+                                                                                        </button>
+                                                                                        <button
+                                                                                          className="border border-[#8DC63F] rounded-xl text-[#5d8f20] px-2 py-1 text-xs hover:bg-[#8DC63F] hover:text-white flex items-center gap-1"
+                                                                                          onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            openMindSparkQuestions(item);
+                                                                                          }}
+                                                                                        >
+                                                                                          <Settings size={13} />
+                                                                                          Mindspark
+                                                                                        </button>
+                                                                                      </div>
                                                                                     )}
                                                                                   </td>
                                                                                 </tr>
@@ -754,6 +792,9 @@ function InsideCertifications() {
                                                                                             <tr className="border-b bg-gray-50">
                                                                                               <th className="py-2 px-4 text-left text-gray-600 text-sm">Resource Name</th>
                                                                                               <th className="py-2 px-4 text-left text-gray-600 text-sm">Trainees Completed</th>
+                                                                                              {decoded.role == 99 && (
+                                                                                                <th className="py-2 px-4 text-left text-gray-600 text-sm">Actions</th>
+                                                                                              )}
                                                                                             </tr>
                                                                                           </thead>
                                                                                           <tbody>
@@ -775,6 +816,20 @@ function InsideCertifications() {
                                                                                                     {item.trainee_completed}
                                                                                                   </span>
                                                                                                 </td>
+                                                                                                {decoded.role == 99 && (
+                                                                                                  <td className="py-2 px-4">
+                                                                                                    <button
+                                                                                                      className="border border-[#8DC63F] rounded-xl text-[#5d8f20] px-2 py-1 text-xs hover:bg-[#8DC63F] hover:text-white flex items-center gap-1"
+                                                                                                      onClick={(e) => {
+                                                                                                        e.stopPropagation();
+                                                                                                        openMindSparkQuestions(item);
+                                                                                                      }}
+                                                                                                    >
+                                                                                                      <Settings size={13} />
+                                                                                                      Mindspark
+                                                                                                    </button>
+                                                                                                  </td>
+                                                                                                )}
                                                                                               </tr>
                                                                                             ))}
                                                                                           </tbody>
@@ -938,6 +993,12 @@ function InsideCertifications() {
             fetchResourcesForModule(selectedModule.learning_module_id);
           }
         }}
+      />
+
+      <MindSparkQuestionModal
+        isVisible={mindSparkQuestionOpen}
+        onClose={closeMindSparkQuestions}
+        resource={selectedMindSparkResource}
       />
       
       {/* ATTACH VOLUME MODAL */}

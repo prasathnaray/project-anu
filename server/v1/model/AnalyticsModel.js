@@ -1,4 +1,5 @@
 const client = require('../utils/conn')
+const { ensureMindSparkQuestionsTable } = require('./mindSparkQuestionm')
 
 const clamp = (value, min = 0, max = 100) => Math.min(Math.max(Number(value) || 0, min), max);
 
@@ -248,7 +249,7 @@ const ActivityLastScoresM = (requester) => {
                 message: 'You do not have permission to view this data'
             });
         }
-        client.query(`
+        ensureMindSparkQuestionsTable().then(() => client.query(`
             WITH latest_sessions AS (
                 SELECT
                     user_id,
@@ -270,6 +271,22 @@ const ActivityLastScoresM = (requester) => {
                     resource_type,
                     resource_topic
                 FROM resource_data
+            ),
+            configured_mindspark_questions AS (
+                SELECT
+                    resource_id,
+                    COUNT(*) AS configured_question_count
+                FROM public.mind_spark_questions
+                WHERE is_active = true
+                GROUP BY resource_id
+            ),
+            attempt_counts AS (
+                SELECT
+                    resource_id,
+                    COUNT(DISTINCT session_id) AS attempt_count
+                FROM activity_submissions
+                WHERE user_id = $1
+                GROUP BY resource_id
             )
             SELECT
                 ls.resource_id,
@@ -278,27 +295,64 @@ const ActivityLastScoresM = (requester) => {
                 ur.resource_name,
                 ur.resource_type,
                 ur.resource_topic,
-                COUNT(*)                                                      AS total_questions,
-                COUNT(*) FILTER (WHERE ass.is_correct = true)                AS correct_answers,
-                COUNT(*) FILTER (WHERE ass.is_correct = false)               AS wrong_answers,
-                ROUND(
-                    COUNT(*) FILTER (WHERE ass.is_correct = true)::decimal /
-                    NULLIF(COUNT(*) FILTER (WHERE ass.is_correct IS NOT NULL), 0) * 100,
-                    2
-                ) AS score_percentage
+                COALESCE(ac.attempt_count, 1)                                AS attempt_count,
+                COALESCE(cmq.configured_question_count, 0)                   AS configured_question_count,
+                CASE
+                    WHEN COALESCE(cmq.configured_question_count, 0) > 0
+                        THEN cmq.configured_question_count
+                    ELSE COUNT(*)
+                END                                                          AS total_questions,
+                CASE
+                    WHEN COALESCE(cmq.configured_question_count, 0) > 0
+                        THEN COUNT(DISTINCT ass.question_no) FILTER (
+                            WHERE ass.is_correct = true
+                              AND msq.question_id IS NOT NULL
+                        )
+                    ELSE COUNT(*) FILTER (WHERE ass.is_correct = true)
+                END                                                          AS correct_answers,
+                CASE
+                    WHEN COALESCE(cmq.configured_question_count, 0) > 0
+                        THEN COUNT(DISTINCT ass.question_no) FILTER (
+                            WHERE ass.is_correct = false
+                              AND msq.question_id IS NOT NULL
+                        )
+                    ELSE COUNT(*) FILTER (WHERE ass.is_correct = false)
+                END                                                          AS wrong_answers,
+                CASE
+                    WHEN COALESCE(cmq.configured_question_count, 0) > 0
+                        THEN ROUND(
+                            COUNT(DISTINCT ass.question_no) FILTER (
+                                WHERE ass.is_correct = true
+                                  AND msq.question_id IS NOT NULL
+                            )::decimal / NULLIF(cmq.configured_question_count, 0) * 100,
+                            2
+                        )
+                    ELSE ROUND(
+                        COUNT(*) FILTER (WHERE ass.is_correct = true)::decimal /
+                        NULLIF(COUNT(*) FILTER (WHERE ass.is_correct IS NOT NULL), 0) * 100,
+                        2
+                    )
+                END                                                          AS score_percentage
             FROM latest_sessions ls
             JOIN activity_submissions ass
                 ON ass.session_id  = ls.session_id
                AND ass.resource_id = ls.resource_id
             JOIN unique_resources ur ON ur.resource_id = ls.resource_id
+            LEFT JOIN configured_mindspark_questions cmq ON cmq.resource_id = ls.resource_id
+            LEFT JOIN attempt_counts ac ON ac.resource_id = ls.resource_id
+            LEFT JOIN public.mind_spark_questions msq
+                ON msq.resource_id = ass.resource_id
+               AND msq.question_no = ass.question_no
+               AND msq.is_active = true
             WHERE ls.rn = 1
             GROUP BY ls.resource_id, ls.session_id, ls.session_date,
-                     ur.resource_name, ur.resource_type, ur.resource_topic
+                     ur.resource_name, ur.resource_type, ur.resource_topic,
+                     ac.attempt_count, cmq.configured_question_count
             ORDER BY ls.session_date DESC;
         `, [requester.user_mail], (err, result) => {
             if (err) return reject(err);
             return resolve(result.rows);
-        });
+        })).catch(reject);
     });
 };
 

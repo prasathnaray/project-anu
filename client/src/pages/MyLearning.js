@@ -4864,6 +4864,16 @@ async function fetchActivityLastScores(token) {
   return Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
 }
 
+async function fetchMindSparkQuestions(resourceId, token) {
+  const params = new URLSearchParams({ resource_id: resourceId, mindspark_no: '1' });
+  const res = await fetch(`${BASE_URL}/api/v1/mind-spark-questions?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Mindspark questions API HTTP ${res.status}`);
+  const json = await res.json();
+  return Array.isArray(json?.data) ? json.data : [];
+}
+
 // ─── DATA TRANSFORMATION ──────────────────────────────────────────────────────
 
 /**
@@ -4951,6 +4961,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       : null;
     const isDone = completionMap[item.resource_id] === true;
     const activityScore = activityScoreMap.get(item.resource_id);
+    const isMindSparkResource = isMindSpark(item.resource_name || '');
 
     resourcesByLMID[learning_module_id].push({
       id:               item.resource_id,
@@ -4964,17 +4975,24 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       reAttempts:       reAttemptMap[item.resource_id] || [],
       activityData:     completionSource === 'activity'
         ? {
-            attempts: activityScore ? 1 : (isDone ? 1 : 0),
-            correct: activityScore ? Number(activityScore.correct_answers || 0) : (isDone ? 1 : 0),
+            attempts: activityScore
+              ? Number(activityScore.attempt_count || 1)
+              : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
+            correct: activityScore
+              ? Number(activityScore.correct_answers || 0)
+              : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
             wrong: activityScore ? Number(activityScore.wrong_answers || 0) : 0,
-            total: activityScore ? Number(activityScore.total_questions || 0) : (isDone ? 1 : 0),
+            total: activityScore
+              ? Number(activityScore.total_questions || 0)
+              : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
             scorePercentage: activityScore?.score_percentage !== null && activityScore?.score_percentage !== undefined
               ? Number(activityScore.score_percentage)
-              : (isDone ? 100 : null),
+              : (isMindSparkResource ? null : (isDone ? 100 : null)),
             sessionDate: activityScore?.session_date || null,
             sessionId: activityScore?.session_id || null,
             resourceType: activityScore?.resource_type || item.resource_type || null,
             resourceTopic: activityScore?.resource_topic || item.resource_topic || '',
+            configuredQuestionCount: Number(activityScore?.configured_question_count || 0),
           }
         : undefined,
     });
@@ -5861,6 +5879,147 @@ function AttemptHistoryModal({ r, showFeedback, onClose, token, showSubmission }
   );
 }
 
+function MindSparkQuizModal({ r, token, onClose }) {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [questions, setQuestions] = React.useState([]);
+
+  React.useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    fetchMindSparkQuestions(r.id, token)
+      .then(data => {
+        if (active) setQuestions(data);
+      })
+      .catch(err => {
+        if (active) setError(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [r.id, token]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 flex-shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-yellow-50 border border-yellow-200 flex items-center justify-center flex-shrink-0">
+            <Zap size={16} className="text-yellow-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-bold text-gray-800 truncate">{r.name}</h2>
+            <p className="text-[11px] text-gray-400 mt-0.5">Mindspark questions</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <X size={16} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50">
+          {loading && (
+            <div className="flex items-center justify-center py-16 text-gray-400">
+              <Loader2 size={24} className="animate-spin mr-2" />
+              <span className="text-sm">Loading Mindspark questions...</span>
+            </div>
+          )}
+
+          {error && !loading && (
+            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-500">
+              {error}
+            </div>
+          )}
+
+          {!loading && questions.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <Zap size={32} className="mb-3 text-gray-300" />
+              <p className="text-sm font-medium">No Mindspark questions configured</p>
+              <p className="text-xs mt-1">Ask the admin to configure this resource.</p>
+            </div>
+          )}
+
+          {!loading && questions.map((question, index) => {
+            const options = Array.isArray(question.options) ? question.options : [];
+
+            return (
+              <div key={question.question_id} className="rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-full bg-yellow-50 border border-yellow-200 text-yellow-600 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {question.question_no ?? index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800">{question.prompt}</p>
+                    {question.assets?.length > 0 && (
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        {question.assets.map((asset, assetIndex) => (
+                          <div key={assetIndex} className="rounded-lg border border-gray-100 overflow-hidden bg-gray-50">
+                            {asset.url ? (
+                              <img src={asset.url} alt={asset.alt || `Question asset ${assetIndex + 1}`} className="w-full max-h-56 object-contain bg-black/5" />
+                            ) : (
+                              <div className="p-3 text-xs text-gray-500 break-all">{asset.name || JSON.stringify(asset)}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  {options.length > 0 ? options.map((option, optionIndex) => {
+                    const key = String(option.key ?? option.value ?? optionIndex + 1);
+
+                    return (
+                      <div
+                        key={`${question.question_id}-${key}`}
+                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+                      >
+                        <span className="font-semibold mr-2">{key}.</span>
+                        {option.text ?? option.label ?? String(option)}
+                      </div>
+                    );
+                  }) : (
+                    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-400">
+                      No options configured
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {!loading && questions.length > 0 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white flex-shrink-0">
+            <span className="text-xs text-gray-400">
+              {questions.length} question{questions.length !== 1 ? 's' : ''}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onClose}
+                className="px-4 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors text-xs font-medium text-gray-500"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ReattemptLog({ reAttempts, updatedAt }) {
   const attempts = reAttempts.length > 0
     ? reAttempts
@@ -6258,23 +6417,25 @@ function ResourceTypeBadge({ r }) {
 // }
 
 //working good
-function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal }) {
+function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal, onOpenMindSparkQuiz }) {
   const done           = isResourceDone(r);
   const isPractice     = r.type === 'practice';
   const isInterpret    = r.type === 'interpret';
   const isTest         = r.type === 'test';
   const isActivity     = r.completionSource === 'activity';
+  const isMindSparkResource = isMindSpark(r.name);
 
   const showLog      = (isPractice && practiceShowsLog(r.name))      || (isTest && testShowsLog(r.name));
   const showFeedback = (isPractice && practiceShowsFeedback(r.name))  || (isTest && testShowsFeedback(r.name));
   const showSubmission = (isPractice && practiceShowsFeedback(r.name)) || isTest;
-  const showActivityView = isActivity;
+  const showActivityView = isActivity && !isMindSparkResource;
 
-  const isClickable    = isInterpret;
+  const isClickable    = isInterpret || isMindSparkResource;
   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
 
   const handleClick = () => {
     if (isInterpret) onOpenInterpretModal(r);
+    if (isMindSparkResource) onOpenMindSparkQuiz(r);
   };
 
   return (
@@ -6307,6 +6468,30 @@ function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal }) {
             <Eye size={9} /> View Scores
           </span>
         )}
+        {isMindSparkResource && (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onOpenMindSparkQuiz(r);
+            }}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-600 border border-yellow-200 hover:border-[#8DC63F] hover:text-[#8DC63F] transition-colors flex-shrink-0"
+          >
+            <Zap size={10} /> View Questions
+          </button>
+        )}
+        {isMindSparkResource && (
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onOpenAttemptModal({ resource: r, showFeedback: false, showSubmission: false });
+            }}
+            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-slate-50 text-slate-600 border border-slate-200 hover:border-[#8DC63F] hover:text-[#8DC63F] transition-colors flex-shrink-0"
+          >
+            <History size={10} /> Score
+          </button>
+        )}
         {(showLog || showActivityView) && (
           <button
             type="button"
@@ -6337,7 +6522,7 @@ const getTestNumber = (name = '') => {
 
 const testShowsLog      = name => { const n = getTestNumber(name); return n !== null; };
 const testShowsFeedback = name => { const n = getTestNumber(name); return n !== null; };
-function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal, onOpenAttemptModal }) {
+function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal, onOpenAttemptModal, onOpenMindSparkQuiz }) {
   const TopicIcon = TOPIC_ICONS[normalizeSortKey(topic)] || BookOpen;
   const topicDone = items.filter(isResourceDone).length;
   const pct       = items.length ? Math.round((topicDone / items.length) * 100) : 0;
@@ -6370,7 +6555,7 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
       {isOpen && (
         <div className="mt-2 flex flex-col gap-2 pl-4 border-l-2 border-[#8DC63F]/20 ml-4">
           {items.map(r => (
-            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} />
+            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} onOpenMindSparkQuiz={onOpenMindSparkQuiz} />
           ))}
         </div>
       )}
@@ -6380,7 +6565,7 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
 
 // ─── TYPE SECTION ─────────────────────────────────────────────────────────────
 
-function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, onToggleTopic, token, onOpenInterpretModal, onOpenAttemptModal }) {
+function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, onToggleTopic, token, onOpenInterpretModal, onOpenAttemptModal, onOpenMindSparkQuiz }) {
   const meta  = TYPE_META[typeKey] || TYPE_META.resource;
   const Icon  = meta.icon;
   const total = accordions.reduce((s, g) => s + g.items.length, 0) + directRows.length;
@@ -6396,7 +6581,7 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
       {flatList ? (
         <div className="flex flex-col gap-2">
           {directRows.map(r => (
-            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} />
+            <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} onOpenMindSparkQuiz={onOpenMindSparkQuiz} />
           ))}
         </div>
       ) : (
@@ -6404,7 +6589,7 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
           {directRows.length > 0 && (
             <div className="flex flex-col gap-2 mt-1 mb-3">
               {directRows.map(r => (
-                <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} />
+                <ResourceRow key={r.id} r={r} token={token} onOpenInterpretModal={onOpenInterpretModal} onOpenAttemptModal={onOpenAttemptModal} onOpenMindSparkQuiz={onOpenMindSparkQuiz} />
               ))}
             </div>
           )}
@@ -6418,6 +6603,7 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
               token={token}
               onOpenInterpretModal={onOpenInterpretModal}
               onOpenAttemptModal={onOpenAttemptModal}
+              onOpenMindSparkQuiz={onOpenMindSparkQuiz}
             />
           ))}
         </>
@@ -6442,6 +6628,7 @@ function MyLearning() {
   const [openTopics,     setOpenTopics]     = React.useState({});
   const [interpretModal, setInterpretModal] = React.useState(null);
   const [attemptModal,   setAttemptModal]   = React.useState(null);
+  const [mindSparkQuizModal, setMindSparkQuizModal] = React.useState(null);
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   const token = localStorage.getItem('user_token');
@@ -6568,6 +6755,14 @@ function MyLearning() {
           showSubmission={attemptModal.showSubmission}
           token={token}
           onClose={() => setAttemptModal(null)}
+        />
+      )}
+
+      {mindSparkQuizModal && (
+        <MindSparkQuizModal
+          r={mindSparkQuizModal}
+          token={token}
+          onClose={() => setMindSparkQuizModal(null)}
         />
       )}
 
@@ -6725,6 +6920,7 @@ function MyLearning() {
                         token={token}
                         onOpenInterpretModal={setInterpretModal}
                         onOpenAttemptModal={setAttemptModal}
+                        onOpenMindSparkQuiz={setMindSparkQuizModal}
                       />
                     ))}
                   </div>

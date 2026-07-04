@@ -242,6 +242,7 @@ app.use('/api/v1/', Authenticate, createscanCentersRouter);
 app.use('/api/v1/', Authenticate, getScanCenterRouter);
 //mind spark
 app.use('/api/v1/', Authenticate, mindSparkRouter);
+app.use('/api/v1/', Authenticate, questionsRouter);
 //submit image interpretation and measurement
 app.use('/api/v1/', Authenticate, iivrRouter);
 //test route for iivr

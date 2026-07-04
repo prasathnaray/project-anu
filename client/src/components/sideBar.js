@@ -35,6 +35,11 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     setTokData(token);
   }, []);
   const data = window.location.pathname;
+  const isCoursePath = data === "/certificate" ||
+    data.startsWith("/chapters/") ||
+    data.startsWith("/module/") ||
+    data.startsWith("/cert-course/") ||
+    data.startsWith("/resource/");
   // console.log(data)
   return (
   <div className={`fixed top-[50px] left-0 h-screen ${
@@ -59,7 +64,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               {tokdata.role == 99 && 
               <>
                   <li className={`${data==="/curriculum"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/curriculum" className={`${data==="/curriculum" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><BookCheck size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Curriculum</div></a></li>
-                  <li className={`${data==="/certificate"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/certificate" className={`${data==="/certificate" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
+                  <li className={`${isCoursePath ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/certificate" className={`${isCoursePath ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
                   <li className="mb-1 mt-2">
                     <button
                       onMouseDown={(e) => ripple.create(e, "dark", "circle")}
