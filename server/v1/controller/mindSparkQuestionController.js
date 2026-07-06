@@ -3,6 +3,7 @@ const {
     getMindSparkQuestions,
     updateMindSparkQuestion,
     deleteMindSparkQuestion,
+    getMindSparkAttemptDetails,
 } = require('../model/mindSparkQuestionm');
 
 const isBlank = (value) => value === undefined || value === null || value === '';
@@ -182,9 +183,39 @@ const deleteQuestionController = async (req, res) => {
     }
 };
 
+const getAttemptDetailsController = async (req, res) => {
+    try {
+        const { resource_id, session_id } = req.query;
+
+        if (isBlank(resource_id)) {
+            return res.status(400).json({
+                status: 'Bad Request',
+                code: 400,
+                message: 'resource_id is required'
+            });
+        }
+
+        const result = await getMindSparkAttemptDetails(req.user, { resource_id, session_id });
+        if (result.code === 401) {
+            return res.status(401).json(result);
+        }
+
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error('Error fetching Mindspark attempt details:', err);
+        return res.status(500).json({
+            status: 'Error',
+            code: 500,
+            message: 'Failed to fetch Mindspark attempt details',
+            error: err.message
+        });
+    }
+};
+
 module.exports = {
     createQuestionsController,
     getQuestionsController,
     updateQuestionController,
     deleteQuestionController,
+    getAttemptDetailsController,
 };

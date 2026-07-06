@@ -248,10 +248,95 @@ const deleteMindSparkQuestion = async (requester, questionId) => {
     return { status: 'Success', code: 200, data: result.rows[0] ?? null };
 };
 
+const getMindSparkAttemptDetails = async (requester, { resource_id, session_id }) => {
+    if (!canRead(requester)) {
+        return {
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to view Mindspark attempt details.'
+        };
+    }
+
+    await ensureMindSparkQuestionsTable();
+
+    const latestSessionResult = await client.query(
+        `SELECT session_id
+         FROM activity_submissions
+         WHERE user_id = $1
+           AND resource_id = $2
+           AND ($3::uuid IS NULL OR session_id = $3::uuid)
+         GROUP BY session_id
+         ORDER BY MAX(submitted_at) DESC
+         LIMIT 1`,
+        [requester.user_mail, resource_id, session_id || null]
+    );
+
+    const latestSessionId = latestSessionResult.rows[0]?.session_id || null;
+    if (!latestSessionId) {
+        return {
+            status: 'Success',
+            code: 200,
+            data: [],
+            summary: {
+                session_id: null,
+                total_questions: 0,
+                correct_answers: 0,
+                wrong_answers: 0,
+                score_percentage: null,
+            }
+        };
+    }
+
+    const result = await client.query(
+        `SELECT
+            msq.question_id,
+            msq.question_no,
+            msq.question_type,
+            msq.prompt,
+            msq.options,
+            msq.correct_answer,
+            msq.feedback_correct,
+            msq.feedback_wrong,
+            ass.session_id,
+            ass.option_chosen,
+            ass.is_correct,
+            ass.submitted_at
+         FROM mind_spark_questions msq
+         LEFT JOIN activity_submissions ass
+            ON ass.resource_id = msq.resource_id
+           AND ass.question_no = msq.question_no
+           AND ass.session_id = $2
+           AND ass.user_id = $3
+         WHERE msq.resource_id = $1
+           AND msq.is_active = true
+         ORDER BY msq.question_no ASC`,
+        [resource_id, latestSessionId, requester.user_mail]
+    );
+
+    const rows = result.rows;
+    const total = rows.length;
+    const correct = rows.filter(row => row.is_correct === true).length;
+    const wrong = rows.filter(row => row.is_correct === false).length;
+
+    return {
+        status: 'Success',
+        code: 200,
+        data: rows,
+        summary: {
+            session_id: latestSessionId,
+            total_questions: total,
+            correct_answers: correct,
+            wrong_answers: wrong,
+            score_percentage: total > 0 ? Number(((correct / total) * 100).toFixed(2)) : null,
+        }
+    };
+};
+
 module.exports = {
     ensureMindSparkQuestionsTable,
     createMindSparkQuestions,
     getMindSparkQuestions,
     updateMindSparkQuestion,
     deleteMindSparkQuestion,
+    getMindSparkAttemptDetails,
 };

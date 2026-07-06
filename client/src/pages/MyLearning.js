@@ -4874,6 +4874,17 @@ async function fetchMindSparkQuestions(resourceId, token) {
   return Array.isArray(json?.data) ? json.data : [];
 }
 
+async function fetchMindSparkAttemptDetails(resourceId, token, sessionId = '') {
+  const params = new URLSearchParams({ resource_id: resourceId });
+  if (sessionId) params.append('session_id', sessionId);
+
+  const res = await fetch(`${BASE_URL}/api/v1/mind-spark-attempt-details?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Mindspark attempt API HTTP ${res.status}`);
+  return res.json();
+}
+
 // ─── DATA TRANSFORMATION ──────────────────────────────────────────────────────
 
 /**
@@ -5762,7 +5773,161 @@ function SubmittedContentPanel({ r, token }) {
   );
 }
 
-function ActivityAttemptPanel({ r }) {
+const getMindSparkAnswerKey = answer => String(
+  answer?.key ?? answer?.value ?? answer?.answer ?? answer?.option ?? answer?.label ?? ''
+);
+
+const getMindSparkOptionText = (options, key) => {
+  const normalizedKey = String(key ?? '');
+  const option = (Array.isArray(options) ? options : []).find(item => {
+    const itemKey = String(item?.key ?? item?.value ?? item?.label ?? item?.text ?? '');
+    return itemKey === normalizedKey || itemKey.slice(0, 10) === normalizedKey;
+  });
+  return option?.text ?? option?.label ?? option?.value ?? '';
+};
+
+function MindSparkAttemptDetailsPanel({ r, token }) {
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [details, setDetails] = React.useState([]);
+  const [summary, setSummary] = React.useState(null);
+
+  React.useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    fetchMindSparkAttemptDetails(r.id, token, r.activityData?.sessionId)
+      .then(json => {
+        if (!active) return;
+        setDetails(Array.isArray(json?.data) ? json.data : []);
+        setSummary(json?.summary || null);
+      })
+      .catch(err => {
+        if (active) setError(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [r.id, r.activityData?.sessionId, token]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12 text-gray-400">
+        <Loader2 size={22} className="animate-spin mr-2" />
+        <span className="text-sm">Loading score details...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (!details.length) {
+    return (
+      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+        <Zap size={28} className="mb-2 text-gray-300" />
+        <p className="text-sm font-medium">No Mindspark attempt found</p>
+        <p className="text-xs mt-1">This resource has no mapped attempt details yet</p>
+      </div>
+    );
+  }
+
+  const correct = Number(summary?.correct_answers || 0);
+  const total = Number(summary?.total_questions || details.length);
+  const wrong = Number(summary?.wrong_answers || 0);
+  const pct = summary?.score_percentage !== null && summary?.score_percentage !== undefined
+    ? Number(summary.score_percentage)
+    : (total > 0 ? (correct / total) * 100 : null);
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+          <p className="text-[10px] text-gray-400">Score</p>
+          <p className="text-sm font-semibold text-gray-700">{pct !== null ? `${Math.round(pct)}%` : '—'}</p>
+        </div>
+        <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+          <p className="text-[10px] text-gray-400">Correct</p>
+          <p className="text-sm font-semibold text-[#8DC63F]">{correct}</p>
+        </div>
+        <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+          <p className="text-[10px] text-gray-400">Wrong</p>
+          <p className="text-sm font-semibold text-red-500">{wrong}</p>
+        </div>
+        <div className="rounded-lg border border-gray-100 bg-white px-3 py-2">
+          <p className="text-[10px] text-gray-400">Questions</p>
+          <p className="text-sm font-semibold text-gray-700">{total}</p>
+        </div>
+      </div>
+
+      {details.map((item, index) => {
+        const options = Array.isArray(item.options) ? item.options : [];
+        const correctKey = getMindSparkAnswerKey(item.correct_answer);
+        const selectedText = getMindSparkOptionText(options, item.option_chosen);
+        const correctText = getMindSparkOptionText(options, correctKey);
+        const answered = item.is_correct === true || item.is_correct === false;
+        const right = item.is_correct === true;
+
+        return (
+          <div
+            key={item.question_id || `${item.question_no}-${index}`}
+            className={`rounded-xl border bg-white p-3 ${right ? 'border-[#8DC63F]/40' : answered ? 'border-red-200' : 'border-gray-200'}`}
+          >
+            <div className="flex items-start gap-3">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+                right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+              }`}>
+                {right ? <CheckCircle2 size={15} /> : answered ? <X size={15} /> : item.question_no || index + 1}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                    {right ? 'Right' : answered ? 'Wrong' : 'Not answered'}
+                  </span>
+                  <span className="text-[10px] text-gray-400">Question {item.question_no || index + 1}</span>
+                </div>
+                <p className="text-sm font-semibold text-gray-800">{item.prompt}</p>
+                <div className="mt-3 grid gap-2 text-xs">
+                  <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                    <span className="text-gray-400">Selected: </span>
+                    <span className={right ? 'font-semibold text-[#8DC63F]' : answered ? 'font-semibold text-red-500' : 'font-semibold text-gray-500'}>
+                      {answered ? (selectedText || item.option_chosen || '—') : '—'}
+                    </span>
+                  </div>
+                  <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                    <span className="text-gray-400">Correct answer: </span>
+                    <span className="font-semibold text-gray-700">{correctText || correctKey || '—'}</span>
+                  </div>
+                </div>
+                {(right ? item.feedback_correct : item.feedback_wrong) && (
+                  <p className="mt-2 text-xs text-gray-500">{right ? item.feedback_correct : item.feedback_wrong}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ActivityAttemptPanel({ r, token }) {
+  if (isMindSpark(r.name)) {
+    return <MindSparkAttemptDetailsPanel r={r} token={token} />;
+  }
+
   const activity = r.activityData || {};
   const attempts = Number(activity.attempts || 0);
   const correct = Number(activity.correct || 0);
@@ -5870,7 +6035,7 @@ function AttemptHistoryModal({ r, showFeedback, onClose, token, showSubmission }
 
         <div className="flex-1 overflow-y-auto p-5 bg-gray-50">
           {isActivity
-            ? <ActivityAttemptPanel r={r} />
+            ? <ActivityAttemptPanel r={r} token={token} />
             : <PracticeExpandedPanel r={r} showFeedback={showFeedback} showSubmission={showSubmission} token={token} className="mt-0" />
           }
         </div>
