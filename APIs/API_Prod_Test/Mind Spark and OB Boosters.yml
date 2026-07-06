@@ -11,12 +11,12 @@ http:
     data: |-
       {
           "resourceType": "PROBEMOVEMENTS",
-          "resourceId": "d205a94c-cdfc-4e04-986f-0fe5e9432cc5",
+          "resourceId": "3ad12573-dbbb-4a3b-9f7a-fbb27d78b3ed",
           "totalTimeTaken": 90
       }
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3NzMwNDExNzZ9.IjJxr_7Y55ZA6tWFP0TdbdGvfsi7gV-03Idbp4WXOe8
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiaWF0IjoxNzgzMzIzNDczfQ.nhK7DHtybvGj-BOZCXYBTHqXTxtAyVMJfcdbJarYsC4
 
 settings:
   encodeUrl: true

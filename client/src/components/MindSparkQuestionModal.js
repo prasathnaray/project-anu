@@ -4,46 +4,17 @@ import { Trash2, X } from "lucide-react";
 import { toast } from "react-toastify";
 import CustomCloseButton from "../utils/CustomCloseButton";
 import { deleteMindSparkQuestionAPI, getMindSparkQuestionsAPI, saveMindSparkQuestionsAPI } from "../API/MindSparkQuestionsAPI";
-
-const emptyQuestion = (questionNo = 1) => ({
-  question_no: questionNo,
-  question_type: "MCQ",
-  prompt: "",
-  options: [
-    { key: "a", text: "" },
-    { key: "b", text: "" },
-    { key: "c", text: "" },
-    { key: "d", text: "" },
-  ],
-  correct_answer_key: "",
-  feedback_correct: "",
-  feedback_wrong: "",
-  assetsText: "[]",
-  metadataText: "{}",
-});
-
-const parseJsonText = (value, fallback) => {
-  try {
-    return JSON.parse(value || JSON.stringify(fallback));
-  } catch (err) {
-    return fallback;
-  }
-};
-
-const formatQuestionForForm = (question, index) => ({
-  question_id: question.question_id,
-  question_no: question.question_no ?? index + 1,
-  question_type: question.question_type ?? "MCQ",
-  prompt: question.prompt ?? "",
-  options: Array.isArray(question.options) && question.options.length > 0
-    ? question.options
-    : emptyQuestion(index + 1).options,
-  correct_answer_key: question.correct_answer?.key ?? "",
-  feedback_correct: question.feedback_correct ?? "",
-  feedback_wrong: question.feedback_wrong ?? "",
-  assetsText: JSON.stringify(question.assets ?? [], null, 2),
-  metadataText: JSON.stringify(question.metadata ?? {}, null, 2),
-});
+import {
+  buildQuestionPayload,
+  changeQuestionType,
+  emptyQuestion,
+  formatQuestionForForm,
+  getNextOptionRow,
+  getQuestionValidationError,
+  isMcqType,
+  isOrderingType,
+  questionUsesRows,
+} from "../utils/mindSparkQuestionForm";
 
 function MindSparkQuestionModal({ isVisible, onClose, resource }) {
   const [mindsparkNo, setMindsparkNo] = useState(1);
@@ -93,6 +64,38 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
     );
   };
 
+  const updateQuestionType = (index, questionType) => {
+    setQuestions((previous) =>
+      previous.map((question, questionIndex) =>
+        questionIndex === index ? changeQuestionType(question, questionType) : question
+      )
+    );
+  };
+
+  const addOptionRow = (questionIndex) => {
+    setQuestions((previous) =>
+      previous.map((question, index) => {
+        if (index !== questionIndex) return question;
+        return {
+          ...question,
+          options: [...question.options, getNextOptionRow(question.question_type, question.options)],
+        };
+      })
+    );
+  };
+
+  const removeOptionRow = (questionIndex, optionIndex) => {
+    setQuestions((previous) =>
+      previous.map((question, index) => {
+        if (index !== questionIndex) return question;
+        return {
+          ...question,
+          options: question.options.filter((_, currentOptionIndex) => currentOptionIndex !== optionIndex),
+        };
+      })
+    );
+  };
+
   const addQuestion = () => {
     setQuestions((previous) => [...previous, emptyQuestion(previous.length + 1)]);
   };
@@ -123,26 +126,16 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
       return;
     }
 
-    const invalidQuestion = questions.find((question) => !question.prompt.trim() || !question.correct_answer_key.trim());
-    if (invalidQuestion) {
-      toast.error("Question and correct answer are required");
+    const validationError = questions.map(getQuestionValidationError).find(Boolean);
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
     const payload = {
       resource_id: resource.resource_id,
       mindspark_no: Number(mindsparkNo) || 1,
-      questions: questions.map((question, index) => ({
-        question_no: Number(question.question_no) || index + 1,
-        question_type: question.question_type,
-        prompt: question.prompt.trim(),
-        options: question.options.filter((option) => option.key?.trim() || option.text?.trim()),
-        correct_answer: { key: question.correct_answer_key.trim() },
-        feedback_correct: question.feedback_correct,
-        feedback_wrong: question.feedback_wrong,
-        assets: parseJsonText(question.assetsText, []),
-        metadata: parseJsonText(question.metadataText, {}),
-      })),
+      questions: questions.map(buildQuestionPayload),
     };
 
     try {
@@ -213,13 +206,13 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
                     <Select
                       label="Question Type"
                       value={question.question_type}
-                      onChange={(event) => updateQuestionField(questionIndex, "question_type", event.target.value)}
+                      onChange={(event) => updateQuestionType(questionIndex, event.target.value)}
                     >
                       <MenuItem value="MCQ">MCQ</MenuItem>
                       <MenuItem value="ORDERING">Ordering</MenuItem>
                       <MenuItem value="IMAGE_ERROR">Image Error</MenuItem>
                       <MenuItem value="MATCHING">Matching</MenuItem>
-                      <MenuItem value="MEASUREMENT">Measurement</MenuItem>
+                      <MenuItem value="MEASUREMENT">Measurements</MenuItem>
                     </Select>
                   </FormControl>
                 </div>
@@ -236,35 +229,56 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
                   />
                 </div>
 
-                <div className="mt-4 grid grid-cols-[80px_1fr] gap-3">
-                  {question.options.map((option, optionIndex) => (
-                    <React.Fragment key={optionIndex}>
-                      <TextField
-                        size="small"
-                        label="Key"
-                        value={option.key}
-                        onChange={(event) => updateOptionField(questionIndex, optionIndex, "key", event.target.value)}
-                      />
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label={`Option ${optionIndex + 1}`}
-                        value={option.text}
-                        onChange={(event) => updateOptionField(questionIndex, optionIndex, "text", event.target.value)}
-                      />
-                    </React.Fragment>
-                  ))}
-                </div>
+                {questionUsesRows(question.question_type) && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-[80px_1fr_40px] gap-3">
+                      {question.options.map((option, optionIndex) => (
+                        <React.Fragment key={optionIndex}>
+                          <TextField
+                            size="small"
+                            label={isOrderingType(question.question_type) ? "Step" : "Key"}
+                            value={option.key}
+                            onChange={(event) => updateOptionField(questionIndex, optionIndex, "key", event.target.value)}
+                          />
+                          <TextField
+                            fullWidth
+                            size="small"
+                            label={isOrderingType(question.question_type) ? `Movement ${optionIndex + 1}` : `Option ${optionIndex + 1}`}
+                            value={option.text}
+                            onChange={(event) => updateOptionField(questionIndex, optionIndex, "text", event.target.value)}
+                          />
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => removeOptionRow(questionIndex, optionIndex)}
+                            disabled={isMcqType(question.question_type) && question.options.length <= 2}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </IconButton>
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="mt-3 border border-[#8DC63F] text-[#5d8f20] px-3 py-1.5 rounded text-xs"
+                      onClick={() => addOptionRow(questionIndex)}
+                    >
+                      {isOrderingType(question.question_type) ? "Add Step" : "Add Option"}
+                    </button>
+                  </div>
+                )}
 
-                <div className="mt-4">
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Correct Answer Key"
-                    value={question.correct_answer_key}
-                    onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
-                  />
-                </div>
+                {isMcqType(question.question_type) && (
+                  <div className="mt-4">
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Correct Answer Key"
+                      value={question.correct_answer_key}
+                      onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
+                    />
+                  </div>
+                )}
 
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <TextField

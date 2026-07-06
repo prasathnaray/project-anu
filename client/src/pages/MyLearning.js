@@ -6116,6 +6116,7 @@ function MindSparkQuizModal({ r, token, onClose }) {
 
           {!loading && questions.map((question, index) => {
             const options = Array.isArray(question.options) ? question.options : [];
+            const isOrderingQuestion = String(question.question_type || '').toUpperCase() === 'ORDERING';
 
             return (
               <div key={question.question_id} className="rounded-xl border border-gray-200 bg-white p-4">
@@ -6144,14 +6145,15 @@ function MindSparkQuizModal({ r, token, onClose }) {
                 <div className="mt-4 space-y-2">
                   {options.length > 0 ? options.map((option, optionIndex) => {
                     const key = String(option.key ?? option.value ?? optionIndex + 1);
+                    const optionText = option.text ?? option.label ?? String(option);
 
                     return (
                       <div
                         key={`${question.question_id}-${key}`}
                         className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
                       >
-                        <span className="font-semibold mr-2">{key}.</span>
-                        {option.text ?? option.label ?? String(option)}
+                        {!isOrderingQuestion && <span className="font-semibold mr-2">{key}.</span>}
+                        {optionText}
                       </div>
                     );
                   }) : (
