@@ -10,15 +10,21 @@ import {
   emptyQuestion,
   formatQuestionForForm,
   getNextOptionRow,
+  getQuestionConfigCopy,
+  getQuestionConfigMode,
   getQuestionValidationError,
-  isMcqType,
+  getQuestionTypeOptions,
+  isChoiceType,
   isOrderingType,
   questionUsesRows,
 } from "../utils/mindSparkQuestionForm";
 
 function MindSparkQuestionModal({ isVisible, onClose, resource }) {
+  const configMode = getQuestionConfigMode(resource);
+  const copy = getQuestionConfigCopy(configMode);
+  const questionTypeOptions = getQuestionTypeOptions(configMode);
   const [mindsparkNo, setMindsparkNo] = useState(1);
-  const [questions, setQuestions] = useState([emptyQuestion()]);
+  const [questions, setQuestions] = useState([emptyQuestion(1, configMode)]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -26,21 +32,21 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
       if (!isVisible || !resource?.resource_id) return;
 
       setMindsparkNo(1);
-      setQuestions([emptyQuestion()]);
+      setQuestions([emptyQuestion(1, configMode)]);
 
       try {
         const token = localStorage.getItem("user_token");
         const response = await getMindSparkQuestionsAPI(token, resource.resource_id, 1);
         const rows = response?.data?.data || [];
-        setQuestions(rows.length > 0 ? rows.map(formatQuestionForForm) : [emptyQuestion()]);
+        setQuestions(rows.length > 0 ? rows.map(formatQuestionForForm) : [emptyQuestion(1, configMode)]);
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load Mindspark questions");
+        toast.error(copy.failureLoadMessage);
       }
     };
 
     loadQuestions();
-  }, [isVisible, resource]);
+  }, [isVisible, resource, configMode, copy.failureLoadMessage]);
 
   if (!isVisible) return null;
 
@@ -97,7 +103,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
   };
 
   const addQuestion = () => {
-    setQuestions((previous) => [...previous, emptyQuestion(previous.length + 1)]);
+    setQuestions((previous) => [...previous, emptyQuestion(previous.length + 1, configMode)]);
   };
 
   const removeQuestion = async (index) => {
@@ -116,7 +122,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
 
     setQuestions((previous) => {
       const next = previous.filter((_, questionIndex) => questionIndex !== index);
-      return next.length > 0 ? next : [emptyQuestion()];
+      return next.length > 0 ? next : [emptyQuestion(1, configMode)];
     });
   };
 
@@ -142,15 +148,15 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
       setSaving(true);
       const token = localStorage.getItem("user_token");
       await saveMindSparkQuestionsAPI(token, payload);
-      toast.success("Mindspark questions saved", {
+      toast.success(copy.successMessage, {
         autoClose: 3000,
-        toastId: "mindspark-questions-saved",
+        toastId: `${configMode}-questions-saved`,
         closeButton: CustomCloseButton,
       });
       onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save Mindspark questions");
+      toast.error(copy.failureSaveMessage);
     } finally {
       setSaving(false);
     }
@@ -161,7 +167,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
       <div className="w-[760px] bg-white p-4 rounded shadow-md" onClick={(event) => event.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <div className="text-lg font-semibold">Configure Mindspark Questions</div>
+            <div className="text-lg font-semibold">{copy.title}</div>
             <div className="text-xs text-gray-500 mt-1">{resource?.resource_name}</div>
           </div>
           <IconButton onClick={onClose}>
@@ -176,7 +182,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
               fullWidth
               size="small"
               type="number"
-              label="Mindspark No"
+              label={copy.setNumberLabel}
               value={mindsparkNo}
               onChange={(event) => setMindsparkNo(event.target.value)}
             />
@@ -208,11 +214,11 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
                       value={question.question_type}
                       onChange={(event) => updateQuestionType(questionIndex, event.target.value)}
                     >
-                      <MenuItem value="MCQ">MCQ</MenuItem>
-                      <MenuItem value="ORDERING">Ordering</MenuItem>
-                      <MenuItem value="IMAGE_ERROR">Image Error</MenuItem>
-                      <MenuItem value="MATCHING">Matching</MenuItem>
-                      <MenuItem value="MEASUREMENT">Measurements</MenuItem>
+                      {questionTypeOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -243,7 +249,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
                           <TextField
                             fullWidth
                             size="small"
-                            label={isOrderingType(question.question_type) ? `Movement ${optionIndex + 1}` : `Option ${optionIndex + 1}`}
+                            label={isOrderingType(question.question_type) ? `Movement ${optionIndex + 1}` : `${copy.optionLabel} ${optionIndex + 1}`}
                             value={option.text}
                             onChange={(event) => updateOptionField(questionIndex, optionIndex, "text", event.target.value)}
                           />
@@ -251,7 +257,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
                             size="small"
                             color="error"
                             onClick={() => removeOptionRow(questionIndex, optionIndex)}
-                            disabled={isMcqType(question.question_type) && question.options.length <= 2}
+                            disabled={isChoiceType(question.question_type) && question.options.length <= 2}
                           >
                             <Trash2 className="h-4 w-4" />
                           </IconButton>
@@ -268,7 +274,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
                   </div>
                 )}
 
-                {isMcqType(question.question_type) && (
+                {isChoiceType(question.question_type) && (
                   <div className="mt-4">
                     <TextField
                       fullWidth

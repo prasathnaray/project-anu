@@ -4,11 +4,41 @@ export const QUESTION_TYPE = {
   IMAGE_ERROR: "IMAGE_ERROR",
   MATCHING: "MATCHING",
   MEASUREMENT: "MEASUREMENT",
+  FIND_IMAGE: "type1",
+  IMAGE_UPLOAD: "type2",
+  ANNOTATION1: "annotation1",
+  ANNOTATION2: "annotation2",
+  II_MEASUREMENT: "measurement",
 };
 
 const MCQ_KEYS = ["a", "b", "c", "d"];
+const IMAGE_OPTION_KEYS = ["A", "B", "C", "D"];
 
-const defaultMcqOptions = () => MCQ_KEYS.map((key) => ({ key, text: "" }));
+export const QUESTION_CONFIG_MODE = {
+  MINDSPARK: "mindspark",
+  IMAGE_INTERPRETATION: "image_interpretation",
+};
+
+const MINDSPARK_QUESTION_TYPE_OPTIONS = [
+  { value: QUESTION_TYPE.MCQ, label: "MCQ" },
+  { value: QUESTION_TYPE.ORDERING, label: "Ordering" },
+  { value: QUESTION_TYPE.IMAGE_ERROR, label: "Image Error" },
+  { value: QUESTION_TYPE.MATCHING, label: "Matching" },
+  { value: QUESTION_TYPE.MEASUREMENT, label: "Measurements" },
+];
+
+const IMAGE_INTERPRETATION_QUESTION_TYPE_OPTIONS = [
+  { value: QUESTION_TYPE.FIND_IMAGE, label: "Find the Image" },
+  { value: QUESTION_TYPE.IMAGE_UPLOAD, label: "Image Upload" },
+  { value: QUESTION_TYPE.ANNOTATION1, label: "Annotation 1" },
+  { value: QUESTION_TYPE.ANNOTATION2, label: "Annotation 2" },
+  { value: QUESTION_TYPE.II_MEASUREMENT, label: "Measurement" },
+];
+
+const defaultMcqOptions = (questionType = QUESTION_TYPE.MCQ) => {
+  const keys = questionType === QUESTION_TYPE.FIND_IMAGE ? IMAGE_OPTION_KEYS : MCQ_KEYS;
+  return keys.map((key) => ({ key, text: "" }));
+};
 
 const defaultOrderingSteps = () => [
   { key: "1", text: "" },
@@ -24,8 +54,47 @@ export const parseJsonText = (value, fallback) => {
 };
 
 export const isMcqType = (questionType) => questionType === QUESTION_TYPE.MCQ;
+export const isChoiceType = (questionType) => (
+  questionType === QUESTION_TYPE.MCQ || questionType === QUESTION_TYPE.FIND_IMAGE
+);
 export const isOrderingType = (questionType) => questionType === QUESTION_TYPE.ORDERING;
-export const questionUsesRows = (questionType) => isMcqType(questionType) || isOrderingType(questionType);
+export const questionUsesRows = (questionType) => isChoiceType(questionType) || isOrderingType(questionType);
+
+export const getQuestionConfigMode = (resource) => (
+  String(resource?.resource_type || "").toLowerCase() === "image interpretation"
+    ? QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION
+    : QUESTION_CONFIG_MODE.MINDSPARK
+);
+
+export const getQuestionTypeOptions = (mode = QUESTION_CONFIG_MODE.MINDSPARK) => (
+  mode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION
+    ? IMAGE_INTERPRETATION_QUESTION_TYPE_OPTIONS
+    : MINDSPARK_QUESTION_TYPE_OPTIONS
+);
+
+export const getDefaultQuestionType = (mode = QUESTION_CONFIG_MODE.MINDSPARK) => (
+  mode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION ? QUESTION_TYPE.FIND_IMAGE : QUESTION_TYPE.MCQ
+);
+
+export const getQuestionConfigCopy = (mode = QUESTION_CONFIG_MODE.MINDSPARK) => (
+  mode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION
+    ? {
+        title: "Configure Image Interpretation Questions",
+        setNumberLabel: "Question Set",
+        successMessage: "Image Interpretation questions saved",
+        failureLoadMessage: "Failed to load Image Interpretation questions",
+        failureSaveMessage: "Failed to save Image Interpretation questions",
+        optionLabel: "Image Option",
+      }
+    : {
+        title: "Configure Mindspark Questions",
+        setNumberLabel: "Mindspark No",
+        successMessage: "Mindspark questions saved",
+        failureLoadMessage: "Failed to load Mindspark questions",
+        failureSaveMessage: "Failed to save Mindspark questions",
+        optionLabel: "Option",
+      }
+);
 
 export const normalizeOptionRows = (options, questionType) => {
   const rows = Array.isArray(options) ? options : [];
@@ -39,29 +108,33 @@ export const normalizeOptionRows = (options, questionType) => {
       : defaultOrderingSteps();
   }
 
-  if (isMcqType(questionType)) {
+  if (isChoiceType(questionType)) {
+    const fallbackKeys = questionType === QUESTION_TYPE.FIND_IMAGE ? IMAGE_OPTION_KEYS : MCQ_KEYS;
     return rows.length > 0
       ? rows.map((option, index) => ({
-          key: String(option?.key ?? option?.value ?? MCQ_KEYS[index] ?? index + 1),
+          key: String(option?.key ?? option?.value ?? fallbackKeys[index] ?? index + 1),
           text: String(option?.text ?? option?.label ?? ""),
         }))
-      : defaultMcqOptions();
+      : defaultMcqOptions(questionType);
   }
 
   return [];
 };
 
-export const emptyQuestion = (questionNo = 1) => ({
-  question_no: questionNo,
-  question_type: QUESTION_TYPE.MCQ,
-  prompt: "",
-  options: defaultMcqOptions(),
-  correct_answer_key: "",
-  feedback_correct: "",
-  feedback_wrong: "",
-  assetsText: "[]",
-  metadataText: "{}",
-});
+export const emptyQuestion = (questionNo = 1, mode = QUESTION_CONFIG_MODE.MINDSPARK) => {
+  const questionType = getDefaultQuestionType(mode);
+  return {
+    question_no: questionNo,
+    question_type: questionType,
+    prompt: "",
+    options: defaultMcqOptions(questionType),
+    correct_answer_key: "",
+    feedback_correct: "",
+    feedback_wrong: "",
+    assetsText: "[]",
+    metadataText: "{}",
+  };
+};
 
 export const formatQuestionForForm = (question, index) => {
   const questionType = question.question_type ?? QUESTION_TYPE.MCQ;
@@ -84,7 +157,7 @@ export const changeQuestionType = (question, questionType) => ({
   ...question,
   question_type: questionType,
   options: normalizeOptionRows(question.options, questionType),
-  correct_answer_key: isMcqType(questionType) ? question.correct_answer_key : "",
+  correct_answer_key: isChoiceType(questionType) ? question.correct_answer_key : "",
 });
 
 export const getNextOptionRow = (questionType, rows) => {
@@ -94,14 +167,15 @@ export const getNextOptionRow = (questionType, rows) => {
     return { key: String(nextIndex + 1), text: "" };
   }
 
-  return { key: MCQ_KEYS[nextIndex] ?? String(nextIndex + 1), text: "" };
+  const keys = questionType === QUESTION_TYPE.FIND_IMAGE ? IMAGE_OPTION_KEYS : MCQ_KEYS;
+  return { key: keys[nextIndex] ?? String(nextIndex + 1), text: "" };
 };
 
 export const getQuestionValidationError = (question) => {
   if (!question.prompt.trim()) return "Question is required";
 
-  if (isMcqType(question.question_type) && !question.correct_answer_key.trim()) {
-    return "Correct answer key is required for MCQ questions";
+  if (isChoiceType(question.question_type) && !question.correct_answer_key.trim()) {
+    return "Correct answer key is required for option questions";
   }
 
   return null;
@@ -116,7 +190,7 @@ export const buildQuestionPayload = (question, index) => {
     .filter((option) => option.key || option.text);
 
   let correctAnswer = {};
-  if (isMcqType(question.question_type)) {
+  if (isChoiceType(question.question_type)) {
     correctAnswer = { key: question.correct_answer_key.trim() };
   } else if (isOrderingType(question.question_type)) {
     correctAnswer = { order: options.map((option) => option.key) };

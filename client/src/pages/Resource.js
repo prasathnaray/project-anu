@@ -18,8 +18,11 @@ import {
   emptyQuestion,
   formatQuestionForForm,
   getNextOptionRow,
+  getQuestionConfigCopy,
+  getQuestionConfigMode,
   getQuestionValidationError,
-  isMcqType,
+  getQuestionTypeOptions,
+  isChoiceType,
   isOrderingType,
   questionUsesRows,
 } from "../utils/mindSparkQuestionForm";
@@ -51,6 +54,9 @@ function Resource() {
   const [mindsparkNo, setMindsparkNo] = React.useState(1);
   const [mindSparkQuestions, setMindSparkQuestions] = React.useState([emptyQuestion()]);
   const [savingQuestions, setSavingQuestions] = React.useState(false);
+  const questionConfigMode = getQuestionConfigMode(selectedResource);
+  const questionConfigCopy = getQuestionConfigCopy(questionConfigMode);
+  const questionTypeOptions = getQuestionTypeOptions(questionConfigMode);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -94,19 +100,21 @@ function Resource() {
   };
 
   const openQuestionForm = async (resource) => {
+    const mode = getQuestionConfigMode(resource);
+    const copy = getQuestionConfigCopy(mode);
     setSelectedResource(resource);
     setMindsparkNo(1);
     setQuestionModalOpen(true);
-    setMindSparkQuestions([emptyQuestion()]);
+    setMindSparkQuestions([emptyQuestion(1, mode)]);
 
     try {
       const token = localStorage.getItem("user_token");
       const response = await getMindSparkQuestionsAPI(token, resource.resource_id, 1);
       const rows = response?.data?.data || [];
-      setMindSparkQuestions(rows.length > 0 ? rows.map(formatQuestionForForm) : [emptyQuestion()]);
+      setMindSparkQuestions(rows.length > 0 ? rows.map(formatQuestionForForm) : [emptyQuestion(1, mode)]);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load Mindspark questions");
+      toast.error(copy.failureLoadMessage);
     }
   };
 
@@ -170,7 +178,7 @@ function Resource() {
   };
 
   const addQuestion = () => {
-    setMindSparkQuestions((previous) => [...previous, emptyQuestion(previous.length + 1)]);
+    setMindSparkQuestions((previous) => [...previous, emptyQuestion(previous.length + 1, questionConfigMode)]);
   };
 
   const removeQuestion = async (index) => {
@@ -189,7 +197,7 @@ function Resource() {
 
     setMindSparkQuestions((previous) => {
       const next = previous.filter((_, questionIndex) => questionIndex !== index);
-      return next.length > 0 ? next : [emptyQuestion()];
+      return next.length > 0 ? next : [emptyQuestion(1, questionConfigMode)];
     });
   };
 
@@ -215,15 +223,15 @@ function Resource() {
       setSavingQuestions(true);
       const token = localStorage.getItem("user_token");
       await saveMindSparkQuestionsAPI(token, payload);
-      toast.success("Mindspark questions saved", {
+      toast.success(questionConfigCopy.successMessage, {
         autoClose: 3000,
-        toastId: "mindspark-questions-saved",
+        toastId: `${questionConfigMode}-questions-saved`,
         closeButton: CustomCloseButton,
       });
       closeQuestionForm();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save Mindspark questions");
+      toast.error(questionConfigCopy.failureSaveMessage);
     } finally {
       setSavingQuestions(false);
     }
@@ -295,7 +303,7 @@ function Resource() {
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">No. of Trainees Completed</th>
                       {(decoded.role == 99 || decoded.role == 101) && (
-                        <th className="py-2 px-4 text-[#8DC63F]">Mindspark</th>
+                        <th className="py-2 px-4 text-[#8DC63F]">Questions</th>
                       )}
                     </tr>
                   </thead>
@@ -370,7 +378,7 @@ function Resource() {
       <CreateModule isVisible={questionModalOpen} onClose={closeQuestionForm}>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <div className="text-lg font-semibold">Configure Mindspark Questions</div>
+            <div className="text-lg font-semibold">{questionConfigCopy.title}</div>
             <div className="text-xs text-gray-500 mt-1">{selectedResource?.resource_name}</div>
           </div>
           <IconButton onClick={closeQuestionForm}>
@@ -391,7 +399,7 @@ function Resource() {
               fullWidth
               size="small"
               type="number"
-              label="Mindspark No"
+              label={questionConfigCopy.setNumberLabel}
               value={mindsparkNo}
               onChange={(event) => setMindsparkNo(event.target.value)}
             />
@@ -423,11 +431,11 @@ function Resource() {
                       value={question.question_type}
                       onChange={(event) => updateQuestionType(questionIndex, event.target.value)}
                     >
-                      <MenuItem value="MCQ">MCQ</MenuItem>
-                      <MenuItem value="ORDERING">Ordering</MenuItem>
-                      <MenuItem value="IMAGE_ERROR">Image Error</MenuItem>
-                      <MenuItem value="MATCHING">Matching</MenuItem>
-                      <MenuItem value="MEASUREMENT">Measurements</MenuItem>
+                      {questionTypeOptions.map((option) => (
+                        <MenuItem key={option.value} value={option.value}>
+                          {option.label}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </div>
@@ -458,7 +466,7 @@ function Resource() {
                           <TextField
                             fullWidth
                             size="small"
-                            label={isOrderingType(question.question_type) ? `Movement ${optionIndex + 1}` : `Option ${optionIndex + 1}`}
+                            label={isOrderingType(question.question_type) ? `Movement ${optionIndex + 1}` : `${questionConfigCopy.optionLabel} ${optionIndex + 1}`}
                             value={option.text}
                             onChange={(event) => updateOptionField(questionIndex, optionIndex, "text", event.target.value)}
                           />
@@ -466,7 +474,7 @@ function Resource() {
                             size="small"
                             color="error"
                             onClick={() => removeOptionRow(questionIndex, optionIndex)}
-                            disabled={isMcqType(question.question_type) && question.options.length <= 2}
+                            disabled={isChoiceType(question.question_type) && question.options.length <= 2}
                           >
                             <Trash2 className="h-4 w-4" />
                           </IconButton>
@@ -483,7 +491,7 @@ function Resource() {
                   </div>
                 )}
 
-                {isMcqType(question.question_type) && (
+                {isChoiceType(question.question_type) && (
                   <div className="mt-4">
                     <TextField
                       fullWidth

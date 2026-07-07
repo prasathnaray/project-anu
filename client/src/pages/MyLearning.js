@@ -6150,14 +6150,14 @@ function MindSparkQuizModal({ r, token, onClose }) {
                     return (
                       <div
                         key={`${question.question_id}-${key}`}
-                        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
+                        className="w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-700"
                       >
                         {!isOrderingQuestion && <span className="font-semibold mr-2">{key}.</span>}
                         {optionText}
                       </div>
                     );
                   }) : (
-                    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-400">
+                    <div className="rounded-lg bg-white px-3 py-2 text-sm text-gray-400">
                       No options configured
                     </div>
                   )}

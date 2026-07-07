@@ -646,7 +646,7 @@ function InsideCertifications() {
                                                                                   }}
                                                                                 >
                                                                                   <Settings size={13} />
-                                                                                  Mindspark
+                                                                                  {item.resource_type === "Image Interpretation" ? "Questions" : "Mindspark"}
                                                                                 </button>
                                                                               </div>
                                                                             )}
@@ -741,7 +741,7 @@ function InsideCertifications() {
                                                                                           }}
                                                                                         >
                                                                                           <Settings size={13} />
-                                                                                          Mindspark
+                                                                                          {item.resource_type === "Image Interpretation" ? "Questions" : "Mindspark"}
                                                                                         </button>
                                                                                       </div>
                                                                                     )}
@@ -826,7 +826,7 @@ function InsideCertifications() {
                                                                                                       }}
                                                                                                     >
                                                                                                       <Settings size={13} />
-                                                                                                      Mindspark
+                                                                                                      {item.resource_type === "Image Interpretation" ? "Questions" : "Mindspark"}
                                                                                                     </button>
                                                                                                   </td>
                                                                                                 )}
