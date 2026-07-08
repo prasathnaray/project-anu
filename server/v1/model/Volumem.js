@@ -472,7 +472,7 @@ vcl.completed_at DESC;`;
 }
 const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
       return new Promise((resolve, reject) => {
-            const isPrivileged = [99, 101, 102].includes(Number(requester.role));
+            const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
             if (!isPrivileged) {
                 return resolve({
                     status: 'Unauthorized',
@@ -491,6 +491,40 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
             })
       })
 }
+const getVolumePlacementsModel = (requester) => {
+    return new Promise((resolve, reject) => {
+        const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
+        if (!isPrivileged) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'You do not have permission to view volume placements',
+            });
+        }
+
+        const query = `
+            SELECT
+                vp.*,
+                v.volume_name
+            FROM volume_placements vp
+            LEFT JOIN volumes v
+                ON vp.volume_id = v.volume_id
+            ORDER BY vp.created_at DESC;
+        `;
+
+        client.query(query, (err, result) => {
+            if (err) {
+                return reject(err);
+            }
+
+            return resolve({
+                status: 'Success',
+                code: 200,
+                data: result.rows
+            });
+        });
+    });
+};
 // const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files) => {
 //     return new Promise((resolve, reject) => {
 //         // Check user permissions
@@ -763,4 +797,4 @@ const getAssociatedVolumeModel = (requester, r_id) => {
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel};
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel};

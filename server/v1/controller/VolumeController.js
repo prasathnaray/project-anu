@@ -1,5 +1,5 @@
 const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel} = require("../model/Volumem");
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const VolumeController = async(req, res) => {
@@ -272,6 +272,26 @@ const volumePlacementController = async(req, res) => {
     catch(err) {
         console.error(err);
         res.status(500).send(err.message || "Internal server error");
+    }
+}
+const getVolumePlacementsController = async(req, res) => {
+    const requester = req.user;
+    try {
+        const result = await getVolumePlacementsModel(requester);
+        if (result.code === 401) {
+            return res.status(401).json({
+                error: result.message
+            });
+        }
+
+        res.status(200).json(result.data);
+    }
+    catch(err) {
+        console.error('Get volume placements error:', err);
+        res.status(500).json({
+            error: 'Internal server error',
+            message: err.message
+        });
     }
 }
 // const volRecordingC = async(req, res) => {
@@ -843,4 +863,4 @@ const getAssociatedVolumeController = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, volRecordingC, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, volRecordingC, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}
