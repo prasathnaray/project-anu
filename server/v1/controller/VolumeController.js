@@ -276,8 +276,9 @@ const volumePlacementController = async(req, res) => {
 }
 const getVolumePlacementsController = async(req, res) => {
     const requester = req.user;
+    const volume_id = req.params.volume_id || req.query.volume_id || null;
     try {
-        const result = await getVolumePlacementsModel(requester);
+        const result = await getVolumePlacementsModel(requester, volume_id);
         if (result.code === 401) {
             return res.status(401).json({
                 error: result.message
@@ -293,6 +294,15 @@ const getVolumePlacementsController = async(req, res) => {
             message: err.message
         });
     }
+}
+const getVolumePlacementsByVolumeIdController = async(req, res) => {
+    if (!req.params.volume_id && !req.query.volume_id) {
+        return res.status(400).json({
+            error: 'volume_id is required'
+        });
+    }
+
+    return getVolumePlacementsController(req, res);
 }
 // const volRecordingC = async(req, res) => {
 //     const requester = req.user;
@@ -863,4 +873,4 @@ const getAssociatedVolumeController = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, volRecordingC, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}

@@ -491,7 +491,7 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
             })
       })
 }
-const getVolumePlacementsModel = (requester) => {
+const getVolumePlacementsModel = (requester, volume_id = null) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
         if (!isPrivileged) {
@@ -502,17 +502,24 @@ const getVolumePlacementsModel = (requester) => {
             });
         }
 
-        const query = `
+        let query = `
             SELECT
                 vp.*,
                 v.volume_name
             FROM volume_placements vp
             LEFT JOIN volumes v
                 ON vp.volume_id = v.volume_id
-            ORDER BY vp.created_at DESC;
         `;
+        const values = [];
 
-        client.query(query, (err, result) => {
+        if (volume_id) {
+            query += ` WHERE vp.volume_id = $1`;
+            values.push(volume_id);
+        }
+
+        query += ` ORDER BY vp.created_at DESC;`;
+
+        client.query(query, values, (err, result) => {
             if (err) {
                 return reject(err);
             }
