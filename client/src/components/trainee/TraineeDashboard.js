@@ -4590,16 +4590,19 @@ const NEXT_RESOURCE_ORDER = Object.fromEntries(
     'BPD & HC::Geometric Shapes, Key Landmarks & Significance': 2,
     'BPD & HC::Geometric shapes of key landmarks and their significance': 2,
     'BPD & HC::Mind Sparks - Anatomical Landmarks': 3,
+    'BPD & HC::MindSparks - Anatomical Landmarks': 3,
     'BPD & HC::MindSparks - Quiz': 3,
 
+    'BPD & HC::Imaging the plane': 1,
+    'BPD & HC::Imaging the Plane': 1,
     'BPD & HC::Finding the Fetal Presentation': 1,
     'BPD & HC::Finding the fetal presentation': 1,
     'BPD & HC::How to acquire the transthalamic plane': 2,
     'BPD & HC::How To Acquire The Transthalamic Plane': 2,
-    'BPD & HC::Interaction - Fetal Head Scanning Activity': 3,
-    'BPD & HC::Mind Sparks - Probe Movements': 4,
-    'BPD & HC::Mind Sparks - Probe movements': 4,
-    'BPD & HC::MindSparks - Probe movements': 4,
+    'BPD & HC::Interaction - Fetal Head Scanning Activity': 2,
+    'BPD & HC::Mind Sparks - Probe Movements': 3,
+    'BPD & HC::Mind Sparks - Probe movements': 3,
+    'BPD & HC::MindSparks - Probe movements': 3,
     'BPD & HC::Mind Sparks - Picture Pick': 4,
     'BPD & HC:: How To Image The Plane': 4,
 
@@ -4609,56 +4612,73 @@ const NEXT_RESOURCE_ORDER = Object.fromEntries(
     'BPD & HC::How To Measure HC': 2,
 
     'BPD & HC::Plane Acquisition Challenges & Common Errors': 1,
+    'BPD & HC::Plane Acquisition Challenges and Common Errors': 1,
+    'BPD & HC::Plane Acquisition Challenges and Common Measurement Errors': 1,
     'BPD & HC::Plane Acquisition Challenges': 1,
     'BPD & HC::Artifacts': 2,
     'BPD & HC::Common Measurement Errors': 3,
-    'BPD & HC::MindSparks - Picture Pick': 4,
+    'BPD & HC::MindSparks - Picture Pick': 2,
 
     'BPD & HC::Image Diagnosis': 1,
-    'BPD & HC::BPD Chart': 1,
-    'BPD & HC::HC Chart': 2,
-    'BPD & HC::Mind Sparks - Chart Interpretation': 3,
-    'BPD & HC::MindSparks - Yes/No': 3,
+    'BPD & HC::Percentile Chart & Significance': 2,
+    'BPD & HC::Percentile Charts & Significance': 2,
+    'BPD & HC::Percentile Charts  & Significance': 2,
+    'BPD & HC::BPD Chart': 3,
+    'BPD & HC::HC Chart': 4,
+    'BPD & HC::Mind Sparks - Chart Interpretation': 5,
+    'BPD & HC::MindSparks - Yes/No': 5,
 
-    'BPD & HC::Picture Pick': 1,
-    'BPD & HC::True / False': 2,
-    'BPD & HC::True/False': 2,
-    'BPD & HC::Wordsearch': 3,
-    'BPD & HC::Word Search': 3,
+    'BPD & HC::Image Selection': 1,
+    'BPD & HC::Picture Pick': 2,
+    'BPD & HC::Visual Recognition': 3,
+    'BPD & HC::True / False': 4,
+    'BPD & HC::True/False': 4,
+    'BPD & HC::Wordsearch': 5,
+    'BPD & HC::Word Search': 5,
 
-    'AC::Transabdominal plane': 1,
+    'AC::AC Introduction': 1,
+    'AC::Transabdominal plane': 2,
     'AC::Abdominal circumference': 2,
+    'AC::Transabdominal plane & Abdominal circumference': 2,
     'AC::Significance': 3,
 
     'AC::Anatomical landmarks': 1,
     'AC::Anatomical landmarks of the transabdominal plane': 1,
     'AC::Anatomical Landmarks of the Transabdominal Plane': 1,
-    'AC::Mind Sparks - Geometric landmarks': 2,
-    'AC::Geometric shapes of key landmarks and their significance': 2,
-    'AC::Mind Sparks - Anatomical Landmarks': 3,
-    'AC::MindSparks - Quiz': 3,
+    'AC::Mind Sparks - Geometric landmarks': 1,
+    'AC::Geometric shapes of key landmarks and their significance': 1,
+    'AC::Mind Sparks - Anatomical Landmarks': 2,
+    'AC::MindSparks - Quiz': 2,
 
+    'AC::Imaging the plane': 1,
+    'AC::Imaging the Plane': 1,
     'AC::Cephalic Presentation': 1,
     'AC::Breech Presentation': 2,
-    'AC::Mind Sparks - Probe movements': 3,
-    'AC::MindSparks - Probe movements': 3,
+    'AC::Mind Sparks - Probe movements': 2,
+    'AC::MindSparks - Probe movements': 2,
 
+    'AC::Measurement': 1,
+    'AC::Measurements': 1,
+    'AC::How to measure AC': 1,
     'AC::Ellipse method': 1,
-    'AC::Two-diameter method': 2,
-    'AC::Interaction - Landmark placement and measurement': 3,
-    'AC::Mind Sparks - Picture Pick': 4,
-    'AC::MindSparks - Picture Pick': 4,
+    'AC::Two-diameter method': 1,
+    'AC::Interaction - Landmark placement and measurement': 2,
+    'AC::Interaction - Plane orientation and measurement': 2,
+    'AC::Mind Sparks - Picture Pick': 3,
 
     'AC::Pitfalls': 1,
     'AC::Pit Falls': 1,
     'AC::Plane Acquisition Challenges': 1,
-    'AC::Common Measurement Errors': 2,
+    'AC::Plane Acquisition Challenges and Common Errors': 1,
+    'AC::Plane Acquisition Challenges and Common Measurement Errors': 1,
+    'AC::Common Measurement Errors': 1,
     'AC::Artifacts': 3,
 
     'AC::Image Diagnosis': 1,
-    'AC::AC chart': 2,
-    'AC::Mind Sparks - Chart Interpretation': 3,
-    'AC::MindSparks - True/False': 3,
+    'AC::AC chart': 1,
+    'AC::AC Chart': 1,
+    'AC::Mind Sparks - Chart Interpretation': 2,
+    'AC::MindSparks - True/False': 2,
 
     'AC::ALM - Crossword': 1,
     'AC::Crossword puzzle': 1,
@@ -4675,19 +4695,19 @@ const NEXT_RESOURCE_ORDER = Object.fromEntries(
     'FL::Anatomical landmarks': 1,
     'FL::Anatomical landmarks of the femur diaphysis plane': 1,
     'FL::Anatomical Landmarks of the femur diaphysis Plane': 1,
-    'FL::Mind sparks - Geometric Landmarks': 2,
-    'FL::Geometric shapes of key landmarks and their significance': 2,
-    'FL::Anatomical landmarks End card': 3,
-    'FL::Interaction - Femur Bone': 3,
-    'FL::Mind Sparks - Anatomical Landmarks': 4,
-    'FL::MindSparks - Quiz': 4,
+    'FL::Mind sparks - Geometric Landmarks': 1,
+    'FL::Geometric shapes of key landmarks and their significance': 1,
+    'FL::Anatomical landmarks End card': 2,
+    'FL::Interaction - Femur Bone': 2,
+    'FL::Mind Sparks - Anatomical Landmarks': 3,
+    'FL::MindSparks - Quiz': 3,
 
     'FL::Imaging the plane': 1,
     'FL::How to acquire the femur diaphysis plane': 1,
     'FL::Breech Presentation': 1,
     'FL::Cephalic Presentation': 2,
-    'FL::Mind Sparks - Probe movements': 3,
-    'FL::MindSparks - Probe movements': 3,
+    'FL::Mind Sparks - Probe movements': 2,
+    'FL::MindSparks - Probe movements': 2,
 
     'FL::Measurements': 1,
     'FL::Measurement': 1,
@@ -4699,11 +4719,12 @@ const NEXT_RESOURCE_ORDER = Object.fromEntries(
     'FL::Pitfalls in plane acquisition and measurement': 1,
     'FL::Pit Falls': 1,
     'FL::Plane Acquisition Challenges': 1,
+    'FL::Plane Acquisition Challenges and Common Errors': 1,
     'FL::Plane acquisition errors': 1,
-    'FL::Artifacts': 2,
-    'FL::Common Measurement Errors': 3,
-    'FL::Common measurement errors': 3,
-    'FL::Mind Sparks - Errors - Picture pick': 4,
+    'FL::Artifacts': 1,
+    'FL::Common Measurement Errors': 1,
+    'FL::Common measurement errors': 1,
+    'FL::Mind Sparks - Errors - Picture pick': 2,
 
     'FL::Diagnosis': 1,
     'FL::Image Diagnosis': 1,
@@ -4794,6 +4815,297 @@ const NEXT_TOPIC_ORDER = [
 const NEXT_TOPIC_ORDER_INDEX = Object.fromEntries(
   NEXT_TOPIC_ORDER.map((topic, index) => [normalizeSortKey(topic), index])
 );
+
+const NEXT_TOPIC_ORDER_BY_MODULE = Object.fromEntries(
+  Object.entries({
+    'BPD & HC': [
+      'Fetal Head',
+      'Fetal Head (BPD & HC)',
+      'Anatomical Landmarks',
+      'Anatomical landmarks',
+      'Imaging the Transthalamic Plane',
+      'Imaging the Plane',
+      'Measurement',
+      'Measurements',
+      'Pitfalls in Plane Acquisition and Measurement',
+      'Plane Acquisition Challenges and Common Errors',
+      'Plane Acquisition Challenges and Common Measurement Errors',
+      'Image Diagnosis',
+      'Image diagnosis',
+      'OB Boosters',
+    ],
+    AC: [
+      'AC - Fetal Abdomen',
+      'Fetal Abdomen',
+      'Fetal abdomen',
+      'Anatomical Landmarks',
+      'Anatomical landmarks',
+      'Imaging the Plane',
+      'Imaging the plane',
+      'Imaging the transabdominal plane',
+      'Measurement',
+      'Measurements',
+      'Pitfalls in Plane Acquisition and Measurement',
+      'Plane Acquisition Challenges and Common Errors',
+      'Plane Acquisition Challenges and Common Measurement Errors',
+      'Pitfalls',
+      'Pit Falls',
+      'Image Diagnosis',
+      'Image diagnosis',
+      'OB Boosters',
+    ],
+  }).map(([moduleName, topics]) => [
+    normalizeSortKey(moduleName),
+    Object.fromEntries(topics.map((topic, index) => [normalizeSortKey(topic), index])),
+  ])
+);
+
+const isNextBpdHcScope = (value = '') => normalizeModuleSortLabel(value) === 'BPD & HC';
+const isNextMappedOrderScope = (value = '') => ['BPD & HC', 'AC'].includes(normalizeModuleSortLabel(value));
+
+const getNextTopicSortIndex = (moduleLabel, topic) => {
+  if (!topic) return -1;
+  const scopedTopicOrder = NEXT_TOPIC_ORDER_BY_MODULE[normalizeSortKey(moduleLabel)] || NEXT_TOPIC_ORDER_INDEX;
+  return scopedTopicOrder[normalizeSortKey(topic)] ?? 999;
+};
+
+const getNextAcResourceSortIndex = (topic, resourceName) => {
+  const normalizedTopic = normalizeSortKey(topic);
+  const normalizedName = normalizeSortKey(resourceName);
+
+  if (['fetal abdomen', 'ac - fetal abdomen'].includes(normalizedTopic)) {
+    if (normalizedName === normalizeSortKey('AC Introduction')) return 1;
+    if (
+      normalizedName === normalizeSortKey('Transabdominal plane') ||
+      normalizedName === normalizeSortKey('Abdominal circumference') ||
+      normalizedName === normalizeSortKey('Transabdominal plane & Abdominal circumference')
+    ) return 2;
+    if (normalizedName === normalizeSortKey('Significance')) return 3;
+  }
+
+  if (normalizedTopic === normalizeSortKey('Anatomical Landmarks') || normalizedTopic === normalizeSortKey('Anatomical landmarks')) {
+    if (
+      normalizedName === normalizeSortKey('Geometric shapes of key landmarks and their significance') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Geometric landmarks') ||
+      normalizedName === normalizeSortKey('Anatomical landmarks') ||
+      normalizedName === normalizeSortKey('Anatomical landmarks of the transabdominal plane') ||
+      normalizedName === normalizeSortKey('Anatomical Landmarks of the Transabdominal Plane')
+    ) return 1;
+    if (
+      normalizedName === normalizeSortKey('MindSparks - Quiz') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Anatomical Landmarks')
+    ) return 2;
+  }
+
+  if (normalizedTopic === normalizeSortKey('Imaging the Plane') || normalizedTopic === normalizeSortKey('Imaging the plane') || normalizedTopic === normalizeSortKey('Imaging the transabdominal plane')) {
+    if (
+      normalizedName === normalizeSortKey('Imaging the plane') ||
+      normalizedName === normalizeSortKey('Imaging the Plane') ||
+      normalizedName === normalizeSortKey('How to acquire the transabdominal plane')
+    ) return 1;
+    if (
+      normalizedName === normalizeSortKey('MindSparks - Probe movements') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Probe movements')
+    ) return 2;
+  }
+
+  if (normalizedTopic === normalizeSortKey('Measurement') || normalizedTopic === normalizeSortKey('Measurements')) {
+    if (
+      normalizedName === normalizeSortKey('Measurement') ||
+      normalizedName === normalizeSortKey('Measurements') ||
+      normalizedName === normalizeSortKey('How to measure AC') ||
+      normalizedName === normalizeSortKey('Ellipse method') ||
+      normalizedName === normalizeSortKey('Two-diameter method')
+    ) return 1;
+    if (
+      normalizedName === normalizeSortKey('Interaction - Plane orientation and measurement') ||
+      normalizedName === normalizeSortKey('Interaction - Landmark placement and measurement')
+    ) return 2;
+    if (
+      normalizedName === normalizeSortKey('MindSparks - Picture Pick') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Picture Pick')
+    ) return 3;
+  }
+
+  if (
+    normalizedTopic === normalizeSortKey('Pitfalls in Plane Acquisition and Measurement') ||
+    normalizedTopic === normalizeSortKey('Plane Acquisition Challenges and Common Errors') ||
+    normalizedTopic === normalizeSortKey('Plane Acquisition Challenges and Common Measurement Errors') ||
+    normalizedTopic === normalizeSortKey('Pitfalls') ||
+    normalizedTopic === normalizeSortKey('Pit Falls')
+  ) {
+    if (
+      normalizedName === normalizeSortKey('Plane Acquisition Challenges and Common Errors') ||
+      normalizedName === normalizeSortKey('Plane Acquisition Challenges and Common Measurement Errors') ||
+      normalizedName === normalizeSortKey('Plane Acquisition Challenges') ||
+      normalizedName === normalizeSortKey('Common Measurement Errors')
+    ) return 1;
+    if (
+      normalizedName === normalizeSortKey('MindSparks - Picture Pick') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Picture Pick')
+    ) return 2;
+  }
+
+  if (normalizedTopic === normalizeSortKey('Image Diagnosis') || normalizedTopic === normalizeSortKey('Image diagnosis')) {
+    if (
+      normalizedName === normalizeSortKey('AC chart') ||
+      normalizedName === normalizeSortKey('AC Chart') ||
+      normalizedName === normalizeSortKey('Image Diagnosis')
+    ) return 1;
+    if (
+      normalizedName === normalizeSortKey('MindSparks - True/False') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Chart Interpretation')
+    ) return 2;
+  }
+
+  if (normalizedTopic === normalizeSortKey('OB Boosters')) {
+    if (normalizedName === normalizeSortKey('Crossword puzzle') || normalizedName === normalizeSortKey('ALM - Crossword')) return 1;
+    if (normalizedName === normalizeSortKey('True/False')) return 2;
+    if (normalizedName === normalizeSortKey('Picture Pick')) return 3;
+  }
+
+  return undefined;
+};
+
+const getNextResourceSortIndex = (moduleLabel, resourceName, displayOrder, topic = '') => {
+  if (normalizeModuleSortLabel(moduleLabel) === 'AC') {
+    const acOrder = getNextAcResourceSortIndex(topic, resourceName);
+    if (acOrder !== undefined) {
+      return acOrder;
+    }
+  }
+
+  const mappedOrder = NEXT_RESOURCE_ORDER[normalizeSortKey(`${moduleLabel}::${resourceName}`)];
+
+  if (isNextMappedOrderScope(moduleLabel) && mappedOrder !== undefined) {
+    return mappedOrder;
+  }
+
+  return Number.isFinite(Number(displayOrder)) ? Number(displayOrder) : (mappedOrder ?? 999);
+};
+
+const NEXT_BPD_HC_TOPIC_BY_RESOURCE = Object.fromEntries(
+  Object.entries({
+    'Transthalamic Plane': 'Fetal Head',
+    'Bi-Parietal Diameter': 'Fetal Head',
+    'Head Circumference': 'Fetal Head',
+    'Significance': 'Fetal Head',
+    'Anatomical Landmarks and Significance': 'Anatomical Landmarks',
+    'Anatomical Landmarks of the Transthalamic Plane': 'Anatomical Landmarks',
+    'Geometric Shapes, Key Landmarks & Significance': 'Anatomical Landmarks',
+    'Geometric shapes of key landmarks and their significance': 'Anatomical Landmarks',
+    'Mind Sparks - Anatomical Landmarks': 'Anatomical Landmarks',
+    'MindSparks - Anatomical Landmarks': 'Anatomical Landmarks',
+    'MindSparks - Quiz': 'Anatomical Landmarks',
+    'Imaging the plane': 'Imaging the Transthalamic Plane',
+    'Imaging the Plane': 'Imaging the Transthalamic Plane',
+    'Finding the Fetal Presentation': 'Imaging the Transthalamic Plane',
+    'Finding the fetal presentation': 'Imaging the Transthalamic Plane',
+    'How to acquire the transthalamic plane': 'Imaging the Transthalamic Plane',
+    'How To Acquire The Transthalamic Plane': 'Imaging the Transthalamic Plane',
+    'Interaction - Fetal Head Scanning Activity': 'Imaging the Transthalamic Plane',
+    'Mind Sparks - Probe Movements': 'Imaging the Transthalamic Plane',
+    'Mind Sparks - Probe movements': 'Imaging the Transthalamic Plane',
+    'MindSparks - Probe movements': 'Imaging the Transthalamic Plane',
+    'How to Measure BPD': 'Measurement',
+    'How To Measure BPD': 'Measurement',
+    'How to measure BPD': 'Measurement',
+    'How to Measure HC': 'Measurement',
+    'How To Measure HC': 'Measurement',
+    'How to measure HC': 'Measurement',
+    'Plane Acquisition Challenges & Common Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'Plane Acquisition Challenges and Common Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'Plane Acquisition Challenges and Common Measurement Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'Plane Acquisition Challenges': 'Pitfalls in Plane Acquisition and Measurement',
+    'Common Measurement Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'MindSparks - Picture Pick': 'Pitfalls in Plane Acquisition and Measurement',
+    'Mind Sparks - Picture Pick': 'Pitfalls in Plane Acquisition and Measurement',
+    'Image Diagnosis': 'Image Diagnosis',
+    'Percentile Charts & Significance': 'Image Diagnosis',
+    'Percentile Charts  & Significance': 'Image Diagnosis',
+    'Percentile Chart & Significance': 'Image Diagnosis',
+    'BPD Chart': 'Image Diagnosis',
+    'HC Chart': 'Image Diagnosis',
+    'Mind Sparks - Chart Interpretation': 'Image Diagnosis',
+    'MindSparks - Yes/No': 'Image Diagnosis',
+    'Image Selection': 'OB Boosters',
+    'Picture Pick': 'OB Boosters',
+    'Visual Recognition': 'OB Boosters',
+    'True / False': 'OB Boosters',
+    'True/False': 'OB Boosters',
+    'Wordsearch': 'OB Boosters',
+    'Word Search': 'OB Boosters',
+  }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
+);
+
+const NEXT_AC_TOPIC_BY_RESOURCE = Object.fromEntries(
+  Object.entries({
+    'AC Introduction': 'Fetal Abdomen',
+    'Transabdominal plane': 'Fetal Abdomen',
+    'Abdominal circumference': 'Fetal Abdomen',
+    'Transabdominal plane & Abdominal circumference': 'Fetal Abdomen',
+    'Significance': 'Fetal Abdomen',
+    'Anatomical landmarks': 'Anatomical Landmarks',
+    'Anatomical landmarks of the transabdominal plane': 'Anatomical Landmarks',
+    'Anatomical Landmarks of the Transabdominal Plane': 'Anatomical Landmarks',
+    'Mind Sparks - Geometric landmarks': 'Anatomical Landmarks',
+    'Geometric shapes of key landmarks and their significance': 'Anatomical Landmarks',
+    'Mind Sparks - Anatomical Landmarks': 'Anatomical Landmarks',
+    'MindSparks - Quiz': 'Anatomical Landmarks',
+    'Imaging the plane': 'Imaging the Plane',
+    'Imaging the Plane': 'Imaging the Plane',
+    'How to acquire the transabdominal plane': 'Imaging the Plane',
+    'Cephalic Presentation': 'Imaging the Plane',
+    'Breech Presentation': 'Imaging the Plane',
+    'Mind Sparks - Probe movements': 'Imaging the Plane',
+    'MindSparks - Probe movements': 'Imaging the Plane',
+    'Measurement': 'Measurement',
+    'Measurements': 'Measurement',
+    'How to measure AC': 'Measurement',
+    'Ellipse method': 'Measurement',
+    'Two-diameter method': 'Measurement',
+    'Interaction - Landmark placement and measurement': 'Measurement',
+    'Interaction - Plane orientation and measurement': 'Measurement',
+    'Plane Acquisition Challenges and Common Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'Plane Acquisition Challenges and Common Measurement Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'Plane Acquisition Challenges': 'Pitfalls in Plane Acquisition and Measurement',
+    'Common Measurement Errors': 'Pitfalls in Plane Acquisition and Measurement',
+    'Image Diagnosis': 'Image Diagnosis',
+    'AC chart': 'Image Diagnosis',
+    'AC Chart': 'Image Diagnosis',
+    'Mind Sparks - Chart Interpretation': 'Image Diagnosis',
+    'MindSparks - True/False': 'Image Diagnosis',
+    'ALM - Crossword': 'OB Boosters',
+    'Crossword puzzle': 'OB Boosters',
+    'True/False': 'OB Boosters',
+    'Picture Pick': 'OB Boosters',
+  }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
+);
+
+const getNextDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
+  const normalizedModule = normalizeModuleSortLabel(moduleLabel);
+  const normalizedTopic = normalizeSortKey(topic);
+  const normalizedResource = normalizeSortKey(resourceName);
+
+  if (normalizedModule === 'AC') {
+    if (
+      normalizedResource === normalizeSortKey('MindSparks - Picture Pick') ||
+      normalizedResource === normalizeSortKey('Mind Sparks - Picture Pick')
+    ) {
+      return normalizedTopic.includes('pitfall') || normalizedTopic.includes('plane acquisition')
+        ? 'Pitfalls in Plane Acquisition and Measurement'
+        : 'Measurement';
+    }
+
+    return NEXT_AC_TOPIC_BY_RESOURCE[normalizedResource] || topic;
+  }
+
+  if (!isNextBpdHcScope(moduleLabel)) {
+    return topic;
+  }
+
+  return NEXT_BPD_HC_TOPIC_BY_RESOURCE[normalizedResource] || topic;
+};
 
 const NEXT_MODULE_ORDER = ['BPD & HC', 'AC', 'FL'];
 const NEXT_SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
@@ -5403,19 +5715,21 @@ function TraineeDashboard() {
           row?.unit_name || row?.module_name || row?.course_name || row?.learning_module_id || ''
         ).trim();
         const moduleLabel = normalizeModuleSortLabel(rawModuleLabel);
-        const topic = String(row?.resource_topic || '').trim();
         const resourceName = String(row?.resource_name || '').trim();
+        const topic = getNextDisplayResourceTopic(
+          moduleLabel,
+          String(row?.resource_topic || '').trim(),
+          resourceName
+        );
         const moduleSortIndex = NEXT_MODULE_ORDER.indexOf(moduleLabel);
         const sectionSortIndex = NEXT_SECTION_ORDER.indexOf(typeKey);
         const topicSortIndex =
           typeKey === 'interpret'
             ? 999
-            : topic
-              ? (NEXT_TOPIC_ORDER_INDEX[normalizeSortKey(topic)] ?? 999)
-              : -1;
+            : getNextTopicSortIndex(moduleLabel, topic);
         const displayOrder = Number(row?.display_order);
         const itemSortIndex = typeKey === 'resource'
-          ? (Number.isFinite(displayOrder) ? displayOrder : (NEXT_RESOURCE_ORDER[normalizeSortKey(`${moduleLabel}::${resourceName}`)] ?? 999))
+          ? getNextResourceSortIndex(moduleLabel, resourceName, displayOrder, topic)
           : (NEXT_NON_RESOURCE_ORDER[typeKey]?.[normalizeSortKey(resourceName)] ?? 999);
 
         return {

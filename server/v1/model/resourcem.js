@@ -68,6 +68,7 @@ const getResourcesModel = (requester, module_id) => {
           rd.resource_id,
           rd.resource_name,
           rd.module_id,
+          rd.display_order,
           CASE 
             WHEN pd.user_id IS NOT NULL AND pd.is_completed = TRUE THEN TRUE 
             ELSE FALSE 
@@ -77,6 +78,7 @@ const getResourcesModel = (requester, module_id) => {
           ON rd.resource_id = pd.resourse_id
           AND pd.user_id = $2
         WHERE rd.module_id = $1
+        ORDER BY rd.display_order ASC NULLS LAST, rd.created_at ASC
       `;
       params = [module_id, requester.user_mail];
     } else {

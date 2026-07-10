@@ -57,7 +57,14 @@ const getResourceBylmandrt = (requester, r_type, learning_module_id) => {
                 message: "You don't have a persmission"
             })
         }
-        client.query('select * from resource_data where resource_type=$1 AND learning_module_id=$2;',[r_type, learning_module_id], (err, result) => {    
+        client.query(
+            `SELECT *
+             FROM resource_data
+             WHERE resource_type = $1
+               AND learning_module_id = $2
+             ORDER BY display_order ASC NULLS LAST, created_at ASC;`,
+            [r_type, learning_module_id],
+            (err, result) => {    
             if(err)
             {
                 return reject(err)
