@@ -3,14 +3,19 @@ import { jwtDecode } from "jwt-decode";
 import { Navigate, useParams } from "react-router-dom";
 import NavBar from "../components/navBar";
 import SideBar from "../components/sideBar";
-import { ArrowUpWideNarrow, Plus, X, CheckCircle, LayoutDashboard, Bookmark, Notebook, Settings, Trash2 } from "lucide-react";
-import { FormControl, IconButton, InputLabel, List, MenuItem, Select, TextField } from "@mui/material";
+import { ArrowUpWideNarrow, Plus, X, CheckCircle, LayoutDashboard, Bookmark, Notebook, Settings, Trash2, Upload } from "lucide-react";
+import { Button, FormControl, IconButton, InputLabel, List, MenuItem, Select, TextField } from "@mui/material";
 import CreateModule from "../components/superadmin/CreateModule";
 import { toast } from "react-toastify";
 import CustomCloseButton from "../utils/CustomCloseButton";
 import getResourceAPI from "../API/GetResourceAPI";
 import CreateResourceApi from "../API/createResourcesAPI";
-import { deleteMindSparkQuestionAPI, getMindSparkQuestionsAPI, saveMindSparkQuestionsAPI } from "../API/MindSparkQuestionsAPI";
+import {
+  deleteMindSparkQuestionAPI,
+  getMindSparkQuestionsAPI,
+  saveMindSparkQuestionsAPI,
+  uploadMindSparkQuestionAssetAPI,
+} from "../API/MindSparkQuestionsAPI";
 import { MarketingIcon } from "hugeicons-react";
 import {
   buildQuestionPayload,
@@ -22,8 +27,11 @@ import {
   getQuestionConfigMode,
   getQuestionValidationError,
   getQuestionTypeOptions,
+  OB_BOOSTER_UNITS,
+  QUESTION_CONFIG_MODE,
   isChoiceType,
   isOrderingType,
+  isTrueFalseType,
   questionUsesRows,
 } from "../utils/mindSparkQuestionForm";
 
@@ -54,6 +62,7 @@ function Resource() {
   const [mindsparkNo, setMindsparkNo] = React.useState(1);
   const [mindSparkQuestions, setMindSparkQuestions] = React.useState([emptyQuestion()]);
   const [savingQuestions, setSavingQuestions] = React.useState(false);
+  const [uploadingAsset, setUploadingAsset] = React.useState({});
   const questionConfigMode = getQuestionConfigMode(selectedResource);
   const questionConfigCopy = getQuestionConfigCopy(questionConfigMode);
   const questionTypeOptions = getQuestionTypeOptions(questionConfigMode);
@@ -153,13 +162,79 @@ function Resource() {
     );
   };
 
+  const uploadQuestionImage = async (questionIndex, file) => {
+    if (!file) return;
+    const uploadKey = `question-${questionIndex}`;
+    setUploadingAsset((previous) => ({ ...previous, [uploadKey]: true }));
+
+    try {
+      const token = localStorage.getItem("user_token");
+      const response = await uploadMindSparkQuestionAssetAPI(token, file);
+      const uploaded = response?.data?.data;
+      if (!uploaded?.public_url) throw new Error("Upload did not return an image URL");
+
+      setMindSparkQuestions((previous) =>
+        previous.map((question, index) =>
+          index === questionIndex
+            ? {
+                ...question,
+                image_url: uploaded.public_url,
+                image_alt: question.image_alt || uploaded.original_name || "",
+              }
+            : question
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingAsset((previous) => ({ ...previous, [uploadKey]: false }));
+    }
+  };
+
+  const uploadOptionImage = async (questionIndex, optionIndex, file) => {
+    if (!file) return;
+    const uploadKey = `option-${questionIndex}-${optionIndex}`;
+    setUploadingAsset((previous) => ({ ...previous, [uploadKey]: true }));
+
+    try {
+      const token = localStorage.getItem("user_token");
+      const response = await uploadMindSparkQuestionAssetAPI(token, file);
+      const uploaded = response?.data?.data;
+      if (!uploaded?.public_url) throw new Error("Upload did not return an image URL");
+
+      setMindSparkQuestions((previous) =>
+        previous.map((question, index) => {
+          if (index !== questionIndex) return question;
+          const options = question.options.map((option, currentOptionIndex) =>
+            currentOptionIndex === optionIndex
+              ? {
+                  ...option,
+                  image_url: uploaded.public_url,
+                  image_alt: option.image_alt || uploaded.original_name || "",
+                }
+              : option
+          );
+          return { ...question, options };
+        })
+      );
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingAsset((previous) => ({ ...previous, [uploadKey]: false }));
+    }
+  };
+
   const addOptionRow = (questionIndex) => {
     setMindSparkQuestions((previous) =>
       previous.map((question, index) => {
         if (index !== questionIndex) return question;
+        const nextOption = getNextOptionRow(question.question_type, question.options);
+        if (!nextOption) return question;
         return {
           ...question,
-          options: [...question.options, getNextOptionRow(question.question_type, question.options)],
+          options: [...question.options, nextOption],
         };
       })
     );
@@ -440,6 +515,25 @@ function Resource() {
                   </FormControl>
                 </div>
 
+                {questionConfigMode === QUESTION_CONFIG_MODE.OB_BOOSTER && (
+                  <div className="mt-4">
+                    <FormControl fullWidth size="small">
+                      <InputLabel>OB Unit</InputLabel>
+                      <Select
+                        label="OB Unit"
+                        value={question.ob_unit || OB_BOOSTER_UNITS[0]}
+                        onChange={(event) => updateQuestionField(questionIndex, "ob_unit", event.target.value)}
+                      >
+                        {OB_BOOSTER_UNITS.map((unit) => (
+                          <MenuItem key={unit} value={unit}>
+                            {unit}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </div>
+                )}
+
                 <div className="mt-4">
                   <TextField
                     fullWidth
@@ -452,11 +546,55 @@ function Resource() {
                   />
                 </div>
 
+                <div className="mt-4 grid grid-cols-[1fr_180px] gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Question Image URL"
+                      value={question.image_url}
+                      onChange={(event) => updateQuestionField(questionIndex, "image_url", event.target.value)}
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Question Image Alt"
+                      value={question.image_alt}
+                      onChange={(event) => updateQuestionField(questionIndex, "image_alt", event.target.value)}
+                    />
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Upload size={14} />}
+                      disabled={uploadingAsset[`question-${questionIndex}`]}
+                    >
+                      {uploadingAsset[`question-${questionIndex}`] ? "Uploading..." : "Upload Question Image"}
+                      <input
+                        hidden
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) => {
+                          uploadQuestionImage(questionIndex, event.target.files?.[0]);
+                          event.target.value = "";
+                        }}
+                      />
+                    </Button>
+                  </div>
+                  <div className="h-24 rounded border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+                    {question.image_url ? (
+                      <img src={question.image_url} alt={question.image_alt || "Question"} className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-gray-400">Question image preview</span>
+                    )}
+                  </div>
+                </div>
+
                 {questionUsesRows(question.question_type) && (
                   <div className="mt-4">
-                    <div className="grid grid-cols-[80px_1fr_40px] gap-3">
+                    <div className="space-y-3">
                       {question.options.map((option, optionIndex) => (
-                        <React.Fragment key={optionIndex}>
+                        <div key={optionIndex} className="grid grid-cols-[70px_1fr_1fr_120px_40px] gap-3 items-start rounded border border-gray-100 bg-gray-50 p-3">
                           <TextField
                             size="small"
                             label={isOrderingType(question.question_type) ? "Step" : "Key"}
@@ -470,36 +608,101 @@ function Resource() {
                             value={option.text}
                             onChange={(event) => updateOptionField(questionIndex, optionIndex, "text", event.target.value)}
                           />
+                          {!isOrderingType(question.question_type) && !isTrueFalseType(question.question_type) ? (
+                            <div className="space-y-2">
+                              <TextField
+                                fullWidth
+                                size="small"
+                                label="Option Image URL"
+                                value={option.image_url || ""}
+                                onChange={(event) => updateOptionField(questionIndex, optionIndex, "image_url", event.target.value)}
+                              />
+                              <Button
+                                component="label"
+                                variant="outlined"
+                                size="small"
+                                startIcon={<Upload size={14} />}
+                                disabled={uploadingAsset[`option-${questionIndex}-${optionIndex}`]}
+                                fullWidth
+                              >
+                                {uploadingAsset[`option-${questionIndex}-${optionIndex}`] ? "Uploading..." : "Upload Image"}
+                                <input
+                                  hidden
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={(event) => {
+                                    uploadOptionImage(questionIndex, optionIndex, event.target.files?.[0]);
+                                    event.target.value = "";
+                                  }}
+                                />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div />
+                          )}
+                          <div className="h-20 rounded border border-gray-200 bg-white flex items-center justify-center overflow-hidden">
+                            {option.image_url ? (
+                              <img src={option.image_url} alt={option.image_alt || option.text || `Option ${option.key}`} className="h-full w-full object-contain" />
+                            ) : (
+                              <span className="px-2 text-center text-[11px] text-gray-400">Option preview</span>
+                            )}
+                          </div>
                           <IconButton
                             size="small"
                             color="error"
                             onClick={() => removeOptionRow(questionIndex, optionIndex)}
-                            disabled={isChoiceType(question.question_type) && question.options.length <= 2}
+                            disabled={isTrueFalseType(question.question_type) || (isChoiceType(question.question_type) && question.options.length <= 2)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </IconButton>
-                        </React.Fragment>
+                          {!isOrderingType(question.question_type) && !isTrueFalseType(question.question_type) && (
+                            <TextField
+                              className="col-start-3"
+                              fullWidth
+                              size="small"
+                              label="Option Image Alt"
+                              value={option.image_alt || ""}
+                              onChange={(event) => updateOptionField(questionIndex, optionIndex, "image_alt", event.target.value)}
+                            />
+                          )}
+                        </div>
                       ))}
                     </div>
-                    <button
-                      type="button"
-                      className="mt-3 border border-[#8DC63F] text-[#5d8f20] px-3 py-1.5 rounded text-xs"
-                      onClick={() => addOptionRow(questionIndex)}
-                    >
-                      {isOrderingType(question.question_type) ? "Add Step" : "Add Option"}
-                    </button>
+                    {!isTrueFalseType(question.question_type) && (
+                      <button
+                        type="button"
+                        className="mt-3 border border-[#8DC63F] text-[#5d8f20] px-3 py-1.5 rounded text-xs"
+                        onClick={() => addOptionRow(questionIndex)}
+                      >
+                        {isOrderingType(question.question_type) ? "Add Step" : "Add Option"}
+                      </button>
+                    )}
                   </div>
                 )}
 
                 {isChoiceType(question.question_type) && (
                   <div className="mt-4">
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Correct Answer Key"
-                      value={question.correct_answer_key}
-                      onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
-                    />
+                    {isTrueFalseType(question.question_type) ? (
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Correct Answer</InputLabel>
+                        <Select
+                          label="Correct Answer"
+                          value={question.correct_answer_key}
+                          onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
+                        >
+                          <MenuItem value="true">True</MenuItem>
+                          <MenuItem value="false">False</MenuItem>
+                        </Select>
+                      </FormControl>
+                    ) : (
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Correct Answer Key"
+                        value={question.correct_answer_key}
+                        onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
+                      />
+                    )}
                   </div>
                 )}
 

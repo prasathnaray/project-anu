@@ -32,6 +32,7 @@ import getConvertedVolumeListApi from "../API/GetConvertedVolumeList";
 import GetShadowRecordingsAPI from "../API/GetShadowRecordingsAPI";
 import AssoVolumeAPI from "../API/AssoVolumeAPI";
 import MindSparkQuestionModal from "../components/MindSparkQuestionModal";
+import { getQuestionConfigMode, QUESTION_CONFIG_MODE } from "../utils/mindSparkQuestionForm";
 
 function InsideCertifications() {
   const navigate = useNavigate();
@@ -65,6 +66,13 @@ function InsideCertifications() {
   const [selectedResourceForPopup, setSelectedResourceForPopup] = useState(null);
   const [mindSparkQuestionOpen, setMindSparkQuestionOpen] = useState(false);
   const [selectedMindSparkResource, setSelectedMindSparkResource] = useState(null);
+
+  const getQuestionConfigActionLabel = (resource) => {
+    const mode = getQuestionConfigMode(resource);
+    if (mode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION) return "Questions";
+    if (mode === QUESTION_CONFIG_MODE.OB_BOOSTER) return "OB Booster";
+    return "Mindspark";
+  };
   
   //set volume list 
   const [volumeList, setVolumeList] = useState([]);
@@ -646,7 +654,7 @@ function InsideCertifications() {
                                                                                   }}
                                                                                 >
                                                                                   <Settings size={13} />
-                                                                                  {item.resource_type === "Image Interpretation" ? "Questions" : "Mindspark"}
+                                                                                  {getQuestionConfigActionLabel(item)}
                                                                                 </button>
                                                                               </div>
                                                                             )}
@@ -741,7 +749,7 @@ function InsideCertifications() {
                                                                                           }}
                                                                                         >
                                                                                           <Settings size={13} />
-                                                                                          {item.resource_type === "Image Interpretation" ? "Questions" : "Mindspark"}
+                                                                                          {getQuestionConfigActionLabel(item)}
                                                                                         </button>
                                                                                       </div>
                                                                                     )}
@@ -826,7 +834,7 @@ function InsideCertifications() {
                                                                                                       }}
                                                                                                     >
                                                                                                       <Settings size={13} />
-                                                                                                      {item.resource_type === "Image Interpretation" ? "Questions" : "Mindspark"}
+                                                                                                      {getQuestionConfigActionLabel(item)}
                                                                                                     </button>
                                                                                                   </td>
                                                                                                 )}

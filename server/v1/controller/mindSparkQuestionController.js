@@ -1,5 +1,6 @@
 const {
     createMindSparkQuestions,
+    uploadMindSparkAsset,
     getMindSparkQuestions,
     updateMindSparkQuestion,
     deleteMindSparkQuestion,
@@ -62,6 +63,33 @@ const createQuestionsController = async (req, res) => {
             status: 'Error',
             code: 500,
             message: 'Failed to save Mindspark questions',
+            error: err.message
+        });
+    }
+};
+
+const uploadAssetController = async (req, res) => {
+    try {
+        const result = await uploadMindSparkAsset(req.user, req.file);
+        if (result.code === 401) {
+            return res.status(401).json(result);
+        }
+        if (result.code === 400) {
+            return res.status(400).json(result);
+        }
+
+        return res.status(200).json({
+            status: 'Success',
+            code: 200,
+            message: 'Mindspark asset uploaded successfully',
+            data: result.data
+        });
+    } catch (err) {
+        console.error('Error uploading Mindspark asset:', err);
+        return res.status(500).json({
+            status: 'Error',
+            code: 500,
+            message: 'Failed to upload Mindspark asset',
             error: err.message
         });
     }
@@ -214,6 +242,7 @@ const getAttemptDetailsController = async (req, res) => {
 
 module.exports = {
     createQuestionsController,
+    uploadAssetController,
     getQuestionsController,
     updateQuestionController,
     deleteQuestionController,

@@ -22,6 +22,18 @@ export const saveMindSparkQuestionsAPI = (token, payload) => {
   });
 };
 
+export const uploadMindSparkQuestionAssetAPI = (token, file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  return axios.post(`${APP_URL}/api/v1/mind-spark-question-assets`, formData, {
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
+
 export const deleteMindSparkQuestionAPI = (token, questionId) => {
   return axios.delete(`${APP_URL}/api/v1/mind-spark-questions/${questionId}`, {
     headers: authHeaders(token),

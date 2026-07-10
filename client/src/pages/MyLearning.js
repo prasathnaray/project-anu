@@ -5791,6 +5791,8 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
   const [error, setError] = React.useState(null);
   const [details, setDetails] = React.useState([]);
   const [summary, setSummary] = React.useState(null);
+  const isOBResource = isOBBooster(r.topic);
+  const activityLabel = isOBResource ? 'OB Booster' : 'Mindspark';
 
   React.useEffect(() => {
     let active = true;
@@ -5819,7 +5821,7 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-400">
         <Loader2 size={22} className="animate-spin mr-2" />
-        <span className="text-sm">Loading score details...</span>
+        <span className="text-sm">Loading {activityLabel} details...</span>
       </div>
     );
   }
@@ -5836,7 +5838,7 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-gray-400">
         <Zap size={28} className="mb-2 text-gray-300" />
-        <p className="text-sm font-medium">No Mindspark attempt found</p>
+        <p className="text-sm font-medium">No {activityLabel} attempt found</p>
         <p className="text-xs mt-1">This resource has no mapped attempt details yet</p>
       </div>
     );
@@ -5877,6 +5879,12 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
         const correctText = getMindSparkOptionText(options, correctKey);
         const answered = item.is_correct === true || item.is_correct === false;
         const right = item.is_correct === true;
+        const selectedKey = String(item.option_chosen ?? '');
+        const normalizedCorrectKey = String(correctKey ?? '');
+        const optionMatches = (option, key) => {
+          const itemKey = String(option?.key ?? option?.value ?? option?.label ?? option?.text ?? '');
+          return itemKey === key || itemKey.toLowerCase() === key.toLowerCase();
+        };
 
         return (
           <div
@@ -5899,6 +5907,61 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
                   <span className="text-[10px] text-gray-400">Question {item.question_no || index + 1}</span>
                 </div>
                 <p className="text-sm font-semibold text-gray-800">{item.prompt}</p>
+                {item.assets?.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {item.assets.map((asset, assetIndex) => (
+                      <div key={assetIndex} className="rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
+                        {asset.url ? (
+                          <img src={asset.url} alt={asset.alt || `Question asset ${assetIndex + 1}`} className="w-full max-h-44 object-contain" />
+                        ) : (
+                          <div className="p-2 text-[11px] text-gray-500 break-all">{asset.name || JSON.stringify(asset)}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {options.length > 0 && (
+                  <div className="mt-3 grid gap-2">
+                    {options.map((option, optionIndex) => {
+                      const optionKey = String(option.key ?? option.value ?? optionIndex + 1);
+                      const optionText = option.text ?? option.label ?? String(option);
+                      const optionImageUrl = option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url;
+                      const selected = answered && optionMatches(option, selectedKey);
+                      const correctOption = optionMatches(option, normalizedCorrectKey);
+
+                      return (
+                        <div
+                          key={`${item.question_id || item.question_no}-${optionKey}`}
+                          className={`rounded-lg border px-3 py-2 text-xs ${
+                            selected
+                              ? right
+                                ? 'border-[#8DC63F]/50 bg-[#8DC63F]/5'
+                                : 'border-red-200 bg-red-50'
+                              : correctOption
+                                ? 'border-[#8DC63F]/30 bg-[#8DC63F]/5'
+                                : 'border-gray-100 bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium text-gray-700">
+                              <span className="mr-2">{optionKey}.</span>
+                              {optionText && optionText !== '[object Object]' ? optionText : ''}
+                            </span>
+                            <div className="flex gap-1">
+                              {selected && <span className="rounded-full bg-gray-900/5 px-2 py-0.5 text-[10px] text-gray-600">Selected</span>}
+                              {correctOption && <span className="rounded-full bg-[#8DC63F]/10 px-2 py-0.5 text-[10px] text-[#5d8f20]">Correct</span>}
+                            </div>
+                          </div>
+                          {optionImageUrl && (
+                            <div className="mt-2 h-28 rounded-md bg-white overflow-hidden flex items-center justify-center">
+                              <img src={optionImageUrl} alt={option.image_alt || optionText || `Option ${optionKey}`} className="h-full w-full object-contain" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
                 <div className="mt-3 grid gap-2 text-xs">
                   <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
                     <span className="text-gray-400">Selected: </span>
@@ -5924,7 +5987,7 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
 }
 
 function ActivityAttemptPanel({ r, token }) {
-  if (isMindSpark(r.name)) {
+  if (isMindSpark(r.name) || isOBBooster(r.topic)) {
     return <MindSparkAttemptDetailsPanel r={r} token={token} />;
   }
 
@@ -6146,14 +6209,23 @@ function MindSparkQuizModal({ r, token, onClose }) {
                   {options.length > 0 ? options.map((option, optionIndex) => {
                     const key = String(option.key ?? option.value ?? optionIndex + 1);
                     const optionText = option.text ?? option.label ?? String(option);
+                    const optionImageUrl = option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url;
+                    const optionImageAlt = option.image_alt ?? option.imageAlt ?? option.alt ?? optionText ?? `Option ${key}`;
 
                     return (
                       <div
                         key={`${question.question_id}-${key}`}
-                        className="w-full rounded-lg bg-white px-3 py-2 text-sm text-gray-700"
+                        className="w-full rounded-lg border border-gray-100 bg-white px-3 py-2 text-sm text-gray-700"
                       >
-                        {!isOrderingQuestion && <span className="font-semibold mr-2">{key}.</span>}
-                        {optionText}
+                        <div>
+                          {!isOrderingQuestion && <span className="font-semibold mr-2">{key}.</span>}
+                          {optionText && optionText !== "[object Object]" && <span>{optionText}</span>}
+                        </div>
+                        {optionImageUrl && (
+                          <div className="mt-2 h-36 rounded-md bg-gray-50 overflow-hidden flex items-center justify-center">
+                            <img src={optionImageUrl} alt={optionImageAlt} className="h-full w-full object-contain" />
+                          </div>
+                        )}
                       </div>
                     );
                   }) : (

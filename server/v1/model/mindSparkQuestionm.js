@@ -1,7 +1,12 @@
 const client = require('../utils/conn');
+const path = require('path');
+const supabase = require('../supaBaseClient');
 
 const isAdmin = (requester) => [99, 101, 102].includes(Number(requester.role));
 const canRead = (requester) => [99, 101, 102, 103].includes(Number(requester.role));
+const ASSET_BUCKET = process.env.MINDSPARK_ASSET_BUCKET || process.env.BUCKET_NAME || 'question-images';
+
+const safePathPart = (value) => String(value || 'unknown').replace(/[^a-zA-Z0-9._-]/g, '_');
 
 const ensureMindSparkQuestionsTable = async () => {
     await client.query(`
@@ -129,6 +134,58 @@ const createMindSparkQuestions = async (requester, payload) => {
     } finally {
         db.release();
     }
+};
+
+const uploadMindSparkAsset = async (requester, file) => {
+    if (!isAdmin(requester)) {
+        return {
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to upload Mindspark assets.'
+        };
+    }
+
+    if (!file) {
+        return {
+            status: 'Bad Request',
+            code: 400,
+            message: 'image file is required'
+        };
+    }
+
+    if (!String(file.mimetype || '').startsWith('image/')) {
+        return {
+            status: 'Bad Request',
+            code: 400,
+            message: 'Only image files are allowed'
+        };
+    }
+
+    const ext = path.extname(file.originalname || '') || '.png';
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    const storagePath = `mindspark/${safePathPart(requester.user_mail)}/${filename}`;
+    const { error } = await supabase.storage
+        .from(ASSET_BUCKET)
+        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data: urlData } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(storagePath);
+
+    return {
+        status: 'Success',
+        code: 200,
+        data: {
+            filename,
+            original_name: file.originalname,
+            storage_path: storagePath,
+            public_url: urlData.publicUrl,
+            mime_type: file.mimetype,
+            size: file.size,
+        }
+    };
 };
 
 const getMindSparkQuestions = async (requester, { resource_id, mindspark_no, include_inactive }) => {
@@ -288,7 +345,23 @@ const getMindSparkAttemptDetails = async (requester, { resource_id, session_id }
     }
 
     const result = await client.query(
-        `SELECT
+        `WITH latest_submissions AS (
+            SELECT *
+            FROM (
+                SELECT
+                    ass.*,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY ass.resource_id, ass.question_no, ass.session_id, ass.user_id
+                        ORDER BY ass.submitted_at DESC
+                    ) AS row_rank
+                FROM activity_submissions ass
+                WHERE ass.resource_id = $1
+                  AND ass.session_id = $2
+                  AND ass.user_id = $3
+            ) ranked
+            WHERE row_rank = 1
+         )
+         SELECT
             msq.question_id,
             msq.question_no,
             msq.question_type,
@@ -297,16 +370,16 @@ const getMindSparkAttemptDetails = async (requester, { resource_id, session_id }
             msq.correct_answer,
             msq.feedback_correct,
             msq.feedback_wrong,
+            msq.assets,
+            msq.metadata,
             ass.session_id,
             ass.option_chosen,
             ass.is_correct,
             ass.submitted_at
          FROM mind_spark_questions msq
-         LEFT JOIN activity_submissions ass
+         LEFT JOIN latest_submissions ass
             ON ass.resource_id = msq.resource_id
            AND ass.question_no = msq.question_no
-           AND ass.session_id = $2
-           AND ass.user_id = $3
          WHERE msq.resource_id = $1
            AND msq.is_active = true
          ORDER BY msq.question_no ASC`,
@@ -335,6 +408,7 @@ const getMindSparkAttemptDetails = async (requester, { resource_id, session_id }
 module.exports = {
     ensureMindSparkQuestionsTable,
     createMindSparkQuestions,
+    uploadMindSparkAsset,
     getMindSparkQuestions,
     updateMindSparkQuestion,
     deleteMindSparkQuestion,
