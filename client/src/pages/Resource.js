@@ -29,7 +29,11 @@ import {
   getQuestionTypeOptions,
   OB_BOOSTER_UNITS,
   QUESTION_CONFIG_MODE,
+  getImageInterpretationFeedbackCaseEntries,
+  isAnnotationType,
   isChoiceType,
+  isImageInterpretationFindImageType,
+  isImageInterpretationMeasurementType,
   isOrderingType,
   isTrueFalseType,
   questionUsesRows,
@@ -66,6 +70,16 @@ function Resource() {
   const questionConfigMode = getQuestionConfigMode(selectedResource);
   const questionConfigCopy = getQuestionConfigCopy(questionConfigMode);
   const questionTypeOptions = getQuestionTypeOptions(questionConfigMode);
+  const canRemoveOption = (question) => {
+    if (isTrueFalseType(question.question_type)) return false;
+    if (
+      questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION
+      && isImageInterpretationFindImageType(question.question_type)
+    ) {
+      return true;
+    }
+    return !(isChoiceType(question.question_type) && question.options.length <= 2);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -551,14 +565,14 @@ function Resource() {
                     <TextField
                       fullWidth
                       size="small"
-                      label="Question Image URL"
+                      label={questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION ? "Reference Image URL" : "Question Image URL"}
                       value={question.image_url}
                       onChange={(event) => updateQuestionField(questionIndex, "image_url", event.target.value)}
                     />
                     <TextField
                       fullWidth
                       size="small"
-                      label="Question Image Alt"
+                      label={questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION ? "Reference Image Alt" : "Question Image Alt"}
                       value={question.image_alt}
                       onChange={(event) => updateQuestionField(questionIndex, "image_alt", event.target.value)}
                     />
@@ -585,10 +599,75 @@ function Resource() {
                     {question.image_url ? (
                       <img src={question.image_url} alt={question.image_alt || "Question"} className="h-full w-full object-contain" />
                     ) : (
-                      <span className="text-xs text-gray-400">Question image preview</span>
+                      <span className="text-xs text-gray-400">Image preview</span>
                     )}
                   </div>
                 </div>
+
+                {questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION && isImageInterpretationFindImageType(question.question_type) && (
+                  <div className="mt-4 grid grid-cols-2 gap-4">
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Reference Video URL"
+                      value={question.video_url}
+                      onChange={(event) => updateQuestionField(questionIndex, "video_url", event.target.value)}
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Video Title"
+                      value={question.video_title}
+                      onChange={(event) => updateQuestionField(questionIndex, "video_title", event.target.value)}
+                    />
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Expected Timeframe"
+                      value={question.expected_timeframe}
+                      onChange={(event) => updateQuestionField(questionIndex, "expected_timeframe", event.target.value)}
+                    />
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      size="small"
+                      label="Interpretation Guidance"
+                      value={question.interpretation_guidance}
+                      onChange={(event) => updateQuestionField(questionIndex, "interpretation_guidance", event.target.value)}
+                    />
+                  </div>
+                )}
+
+                {questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION && isAnnotationType(question.question_type) && (
+                  <div className="mt-4">
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      size="small"
+                      label="Expected Landmarks"
+                      helperText="Comma-separated, e.g. Arrow Sign, Midline Falx, Thalamus, CSP, Cranium"
+                      value={question.expected_landmarks_text}
+                      onChange={(event) => updateQuestionField(questionIndex, "expected_landmarks_text", event.target.value)}
+                    />
+                  </div>
+                )}
+
+                {questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION && isImageInterpretationMeasurementType(question.question_type) && (
+                  <div className="mt-4">
+                    <TextField
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      size="small"
+                      label="Interpretation Guidance"
+                      helperText="Example: Values between the 5th and 95th percentiles are considered normal."
+                      value={question.interpretation_guidance}
+                      onChange={(event) => updateQuestionField(questionIndex, "interpretation_guidance", event.target.value)}
+                    />
+                  </div>
+                )}
 
                 {questionUsesRows(question.question_type) && (
                   <div className="mt-4">
@@ -651,7 +730,7 @@ function Resource() {
                             size="small"
                             color="error"
                             onClick={() => removeOptionRow(questionIndex, optionIndex)}
-                            disabled={isTrueFalseType(question.question_type) || (isChoiceType(question.question_type) && question.options.length <= 2)}
+                            disabled={!canRemoveOption(question)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </IconButton>
@@ -695,13 +774,20 @@ function Resource() {
                         </Select>
                       </FormControl>
                     ) : (
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Correct Answer Key"
-                        value={question.correct_answer_key}
-                        onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
-                      />
+                      <div className="space-y-2">
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label={questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION && isImageInterpretationFindImageType(question.question_type)
+                            ? "Correct Answer Key"
+                            : "Correct Answer Key"}
+                          helperText={questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION && isImageInterpretationFindImageType(question.question_type)
+                            ? "Optional. Use A/B/C/D if you want to configure the answer before uploading option images."
+                            : ""}
+                          value={question.correct_answer_key}
+                          onChange={(event) => updateQuestionField(questionIndex, "correct_answer_key", event.target.value)}
+                        />
+                      </div>
                     )}
                   </div>
                 )}
@@ -712,7 +798,7 @@ function Resource() {
                     multiline
                     minRows={2}
                     size="small"
-                    label="Correct Feedback"
+                    label={questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION ? "Feedback If Correct" : "Correct Feedback"}
                     value={question.feedback_correct}
                     onChange={(event) => updateQuestionField(questionIndex, "feedback_correct", event.target.value)}
                   />
@@ -721,11 +807,37 @@ function Resource() {
                     multiline
                     minRows={2}
                     size="small"
-                    label="Wrong Feedback"
+                    label={questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION ? "Default Feedback If Wrong" : "Wrong Feedback"}
                     value={question.feedback_wrong}
                     onChange={(event) => updateQuestionField(questionIndex, "feedback_wrong", event.target.value)}
                   />
                 </div>
+
+                {questionConfigMode === QUESTION_CONFIG_MODE.IMAGE_INTERPRETATION
+                  && getImageInterpretationFeedbackCaseEntries(question.question_type).length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-sm font-medium text-gray-700 mb-3">Case-Based Wrong Feedback</div>
+                      <div className="grid grid-cols-1 gap-3">
+                        {getImageInterpretationFeedbackCaseEntries(question.question_type).map((item) => (
+                          <TextField
+                            key={item.key}
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            size="small"
+                            label={item.label}
+                            value={question.feedback_cases?.[item.key] || ""}
+                            onChange={(event) =>
+                              updateQuestionField(questionIndex, "feedback_cases", {
+                                ...(question.feedback_cases || {}),
+                                [item.key]: event.target.value,
+                              })
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                 <div className="mt-4 grid grid-cols-2 gap-4">
                   <TextField

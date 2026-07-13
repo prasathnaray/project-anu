@@ -82,7 +82,16 @@ const getQuestionImageAsset = (assets) => {
     || rows.find((asset) => asset?.url);
 };
 
+const getQuestionVideoAsset = (assets) => {
+  const rows = Array.isArray(assets) ? assets : [];
+  return rows.find((asset) => asset?.source === "question_video" && asset?.url)
+    || rows.find((asset) => asset?.type === "video" && asset?.url)
+    || null;
+};
+
 const normalizeImageValue = (value) => String(value ?? "").trim();
+
+const normalizeTextValue = (value) => String(value ?? "").trim();
 
 const normalizeOptionImageFields = (option = {}) => ({
   image_url: normalizeImageValue(option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url),
@@ -90,6 +99,7 @@ const normalizeOptionImageFields = (option = {}) => ({
 });
 
 export const isMcqType = (questionType) => questionType === QUESTION_TYPE.MCQ;
+export const isImageInterpretationFindImageType = (questionType) => questionType === QUESTION_TYPE.FIND_IMAGE;
 export const isChoiceType = (questionType) => (
   questionType === QUESTION_TYPE.MCQ
   || questionType === QUESTION_TYPE.FIND_IMAGE
@@ -97,7 +107,26 @@ export const isChoiceType = (questionType) => (
 );
 export const isTrueFalseType = (questionType) => questionType === QUESTION_TYPE.TRUE_FALSE;
 export const isOrderingType = (questionType) => questionType === QUESTION_TYPE.ORDERING;
+export const isAnnotation1Type = (questionType) => questionType === QUESTION_TYPE.ANNOTATION1;
+export const isAnnotation2Type = (questionType) => questionType === QUESTION_TYPE.ANNOTATION2;
+export const isAnnotationType = (questionType) => isAnnotation1Type(questionType) || isAnnotation2Type(questionType);
+export const isImageInterpretationMeasurementType = (questionType) => questionType === QUESTION_TYPE.II_MEASUREMENT;
 export const questionUsesRows = (questionType) => isChoiceType(questionType) || isOrderingType(questionType);
+
+export const getImageInterpretationFeedbackCaseCount = (questionType) => {
+  if (isAnnotation1Type(questionType)) return 6;
+  if (isAnnotation2Type(questionType)) return 5;
+  if (isImageInterpretationMeasurementType(questionType)) return 3;
+  return 0;
+};
+
+export const getImageInterpretationFeedbackCaseEntries = (questionType) => {
+  const count = getImageInterpretationFeedbackCaseCount(questionType);
+  return Array.from({ length: count }, (_, index) => ({
+    key: `case_${index + 1}`,
+    label: `Case ${index + 1}`,
+  }));
+};
 
 export const isObBoosterResource = (resource) => {
   const topic = String(resource?.resource_topic || resource?.topic || "").toLowerCase();
@@ -204,6 +233,9 @@ export const normalizeOptionRows = (options, questionType) => {
 
 export const emptyQuestion = (questionNo = 1, mode = QUESTION_CONFIG_MODE.MINDSPARK) => {
   const questionType = getDefaultQuestionType(mode);
+  const feedbackCases = Object.fromEntries(
+    getImageInterpretationFeedbackCaseEntries(questionType).map((item) => [item.key, ""])
+  );
   return {
     question_no: questionNo,
     question_type: questionType,
@@ -215,6 +247,12 @@ export const emptyQuestion = (questionNo = 1, mode = QUESTION_CONFIG_MODE.MINDSP
     ob_unit: OB_BOOSTER_UNITS[0],
     image_url: "",
     image_alt: "",
+    video_url: "",
+    video_title: "",
+    expected_timeframe: "",
+    expected_landmarks_text: "",
+    interpretation_guidance: "",
+    feedback_cases: feedbackCases,
     assetsText: "[]",
     metadataText: "{}",
   };
@@ -223,6 +261,12 @@ export const emptyQuestion = (questionNo = 1, mode = QUESTION_CONFIG_MODE.MINDSP
 export const formatQuestionForForm = (question, index) => {
   const questionType = question.question_type ?? QUESTION_TYPE.MCQ;
   const imageAsset = getQuestionImageAsset(question.assets);
+  const videoAsset = getQuestionVideoAsset(question.assets);
+  const feedbackCaseEntries = getImageInterpretationFeedbackCaseEntries(questionType);
+  const storedFeedbackCases = question.metadata?.feedback_cases ?? {};
+  const feedbackCases = Object.fromEntries(
+    feedbackCaseEntries.map((item) => [item.key, String(storedFeedbackCases[item.key] ?? "")])
+  );
 
   return {
     question_id: question.question_id,
@@ -236,6 +280,14 @@ export const formatQuestionForForm = (question, index) => {
     ob_unit: question.metadata?.ob_unit ?? question.metadata?.unit ?? OB_BOOSTER_UNITS[0],
     image_url: imageAsset?.url ?? "",
     image_alt: imageAsset?.alt ?? imageAsset?.name ?? "",
+    video_url: videoAsset?.url ?? question.metadata?.video_url ?? "",
+    video_title: videoAsset?.title ?? videoAsset?.name ?? question.metadata?.video_title ?? "",
+    expected_timeframe: question.metadata?.expected_timeframe ?? "",
+    expected_landmarks_text: Array.isArray(question.metadata?.expected_landmarks)
+      ? question.metadata.expected_landmarks.join(", ")
+      : String(question.metadata?.expected_landmarks_text ?? ""),
+    interpretation_guidance: question.metadata?.interpretation_guidance ?? "",
+    feedback_cases: feedbackCases,
     assetsText: JSON.stringify(question.assets ?? [], null, 2),
     metadataText: JSON.stringify(question.metadata ?? {}, null, 2),
   };
@@ -246,6 +298,12 @@ export const changeQuestionType = (question, questionType) => ({
   question_type: questionType,
   options: isTrueFalseType(questionType) ? defaultMcqOptions(questionType) : normalizeOptionRows(question.options, questionType),
   correct_answer_key: isChoiceType(questionType) ? question.correct_answer_key : "",
+  feedback_cases: Object.fromEntries(
+    getImageInterpretationFeedbackCaseEntries(questionType).map((item) => [
+      item.key,
+      question.feedback_cases?.[item.key] ?? "",
+    ])
+  ),
 });
 
 export const getNextOptionRow = (questionType, rows) => {
@@ -266,7 +324,11 @@ export const getNextOptionRow = (questionType, rows) => {
 export const getQuestionValidationError = (question) => {
   if (!question.prompt.trim()) return "Question is required";
 
-  if (isChoiceType(question.question_type) && !question.correct_answer_key.trim()) {
+  if (
+    isChoiceType(question.question_type)
+    && question.question_type !== QUESTION_TYPE.FIND_IMAGE
+    && !question.correct_answer_key.trim()
+  ) {
     return "Correct answer key is required for option questions";
   }
 
@@ -292,6 +354,17 @@ export const buildQuestionPayload = (question, index) => {
   const parsedAssets = parseJsonText(question.assetsText, []);
   const parsedMetadata = parseJsonText(question.metadataText, {});
   const questionImageUrl = normalizeImageValue(question.image_url);
+  const questionVideoUrl = normalizeImageValue(question.video_url);
+  const feedbackCases = Object.fromEntries(
+    Object.entries(question.feedback_cases ?? {})
+      .map(([key, value]) => [key, normalizeTextValue(value)])
+      .filter(([, value]) => value)
+  );
+  const expectedLandmarks = normalizeTextValue(question.expected_landmarks_text)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
   const assets = questionImageUrl
     ? [
         {
@@ -302,11 +375,22 @@ export const buildQuestionPayload = (question, index) => {
         },
         ...parsedAssets.filter((asset) => asset?.source !== "question_image" && asset?.url !== questionImageUrl),
       ]
-    : parsedAssets;
+    : [...parsedAssets];
+
+  if (questionVideoUrl) {
+    assets.unshift({
+      type: "video",
+      source: "question_video",
+      url: questionVideoUrl,
+      ...(normalizeTextValue(question.video_title) ? { title: normalizeTextValue(question.video_title) } : {}),
+    });
+  }
 
   let correctAnswer = {};
   if (isChoiceType(question.question_type)) {
-    correctAnswer = { key: question.correct_answer_key.trim() };
+    correctAnswer = question.question_type === QUESTION_TYPE.FIND_IMAGE && normalizeTextValue(question.expected_timeframe)
+      ? { timeframe: normalizeTextValue(question.expected_timeframe) }
+      : { key: question.correct_answer_key.trim() };
   } else if (isOrderingType(question.question_type)) {
     correctAnswer = { order: options.map((option) => option.key) };
   }
@@ -323,6 +407,12 @@ export const buildQuestionPayload = (question, index) => {
     metadata: {
       ...parsedMetadata,
       ...(question.ob_unit ? { ob_unit: question.ob_unit } : {}),
+      ...(normalizeTextValue(question.video_url) ? { video_url: normalizeTextValue(question.video_url) } : {}),
+      ...(normalizeTextValue(question.video_title) ? { video_title: normalizeTextValue(question.video_title) } : {}),
+      ...(normalizeTextValue(question.expected_timeframe) ? { expected_timeframe: normalizeTextValue(question.expected_timeframe) } : {}),
+      ...(expectedLandmarks.length > 0 ? { expected_landmarks: expectedLandmarks } : {}),
+      ...(normalizeTextValue(question.interpretation_guidance) ? { interpretation_guidance: normalizeTextValue(question.interpretation_guidance) } : {}),
+      ...(Object.keys(feedbackCases).length > 0 ? { feedback_cases: feedbackCases } : {}),
     },
   };
 };

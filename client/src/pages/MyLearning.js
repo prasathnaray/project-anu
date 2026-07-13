@@ -5345,25 +5345,98 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
 
 // ─── SUBMISSION HELPERS ───────────────────────────────────────────────────────
 
-function groupBySession(submissions) {
-  const map = {};
-  submissions.forEach(s => {
-    const sid = s.session_id || 'unknown';
-    if (!map[sid]) map[sid] = { session_id: sid, created_at: s.created_at, byType: {} };
-    const sess = map[sid];
-    if (s.created_at < sess.created_at) sess.created_at = s.created_at;
-    if (!sess.byType[s.question_type]) sess.byType[s.question_type] = [];
-    sess.byType[s.question_type].push(s);
+const getConfiguredAnswerKey = answer => String(
+  answer?.key ?? answer?.value ?? answer?.answer ?? answer?.option ?? answer?.label ?? ''
+);
+
+const getConfiguredOptionDetails = (options, key) => {
+  const normalizedKey = String(key ?? '');
+  return (Array.isArray(options) ? options : []).find(item => {
+    const itemKey = String(item?.key ?? item?.value ?? item?.label ?? item?.text ?? '');
+    return itemKey === normalizedKey || itemKey.slice(0, 10) === normalizedKey;
+  }) || null;
+};
+
+const getConfiguredOptionText = (options, key) => {
+  const option = getConfiguredOptionDetails(options, key);
+  return option?.text ?? option?.label ?? option?.value ?? '';
+};
+
+const optionMatchesConfiguredKey = (option, key) => {
+  const optionKey = String(option?.key ?? option?.value ?? option?.label ?? option?.text ?? '');
+  const normalizedKey = String(key ?? '');
+  return optionKey === normalizedKey || optionKey.toLowerCase() === normalizedKey.toLowerCase();
+};
+
+function buildImageInterpretationSessions(submissions, questions) {
+  const questionRows = Array.isArray(questions)
+    ? [...questions].sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0))
+    : [];
+
+  const submissionsBySession = {};
+  (Array.isArray(submissions) ? submissions : []).forEach((submission) => {
+    const sessionId = submission.session_id || 'unknown';
+    if (!submissionsBySession[sessionId]) {
+      submissionsBySession[sessionId] = [];
+    }
+    submissionsBySession[sessionId].push(submission);
   });
-  return Object.values(map).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  return Object.entries(submissionsBySession)
+    .map(([sessionId, sessionRows]) => {
+      const latestByQuestion = {};
+      sessionRows.forEach((row) => {
+        const questionNo = String(row.question_no ?? '');
+        const previous = latestByQuestion[questionNo];
+        if (!previous || new Date(row.created_at || 0) > new Date(previous.created_at || 0)) {
+          latestByQuestion[questionNo] = row;
+        }
+      });
+
+      const mergedRows = questionRows.length > 0
+        ? questionRows.map((question) => ({
+            ...question,
+            ...latestByQuestion[String(question.question_no ?? '')],
+            question_no: question.question_no,
+            question_type: question.question_type ?? latestByQuestion[String(question.question_no ?? '')]?.question_type,
+            prompt: question.prompt ?? latestByQuestion[String(question.question_no ?? '')]?.prompt ?? '',
+            options: Array.isArray(question.options) ? question.options : [],
+            correct_answer: question.correct_answer ?? null,
+            feedback_correct: question.feedback_correct ?? null,
+            feedback_wrong: question.feedback_wrong ?? null,
+            assets: Array.isArray(question.assets) ? question.assets : [],
+          }))
+        : Object.values(latestByQuestion).sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0));
+
+      const byType = {};
+      mergedRows.forEach((row) => {
+        const type = row.question_type || 'unknown';
+        if (!byType[type]) byType[type] = [];
+        byType[type].push(row);
+      });
+
+      const latestCreatedAt = sessionRows.reduce((latest, row) => {
+        const rowDate = new Date(row.created_at || 0);
+        return rowDate > latest ? rowDate : latest;
+      }, new Date(0));
+
+      return {
+        session_id: sessionId,
+        created_at: latestCreatedAt.toISOString(),
+        byType,
+      };
+    })
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 }
 
 function sessionSummary(session) {
-  const all     = Object.values(session.byType).flat();
-  const total   = all.length;
-  const correct = all.filter(q => q.is_correct).length;
-  const pct     = total > 0 ? Math.round((correct / total) * 100) : 0;
-  return { total, correct, pct };
+  const all = Object.values(session.byType).flat();
+  const total = all.length;
+  const correct = all.filter(q => q.is_correct === true).length;
+  const wrong = all.filter(q => q.is_correct === false).length;
+  const answered = correct + wrong;
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  return { total, correct, wrong, answered, pct };
 }
 
 // ─── TOPIC GROUPS ─────────────────────────────────────────────────────────────
@@ -5398,56 +5471,163 @@ function buildTopicGroups(items, orderScope = '') {
 // ─── IMAGE INTERPRETATION MODAL ───────────────────────────────────────────────
 
 function QuestionRow({ q }) {
+  const answered = q.is_correct === true || q.is_correct === false;
+  const right = q.is_correct === true;
   const isAnnotation  = q.question_type === 'annotation1' || q.question_type === 'annotation2';
   const isMeasurement = q.question_type === 'measurement';
+  const options = Array.isArray(q.options) ? q.options : [];
+  const correctKey = getConfiguredAnswerKey(q.correct_answer);
+  const selectedKey = String(q.option_chosen ?? '');
+  const selectedText = getConfiguredOptionText(options, selectedKey);
+  const correctText = getConfiguredOptionText(options, correctKey);
+  const selectedOption = getConfiguredOptionDetails(options, selectedKey);
+  const correctOption = getConfiguredOptionDetails(options, correctKey);
 
   return (
-    <div className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border text-xs
-      ${q.is_correct ? 'bg-[#8DC63F]/5 border-[#8DC63F]/25' : 'bg-red-50/60 border-red-100'}`}>
-      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-[10px] mt-0.5
-        ${q.is_correct ? 'bg-[#8DC63F] text-white' : 'bg-red-100 text-red-500'}`}>
-        {q.question_no}
-      </div>
-      <div className="flex-1 min-w-0 space-y-1">
-        {q.option_chosen != null && (
-          <p className="text-gray-500">Option chosen: <span className="font-semibold text-gray-700">{q.option_chosen}</span></p>
-        )}
-        {isAnnotation && (
-          <div className="flex items-center gap-3">
-            <span className="text-[#8DC63F] font-medium">✓ {q.correct_label_count ?? 0} correct</span>
-            <span className="text-red-500 font-medium">✗ {q.wrong_label_count ?? 0} wrong</span>
-            <span className="text-gray-400">{q.unused_label_count ?? 0} unused</span>
+    <div className={`rounded-xl border bg-white p-3 ${
+      right ? 'border-[#8DC63F]/40' : answered ? 'border-red-200' : 'border-gray-200'
+    }`}>
+      <div className="flex items-start gap-3">
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+          right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+        }`}>
+          {right ? <CheckCircle2 size={15} /> : answered ? <X size={15} /> : q.question_no}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+              right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+            }`}>
+              {right ? 'Right' : answered ? 'Wrong' : 'Not answered'}
+            </span>
+            <span className="text-[10px] text-gray-400">Question {q.question_no}</span>
           </div>
-        )}
-        {isMeasurement && (
-          <div className="flex flex-wrap items-center gap-3">
-            {q.value != null && (
-              <span className="text-gray-600">Value: <span className="font-semibold">{q.value}</span></span>
-            )}
-            {q.interpretation && (
-              <span className={`capitalize font-medium ${q.interpretation === 'good' ? 'text-[#8DC63F]' : 'text-red-500'}`}>
-                Interpretation: {q.interpretation}
-              </span>
-            )}
-            {q.caliper_placement_interpretation && (
-              <span className={`capitalize font-medium ${q.caliper_placement_interpretation === 'good' ? 'text-[#8DC63F]' : 'text-amber-500'}`}>
-                Caliper: {q.caliper_placement_interpretation}
-              </span>
+
+          {q.prompt && (
+            <p className="text-sm font-semibold text-gray-800">{q.prompt}</p>
+          )}
+
+          {Array.isArray(q.assets) && q.assets.length > 0 && (
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {q.assets.map((asset, assetIndex) => (
+                <div key={assetIndex} className="rounded-lg border border-gray-100 bg-gray-50 overflow-hidden">
+                  {asset?.url ? (
+                    <img
+                      src={asset.url}
+                      alt={asset.alt || `Question asset ${assetIndex + 1}`}
+                      className="w-full max-h-44 object-contain"
+                    />
+                  ) : (
+                    <div className="p-2 text-[11px] text-gray-500 break-all">{asset?.name || JSON.stringify(asset)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {options.length > 0 && (
+            <div className="mt-3 grid gap-2">
+              {options.map((option, optionIndex) => {
+                const optionKey = String(option.key ?? option.value ?? optionIndex + 1);
+                const optionText = option.text ?? option.label ?? String(option);
+                const optionImageUrl = option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url;
+                const selected = answered && optionMatchesConfiguredKey(option, selectedKey);
+                const isCorrectOption = optionMatchesConfiguredKey(option, correctKey);
+
+                return (
+                  <div
+                    key={`${q.question_id || q.question_no}-${optionKey}`}
+                    className={`rounded-lg border px-3 py-2 text-xs ${
+                      selected
+                        ? right
+                          ? 'border-[#8DC63F]/50 bg-[#8DC63F]/5'
+                          : 'border-red-200 bg-red-50'
+                        : isCorrectOption
+                          ? 'border-[#8DC63F]/30 bg-[#8DC63F]/5'
+                          : 'border-gray-100 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-gray-700">
+                        <span className="mr-2">{optionKey}.</span>
+                        {optionText && optionText !== '[object Object]' ? optionText : ''}
+                      </span>
+                      <div className="flex gap-1">
+                        {selected && <span className="rounded-full bg-gray-900/5 px-2 py-0.5 text-[10px] text-gray-600">Selected</span>}
+                        {isCorrectOption && <span className="rounded-full bg-[#8DC63F]/10 px-2 py-0.5 text-[10px] text-[#5d8f20]">Correct</span>}
+                      </div>
+                    </div>
+                    {optionImageUrl && (
+                      <div className="mt-2 h-28 rounded-md bg-white overflow-hidden flex items-center justify-center">
+                        <img src={optionImageUrl} alt={option.image_alt || optionText || `Option ${optionKey}`} className="h-full w-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-3 space-y-2">
+            {(answered || options.length > 0) && (
+              <div className="grid gap-2 text-xs">
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <span className="text-gray-400">Selected: </span>
+                  <span className={right ? 'font-semibold text-[#8DC63F]' : answered ? 'font-semibold text-red-500' : 'font-semibold text-gray-500'}>
+                    {answered ? (selectedText || selectedOption?.key || q.option_chosen || '—') : '—'}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                  <span className="text-gray-400">Correct answer: </span>
+                  <span className="font-semibold text-gray-700">
+                    {correctText || correctOption?.key || correctKey || '—'}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
-        )}
-        {q.public_url && (
-          <a href={q.public_url} target="_blank" rel="noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] text-blue-500 hover:underline">
-            <Eye size={10} /> View submitted image
-          </a>
-        )}
-      </div>
-      <div className="flex-shrink-0 mt-0.5">
-        {q.is_correct
-          ? <CheckCheck size={14} className="text-[#8DC63F]" />
-          : <X size={14} className="text-red-400" />
-        }
+
+          {isAnnotation && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+              <span className="text-[#8DC63F] font-medium">Correct labels: {q.correct_label_count ?? 0}</span>
+              <span className="text-red-500 font-medium">Wrong labels: {q.wrong_label_count ?? 0}</span>
+              <span className="text-gray-400">Unused: {q.unused_label_count ?? 0}</span>
+            </div>
+          )}
+
+          {isMeasurement && (
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+              {q.value != null && (
+                <span className="text-gray-600">Value: <span className="font-semibold">{q.value}</span></span>
+              )}
+              {q.interpretation && (
+                <span className={`capitalize font-medium ${q.interpretation === 'good' ? 'text-[#8DC63F]' : 'text-red-500'}`}>
+                  Interpretation: {q.interpretation}
+                </span>
+              )}
+              {q.caliper_placement_interpretation && (
+                <span className={`capitalize font-medium ${q.caliper_placement_interpretation === 'good' ? 'text-[#8DC63F]' : 'text-amber-500'}`}>
+                  Caliper: {q.caliper_placement_interpretation}
+                </span>
+              )}
+            </div>
+          )}
+
+          {q.public_url && (
+            <a
+              href={q.public_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1 text-[10px] text-blue-500 hover:underline"
+            >
+              <Eye size={10} /> View submitted image
+            </a>
+          )}
+
+          {answered && (right ? q.feedback_correct : q.feedback_wrong) && (
+            <p className="mt-2 text-xs text-gray-500">{right ? q.feedback_correct : q.feedback_wrong}</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -5527,11 +5707,28 @@ function ImageInterpretModal({ r, token, onClose }) {
   const [sessions, setSessions] = React.useState([]);
 
   React.useEffect(() => {
-    setLoading(true); setError(null);
-    fetchSubmissions(r.id, token)
-      .then(data => setSessions(groupBySession(data)))
-      .catch(err  => setError(err.message))
-      .finally(() => setLoading(false));
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    Promise.all([
+      fetchSubmissions(r.id, token),
+      fetchMindSparkQuestions(r.id, token),
+    ])
+      .then(([submissionData, questionData]) => {
+        if (!active) return;
+        setSessions(buildImageInterpretationSessions(submissionData, questionData));
+      })
+      .catch(err => {
+        if (active) setError(err.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [r.id, token]);
 
   const latest    = sessions[sessions.length - 1];
