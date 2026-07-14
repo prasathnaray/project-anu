@@ -115,7 +115,7 @@ export const questionUsesRows = (questionType) => isChoiceType(questionType) || 
 
 export const getImageInterpretationFeedbackCaseCount = (questionType) => {
   if (isAnnotation1Type(questionType)) return 6;
-  if (isAnnotation2Type(questionType)) return 5;
+  if (isAnnotation2Type(questionType)) return 10;
   if (isImageInterpretationMeasurementType(questionType)) return 3;
   return 0;
 };
