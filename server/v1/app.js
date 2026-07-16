@@ -97,6 +97,7 @@ const activityLastScoresRouter = require('./routes/activityLastScoresRoute.js');
 const skillCompetencyRouter = require('./routes/skillCompetencyRoute.js');
 const performanceMetricsRouter = require('./routes/performanceMetricsRoute.js');
 const reattRouter = require('./routes/reattRoute.js');
+const challengeRouter = require('./routes/challengeRoute.js');
 //questions
 const questionsRouter = require('./routes/questionsRoute.js');
 //Auth middleware
@@ -265,6 +266,7 @@ app.use('/api/v1/', Authenticate, activityLastScoresRouter);
 app.use('/api/v1/', Authenticate, skillCompetencyRouter);
 app.use('/api/v1/', Authenticate, performanceMetricsRouter);
 app.use('/api/v1/', Authenticate, reattRouter);
+app.use('/api/v1/', Authenticate, challengeRouter);
 app.use((err, req, res, next) => {
     if (err instanceof multer.MulterError) {
         const maxUploadSizeMb = Number(process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100);

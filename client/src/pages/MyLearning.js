@@ -5368,10 +5368,42 @@ const optionMatchesConfiguredKey = (option, key) => {
   return optionKey === normalizedKey || optionKey.toLowerCase() === normalizedKey.toLowerCase();
 };
 
+const groupQuestionsByType = (rows) => {
+  const byType = {};
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    const type = row.question_type || 'unknown';
+    if (!byType[type]) byType[type] = [];
+    byType[type].push(row);
+  });
+  return byType;
+};
+
+const getConfiguredAnswerTimeframe = answer => String(
+  answer?.timeframe ?? answer?.expected_timeframe ?? ''
+).trim();
+
+const getQuestionMetadataList = (metadata, key) => {
+  const value = metadata?.[key];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value === 'string') {
+    return value.split(',').map(item => item.trim()).filter(Boolean);
+  }
+  return [];
+};
+
 function buildImageInterpretationSessions(submissions, questions) {
   const questionRows = Array.isArray(questions)
     ? [...questions].sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0))
     : [];
+
+  if ((!Array.isArray(submissions) || submissions.length === 0) && questionRows.length > 0) {
+    return [{
+      session_id: 'configured-questions',
+      created_at: null,
+      byType: groupQuestionsByType(questionRows),
+      isConfiguredOnly: true,
+    }];
+  }
 
   const submissionsBySession = {};
   (Array.isArray(submissions) ? submissions : []).forEach((submission) => {
@@ -5408,12 +5440,7 @@ function buildImageInterpretationSessions(submissions, questions) {
           }))
         : Object.values(latestByQuestion).sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0));
 
-      const byType = {};
-      mergedRows.forEach((row) => {
-        const type = row.question_type || 'unknown';
-        if (!byType[type]) byType[type] = [];
-        byType[type].push(row);
-      });
+      const byType = groupQuestionsByType(mergedRows);
 
       const latestCreatedAt = sessionRows.reduce((latest, row) => {
         const rowDate = new Date(row.created_at || 0);
@@ -5473,15 +5500,20 @@ function buildTopicGroups(items, orderScope = '') {
 function QuestionRow({ q }) {
   const answered = q.is_correct === true || q.is_correct === false;
   const right = q.is_correct === true;
+  const questionType = String(q.question_type || '');
+  const isFindImage = questionType === 'type1';
+  const isImageUpload = questionType === 'type2';
   const isAnnotation  = q.question_type === 'annotation1' || q.question_type === 'annotation2';
   const isMeasurement = q.question_type === 'measurement';
   const options = Array.isArray(q.options) ? q.options : [];
   const correctKey = getConfiguredAnswerKey(q.correct_answer);
+  const expectedTimeframe = getConfiguredAnswerTimeframe(q.correct_answer) || String(q.metadata?.expected_timeframe ?? '').trim();
   const selectedKey = String(q.option_chosen ?? '');
   const selectedText = getConfiguredOptionText(options, selectedKey);
   const correctText = getConfiguredOptionText(options, correctKey);
   const selectedOption = getConfiguredOptionDetails(options, selectedKey);
   const correctOption = getConfiguredOptionDetails(options, correctKey);
+  const expectedLandmarks = getQuestionMetadataList(q.metadata, 'expected_landmarks');
 
   return (
     <div className={`rounded-xl border bg-white p-3 ${
@@ -5568,8 +5600,14 @@ function QuestionRow({ q }) {
             </div>
           )}
 
+          {isFindImage && options.length === 0 && (
+            <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 px-3 py-2 text-xs text-blue-600">
+              No image options are configured for this Find the Image question.
+            </div>
+          )}
+
           <div className="mt-3 space-y-2">
-            {(answered || options.length > 0) && (
+            {isFindImage && (answered || options.length > 0 || correctKey || expectedTimeframe) && (
               <div className="grid gap-2 text-xs">
                 <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
                   <span className="text-gray-400">Selected: </span>
@@ -5580,18 +5618,31 @@ function QuestionRow({ q }) {
                 <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
                   <span className="text-gray-400">Correct answer: </span>
                   <span className="font-semibold text-gray-700">
-                    {correctText || correctOption?.key || correctKey || '—'}
+                    {correctText || correctOption?.key || correctKey || expectedTimeframe || '—'}
                   </span>
                 </div>
               </div>
             )}
           </div>
 
+          {isImageUpload && (
+            <div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-xs text-indigo-600">
+              This question is answered by uploading an interpreted image.
+            </div>
+          )}
+
           {isAnnotation && (
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-              <span className="text-[#8DC63F] font-medium">Correct labels: {q.correct_label_count ?? 0}</span>
-              <span className="text-red-500 font-medium">Wrong labels: {q.wrong_label_count ?? 0}</span>
-              <span className="text-gray-400">Unused: {q.unused_label_count ?? 0}</span>
+            <div className="mt-3 space-y-2 text-xs">
+              {expectedLandmarks.length > 0 && (
+                <div className="rounded-lg border border-purple-100 bg-purple-50/50 px-3 py-2 text-purple-600">
+                  Expected landmarks: <span className="font-medium">{expectedLandmarks.join(', ')}</span>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[#8DC63F] font-medium">Correct labels: {q.correct_label_count ?? 0}</span>
+                <span className="text-red-500 font-medium">Wrong labels: {q.wrong_label_count ?? 0}</span>
+                <span className="text-gray-400">Unused: {q.unused_label_count ?? 0}</span>
+              </div>
             </div>
           )}
 
@@ -5638,6 +5689,7 @@ function SessionCard({ session, attemptNo, isLatest }) {
   const sm    = scoreMeta(pct);
   const [open, setOpen] = React.useState(isLatest);
   const types = Object.keys(session.byType);
+  const configuredOnly = session.isConfiguredOnly === true;
 
   return (
     <div className={`border rounded-xl overflow-hidden ${isLatest ? 'border-[#8DC63F]/40' : 'border-gray-200'}`}>
@@ -5648,32 +5700,38 @@ function SessionCard({ session, attemptNo, isLatest }) {
       >
         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm
           ${isLatest ? 'bg-[#8DC63F] text-white' : 'bg-gray-100 text-gray-500'}`}>
-          {attemptNo}
+          {configuredOnly ? <FileText size={15} /> : attemptNo}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-700">
-              {attemptNo === 1 ? 'First Attempt' : `Re-attempt ${attemptNo - 1}`}
+              {configuredOnly ? 'Configured Questions' : attemptNo === 1 ? 'First Attempt' : `Re-attempt ${attemptNo - 1}`}
             </span>
-            {isLatest && (
+            {isLatest && !configuredOnly && (
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#8DC63F]/15 text-[#8DC63F]">Latest</span>
             )}
           </div>
           <p className="text-[11px] text-gray-400 mt-0.5">
-            {formatDateTime(session.created_at)} · {types.length} question type{types.length > 1 ? 's' : ''}
+            {configuredOnly
+              ? `${total} configured question${total !== 1 ? 's' : ''} · ${types.length} question type${types.length > 1 ? 's' : ''}`
+              : `${formatDateTime(session.created_at)} · ${types.length} question type${types.length > 1 ? 's' : ''}`}
           </p>
         </div>
-        <div className="text-right flex-shrink-0 mr-2">
-          <p className={`text-lg font-bold leading-none ${sm.cls}`}>
-            {correct}<span className="text-sm font-normal text-gray-400">/{total}</span>
-          </p>
-          <p className={`text-[11px] font-semibold ${sm.cls}`}>{pct}%</p>
-        </div>
-        <div className="w-16 flex-shrink-0">
-          <div className="w-full bg-gray-100 rounded-full h-1.5">
-            <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: sm.hex }} />
+        {!configuredOnly && (
+          <div className="text-right flex-shrink-0 mr-2">
+            <p className={`text-lg font-bold leading-none ${sm.cls}`}>
+              {correct}<span className="text-sm font-normal text-gray-400">/{total}</span>
+            </p>
+            <p className={`text-[11px] font-semibold ${sm.cls}`}>{pct}%</p>
           </div>
-        </div>
+        )}
+        {!configuredOnly && (
+          <div className="w-16 flex-shrink-0">
+            <div className="w-full bg-gray-100 rounded-full h-1.5">
+              <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: sm.hex }} />
+            </div>
+          </div>
+        )}
         <ChevronDown size={15} className={`flex-shrink-0 transition-transform ${open ? 'rotate-180 text-[#8DC63F]' : 'text-gray-300'}`} />
       </button>
 
@@ -5687,10 +5745,12 @@ function SessionCard({ session, attemptNo, isLatest }) {
               <div key={type}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${tm.color}`}>{tm.label}</span>
-                  <span className="text-[11px] text-gray-400">{typeCorrect}/{qs.length} correct</span>
+                  <span className="text-[11px] text-gray-400">
+                    {configuredOnly ? `${qs.length} question${qs.length !== 1 ? 's' : ''}` : `${typeCorrect}/${qs.length} correct`}
+                  </span>
                 </div>
                 <div className="space-y-1.5">
-                  {qs.map(q => <QuestionRow key={q.id} q={q} />)}
+                  {qs.map(q => <QuestionRow key={q.id || q.question_id || `${type}-${q.question_no}`} q={q} />)}
                 </div>
               </div>
             );
@@ -5731,10 +5791,14 @@ function ImageInterpretModal({ r, token, onClose }) {
     };
   }, [r.id, token]);
 
-  const latest    = sessions[sessions.length - 1];
+  const attemptSessions = sessions.filter(session => !session.isConfiguredOnly);
+  const configuredQuestionCount = sessions
+    .filter(session => session.isConfiguredOnly)
+    .reduce((sum, sess) => sum + Object.values(sess.byType).flat().length, 0);
+  const latest    = attemptSessions[attemptSessions.length - 1] || null;
   const latestSum = latest ? sessionSummary(latest) : null;
   const latestSm  = latestSum ? scoreMeta(latestSum.pct) : null;
-  const totalSubs = sessions.reduce((s, sess) => s + Object.values(sess.byType).flat().length, 0);
+  const totalSubs = attemptSessions.reduce((s, sess) => s + Object.values(sess.byType).flat().length, 0);
 
   return (
     <div
@@ -5749,7 +5813,11 @@ function ImageInterpretModal({ r, token, onClose }) {
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-bold text-gray-800 truncate">{r.name}</h2>
             <p className="text-[11px] text-gray-400 mt-0.5">
-              Image Interpretation · {sessions.length} attempt{sessions.length !== 1 ? 's' : ''}
+              Image Interpretation · {attemptSessions.length > 0
+                ? `${attemptSessions.length} attempt${attemptSessions.length !== 1 ? 's' : ''}`
+                : configuredQuestionCount > 0
+                  ? `${configuredQuestionCount} configured question${configuredQuestionCount !== 1 ? 's' : ''}`
+                  : '0 attempts'}
             </p>
           </div>
           {latestSum && latestSm && (
@@ -5792,7 +5860,7 @@ function ImageInterpretModal({ r, token, onClose }) {
             <SessionCard
               key={session.session_id}
               session={session}
-              attemptNo={idx + 1}
+              attemptNo={session.isConfiguredOnly ? 0 : idx + 1}
               isLatest={idx === sessions.length - 1}
             />
           ))}
@@ -5801,7 +5869,9 @@ function ImageInterpretModal({ r, token, onClose }) {
         {!loading && sessions.length > 0 && (
           <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-gray-50 flex-shrink-0">
             <span className="text-xs text-gray-400">
-              {sessions.length} session{sessions.length !== 1 ? 's' : ''} · {totalSubs} total submissions
+              {attemptSessions.length > 0
+                ? `${attemptSessions.length} session${attemptSessions.length !== 1 ? 's' : ''} · ${totalSubs} total submissions`
+                : `${configuredQuestionCount} question${configuredQuestionCount !== 1 ? 's' : ''} configured`}
             </span>
             <button
               onClick={onClose}
