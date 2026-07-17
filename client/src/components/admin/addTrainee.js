@@ -22,6 +22,7 @@ function AddTrainee() {
   const [selectedProgram, setSelectedProgram] = useState('');
   const [listBatches, setListBatches] = useState([]);
   const tokenData = localStorage.getItem('user_token');
+  const decodedToken = tokenData ? jwtDecode(tokenData) : {};
   const [handleInputData, setHandleInputData] = useState({
           trainee_name: '',
           trainee_email_address: '',
@@ -41,10 +42,12 @@ function AddTrainee() {
         setButtonOpen(!buttonOpen);
     };
   const [currentStep, setCurrentStep] = useState(0);
-  const programOptions = [
-    { label: 'Trainee', value: 'trainee' },
-    { label: 'Instructor', value: 'instructor' }
-  ];
+  const programOptions = decodedToken.role == 102
+    ? [{ label: 'Trainee', value: 'trainee' }]
+    : [
+        { label: 'Trainee', value: 'trainee' },
+        { label: 'Instructor', value: 'instructor' }
+      ];
   const handleProgramChange = (event) => {
     setSelectedProgram(event.target.value);
   };
@@ -171,9 +174,12 @@ function AddTrainee() {
   if (!token) {
     return <Navigate to="/" replace />;
   }
-  const decoded = jwtDecode(token);
+  const decoded = decodedToken;
   if (decoded.role != 101 && decoded.role != 102) {
     return <Navigate to="/dashboard" replace />;
+  }
+  if (decoded.role == 102 && handleInputData.role === "instructor") {
+    return <Navigate to="/trainee/add" replace />;
   }
   return (
     <div className={`flex flex-col min-h-screen`}>

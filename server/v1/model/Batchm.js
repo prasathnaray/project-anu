@@ -1,4 +1,6 @@
 const client = require('../utils/conn.js');
+const hasCenterScope = (requester) => Boolean(requester?.centre_id);
+
 const createBatchm = (batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name, requester) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [101].includes(Number(requester.role));
@@ -9,7 +11,14 @@ const createBatchm = (batch_name, batch_start_date, batch_end_date, certificatio
                 message: 'You do not have permission to access this course data.'
             });
         }
-        client.query('INSERT INTO batch_data(batch_name, batch_start_date, batch_end_date, certification_data, curiculum_id) VALUES($1, $2, $3, $4, $5)', [batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name], (err, result) => {
+        if (!hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            });
+        }
+        client.query('INSERT INTO batch_data(batch_name, batch_start_date, batch_end_date, certification_data, curiculum_id, centre_id) VALUES($1, $2, $3, $4, $5, $6)', [batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name, requester.centre_id], (err, result) => {
             if (err) {
                 return reject(err)
             }
@@ -188,6 +197,13 @@ const getBatchm = (requester, page, limit) => {
         let params;
 
         if (isAdmin) {
+            if (!hasCenterScope(requester)) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.'
+                });
+            }
             query = `
                 WITH role_counts AS (
                     SELECT  
@@ -202,6 +218,8 @@ const getBatchm = (requester, page, limit) => {
                         batch_data b 
                         LEFT JOIN batch_people_data bpd ON b.batch_id = ANY(bpd.batch_id) 
                         LEFT JOIN user_data ud ON bpd.user_id = ud.user_email 
+                    WHERE
+                        b.centre_id = $3
                     GROUP BY  
                         b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, b.curiculum_id, ud.user_role 
                 ),
@@ -253,7 +271,7 @@ const getBatchm = (requester, page, limit) => {
                 ORDER BY bs.batch_name ASC
                 LIMIT $1 OFFSET $2;
             `;
-            params = [limit, offset];
+            params = [limit, offset, requester.centre_id];
 
         } else {
             query = `
@@ -315,7 +333,27 @@ const associateBatchm = (requester, batch_id, user_id) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        client.query('INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)', [batch_id, user_id], (err, result) => {
+        if (!hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            })
+        }
+        const batchIds = Array.isArray(batch_id) ? batch_id : [batch_id];
+        client.query(
+            `INSERT INTO public.batch_people_data(batch_id, user_id)
+             SELECT $1, $2
+             WHERE (
+                 SELECT COUNT(*)::int FROM public.batch_data
+                 WHERE batch_id = ANY($1::varchar[]) AND centre_id = $3
+             ) = cardinality($1::varchar[])
+             AND EXISTS (
+                 SELECT 1 FROM public.user_data
+                 WHERE user_email = $2 AND centre_id = $3
+             )`,
+            [batchIds, user_id, requester.centre_id],
+            (err, result) => {
             if (err) {
                 return reject(err)
             }
@@ -335,7 +373,14 @@ const deleteBatchm = (requester, batch_id) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        client.query('DELETE FROM batch_data WHERE batch_id=$1', [batch_id], (err, result) => {
+        if (!hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            })
+        }
+        client.query('DELETE FROM batch_data WHERE batch_id=$1 AND centre_id=$2', [batch_id, requester.centre_id], (err, result) => {
             if (err) {
                 reject(err)
             }
@@ -439,6 +484,13 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
             message: 'You do not have permission to view trainee profiles'
         });
     }
+    if (!hasCenterScope(requester)) {
+        return Promise.resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'Your account is not linked to a scan center.'
+        });
+    }
 
     return new Promise((resolve, reject) => {
         client.query(
@@ -458,7 +510,8 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
           ON bpd.user_id = ud.user_email
         WHERE 
           ($1::text IS NULL OR b.batch_name ILIKE '%' || $1::text || '%') AND
-          ($2::text IS NULL OR ud.user_name ILIKE '%' || $2::text || '%')
+          ($2::text IS NULL OR ud.user_name ILIKE '%' || $2::text || '%') AND
+          b.centre_id = $3
         GROUP BY 
           b.batch_id, b.batch_name, b.batch_start_date, b.batch_end_date, ud.user_role
       )
@@ -475,7 +528,7 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
       GROUP BY 
         batch_id, batch_name, batch_start_date, batch_end_date
       `,
-            [batch_name || null, instructor_name || null],
+            [batch_name || null, instructor_name || null, requester.centre_id],
             (err, result) => {
                 if (err) reject(err);
                 else resolve(result.rows);
@@ -619,6 +672,26 @@ const individualBatchStats = (requester, batch_id) => {
         });
     }
 
+    const role = Number(requester.role);
+    if (role === 101 && !hasCenterScope(requester)) {
+        return Promise.resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'Your account is not linked to a scan center.'
+        });
+    }
+
+    const accessWhere = role === 101
+        ? 'bd.batch_id = $1 AND bd.centre_id = $2'
+        : `bd.batch_id = $1
+           AND EXISTS (
+               SELECT 1
+               FROM batch_people_data requester_bpd
+               WHERE requester_bpd.user_id = $2
+               AND bd.batch_id = ANY(requester_bpd.batch_id)
+           )`;
+    const params = role === 101 ? [batch_id, requester.centre_id] : [batch_id, requester.user_mail];
+
     return new Promise((resolve, reject) => {
         client.query(` 
             WITH user_info AS ( 
@@ -653,15 +726,15 @@ const individualBatchStats = (requester, batch_id) => {
                 cd.certificate_id,
                 cd.certificate_name
             FROM batch_data bd 
-            JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id) 
-            JOIN user_info ui ON bpd.user_id = ui.user_email 
+            LEFT JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+            LEFT JOIN user_info ui ON bpd.user_id = ui.user_email
             LEFT JOIN user_names un ON ui.user_email = un.user_email 
             LEFT JOIN last_login ll ON ui.user_email = ll.user_id
             LEFT JOIN certification_data cd ON cd.certificate_id::text = ANY(
                 SELECT jsonb_array_elements_text(bd.certification_data)
             )
-            WHERE bd.batch_id = $1 
-        `, [batch_id], (err, result) => {
+            WHERE ${accessWhere}
+        `, params, (err, result) => {
             if (err) {
                 reject(err);
             } else {
@@ -748,8 +821,22 @@ const updateBatchm = (requester, batch_id, new_batch_name, new_start_date, new_e
             message: 'You do not have permission to view trainee profiles'
         });
     }
+    const isSuperAdmin = Number(requester.role) === 99;
+    if (!isSuperAdmin && !hasCenterScope(requester)) {
+        return Promise.resolve({
+            status: 'Unauthorized',
+            code: 401,
+            message: 'Your account is not linked to a scan center.'
+        });
+    }
+    const query = isSuperAdmin
+        ? 'UPDATE batch_data SET batch_name=$1, batch_start_date=$2, batch_end_date=$3 WHERE batch_id=$4'
+        : 'UPDATE batch_data SET batch_name=$1, batch_start_date=$2, batch_end_date=$3 WHERE batch_id=$4 AND centre_id=$5';
+    const params = isSuperAdmin
+        ? [new_batch_name, new_start_date, new_end_date, batch_id]
+        : [new_batch_name, new_start_date, new_end_date, batch_id, requester.centre_id];
     return new Promise((resolve, reject) => {
-        client.query('UPDATE batch_data SET batch_name=$1, batch_start_date=$2, batch_end_date=$3 WHERE batch_id=$4', [new_batch_name, new_start_date, new_end_date, batch_id], (err, result) => {
+        client.query(query, params, (err, result) => {
             if (err) {
                 reject(err)
             }

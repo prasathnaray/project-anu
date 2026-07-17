@@ -46,7 +46,7 @@ const createScancentrem = (requester, data) => {
                     data.center_email,
                     data.center_phone,
                     data.center_address,
-                    requester.user_mail,
+                    data.center_email,
                     data.status || 'Pending'
                 ]
             );
@@ -126,7 +126,24 @@ const getscancenterm = (requester) => {
             });
         }
         try {
-            const result = await client.query('SELECT * FROM scan_centers');
+            const result = await client.query(`
+                SELECT
+                    sc.*,
+                    COALESCE(stats.total_admins, 0) AS total_admins,
+                    COALESCE(stats.total_instructors, 0) AS total_instructors,
+                    COALESCE(stats.total_trainees, 0) AS total_trainees
+                FROM scan_centers sc
+                LEFT JOIN (
+                    SELECT
+                        centre_id,
+                        COUNT(user_email) FILTER (WHERE user_role = '101') AS total_admins,
+                        COUNT(user_email) FILTER (WHERE user_role = '102') AS total_instructors,
+                        COUNT(user_email) FILTER (WHERE user_role = '103') AS total_trainees
+                    FROM user_data
+                    GROUP BY centre_id
+                ) stats ON stats.centre_id = sc.center_id
+                ORDER BY sc.created_at DESC NULLS LAST, sc.center_name ASC
+            `);
             resolve({
                 status: 'success',
                 code: 200,

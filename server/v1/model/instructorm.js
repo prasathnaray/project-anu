@@ -1,4 +1,5 @@
 const client = require('../utils/conn');
+const hasCenterScope = (requester) => Boolean(requester?.centre_id);
 
 const getInstructorsm = (requester, page, limit) => {
     return new Promise((resolve, reject) => {
@@ -10,8 +11,18 @@ const getInstructorsm = (requester, page, limit) => {
                         message: 'You do not have permission to access this profile.'
                     });
                 }
+            if (Number(requester.role) === 101 && !hasCenterScope(requester)) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.'
+                });
+            }
             const offset = (page - 1) * limit;
-            client.query('SELECT COUNT(*) OVER() AS total_count, u.user_name, u.people_id, u.status, u.user_profile_photo, u.user_email, u.user_contact_num, u.user_dob, u.user_gender, bpd.batch_id, ARRAY_AGG(b.batch_name ORDER BY b.batch_id) AS batch_names FROM public.user_data u LEFT JOIN public.batch_people_data bpd ON u.user_email = bpd.user_id LEFT JOIN LATERAL unnest(bpd.batch_id) AS bid(batch_id) ON TRUE LEFT JOIN public.batch_data b ON b.batch_id = bid.batch_id WHERE u.user_role = ANY(ARRAY[$1]) GROUP BY u.user_name, u.user_email, u.user_contact_num, u.user_dob, u.user_gender, bpd.batch_id ORDER BY u.user_name LIMIT $2 OFFSET $3',['102', limit, offset], (err, result) => {
+            const isSuperAdmin = Number(requester.role) === 99;
+            const centerFilter = isSuperAdmin ? '' : 'AND u.centre_id = $4';
+            const params = isSuperAdmin ? ['102', limit, offset] : ['102', limit, offset, requester.centre_id];
+            client.query(`SELECT COUNT(*) OVER() AS total_count, u.user_name, u.people_id, u.status, u.user_profile_photo, u.user_email, u.user_contact_num, u.user_dob, u.user_gender, u.centre_id, u.center_name, bpd.batch_id, ARRAY_AGG(b.batch_name ORDER BY b.batch_id) AS batch_names FROM public.user_data u LEFT JOIN public.batch_people_data bpd ON u.user_email = bpd.user_id LEFT JOIN LATERAL unnest(bpd.batch_id) AS bid(batch_id) ON TRUE LEFT JOIN public.batch_data b ON b.batch_id = bid.batch_id WHERE u.user_role = ANY(ARRAY[$1]) ${centerFilter} GROUP BY u.user_name, u.people_id, u.status, u.user_profile_photo, u.user_email, u.user_contact_num, u.user_dob, u.user_gender, u.centre_id, u.center_name, bpd.batch_id ORDER BY u.user_name LIMIT $2 OFFSET $3`, params, (err, result) => {
                 if(err)
                 {
                     return reject(err)
@@ -34,7 +45,17 @@ const deleteInstructorsm = (requester, user_mail) => {
                 message: 'You do not have permission to access this profile.'
             })
         }
-        client.query('DELETE FROM public.user_data WHERE user_email=$1 and user_role=$2', [user_mail, '102'], (err, result) => {
+        const isSuperAdmin = Number(requester.role) === 99;
+        if (!isSuperAdmin && !hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            });
+        }
+        const centerFilter = isSuperAdmin ? '' : ' and centre_id=$3';
+        const params = isSuperAdmin ? [user_mail, '102'] : [user_mail, '102', requester.centre_id];
+        client.query(`DELETE FROM public.user_data WHERE user_email=$1 and user_role=$2${centerFilter}`, params, (err, result) => {
                 if(err)
                 {
                    return reject(err.message)
@@ -57,8 +78,26 @@ const updateInstructorsm = (requester, batch_id, user_id) => {
                 message: 'You do not have permission to access this profile.'
             })
         }
+        const isSuperAdmin = Number(requester.role) === 99;
+        if (!isSuperAdmin && !hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            });
+        }
         const pgArray = `{${batch_id.join(",")}}`;
-        client.query('update batch_people_data set batch_id = $1 where user_id=$2', [pgArray, user_id], (err, result) => {
+        const ownershipQuery = isSuperAdmin
+            ? 'update batch_people_data set batch_id = $1 where user_id=$2'
+            : `update batch_people_data
+               set batch_id = $1
+               where user_id=$2
+               and exists (
+                   select 1 from public.user_data
+                   where user_email=$2 and user_role='102' and centre_id=$3
+               )`;
+        const params = isSuperAdmin ? [pgArray, user_id] : [pgArray, user_id, requester.centre_id];
+        client.query(ownershipQuery, params, (err, result) => {
                 if(err)
                 {
                     return reject(err.message)

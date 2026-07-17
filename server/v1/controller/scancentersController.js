@@ -20,6 +20,9 @@ const createScanCenterC = async(req, res) => {
         if (result.code === 401) {
             return res.status(401).json(result);
         }
+        if (result.code && result.code !== 201) {
+            return res.status(result.code).json(result);
+        }
 
         res.status(201).json({
             status: 'success',

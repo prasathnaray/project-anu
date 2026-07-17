@@ -4,6 +4,9 @@ const getDashboardC = async(req, res) => {
     try
     {
         const result = await getDashboardDatam(requester);
+        if (result.code) {
+            return res.status(result.code).json(result);
+        }
         res.status(200).send(result);
     }
     catch(err)

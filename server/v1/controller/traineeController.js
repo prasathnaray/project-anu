@@ -48,6 +48,9 @@ const CreateTraineeController = async (req, res) => {
                 }
                 let hashedPass = await HashPassword(user_password); ;
                 const result = await traineem(filePath, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, user_batch, requester);
+                if (result.code && result.code !== 200) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).json({
                         status: 'Success',
                         message: 'File uploaded to Supabase Storage.',
@@ -67,6 +70,9 @@ const DisableTrainee = async(req, res) => {
         try
         {
                 const result = await disableTraineem(requester, user_mail, status);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 if(result.rowCount === 0)
                 {
                         res.status(400).send({
@@ -94,6 +100,9 @@ const deleteTraineec = async(req, res)=> {
         {
                 // res.send(user_mail)
                 const result = await deleteTraineem(requester, user_mail);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).json({
                         affectedRows: result.rowCount,
                         status: `${result.rowCount==0?'Data not available': 'deleted successfully'}`

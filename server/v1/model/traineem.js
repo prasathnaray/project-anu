@@ -1,8 +1,12 @@
 const client = require('../utils/conn.js');
 // const {HashedPassword} = require('../utils/hash.js');
+const hasCenterScope = (requester) => Boolean(requester?.centre_id);
+
 const traineem = (user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, user_batch, requester) => {
     return new Promise((resolve, reject) => {
             const isPrivileged = [102, 101].includes(Number(requester.role));
+            const role = Number(requester.role);
+            const targetRole = Number(user_role);
             if(!isPrivileged)
             {
                 return resolve({
@@ -11,7 +15,48 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                     message: 'You do not have permission to create a trainee profile.'
                 });
             }
-            client.query('INSERT INTO public.user_data(user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)' , [user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description], (err, result) => {
+
+            if (!hasCenterScope(requester)) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.'
+                });
+            }
+
+            if (![102, 103].includes(targetRole)) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Only instructor and trainee profiles can be created here.'
+                });
+            }
+
+            if (role === 102 && targetRole !== 103) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Instructors can create trainee profiles only.'
+                });
+            }
+
+            client.query(
+                `INSERT INTO public.user_data(
+                    user_profile_photo,
+                    user_name,
+                    user_email,
+                    user_contact_num,
+                    user_dob,
+                    user_gender,
+                    user_password,
+                    user_role,
+                    status,
+                    description,
+                    centre_id,
+                    center_name
+                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+                [user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, requester.centre_id, requester.center_name],
+                (err, result) => {
                   if(err){
                     return reject(err);
                   }  
@@ -69,6 +114,14 @@ const getTraineesm = (requester, page, limit) => {
             });
         }
 
+        if (!hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            });
+        }
+
         const offset = (page - 1) * limit;
 
         let query = "";
@@ -97,10 +150,11 @@ const getTraineesm = (requester, page, limit) => {
                 LEFT JOIN public.batch_data bd 
                     ON bd.batch_id = ANY(bpd.batch_id)
                 WHERE ud.user_role = '103'
+                AND ud.centre_id = $3
                 ORDER BY ud.user_name
                 LIMIT $1 OFFSET $2
             `;
-            params = [limit, offset];
+            params = [limit, offset, requester.centre_id];
         }
 
         // INSTRUCTOR (role 102)
@@ -131,10 +185,11 @@ const getTraineesm = (requester, page, limit) => {
                         WHERE user_id = $3
                 )
                 AND ud.user_role = '103'
+                AND ud.centre_id = $4
                 ORDER BY ud.user_name
                 LIMIT $1 OFFSET $2
             `;
-            params = [limit, offset, requester.user_mail];
+            params = [limit, offset, requester.user_mail, requester.centre_id];
         }
 
         client.query(query, params, (err, result) => {
@@ -156,7 +211,14 @@ const disableTraineem = (requester , user_mail, status) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        client.query('UPDATE public.user_data SET status=$1 WHERE user_email=$2', [status , user_mail], (err, result) => {
+        if (!hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            });
+        }
+        client.query('UPDATE public.user_data SET status=$1 WHERE user_email=$2 AND user_role=$3 AND centre_id=$4', [status, user_mail, '103', requester.centre_id], (err, result) => {
             if(err)
             {
                 return reject(err.message)
@@ -179,7 +241,14 @@ const deleteTraineem = (requester, user_mail) => {
                   message: 'You do not have permission to view trainee profiles'
             })
         }
-        client.query('DELETE FROM public.user_data WHERE user_email=$1 and user_role=$2', [user_mail, '103'], (err, result) => {
+        if (!hasCenterScope(requester)) {
+            return resolve({
+                status: 'Unauthorized',
+                code: 401,
+                message: 'Your account is not linked to a scan center.'
+            });
+        }
+        client.query('DELETE FROM public.user_data WHERE user_email=$1 and user_role=$2 AND centre_id=$3', [user_mail, '103', requester.centre_id], (err, result) => {
                 if(err)
                 {
                    return reject(err.message)
@@ -3667,13 +3736,32 @@ const updateTraineem = (requester, user_id, batch_id) => {
                     message: 'You do not have permission to view trainee profiles'
               })
           }
+          const isSuperAdmin = Number(requester.role) === 99;
+          if (!isSuperAdmin && !hasCenterScope(requester)) {
+              return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.'
+              })
+          }
           const batchIdArray = Array.isArray(batch_id) 
               ? batch_id 
               : [batch_id];
 
+          const query = isSuperAdmin
+              ? `UPDATE batch_people_data SET batch_id = $1 WHERE user_id = $2`
+              : `UPDATE batch_people_data
+                 SET batch_id = $1
+                 WHERE user_id = $2
+                 AND EXISTS (
+                     SELECT 1 FROM public.user_data
+                     WHERE user_email = $2 AND user_role = '103' AND centre_id = $3
+                 )`;
+          const params = isSuperAdmin ? [batchIdArray, user_id] : [batchIdArray, user_id, requester.centre_id];
+
           client.query(
-              `UPDATE batch_people_data SET batch_id = $1 WHERE user_id = $2`, 
-              [batchIdArray, user_id],
+              query,
+              params,
               (err, result) => {
                     if (err) {
                           reject({
@@ -3686,7 +3774,8 @@ const updateTraineem = (requester, user_id, batch_id) => {
                           resolve({
                                 status: 'Success',
                                 code: 200,  
-                                message: 'Trainee batch updated successfully'
+                                message: result.rowCount === 0 ? 'No trainee found for this scan center' : 'Trainee batch updated successfully',
+                                affectedRows: result.rowCount
                           });
                     } 
               }

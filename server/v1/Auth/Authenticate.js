@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 const path = require('path');
+const client = require('../utils/conn');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const Authenticate = (req, res, next) => {
     // const token = req.header('Authorization');
@@ -24,10 +25,23 @@ const Authenticate = (req, res, next) => {
     // }
      const token = req.headers.authorization?.split(' ')[1];
         if (!token) return res.status(401).json({ status: 'Unauthorized: No token' });
-        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
             if (err) return res.status(403).json({ status: 'Forbidden: Invalid token' });
-            req.user = user;
-            next();
+            try {
+                const result = await client.query(
+                    'SELECT centre_id, center_name FROM public.user_data WHERE user_email = $1',
+                    [user.user_mail]
+                );
+                const dbUser = result.rows[0] || {};
+                req.user = {
+                    ...user,
+                    centre_id: user.centre_id || dbUser.centre_id || null,
+                    center_name: user.center_name || dbUser.center_name || null
+                };
+                next();
+            } catch (queryErr) {
+                next(queryErr);
+            }
         });
 }
 module.exports = Authenticate;

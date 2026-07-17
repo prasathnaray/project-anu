@@ -6,6 +6,9 @@ const batchCreation = async(req, res) =>{
     try
     {
             const result = await createBatchm(batch_name, batch_start_date, batch_end_date, JSON.stringify(certification_data), curiculum_name, requester);
+            if (result.code) {
+                    return res.status(result.code).json(result);
+            }
             res.status(200).send(result);
     }
     catch(err)
@@ -20,6 +23,9 @@ const getBatchData= async(req,res) => {
         try 
         {
                 const result = await getBatchm(requester, page, limit);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).send(result);
         }
         catch(err)
@@ -33,6 +39,9 @@ const associateBatchc = async(req, res) => {
         try
         {
                 const result = await associateBatchm(requester, batch_id, user_id);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).send(result);
         }
         catch(err)
@@ -46,6 +55,9 @@ const deleteBatchc = async(req, res) => {
         try
         {
                 const result = await deleteBatchm(requester, batch_id);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).send(result);
         }
         catch(err)
@@ -133,6 +145,9 @@ const filterBatchC = async(req, res) => {
         try
         {
                 const result = await filterBatchm(requester, batch_name, instructor_name);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).send(result);
         }
         catch(err)
@@ -159,6 +174,9 @@ const individualBatchC = async(req, res) => {
     const {batch_id} = req.params;
     try {
         const response = await individualBatchStats(requester, batch_id);
+        if (response.code) {
+                return res.status(response.code).json(response);
+        }
         //console.log('Response being sent:', response); // check this in terminal
         res.status(200).json(response); // ✅ .json() instead of .send()
     }
@@ -172,7 +190,10 @@ const updateBatchC = async(req, res) => {
         const {batch_id, new_batch_name, new_start_date, new_end_date} = req.body;
         try
         {       
-                await updateBatchm(requester, batch_id, new_batch_name, new_start_date, new_end_date)
+                const result = await updateBatchm(requester, batch_id, new_batch_name, new_start_date, new_end_date)
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).json({
                         status: 'Batch updated successfully',
                         code: 200

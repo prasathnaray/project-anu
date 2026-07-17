@@ -6,25 +6,44 @@ const getDashboardDatam = (requester) => {
 
         // ─── Role 101: Full Dashboard ───────────────────────────────────
         if (role === 101) {
+            if (!requester.centre_id) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.',
+                });
+            }
+
             const getTraineesIns = new Promise((res, rej) => {
                 client.query(
                     `SELECT user_data.user_role, COUNT(*)
                      FROM user_data
                      WHERE user_role IN ('102', '103')
+                     AND centre_id = $1
                      GROUP BY user_data.user_role;`,
+                    [requester.centre_id],
                     (err, result) => (err ? rej(err) : res(result))
                 );
             });
 
             const getBatchDas = new Promise((res, rej) => {
-                client.query('SELECT COUNT(*) FROM batch_data', (err, result) =>
-                    err ? rej(err) : res(result)
+                client.query(
+                    `SELECT COUNT(DISTINCT bd.batch_id)
+                     FROM batch_data bd
+                     WHERE bd.centre_id = $1`,
+                    [requester.centre_id],
+                    (err, result) => err ? rej(err) : res(result)
                 );
             });
 
             const TLStats = new Promise((res, rej) => {
-                client.query('SELECT * FROM targeted_learning', (err, result) =>
-                    err ? rej(err) : res(result.rows)
+                client.query(
+                    `SELECT tl.*
+                     FROM targeted_learning tl
+                     JOIN user_data ud ON ud.user_email = tl.created_by
+                     WHERE ud.centre_id = $1`,
+                    [requester.centre_id],
+                    (err, result) => err ? rej(err) : res(result.rows)
                 );
             });
 
@@ -41,9 +60,10 @@ const getDashboardDatam = (requester) => {
                      JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
                      JOIN user_data ud ON bpd.user_id = ud.user_email
                      WHERE ud.user_role = $1
+                     AND ud.centre_id = $2
                      GROUP BY bd.batch_id, bd.batch_name
                      ORDER BY bd.batch_id;`,
-                    ['103'],
+                    ['103', requester.centre_id],
                     (err, result) => (err ? rej(err) : res(result.rows))
                 );
             });
@@ -64,10 +84,12 @@ const getDashboardDatam = (requester) => {
                      FROM user_data ud
                      JOIN progress_data pd ON ud.user_email = pd.user_id
                      WHERE ud.user_role = '103' 
+                     AND ud.centre_id = $1
                      AND pd.is_completed = TRUE
                      GROUP BY ud.user_name, ud.user_email
                      ORDER BY completed_count DESC
                      LIMIT 5;`,
+                    [requester.centre_id],
                     (err, result) => (err ? rej(err) : res(result.rows))
                 );
             });
@@ -81,8 +103,10 @@ const getDashboardDatam = (requester) => {
                      FROM progress_data pd
                      JOIN user_data ud ON pd.user_id = ud.user_email
                      JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+                     WHERE ud.centre_id = $1
                      ORDER BY pd.updated_at DESC
                      LIMIT 5;`,
+                    [requester.centre_id],
                     (err, result) => (err ? rej(err) : res(result.rows))
                 );
             });
@@ -98,9 +122,12 @@ const getDashboardDatam = (requester) => {
                      JOIN batch_people_data bpd2 ON bpd1.batch_id && bpd2.batch_id
                      JOIN user_data ud2 ON bpd2.user_id = ud2.user_email
                      WHERE ud.user_role = '102' AND ud2.user_role = '103'
+                     AND ud.centre_id = $1
+                     AND ud2.centre_id = $1
                      GROUP BY ud.user_name, ud.user_email
                      ORDER BY total_trainees DESC
                      LIMIT 5;`,
+                    [requester.centre_id],
                     (err, result) => (err ? rej(err) : res(result.rows))
                 );
             });
@@ -113,9 +140,11 @@ const getDashboardDatam = (requester) => {
                      FROM user_data ud
                      JOIN volume_conv_logs vcl ON ud.user_email = vcl.converted_by
                      WHERE ud.user_role = '102' AND vcl.conversion_completion = TRUE
+                     AND ud.centre_id = $1
                      GROUP BY ud.user_name
                      ORDER BY total_volumes DESC
                      LIMIT 5;`,
+                    [requester.centre_id],
                     (err, result) => (err ? rej(err) : res(result.rows))
                 );
             });

@@ -7,6 +7,9 @@ const getInstructorData = async(req, res) => {
     try
     {
         const result = await getInstructorsm(requester, page, limit);
+        if (result.code) {
+            return res.status(result.code).json(result);
+        }
         res.status(200).send(result.rows);
     }
     catch(err)
@@ -21,6 +24,9 @@ const instructorController = async(req, res) => {
     try
     {
         const result = await deleteInstructorsm(requester, user_mail);
+        if (result.code) {
+            return res.status(result.code).json(result);
+        }
         res.status(200).json({
                 affectedRows: result.rowCount,
                 status: `${result.rowCount==0? 'Data not available': 'deleted successfully'}`
@@ -38,6 +44,9 @@ const updateInstructorController = async(req, res) => {
     try
     {
         const result = await updateInstructorsm(requester, batch_id, user_id);
+        if (result.code) {
+            return res.status(result.code).json(result);
+        }
         res.status(200).json({
                 affectedRows: result.rowCount,  
                 status: `${result.rowCount==0? 'Data not available': 'updated successfully'}`
