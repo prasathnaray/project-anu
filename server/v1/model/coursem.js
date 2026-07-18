@@ -1,5 +1,6 @@
 const client = require('../utils/conn.js');
 const supabase = require('../supaBaseClient.js');
+const hasCenterScope = (requester) => Boolean(requester?.centre_id);
 
 const coursem = (requester) => {
     return new Promise((resolve, reject) => {
@@ -58,7 +59,15 @@ const getCoursem = (requester) => {
     return new Promise((resolve, reject) => {
         const role = Number(requester.role);
         let query = "";
+        let params = [];
         if (role == 101) {
+            if (!hasCenterScope(requester)) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.'
+                });
+            }
             query = `
                 SELECT 
                     cd.certificate_id,
@@ -67,13 +76,15 @@ const getCoursem = (requester) => {
                     bd.batch_start_date,
                     bd.batch_end_date,
                     ca.access_status 
-                FROM batch_data bd
-                RIGHT JOIN certification_data cd 
+                FROM certification_data cd
+                LEFT JOIN batch_data bd
                     ON bd.certification_data @> to_jsonb(cd.certificate_id::text)
-                RIGHT JOIN course_availability ca 
+                    AND bd.centre_id = $1
+                JOIN course_availability ca 
                     ON trim(both '"' from cd.certificate_id::text) = trim(both '"' from ca.certificate_id::text)
                 WHERE ca.access_status = true;
             `;
+            params = [requester.centre_id];
         } else if (role === 99) {
             // Super Admin Query
             query = `
@@ -82,6 +93,13 @@ const getCoursem = (requester) => {
                 FROM certification_data;
             `;
         } else if ([103, 102].includes(role)) {
+            if (!hasCenterScope(requester)) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 401,
+                    message: 'Your account is not linked to a scan center.'
+                });
+            }
             query = `
                 SELECT 
                     cd.certificate_id,
@@ -90,13 +108,15 @@ const getCoursem = (requester) => {
                     bd.batch_start_date,
                     bd.batch_end_date,
                     ca.access_status 
-                FROM batch_data bd
-                RIGHT JOIN certification_data cd 
+                FROM certification_data cd
+                LEFT JOIN batch_data bd
                     ON bd.certification_data @> to_jsonb(cd.certificate_id::text)
-                RIGHT JOIN course_availability ca 
+                    AND bd.centre_id = $1
+                JOIN course_availability ca 
                     ON trim(both '"' from cd.certificate_id::text) = trim(both '"' from ca.certificate_id::text)
                 WHERE ca.access_status = true;
             `;
+            params = [requester.centre_id];
         } else {
             // Unauthorized
             return resolve({
@@ -105,7 +125,7 @@ const getCoursem = (requester) => {
                 message: 'You do not have permission to access this course data.'
             });
         }
-        client.query(query, (err, result) => {
+        client.query(query, params, (err, result) => {
             if (err) {
                 return reject(err);
             } else {

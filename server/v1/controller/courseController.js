@@ -21,6 +21,9 @@ const getCoursesC = async(req, res) => {
     try
     {
         const result = await getCoursem(requester)
+        if (result.code) {
+            return res.status(result.code).json(result);
+        }
         res.status(200).json({
                 code: 200,
                 status: 'Success',
