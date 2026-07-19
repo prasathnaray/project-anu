@@ -4452,7 +4452,7 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Principles of ultrasound::Imaging modes': 5,
     'Principles of ultrasound::Interaction of ultrasound waves': 6,
     'Principles of ultrasound::Interaction': 7,
-    'Principles of ultrasound::Interaction - ultrasound waves': 7,
+    'Principles of ultrasound::Interaction - ultrasound waves': 6,
     'Principles of ultrasound::7. iNTERACTION Activity': 8,
     'Principles of ultrasound::Echogenicity': 9,
     'Principles of ultrasound::Image optimization': 10,
@@ -4494,6 +4494,7 @@ const RESOURCE_ORDER = Object.fromEntries(
 );
 
 const isBpdHcScope = (value = '') => normalizeModuleSortLabel(value) === 'BPD & HC';
+const isPrinciplesOfUltrasoundScope = (value = '') => normalizeModuleSortLabel(value) === 'Principles of ultrasound';
 const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC'].includes(normalizeModuleSortLabel(value));
 
 const getAcResourceSortIndex = (topic, resourceName) => {
@@ -4707,7 +4708,6 @@ const TOPIC_ORDER = [
   'Image formation',
   'Imaging modes',
   'Interaction of ultrasound waves',
-  'Interaction - ultrasound waves',
   'Interaction Activity',
   'Echogenicity',
   'Image optimization',
@@ -4790,7 +4790,6 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
       'Image formation',
       'Imaging modes',
       'Interaction of ultrasound waves',
-      'Interaction - ultrasound waves',
       'Interaction Activity',
       'Echogenicity',
       'Image optimization',
@@ -4932,10 +4931,40 @@ const AC_TOPIC_BY_RESOURCE = Object.fromEntries(
   }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
 );
 
+const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = Object.fromEntries(
+  Object.entries({
+    'Interaction': 'Interaction of ultrasound waves',
+    'Interaction - ultrasound waves': 'Interaction of ultrasound waves',
+  }).map(([topic, canonicalTopic]) => [normalizeSortKey(topic), canonicalTopic])
+);
+
+const PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS = Object.fromEntries(
+  Object.entries({
+    'Interaction': 'Interaction of ultrasound waves',
+    'Interaction - ultrasound waves': 'Interaction of ultrasound waves',
+  }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
+);
+
+const getDisplayResourceName = (moduleLabel, resourceName) => {
+  if (isPrinciplesOfUltrasoundScope(moduleLabel)) {
+    return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
+  }
+
+  return resourceName;
+};
+
 const getDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
   const normalizedModule = normalizeModuleSortLabel(moduleLabel);
   const normalizedTopic = normalizeSortKey(topic);
   const normalizedResource = normalizeSortKey(resourceName);
+
+  if (normalizedModule === 'Principles of ultrasound') {
+    return (
+      PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizedTopic] ||
+      PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizedResource] ||
+      topic
+    );
+  }
 
   if (normalizedModule === 'AC') {
     if (
@@ -5255,17 +5284,18 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     const typeKey          = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
     const moduleLabel      = normalizeModuleSortLabel(unit_name || course_name || '');
     const resourceName     = (item.resource_name || '').trim();
+    const displayResourceName = getDisplayResourceName(moduleLabel, resourceName);
     const resourceTopic    = getDisplayResourceTopic(moduleLabel, item.resource_topic || '', resourceName);
     const completionSource = typeKey === 'resource'
-      ? deriveCompletionSource(resourceName, resourceTopic)
+      ? deriveCompletionSource(displayResourceName, resourceTopic)
       : null;
     const isDone = completionMap[item.resource_id] === true;
     const activityScore = activityScoreMap.get(item.resource_id);
     const isMindSparkResource = isMindSpark(item.resource_name || '');
 
-    resourcesByLMID[learning_module_id].push({
+    const resourceRow = {
       id:               item.resource_id,
-      name:             resourceName,
+      name:             displayResourceName,
       type:             typeKey,
       topic:            resourceTopic,
       displayOrder:     item.display_order ?? null,
@@ -5295,7 +5325,25 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
             configuredQuestionCount: Number(activityScore?.configured_question_count || 0),
           }
         : undefined,
-    });
+    };
+
+    const duplicateResource = resourcesByLMID[learning_module_id].find(r =>
+      r.type === resourceRow.type &&
+      normalizeSortKey(r.topic) === normalizeSortKey(resourceRow.topic) &&
+      normalizeSortKey(r.name) === normalizeSortKey(resourceRow.name)
+    );
+
+    if (duplicateResource) {
+      duplicateResource.done = duplicateResource.done || resourceRow.done;
+      duplicateResource.updatedAt = [duplicateResource.updatedAt, resourceRow.updatedAt].filter(Boolean).sort().pop() || null;
+      duplicateResource.reAttempts = [...(duplicateResource.reAttempts || []), ...(resourceRow.reAttempts || [])];
+      if ((resourceRow.activityData?.attempts || 0) > (duplicateResource.activityData?.attempts || 0)) {
+        duplicateResource.activityData = resourceRow.activityData;
+      }
+      return;
+    }
+
+    resourcesByLMID[learning_module_id].push(resourceRow);
   });
 
   // ── Sort modules per certificate ──────────────────────────────────────────

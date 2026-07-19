@@ -2147,8 +2147,8 @@ const UNIT_TOPIC_ORDER = {
     [normalizeOrderToken('Image Formation')]: 4,
     [normalizeOrderToken('Imaging modes')]: 5,
     [normalizeOrderToken('Interaction of ultrasound waves')]: 6,
-    [normalizeOrderToken('Interaction')]: 7,
-    [normalizeOrderToken('Interaction - ultrasound waves')]: 7,
+    [normalizeOrderToken('Interaction')]: 6,
+    [normalizeOrderToken('Interaction - ultrasound waves')]: 6,
     [normalizeOrderToken('Interaction Activity')]: 8,
     [normalizeOrderToken('7. iNTERACTION Activity')]: 8,
     [normalizeOrderToken('Echogenicity')]: 9,
@@ -2502,12 +2502,40 @@ const isBpdHcOrderScope = (unitName = '') => {
 };
 
 const isAcOrderScope = (unitName = '') => normalizeOrderToken(unitName).startsWith(normalizeOrderToken('AC'));
+const isPrinciplesOfUltrasoundOrderScope = (unitName = '') =>
+  normalizeOrderToken(unitName) === normalizeOrderToken('Principles of ultrasound');
 
 const isMappedOrderScope = (unitName = '') => {
   return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName);
 };
 
+const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = {
+  [normalizeOrderToken('Interaction')]: 'Interaction of ultrasound waves',
+  [normalizeOrderToken('Interaction - ultrasound waves')]: 'Interaction of ultrasound waves',
+};
+
+const PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS = {
+  [normalizeOrderToken('Interaction')]: 'Interaction of ultrasound waves',
+  [normalizeOrderToken('Interaction - ultrasound waves')]: 'Interaction of ultrasound waves',
+};
+
+const getDisplayResourceName = (unitName, resourceName) => {
+  if (isPrinciplesOfUltrasoundOrderScope(unitName)) {
+    return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
+  }
+
+  return resourceName;
+};
+
 const getDisplayResourceTopic = (unitName, resourceTopic, resourceName) => {
+  if (isPrinciplesOfUltrasoundOrderScope(unitName)) {
+    return (
+      PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizeOrderToken(resourceTopic)] ||
+      PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizeOrderToken(resourceName)] ||
+      resourceTopic
+    );
+  }
+
   if (isAcOrderScope(unitName)) {
     const resourceToken = normalizeOrderToken(resourceName);
     const topicToken = normalizeOrderToken(resourceTopic);
@@ -2608,15 +2636,34 @@ const buildCertificateTree = (rows) => {
     }
     const unit = mod.units[unit_name];
 
-    const leaf = { resource_id, resource_name, display_order, is_completed: is_completed ?? false };
-    const displayResourceTopic = getDisplayResourceTopic(unit_name || course_name, resource_topic, resource_name);
+    const unitLabel = unit_name || course_name;
+    const displayResourceName = getDisplayResourceName(unitLabel, resource_name);
+    const leaf = { resource_id, resource_name: displayResourceName, display_order, is_completed: is_completed ?? false };
+    const displayResourceTopic = getDisplayResourceTopic(unitLabel, resource_topic, resource_name);
 
     if (resource_type === 'Learning Resource') {
-      unit.learning_resources.total += 1;
-      if (is_completed) unit.learning_resources.completed += 1;
       if (!unit.learning_resources.items[displayResourceTopic]) {
         unit.learning_resources.items[displayResourceTopic] = { resource_topic: displayResourceTopic, resources: [] };
       }
+
+      const existingLeaf = unit.learning_resources.items[displayResourceTopic].resources.find(resource =>
+        normalizeOrderToken(resource.resource_name) === normalizeOrderToken(leaf.resource_name)
+      );
+
+      if (existingLeaf) {
+        if (!existingLeaf.is_completed && is_completed) {
+          unit.learning_resources.completed += 1;
+        }
+        existingLeaf.is_completed = existingLeaf.is_completed || (is_completed ?? false);
+        existingLeaf.display_order = Math.min(
+          Number.isFinite(Number(existingLeaf.display_order)) ? Number(existingLeaf.display_order) : 99,
+          Number.isFinite(Number(display_order)) ? Number(display_order) : 99
+        );
+        continue;
+      }
+
+      unit.learning_resources.total += 1;
+      if (is_completed) unit.learning_resources.completed += 1;
       unit.learning_resources.items[displayResourceTopic].resources.push(leaf);
 
     } else if (resource_type === 'Image Interpretation') {
