@@ -4242,14 +4242,20 @@ import APP_URL from '../API/config';
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const BASE_URL       = APP_URL || '';
-const BATCH_API_BASE = 'https://api.hticlab.org/api/v1/batch-individual';
+const BATCH_API_BASE = `${BASE_URL}/api/v1/batch-individual`;
 const CERT_LABEL_MAP = {
   '8264bc83-1d80-47ac-aa6b-ca021ffb4ace': 'BTC',
   '24d9e2c4-42b0-4133-b801-d8cace4600f5': 'UFC',
 };
 
-const normalizeSortKey = (value = '') =>
+const stripLearningResourceSuffix = (value = '') =>
   String(value)
+    .replace(/\s*-\s*LR\s*\(LMS Animation\)\s*$/i, '')
+    .replace(/\s*-\s*LR\s*$/i, '')
+    .trim();
+
+const normalizeSortKey = (value = '') =>
+  stripLearningResourceSuffix(value)
     .toLowerCase()
     .replace(/\s*\/\s*/g, '/')
     .replace(/\s+/g, ' ')
@@ -4459,16 +4465,30 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Principles of ultrasound::Artifacts': 11,
 
     'Probe Movements::Anatomy planes': 1,
+    'Probe Movements::Anatomy Plane': 1,
+    'Probe Movements::Mindsparks - Anatomical Plane - Quiz': 2,
+    'Probe Movements::Mind Sparks - Anatomical Plane - Quiz': 2,
     'Probe Movements::Mindsparks - Drag & Drop': 2,
     'Probe Movements::Types of probe': 3,
-    'Probe Movements::Mindsparks - Quiz': 4,
-    'Probe Movements::Probe Orientation': 5,
-    'Probe Movements::Probe orientation': 5,
-    'Probe Movements::Mindsparks - Picture Pick': 6,
-    'Probe Movements::Probe Movements': 7,
-    'Probe Movements::Drag & Drop - Directional terms': 8,
-    'Probe Movements::True or False - Probe Orientation': 9,
-    'Probe Movements::Probe movements - Real-time': 10,
+    'Probe Movements::Types of Probe': 3,
+    'Probe Movements::Interaction - Probe Selection': 4,
+    'Probe Movements::Mind Sparks - Quiz': 5,
+    'Probe Movements::Mindsparks - Quiz': 5,
+    'Probe Movements::Probe Orientation': 6,
+    'Probe Movements::Probe orientation': 6,
+    'Probe Movements::Mind Sparks - Picture Pick': 7,
+    'Probe Movements::Mindsparks - Picture Pick': 7,
+    'Probe Movements::Probe Movements': 8,
+    'Probe Movements::Mindsparks - Probe Movements': 9,
+    'Probe Movements::Mindsparks - probe movements': 9,
+    'Probe Movements::Mindsparks - Probe movements': 9,
+    'Probe Movements::Mind Sparks - Probe Movements': 9,
+    'Probe Movements::Drag & drop': 10,
+    'Probe Movements::Drag & Drop': 10,
+    'Probe Movements::Drag & Drop - Directional terms': 10,
+    'Probe Movements::True/False': 11,
+    'Probe Movements::True or False - Probe Orientation': 11,
+    'Probe Movements::Probe movements - Real-time': 12,
 
     'Knobology::Ultrasound machine': 1,
     'Knobology::Mindsparks - Quiz': 2,
@@ -4495,7 +4515,8 @@ const RESOURCE_ORDER = Object.fromEntries(
 
 const isBpdHcScope = (value = '') => normalizeModuleSortLabel(value) === 'BPD & HC';
 const isPrinciplesOfUltrasoundScope = (value = '') => normalizeModuleSortLabel(value) === 'Principles of ultrasound';
-const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC'].includes(normalizeModuleSortLabel(value));
+const isProbeMovementsScope = (value = '') => normalizeModuleSortLabel(value) === 'Probe Movements';
+const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC', 'Probe Movements'].includes(normalizeModuleSortLabel(value));
 
 const getAcResourceSortIndex = (topic, resourceName) => {
   const normalizedTopic = normalizeSortKey(topic);
@@ -4603,13 +4624,26 @@ const getResourceSortIndex = (moduleLabel, resourceName, displayOrder, topic = '
     }
   }
 
+  if (
+    isProbeMovementsScope(moduleLabel) &&
+    normalizeSortKey(topic) === normalizeSortKey('Echo Dose') &&
+    normalizeSortKey(resourceName) === normalizeSortKey('Probe movements')
+  ) {
+    return 12;
+  }
+
   const mappedOrder = RESOURCE_ORDER[normalizeSortKey(`${moduleLabel}::${resourceName}`)];
+  const probeMovementsMappedOrder = isProbeMovementsResourceAlias(resourceName)
+    ? RESOURCE_ORDER[normalizeSortKey(`Probe Movements::${resourceName}`)]
+    : undefined;
 
   if (isMappedOrderScope(moduleLabel) && mappedOrder !== undefined) {
     return mappedOrder;
   }
 
-  return Number.isFinite(Number(displayOrder)) ? Number(displayOrder) : (mappedOrder ?? 999);
+  return Number.isFinite(Number(displayOrder))
+    ? Number(displayOrder)
+    : (mappedOrder ?? probeMovementsMappedOrder ?? 999);
 };
 
 const getTopicSortIndex = (moduleLabel, topic) => {
@@ -4713,9 +4747,12 @@ const TOPIC_ORDER = [
   'Image optimization',
   'Artifacts',
   'Anatomy planes',
+  'Anatomy Plane',
   'Types of probe',
+  'Types of Probe',
   'Probe orientation',
   'Probe movements',
+  'Probe Movements',
   'Echo Dose',
   'Ultrasound machine',
   'Functions of knobs',
@@ -4797,9 +4834,12 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
     ],
     'Probe Movements': [
       'Anatomy planes',
+      'Anatomy Plane',
       'Types of probe',
+      'Types of Probe',
       'Probe orientation',
       'Probe movements',
+      'Probe Movements',
       'Echo Dose',
     ],
     Knobology: [
@@ -4945,9 +4985,97 @@ const PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS = Object.fromEntries(
   }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
 );
 
-const getDisplayResourceName = (moduleLabel, resourceName) => {
+const PROBE_MOVEMENTS_TOPIC_BY_RESOURCE = Object.fromEntries(
+  Object.entries({
+    'Anatomy planes': 'Anatomy planes',
+    'Anatomy Plane': 'Anatomy planes',
+    'Mindsparks - Anatomical Plane - Quiz': 'Anatomy planes',
+    'Mind Sparks - Anatomical Plane - Quiz': 'Anatomy planes',
+    'Mindsparks - Drag & Drop': 'Anatomy planes',
+
+    'Types of probe': 'Types of probe',
+    'Types of Probe': 'Types of probe',
+    'Interaction - Probe Selection': 'Types of probe',
+    'Mind Sparks - Quiz': 'Types of probe',
+    'Mindsparks - Quiz': 'Types of probe',
+
+    'Probe Orientation': 'Probe orientation',
+    'Probe orientation': 'Probe orientation',
+    'Mind Sparks - Picture Pick': 'Probe orientation',
+    'Mindsparks - Picture Pick': 'Probe orientation',
+
+    'Probe Movements': 'Probe movements',
+    'Probe movements': 'Probe movements',
+    'Mindsparks - Probe Movements': 'Probe movements',
+    'Mindsparks - probe movements': 'Probe movements',
+    'Mindsparks - Probe movements': 'Probe movements',
+    'Mind Sparks - Probe Movements': 'Probe movements',
+
+    'Drag & drop': 'Echo Dose',
+    'Drag & Drop': 'Echo Dose',
+    'Drag & Drop - Directional terms': 'Echo Dose',
+    'True/False': 'Echo Dose',
+    'True or False - Probe Orientation': 'Echo Dose',
+    'Probe movements - Real-time': 'Echo Dose',
+  }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
+);
+
+const PROBE_MOVEMENTS_RESOURCE_BY_ALIAS = Object.fromEntries(
+  Object.entries({
+    'Anatomy planes': 'Anatomy Plane',
+    'Anatomy Plane': 'Anatomy Plane',
+    'Mindsparks - Drag & Drop': 'Mind Sparks - Anatomical Plane - Quiz',
+    'Mindsparks - Anatomical Plane - Quiz': 'Mind Sparks - Anatomical Plane - Quiz',
+    'Mind Sparks - Anatomical Plane - Quiz': 'Mind Sparks - Anatomical Plane - Quiz',
+
+    'Types of probe': 'Types of probe',
+    'Types of Probe': 'Types of probe',
+    'Interaction - Probe Selection': 'Interaction - Probe Selection',
+    'Mindsparks - Quiz': 'Mind Sparks - Quiz',
+    'Mind Sparks - Quiz': 'Mind Sparks - Quiz',
+
+    'Probe Orientation': 'Probe Orientation',
+    'Probe orientation': 'Probe Orientation',
+    'Mindsparks - Picture Pick': 'Mind Sparks - Picture Pick',
+    'Mind Sparks - Picture Pick': 'Mind Sparks - Picture Pick',
+
+    'Mindsparks - Probe movements': 'Mindsparks - probe movements',
+    'Mindsparks - Probe Movements': 'Mindsparks - probe movements',
+    'Mindsparks - probe movements': 'Mindsparks - probe movements',
+    'Mind Sparks - Probe Movements': 'Mindsparks - probe movements',
+
+    'Drag & Drop - Directional terms': 'Drag & drop',
+    'Drag & Drop': 'Drag & drop',
+    'Drag & drop': 'Drag & drop',
+    'True or False - Probe Orientation': 'True/False',
+    'True / False': 'True/False',
+    'True/False': 'True/False',
+    'Probe movements - Real-time': 'Probe movements',
+  }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
+);
+
+const isProbeMovementsResourceAlias = (resourceName = '') => {
+  const normalizedResource = normalizeSortKey(resourceName);
+  return (
+    normalizedResource === normalizeSortKey('Probe Movements') ||
+    PROBE_MOVEMENTS_RESOURCE_BY_ALIAS[normalizedResource] !== undefined ||
+    PROBE_MOVEMENTS_TOPIC_BY_RESOURCE[normalizedResource] !== undefined
+  );
+};
+
+const getDisplayResourceName = (moduleLabel, resourceName, topic = '') => {
   if (isPrinciplesOfUltrasoundScope(moduleLabel)) {
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
+  }
+
+  if (isProbeMovementsScope(moduleLabel) || isProbeMovementsResourceAlias(resourceName)) {
+    const normalizedResource = normalizeSortKey(resourceName);
+    if (normalizedResource === normalizeSortKey('Probe Movements')) {
+      return normalizeSortKey(topic) === normalizeSortKey('Echo Dose')
+        ? 'Probe movements'
+        : 'Probe Movements';
+    }
+    return PROBE_MOVEMENTS_RESOURCE_BY_ALIAS[normalizedResource] || resourceName;
   }
 
   return resourceName;
@@ -4964,6 +5092,16 @@ const getDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
       PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizedResource] ||
       topic
     );
+  }
+
+  if (normalizedModule === 'Probe Movements' || isProbeMovementsResourceAlias(resourceName)) {
+    if (
+      normalizedResource === normalizeSortKey('Probe Movements') &&
+      normalizedTopic === normalizeSortKey('Echo Dose')
+    ) {
+      return 'Echo Dose';
+    }
+    return PROBE_MOVEMENTS_TOPIC_BY_RESOURCE[normalizedResource] || topic;
   }
 
   if (normalizedModule === 'AC') {
@@ -5284,7 +5422,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     const typeKey          = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
     const moduleLabel      = normalizeModuleSortLabel(unit_name || course_name || '');
     const resourceName     = (item.resource_name || '').trim();
-    const displayResourceName = getDisplayResourceName(moduleLabel, resourceName);
+    const displayResourceName = getDisplayResourceName(moduleLabel, resourceName, item.resource_topic || '');
     const resourceTopic    = getDisplayResourceTopic(moduleLabel, item.resource_topic || '', resourceName);
     const completionSource = typeKey === 'resource'
       ? deriveCompletionSource(displayResourceName, resourceTopic)

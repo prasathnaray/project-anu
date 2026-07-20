@@ -5,6 +5,6 @@ variables:
   - name: token
     value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhZG1pbkBhbnUuaW4iLCJyb2xlIjoiMTAxIiwiaWF0IjoxNzcyNDQ4OTY0fQ.ufDAvzQDBRQL5A_axv-DkdTqvZJK9NsJUde1BwcOLTo
   - name: user_token
-    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3NzI0NzcyNDh9.-jhkaijbaB74r8voEV4k9DhE1mNL4CWRXUzl3bp6qyQ
+    value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiY2VudHJlX2lkIjoiMDhiNjViMjctMDNkZC00MjVlLTgyZDAtY2Y3YWYxMmM3ZWU3IiwiY2VudGVyX25hbWUiOm51bGwsImlhdCI6MTc4NDUzMjE0NX0.cPUEq3YtdwDaqNBszcty1FBzxwMHdCG4iy0w-FsoOAk
   - name: local_base_url
     value: localhost:4004

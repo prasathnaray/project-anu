@@ -156,7 +156,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
 
               {/* the above features are for role 103 below is the updated one */}
               {tokdata.role == 103 && 
-                ["dashboard", "my-Learning", "schedules", "Queries", "Batch"].map((route, i) => {
+                ["dashboard", "my-learning", "schedules", "Queries", "Batch"].map((route, i) => {
                   const items = [
                     { icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
                     { icon: <BookText size={20}/>, label: "My Learning" },

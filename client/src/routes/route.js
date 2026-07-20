@@ -75,6 +75,7 @@ function RoutesPath() {
                             <Route path="/custom-course" element={<CustomCourse />} />
                             <Route path="/reatt-data" element={<ReattData />} />
                             <Route path="/my-learning" element={<MyLearning />} />
+                            <Route path="/my-Learning" element={<MyLearning />} />
                             <Route path="/my-progress" element={<MyProgress />} />
                      </Route>
                     <Route path="*" element={<Login />}/>

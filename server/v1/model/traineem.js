@@ -2108,8 +2108,14 @@ const IMAGE_INTERPRETATION_ORDER = {
   'Measurement': 4,
 };
 
-const normalizeOrderToken = (value = '') =>
+const stripLearningResourceSuffix = (value = '') =>
   String(value)
+    .replace(/\s*-\s*LR\s*\(LMS Animation\)\s*$/i, '')
+    .replace(/\s*-\s*LR\s*$/i, '')
+    .trim();
+
+const normalizeOrderToken = (value = '') =>
+  stripLearningResourceSuffix(value)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
 
@@ -2157,7 +2163,9 @@ const UNIT_TOPIC_ORDER = {
   },
   'Probe Movements': {
     [normalizeOrderToken('Anatomy planes')]: 1,
+    [normalizeOrderToken('Anatomy Plane')]: 1,
     [normalizeOrderToken('Types of probe')]: 2,
+    [normalizeOrderToken('Types of Probe')]: 2,
     [normalizeOrderToken('Probe orientation')]: 3,
     [normalizeOrderToken('Probe movements')]: 4,
     [normalizeOrderToken('Echo Dose')]: 5,
@@ -2224,16 +2232,18 @@ const makeResourceOrderKey = (unitName, topicName, resourceName) =>
   `${normalizeOrderToken(unitName)}::${normalizeOrderToken(topicName)}::${normalizeOrderToken(resourceName)}`;
 
 const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
-  { units: ['Probe Movements'], topics: ['Anatomy planes'], resources: ['Anatomy planes'], order: 1 },
-  { units: ['Probe Movements'], topics: ['Anatomy planes'], resources: ['Mindsparks - Drag & Drop'], order: 2 },
-  { units: ['Probe Movements'], topics: ['Types of probe'], resources: ['Types of probe'], order: 1 },
-  { units: ['Probe Movements'], topics: ['Types of probe'], resources: ['Mindsparks - Quiz'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Anatomy planes', 'Anatomy Plane'], resources: ['Anatomy planes', 'Anatomy Plane'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Anatomy planes', 'Anatomy Plane'], resources: ['Mindsparks - Drag & Drop', 'Mindsparks - Anatomical Plane - Quiz', 'Mind Sparks - Anatomical Plane - Quiz'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Types of probe', 'Types of Probe'], resources: ['Types of probe', 'Types of Probe'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Types of probe', 'Types of Probe'], resources: ['Interaction - Probe Selection'], order: 2 },
+  { units: ['Probe Movements'], topics: ['Types of probe', 'Types of Probe'], resources: ['Mindsparks - Quiz', 'Mind Sparks - Quiz'], order: 3 },
   { units: ['Probe Movements'], topics: ['Probe orientation'], resources: ['Probe Orientation'], order: 1 },
   { units: ['Probe Movements'], topics: ['Probe orientation'], resources: ['Mindsparks - Picture Pick'], order: 2 },
-  { units: ['Probe Movements'], topics: ['Probe movements'], resources: ['Probe Movements'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Probe movements', 'Probe Movements'], resources: ['Probe Movements'], order: 1 },
+  { units: ['Probe Movements'], topics: ['Probe movements', 'Probe Movements'], resources: ['Mindsparks - Probe movements', 'Mindsparks - Probe Movements', 'Mindsparks - probe movements', 'Mind Sparks - Probe Movements'], order: 2 },
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Drag & Drop - Directional terms'], order: 1 },
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['True or False - Probe Orientation'], order: 2 },
-  { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Probe movements - Real-time'], order: 3 },
+  { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Probe movements - Real-time', 'Probe movements'], order: 3 },
   { units: ['Knobology'], topics: ['Ultrasound machine'], resources: ['Ultrasound machine'], order: 1 },
   { units: ['Knobology'], topics: ['Ultrasound machine'], resources: ['Mindsparks - Quiz'], order: 2 },
   { units: ['Knobology'], topics: ['Functions of knobs'], resources: ['Functions of knobs'], order: 1 },
@@ -2504,9 +2514,11 @@ const isBpdHcOrderScope = (unitName = '') => {
 const isAcOrderScope = (unitName = '') => normalizeOrderToken(unitName).startsWith(normalizeOrderToken('AC'));
 const isPrinciplesOfUltrasoundOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Principles of ultrasound');
+const isProbeMovementsOrderScope = (unitName = '') =>
+  normalizeOrderToken(unitName) === normalizeOrderToken('Probe Movements');
 
 const isMappedOrderScope = (unitName = '') => {
-  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName);
+  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName);
 };
 
 const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = {
@@ -2519,9 +2531,86 @@ const PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS = {
   [normalizeOrderToken('Interaction - ultrasound waves')]: 'Interaction of ultrasound waves',
 };
 
-const getDisplayResourceName = (unitName, resourceName) => {
+const PROBE_MOVEMENTS_TOPIC_BY_RESOURCE = {
+  [normalizeOrderToken('Anatomy planes')]: 'Anatomy planes',
+  [normalizeOrderToken('Anatomy Plane')]: 'Anatomy planes',
+  [normalizeOrderToken('Mindsparks - Anatomical Plane - Quiz')]: 'Anatomy planes',
+  [normalizeOrderToken('Mind Sparks - Anatomical Plane - Quiz')]: 'Anatomy planes',
+  [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Anatomy planes',
+
+  [normalizeOrderToken('Types of probe')]: 'Types of probe',
+  [normalizeOrderToken('Types of Probe')]: 'Types of probe',
+  [normalizeOrderToken('Interaction - Probe Selection')]: 'Types of probe',
+  [normalizeOrderToken('Mind Sparks - Quiz')]: 'Types of probe',
+  [normalizeOrderToken('Mindsparks - Quiz')]: 'Types of probe',
+
+  [normalizeOrderToken('Probe Orientation')]: 'Probe orientation',
+  [normalizeOrderToken('Probe orientation')]: 'Probe orientation',
+  [normalizeOrderToken('Mind Sparks - Picture Pick')]: 'Probe orientation',
+  [normalizeOrderToken('Mindsparks - Picture Pick')]: 'Probe orientation',
+
+  [normalizeOrderToken('Probe Movements')]: 'Probe movements',
+  [normalizeOrderToken('Probe movements')]: 'Probe movements',
+  [normalizeOrderToken('Mindsparks - Probe Movements')]: 'Probe movements',
+  [normalizeOrderToken('Mindsparks - probe movements')]: 'Probe movements',
+  [normalizeOrderToken('Mindsparks - Probe movements')]: 'Probe movements',
+  [normalizeOrderToken('Mind Sparks - Probe Movements')]: 'Probe movements',
+
+  [normalizeOrderToken('Drag & drop')]: 'Echo Dose',
+  [normalizeOrderToken('Drag & Drop')]: 'Echo Dose',
+  [normalizeOrderToken('Drag & Drop - Directional terms')]: 'Echo Dose',
+  [normalizeOrderToken('True/False')]: 'Echo Dose',
+  [normalizeOrderToken('True / False')]: 'Echo Dose',
+  [normalizeOrderToken('True or False - Probe Orientation')]: 'Echo Dose',
+  [normalizeOrderToken('Probe movements - Real-time')]: 'Echo Dose',
+};
+
+const PROBE_MOVEMENTS_RESOURCE_BY_ALIAS = {
+  [normalizeOrderToken('Anatomy planes')]: 'Anatomy Plane',
+  [normalizeOrderToken('Anatomy Plane')]: 'Anatomy Plane',
+  [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Mind Sparks - Anatomical Plane - Quiz',
+  [normalizeOrderToken('Mindsparks - Anatomical Plane - Quiz')]: 'Mind Sparks - Anatomical Plane - Quiz',
+  [normalizeOrderToken('Mind Sparks - Anatomical Plane - Quiz')]: 'Mind Sparks - Anatomical Plane - Quiz',
+
+  [normalizeOrderToken('Types of probe')]: 'Types of probe',
+  [normalizeOrderToken('Types of Probe')]: 'Types of probe',
+  [normalizeOrderToken('Interaction - Probe Selection')]: 'Interaction - Probe Selection',
+  [normalizeOrderToken('Mindsparks - Quiz')]: 'Mind Sparks - Quiz',
+  [normalizeOrderToken('Mind Sparks - Quiz')]: 'Mind Sparks - Quiz',
+
+  [normalizeOrderToken('Probe Orientation')]: 'Probe Orientation',
+  [normalizeOrderToken('Probe orientation')]: 'Probe Orientation',
+  [normalizeOrderToken('Mindsparks - Picture Pick')]: 'Mind Sparks - Picture Pick',
+  [normalizeOrderToken('Mind Sparks - Picture Pick')]: 'Mind Sparks - Picture Pick',
+
+  [normalizeOrderToken('Mindsparks - Probe movements')]: 'Mindsparks - probe movements',
+  [normalizeOrderToken('Mindsparks - Probe Movements')]: 'Mindsparks - probe movements',
+  [normalizeOrderToken('Mindsparks - probe movements')]: 'Mindsparks - probe movements',
+  [normalizeOrderToken('Mind Sparks - Probe Movements')]: 'Mindsparks - probe movements',
+
+  [normalizeOrderToken('Drag & Drop - Directional terms')]: 'Drag & drop',
+  [normalizeOrderToken('Drag & Drop')]: 'Drag & drop',
+  [normalizeOrderToken('Drag & drop')]: 'Drag & drop',
+  [normalizeOrderToken('True or False - Probe Orientation')]: 'True/False',
+  [normalizeOrderToken('True / False')]: 'True/False',
+  [normalizeOrderToken('True/False')]: 'True/False',
+  [normalizeOrderToken('Probe movements - Real-time')]: 'Probe movements',
+};
+
+const getDisplayResourceName = (unitName, resourceName, resourceTopic = '') => {
   if (isPrinciplesOfUltrasoundOrderScope(unitName)) {
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
+  }
+
+  if (isProbeMovementsOrderScope(unitName)) {
+    const resourceToken = normalizeOrderToken(resourceName);
+    if (resourceToken === normalizeOrderToken('Probe Movements')) {
+      return normalizeOrderToken(resourceTopic) === normalizeOrderToken('Echo Dose')
+        ? 'Probe movements'
+        : 'Probe Movements';
+    }
+
+    return PROBE_MOVEMENTS_RESOURCE_BY_ALIAS[resourceToken] || resourceName;
   }
 
   return resourceName;
@@ -2550,6 +2639,18 @@ const getDisplayResourceTopic = (unitName, resourceTopic, resourceName) => {
     }
 
     return AC_TOPIC_BY_RESOURCE[resourceToken] || resourceTopic;
+  }
+
+  if (isProbeMovementsOrderScope(unitName)) {
+    const resourceToken = normalizeOrderToken(resourceName);
+    if (
+      resourceToken === normalizeOrderToken('Probe Movements') &&
+      normalizeOrderToken(resourceTopic) === normalizeOrderToken('Echo Dose')
+    ) {
+      return 'Echo Dose';
+    }
+
+    return PROBE_MOVEMENTS_TOPIC_BY_RESOURCE[resourceToken] || resourceTopic;
   }
 
   if (!isBpdHcOrderScope(unitName)) {
@@ -2637,7 +2738,7 @@ const buildCertificateTree = (rows) => {
     const unit = mod.units[unit_name];
 
     const unitLabel = unit_name || course_name;
-    const displayResourceName = getDisplayResourceName(unitLabel, resource_name);
+    const displayResourceName = getDisplayResourceName(unitLabel, resource_name, resource_topic);
     const leaf = { resource_id, resource_name: displayResourceName, display_order, is_completed: is_completed ?? false };
     const displayResourceTopic = getDisplayResourceTopic(unitLabel, resource_topic, resource_name);
 
