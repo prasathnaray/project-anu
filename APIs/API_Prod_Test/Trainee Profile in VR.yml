@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://{{local_base_url}}/api/v1/trainee/4ef474a4-3dd3-4d35-bfdf-40039b8a5be9?isVr=true
+  url: http://{{base_url_prod}}/api/v1/trainee/4ef474a4-3dd3-4d35-bfdf-40039b8a5be9?isVr=true
   params:
     - name: isVr
       value: "true"
@@ -15,7 +15,7 @@ http:
     data: ""
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJzaGFoQGdtYWlsLmNvbSIsInJvbGUiOiIxMDMiLCJpYXQiOjE3ODA4OTYzNzN9.EWRuynvATbSi7sLmovAQSzxf-wbwG0H2p6SxHGoSr9Q
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiY2VudHJlX2lkIjoiMDhiNjViMjctMDNkZC00MjVlLTgyZDAtY2Y3YWYxMmM3ZWU3IiwiY2VudGVyX25hbWUiOm51bGwsImlhdCI6MTc4NDUzOTQyNH0.-7Hx-x8TymSNGwwlNTxG6aBzi1G-Oc9FC2ThyiOOIx0
 
 settings:
   encodeUrl: true

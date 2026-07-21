@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://{{local_base_url}}/api/v1/submit-prac-test
+  url: http://{{base_url_prod}}/api/v1/submit-prac-test
   body:
     type: multipart-form
     data:
@@ -14,7 +14,7 @@ http:
         value: practice
       - name: sessionNumber
         type: text
-        value: "1"
+        value: "3"
       - name: userImages_1
         type: file
         value:
@@ -206,13 +206,13 @@ http:
           }
       - name: resource_id
         type: text
-        value: b0f54440-ffaa-4f85-9dba-6c8347052208
+        value: 839fbb16-b4fe-4365-af05-8fd4f995de2e
       - name: session_id
         type: text
-        value: a37eec6c-b702-481f-b1e0-dfea3e7888b5
+        value: b0f54450-ffba-4f55-9dba-7c6786075328
   auth:
     type: bearer
-    token: "{{user_token}}"
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJrYW1hbEBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiY2VudHJlX2lkIjoiZmFmMjUwYzItNjcyOC00MTVkLWJiY2ItOTczOTNjNDM0MmQ1IiwiY2VudGVyX25hbWUiOm51bGwsImlhdCI6MTc4NDU0NDE2MX0.uD4JHC4sNFe-nPgt7gFPhNfmwT9UWYCxwFY_1FGeaQY
 
 settings:
   encodeUrl: true

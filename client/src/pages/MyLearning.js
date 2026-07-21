@@ -4461,8 +4461,7 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Principles of ultrasound::Interaction - ultrasound waves': 6,
     'Principles of ultrasound::7. iNTERACTION Activity': 8,
     'Principles of ultrasound::Echogenicity': 9,
-    'Principles of ultrasound::Image optimization': 10,
-    'Principles of ultrasound::Artifacts': 11,
+    'Principles of ultrasound::Artifacts': 10,
 
     'Probe Movements::Anatomy planes': 1,
     'Probe Movements::Anatomy Plane': 1,
@@ -4744,7 +4743,6 @@ const TOPIC_ORDER = [
   'Interaction of ultrasound waves',
   'Interaction Activity',
   'Echogenicity',
-  'Image optimization',
   'Artifacts',
   'Anatomy planes',
   'Anatomy Plane',
@@ -4829,7 +4827,6 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
       'Interaction of ultrasound waves',
       'Interaction Activity',
       'Echogenicity',
-      'Image optimization',
       'Artifacts',
     ],
     'Probe Movements': [

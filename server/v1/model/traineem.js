@@ -2158,8 +2158,7 @@ const UNIT_TOPIC_ORDER = {
     [normalizeOrderToken('Interaction Activity')]: 8,
     [normalizeOrderToken('7. iNTERACTION Activity')]: 8,
     [normalizeOrderToken('Echogenicity')]: 9,
-    [normalizeOrderToken('Image optimization')]: 10,
-    [normalizeOrderToken('Artifacts')]: 11,
+    [normalizeOrderToken('Artifacts')]: 10,
   },
   'Probe Movements': {
     [normalizeOrderToken('Anatomy planes')]: 1,

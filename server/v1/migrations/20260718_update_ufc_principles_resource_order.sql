@@ -49,25 +49,12 @@ BEGIN
           AND lower(resource_name) = lower('7. iNTERACTION Activity')
     );
 
-    INSERT INTO public.resource_data (
-        learning_module_id,
-        resource_type,
-        resource_topic,
-        resource_name,
-        display_order
-    )
-    SELECT
-        v_learning_module_id,
-        'Learning Resource',
-        'Image optimization',
-        'Image optimization',
-        10
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM public.resource_data
-        WHERE learning_module_id = v_learning_module_id
-          AND lower(resource_name) = lower('Image optimization')
-    );
+    DELETE FROM public.resource_data
+    WHERE learning_module_id = v_learning_module_id
+      AND (
+        lower(trim(resource_name)) = lower('Image optimization')
+        OR lower(trim(resource_topic)) = lower('Image optimization')
+      );
 
     UPDATE public.resource_data
     SET display_order = CASE lower(resource_name)
@@ -80,8 +67,7 @@ BEGIN
         WHEN lower('Interaction - ultrasound waves') THEN 7
         WHEN lower('7. iNTERACTION Activity') THEN 8
         WHEN lower('Echogenicity') THEN 9
-        WHEN lower('Image optimization') THEN 10
-        WHEN lower('Artifacts') THEN 11
+        WHEN lower('Artifacts') THEN 10
         ELSE display_order
     END,
     resource_topic = CASE lower(resource_name)
@@ -100,7 +86,6 @@ BEGIN
         lower('Interaction - ultrasound waves'),
         lower('7. iNTERACTION Activity'),
         lower('Echogenicity'),
-        lower('Image optimization'),
         lower('Artifacts')
       );
 END $$;
