@@ -4490,13 +4490,14 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Probe Movements::Probe movements - Real-time': 12,
 
     'Knobology::Ultrasound machine': 1,
-    'Knobology::Mindsparks - Quiz': 2,
-    'Knobology::Functions of knobs': 3,
-    'Knobology::Mindsparks - Drag & Drop': 4,
-    'Knobology::Imaging Modes': 5,
-    'Knobology::Mindsparks - True/False': 6,
-    'Knobology::Echo Dose - Match': 7,
-    'Knobology::Echo Dose - Crossword': 8,
+    'Knobology::Interaction - Ultrasound Machine Interaction': 2,
+    'Knobology::Mind Sparks - US Machine - Quiz': 4,
+    'Knobology::Function of knobs': 1,
+    'Knobology::Interaction - Knobology Interaction Activity': 3,
+    'Knobology::Imaging modes': 1,
+    'Knobology::MindSparks - Imaging Modes - True / False': 2,
+    'Knobology::Knobs - Match': 1,
+    'Knobology::Knobs & Machine - Crossword Puzzle': 2,
 
     'Morphology::Image formation & sector orientation': 1,
     'Morphology::Mind Sparks - MCQ': 2,
@@ -4515,7 +4516,7 @@ const RESOURCE_ORDER = Object.fromEntries(
 const isBpdHcScope = (value = '') => normalizeModuleSortLabel(value) === 'BPD & HC';
 const isPrinciplesOfUltrasoundScope = (value = '') => normalizeModuleSortLabel(value) === 'Principles of ultrasound';
 const isProbeMovementsScope = (value = '') => normalizeModuleSortLabel(value) === 'Probe Movements';
-const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC', 'Probe Movements'].includes(normalizeModuleSortLabel(value));
+const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC', 'Probe Movements', 'Knobology'].includes(normalizeModuleSortLabel(value));
 
 const getAcResourceSortIndex = (topic, resourceName) => {
   const normalizedTopic = normalizeSortKey(topic);
@@ -4840,9 +4841,9 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
       'Echo Dose',
     ],
     Knobology: [
-      'Ultrasound machine',
-      'Functions of knobs',
-      'Imaging modes',
+      'Overview of ultrasound machine',
+      'Function of the Knobs',
+      'Imaging Modes',
       'Echo Dose',
     ],
     Morphology: [
@@ -5051,6 +5052,41 @@ const PROBE_MOVEMENTS_RESOURCE_BY_ALIAS = Object.fromEntries(
   }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
 );
 
+const KNOBLOGY_TOPIC_BY_RESOURCE = Object.fromEntries(
+  Object.entries({
+    'Ultrasound machine': 'Overview of ultrasound machine',
+    'Interaction - Ultrasound Machine Interaction': 'Function of the Knobs',
+    'Mindsparks - Quiz': 'Function of the Knobs',
+    'Mind Sparks - US Machine - Quiz': 'Function of the Knobs',
+    'Functions of knobs': 'Function of the Knobs',
+    'Function of knobs': 'Function of the Knobs',
+    'Mindsparks - Drag & Drop': 'Function of the Knobs',
+    'Interaction - Knobology Interaction Activity': 'Function of the Knobs',
+    'Imaging Modes': 'Imaging Modes',
+    'Imaging modes': 'Imaging Modes',
+    'Mindsparks - True/False': 'Imaging Modes',
+    'MindSparks - Imaging Modes - True / False': 'Imaging Modes',
+    'Echo Dose - Match': 'Echo Dose',
+    'Knobs - Match': 'Echo Dose',
+    'Echo Dose - Crossword': 'Echo Dose',
+    'Knobs & Machine - Crossword Puzzle': 'Echo Dose',
+  }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
+);
+
+const KNOBLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
+  Object.entries({
+    'Mindsparks - Quiz': 'Mind Sparks - US Machine - Quiz',
+    'Functions of knobs': 'Function of knobs',
+    'Mindsparks - Drag & Drop': 'Interaction - Knobology Interaction Activity',
+    'Imaging Modes': 'Imaging modes',
+    'Mindsparks - True/False': 'MindSparks - Imaging Modes - True / False',
+    'Echo Dose - Match': 'Knobs - Match',
+    'Echo Dose - Crossword': 'Knobs & Machine - Crossword Puzzle',
+  }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
+);
+
+const isKnobologyScope = (value = '') => normalizeModuleSortLabel(value) === 'Knobology';
+
 const isProbeMovementsResourceAlias = (resourceName = '') => {
   const normalizedResource = normalizeSortKey(resourceName);
   return (
@@ -5063,6 +5099,10 @@ const isProbeMovementsResourceAlias = (resourceName = '') => {
 const getDisplayResourceName = (moduleLabel, resourceName, topic = '') => {
   if (isPrinciplesOfUltrasoundScope(moduleLabel)) {
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
+  }
+
+  if (isKnobologyScope(moduleLabel)) {
+    return KNOBLOGY_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
   }
 
   if (isProbeMovementsScope(moduleLabel) || isProbeMovementsResourceAlias(resourceName)) {
@@ -5089,6 +5129,10 @@ const getDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
       PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizedResource] ||
       topic
     );
+  }
+
+  if (normalizedModule === 'Knobology') {
+    return KNOBLOGY_TOPIC_BY_RESOURCE[normalizedResource] || topic;
   }
 
   if (normalizedModule === 'Probe Movements' || isProbeMovementsResourceAlias(resourceName)) {
@@ -5358,7 +5402,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
 
   // ── Filter to batch certificate only ─────────────────────────────────────
   const data = allowedCertificateIds.size > 0
-    ? rawData.filter(item => allowedCertificateIds.has(item.certificate_id))
+    ? rawData.filter(item => allowedCertificateIds.has(item.certificate_id) && item.is_hidden !== true)
     : [];
 
   // ── Re-attempt lookup ─────────────────────────────────────────────────────

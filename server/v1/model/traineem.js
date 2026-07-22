@@ -2170,9 +2170,9 @@ const UNIT_TOPIC_ORDER = {
     [normalizeOrderToken('Echo Dose')]: 5,
   },
   Knobology: {
-    [normalizeOrderToken('Ultrasound machine')]: 1,
-    [normalizeOrderToken('Functions of knobs')]: 2,
-    [normalizeOrderToken('Imaging modes')]: 3,
+    [normalizeOrderToken('Overview of ultrasound machine')]: 1,
+    [normalizeOrderToken('Function of the Knobs')]: 2,
+    [normalizeOrderToken('Imaging Modes')]: 3,
     [normalizeOrderToken('Echo Dose')]: 4,
   },
   Morphology: {
@@ -2243,14 +2243,15 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Drag & Drop - Directional terms'], order: 1 },
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['True or False - Probe Orientation'], order: 2 },
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Probe movements - Real-time', 'Probe movements'], order: 3 },
-  { units: ['Knobology'], topics: ['Ultrasound machine'], resources: ['Ultrasound machine'], order: 1 },
-  { units: ['Knobology'], topics: ['Ultrasound machine'], resources: ['Mindsparks - Quiz'], order: 2 },
-  { units: ['Knobology'], topics: ['Functions of knobs'], resources: ['Functions of knobs'], order: 1 },
-  { units: ['Knobology'], topics: ['Functions of knobs'], resources: ['Mindsparks - Drag & Drop'], order: 2 },
-  { units: ['Knobology'], topics: ['Imaging modes'], resources: ['Imaging Modes'], order: 1 },
-  { units: ['Knobology'], topics: ['Imaging modes'], resources: ['Mindsparks - True/False'], order: 2 },
-  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Match'], order: 1 },
-  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Crossword'], order: 2 },
+  { units: ['Knobology'], topics: ['Overview of ultrasound machine'], resources: ['Ultrasound machine'], order: 1 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Interaction - Ultrasound Machine Interaction'], order: 2 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Mindsparks - Quiz', 'Mind Sparks - US Machine - Quiz'], order: 4 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Functions of knobs', 'Function of knobs'], order: 1 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Mindsparks - Drag & Drop', 'Interaction - Knobology Interaction Activity'], order: 3 },
+  { units: ['Knobology'], topics: ['Imaging Modes'], resources: ['Imaging Modes', 'Imaging modes'], order: 1 },
+  { units: ['Knobology'], topics: ['Imaging Modes'], resources: ['Mindsparks - True/False', 'MindSparks - Imaging Modes - True / False'], order: 2 },
+  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Match', 'Knobs - Match'], order: 1 },
+  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Crossword', 'Knobs & Machine - Crossword Puzzle'], order: 2 },
   { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Image formation & sector orientation'], order: 1 },
   { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - MCQ'], order: 2 },
   { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Need for understanding sector orientation'], order: 3 },
@@ -2515,9 +2516,40 @@ const isPrinciplesOfUltrasoundOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Principles of ultrasound');
 const isProbeMovementsOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Probe Movements');
+const isKnobologyOrderScope = (unitName = '') =>
+  normalizeOrderToken(unitName) === normalizeOrderToken('Knobology');
 
 const isMappedOrderScope = (unitName = '') => {
-  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName);
+  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName) || isKnobologyOrderScope(unitName);
+};
+
+const KNOBLOGY_TOPIC_BY_RESOURCE = {
+  [normalizeOrderToken('Ultrasound machine')]: 'Overview of ultrasound machine',
+  [normalizeOrderToken('Interaction - Ultrasound Machine Interaction')]: 'Function of the Knobs',
+  [normalizeOrderToken('Mindsparks - Quiz')]: 'Function of the Knobs',
+  [normalizeOrderToken('Mind Sparks - US Machine - Quiz')]: 'Function of the Knobs',
+  [normalizeOrderToken('Functions of knobs')]: 'Function of the Knobs',
+  [normalizeOrderToken('Function of knobs')]: 'Function of the Knobs',
+  [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Function of the Knobs',
+  [normalizeOrderToken('Interaction - Knobology Interaction Activity')]: 'Function of the Knobs',
+  [normalizeOrderToken('Imaging Modes')]: 'Imaging Modes',
+  [normalizeOrderToken('Imaging modes')]: 'Imaging Modes',
+  [normalizeOrderToken('Mindsparks - True/False')]: 'Imaging Modes',
+  [normalizeOrderToken('MindSparks - Imaging Modes - True / False')]: 'Imaging Modes',
+  [normalizeOrderToken('Echo Dose - Match')]: 'Echo Dose',
+  [normalizeOrderToken('Knobs - Match')]: 'Echo Dose',
+  [normalizeOrderToken('Echo Dose - Crossword')]: 'Echo Dose',
+  [normalizeOrderToken('Knobs & Machine - Crossword Puzzle')]: 'Echo Dose',
+};
+
+const KNOBLOGY_RESOURCE_BY_ALIAS = {
+  [normalizeOrderToken('Mindsparks - Quiz')]: 'Mind Sparks - US Machine - Quiz',
+  [normalizeOrderToken('Functions of knobs')]: 'Function of knobs',
+  [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Interaction - Knobology Interaction Activity',
+  [normalizeOrderToken('Imaging Modes')]: 'Imaging modes',
+  [normalizeOrderToken('Mindsparks - True/False')]: 'MindSparks - Imaging Modes - True / False',
+  [normalizeOrderToken('Echo Dose - Match')]: 'Knobs - Match',
+  [normalizeOrderToken('Echo Dose - Crossword')]: 'Knobs & Machine - Crossword Puzzle',
 };
 
 const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = {
@@ -2601,6 +2633,10 @@ const getDisplayResourceName = (unitName, resourceName, resourceTopic = '') => {
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
   }
 
+  if (isKnobologyOrderScope(unitName)) {
+    return KNOBLOGY_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
+  }
+
   if (isProbeMovementsOrderScope(unitName)) {
     const resourceToken = normalizeOrderToken(resourceName);
     if (resourceToken === normalizeOrderToken('Probe Movements')) {
@@ -2622,6 +2658,10 @@ const getDisplayResourceTopic = (unitName, resourceTopic, resourceName) => {
       PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS[normalizeOrderToken(resourceName)] ||
       resourceTopic
     );
+  }
+
+  if (isKnobologyOrderScope(unitName)) {
+    return KNOBLOGY_TOPIC_BY_RESOURCE[normalizeOrderToken(resourceName)] || resourceTopic;
   }
 
   if (isAcOrderScope(unitName)) {
@@ -3566,6 +3606,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.resource_type,
           rd.resource_topic,
           rd.display_order,
+          COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) AS is_hidden,
           up.user_id AS progress_user_id,
           up.is_completed,
           up.updated_at,
@@ -3573,7 +3614,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           COALESCE(NULLIF(rc.max_reattempt_count::text, '')::int, 0) AS max_reattempt_count
         FROM active_certificates ac
         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
-        JOIN resource_data rd ON rd.learning_module_id = lm.learning_module_id
+        JOIN resource_data rd
+          ON rd.learning_module_id = lm.learning_module_id
+         AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
         LEFT JOIN user_progress up ON up.resourse_id = rd.resource_id
         LEFT JOIN test_reattempts tr ON tr.resource_id = rd.resource_id
         LEFT JOIN reatt_config rc
@@ -3606,7 +3649,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.learning_module_id,
           rd.created_at AS resource_created_at
         FROM progress_data pd
-        LEFT JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+        LEFT JOIN resource_data rd
+          ON pd.resourse_id = rd.resource_id
+         AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
         WHERE pd.user_id = (
           SELECT user_email 
           FROM user_data 
@@ -3671,12 +3716,15 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         ui.user_name, ui.user_profile_photo, ui.user_role,
         lm.certificate_id, lm.course_name, lm.module_name, lm.unit_name, lm.learning_module_id,
         rd.resource_id, rd.resource_name, rd.resource_type, rd.resource_topic, rd.display_order,
+        COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) AS is_hidden,
         pdt.user_id AS progress_user_id,
         pdt.is_completed,
         pdt.updated_at
       FROM user_info ui
       CROSS JOIN learning_module lm
-      LEFT JOIN resource_data rd ON lm.learning_module_id = rd.learning_module_id
+      LEFT JOIN resource_data rd
+        ON lm.learning_module_id = rd.learning_module_id
+       AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
       LEFT JOIN pdt ON pdt.rid = rd.resource_id
       ORDER BY
         lm.course_name,
@@ -3707,7 +3755,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         lm.certificate_id,
         cd.certificate_name
       FROM progress_data pd
-      LEFT JOIN resource_data rd ON pd.resourse_id = rd.resource_id
+      LEFT JOIN resource_data rd
+        ON pd.resourse_id = rd.resource_id
+       AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
       LEFT JOIN learning_module lm ON rd.learning_module_id = lm.learning_module_id
       LEFT JOIN certification_data cd ON lm.certificate_id = cd.certificate_id
       WHERE pd.user_id = (
@@ -3716,6 +3766,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         WHERE people_id = $1
       )
       AND pd.is_completed = TRUE
+      AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
       ORDER BY pd.updated_at DESC NULLS LAST, rd.created_at DESC NULLS LAST
       LIMIT 1;
     `;
@@ -3803,7 +3854,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           AND pdt.is_completed = true
         ) AS completed_image_interpretations
       FROM learning_module lm
-      LEFT JOIN resource_data rd ON lm.learning_module_id = rd.learning_module_id
+      LEFT JOIN resource_data rd
+        ON lm.learning_module_id = rd.learning_module_id
+       AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
       LEFT JOIN pdt ON pdt.rid = rd.resource_id
       GROUP BY lm.learning_module_id, lm.course_name, lm.module_name, lm.unit_name;
     `;

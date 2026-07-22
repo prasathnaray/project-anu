@@ -31,6 +31,7 @@ const MODULES = {
   ufc: [
     { id: 'usp',   label: 'Principles of Ultrasound', course: 'Principles of Ultrasound' },
     { id: 'probe', label: 'Probe Movements',          course: 'Probe Movements', locked: true },
+    { id: 'knobology', label: 'Knobology',              course: 'Knobology' },
   ],
 };
 
@@ -131,6 +132,14 @@ const RESOURCES = {
   usp: [
     { id: 'usp_r1', name: 'Ultrasound Wave Physics', type: 'resource', topic: '', done: false },
     { id: 'usp_t1', name: 'Test 1',                  type: 'test',     topic: '', done: false },
+  ],
+  knobology: [
+    { id: 'knob_r1', name: 'Interaction - Ultrasound Machine Interaction', type: 'resource', topic: 'Function of the Knobs', done: false },
+    { id: 'knob_r2', name: 'Interaction - Knobology Interaction Activity', type: 'resource', topic: 'Function of the Knobs', done: false },
+    { id: 'knob_r3', name: 'Mind Sparks - US Machine - Quiz', type: 'resource', topic: 'Function of the Knobs', done: false },
+    { id: 'knob_r4', name: 'MindSparks - Imaging Modes - True / False', type: 'resource', topic: 'Imaging Modes', done: false },
+    { id: 'knob_r5', name: 'Knobs - Match', type: 'resource', topic: 'Echo Dose', done: false },
+    { id: 'knob_r6', name: 'Knobs & Machine - Crossword Puzzle', type: 'resource', topic: 'Echo Dose', done: false },
   ],
 };
 
