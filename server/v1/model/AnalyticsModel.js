@@ -337,6 +337,8 @@ const ActivityLastScoresM = (requester) => {
             JOIN activity_submissions ass
                 ON ass.session_id  = ls.session_id
                AND ass.resource_id = ls.resource_id
+               -- Some UFC clients reuse a session UUID across trainees.
+               AND ass.user_id     = ls.user_id
             JOIN unique_resources ur ON ur.resource_id = ls.resource_id
             LEFT JOIN configured_mindspark_questions cmq ON cmq.resource_id = ls.resource_id
             LEFT JOIN attempt_counts ac ON ac.resource_id = ls.resource_id
