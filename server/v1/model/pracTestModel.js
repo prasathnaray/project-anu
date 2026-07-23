@@ -638,11 +638,44 @@ const submitSession = async (
 
     // ── Step 1: sessions ────────────────────────────────────────────────────
     currentStep = 1;
-    await dbClient.query(
+    const sessionInsertResult = await dbClient.query(
       `INSERT INTO sessions (id, user_id, session_type, session_number, resource_id)
-       VALUES ($1, $2, $3, $4, $5)`,
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (id) DO NOTHING
+       RETURNING id`,
       [sessionId, userId, sessionType, sessionNumber, resource_id]
     );
+
+    if (sessionInsertResult.rowCount === 0) {
+      const { rows: existingSessions } = await dbClient.query(
+        `SELECT user_id, resource_id, session_type, session_number
+         FROM sessions
+         WHERE id = $1`,
+        [sessionId]
+      );
+      const existing = existingSessions[0];
+      const isSameSubmission =
+        existing?.user_id === userId &&
+        String(existing?.resource_id) === String(resource_id) &&
+        String(existing?.session_type).toLowerCase() === String(sessionType).toLowerCase() &&
+        String(existing?.session_number) === String(sessionNumber);
+
+      if (!isSameSubmission) {
+        await dbClient.query('ROLLBACK');
+        return {
+          status: 'Conflict',
+          code: 409,
+          message: 'session_id already exists for a different submission.',
+        };
+      }
+
+      await dbClient.query('COMMIT');
+      return {
+        status: 'Session Submitted Successfully',
+        code: 201,
+        data: { sessionId, duplicate: true },
+      };
+    }
     console.log('✅ Step 1 done: sessions');
 
     // ── Step 2: plane_identification ────────────────────────────────────────
