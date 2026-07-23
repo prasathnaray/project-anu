@@ -733,15 +733,15 @@ const submitSession = async (
       const userFile     = imageMap[m.type]?.user;
       const expertFile   = imageMap[m.type]?.expert;
 
-      if (!userFile || !expertFile) {
-        throw new Error(`Missing image files for measurement type: ${m.type}`);
-      }
+      const userFilePath = userFile
+        ? `measurement_images/${sessionId}_${m.type}_user_${timestamp}`
+        : null;
+      const expertFilePath = expertFile
+        ? `measurement_images/${sessionId}_${m.type}_expert_${timestamp}`
+        : null;
 
-      const userFilePath   = `measurement_images/${sessionId}_${m.type}_user_${timestamp}`;
-      const expertFilePath = `measurement_images/${sessionId}_${m.type}_expert_${timestamp}`;
-
-      await uploadToStorage(userFilePath, userFile);
-      await uploadToStorage(expertFilePath, expertFile);
+      if (userFile) await uploadToStorage(userFilePath, userFile);
+      if (expertFile) await uploadToStorage(expertFilePath, expertFile);
 
       await dbClient.query(
         `INSERT INTO measurements (

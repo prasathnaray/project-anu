@@ -160,18 +160,6 @@ const pracTestController = async (req, res) => {
         }
     }
 
-    // STEP 3 — validate all measurements have images
-    const missingImages = (payload.measurements || [])
-        .filter(m => !imageMap[m.type]?.user || !imageMap[m.type]?.expert)
-        .map(m => m.type);
-
-    if (missingImages.length) {
-        return res.status(400).json({
-            status: 'Error',
-            message: `Missing images for measurements: ${missingImages.join(', ')}`,
-        });
-    }
-
     try {
         const result = await submitSession(requester, sessionType, sessionNumber, resource_id, session_id, payload, imageMap);
         return res.status(result.code).json(result);
