@@ -130,9 +130,17 @@ const pracTestController = async (req, res) => {
     }
 
     // STEP 1 — build index→type map from payload FIRST
+    // AC images are sent with suffix 2 and FL images with suffix 1.
+    // Other measurement types retain their payload-position-based suffix.
+    const imageIndexByType = {
+        FL: 1,
+        AC: 2,
+    };
     const indexToType = {};
     (payload.measurements || []).forEach((m, i) => {
-        indexToType[i + 1] = m.type; // 1→BPD, 2→HC
+        const normalizedType = String(m.type || '').trim().toUpperCase();
+        const imageIndex = imageIndexByType[normalizedType] || i + 1;
+        indexToType[imageIndex] = m.type;
     });
 
     // STEP 2 — build imageMap using index
@@ -140,7 +148,8 @@ const pracTestController = async (req, res) => {
     const imageMap = {};
 
     for (const [key, file] of Object.entries(rawFiles)) {
-        const match = key.match(/^(user|expert)Images_(\d+)$/);
+        // Accept the current singular field names as well as legacy plural names.
+        const match = key.match(/^(user|expert)Images?_(\d+)$/);
         if (match) {
             const [, role, index] = match;
             const type = indexToType[Number(index)];

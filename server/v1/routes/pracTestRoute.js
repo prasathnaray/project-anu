@@ -23,6 +23,10 @@ const { pracTestController, getPracTestAttemptDetailsController } = require('../
 pracTestRouter.post(
     '/submit-prac-test',
     upload.fields([
+        { name: 'userImage_1',    maxCount: 1 },
+        { name: 'expertImage_1',  maxCount: 1 },
+        { name: 'userImage_2',    maxCount: 1 },
+        { name: 'expertImage_2',  maxCount: 1 },
         { name: 'userImages_1',   maxCount: 1 },
         { name: 'expertImages_1', maxCount: 1 },
         { name: 'userImages_2',   maxCount: 1 },
