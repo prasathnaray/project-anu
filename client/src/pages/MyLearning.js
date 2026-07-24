@@ -4499,16 +4499,19 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Knobology::Knobs - Match': 1,
     'Knobology::Knobs & Machine - Crossword Puzzle': 2,
 
-    'Morphology::Image formation & sector orientation': 1,
+    'Morphology::Mind Sparks - Sector': 2,
     'Morphology::Mind Sparks - MCQ': 2,
+    'Morphology::Mind Sparks - Sector Orientation': 3,
     'Morphology::Need for understanding sector orientation': 3,
+    'Morphology::Interaction - Scanning Planes': 4,
     'Morphology::Mind Sparks - ChatBot': 4,
-    'Morphology::3D to 2D Imaging': 5,
+    'Morphology::Mind Sparks - 3D to 2D': 6,
     'Morphology::Mind Sparks - Scanning': 6,
-    'Morphology::2D to 3D Imaging': 7,
+    'Morphology::2D to 3D - Picture Pick': 8,
     'Morphology::Mind Sparks - Picture Pick': 8,
-    'Morphology::Interaction - Spin Wheel': 9,
+    'Morphology::Sector - Finding with clues': 10,
     'Morphology::Sector Orientation': 10,
+    'Morphology::3D to 2D': 11,
     'Morphology::3D to 2D Prediction': 11,
   }).map(([key, value]) => [normalizeSortKey(key), value])
 );
@@ -4516,7 +4519,8 @@ const RESOURCE_ORDER = Object.fromEntries(
 const isBpdHcScope = (value = '') => normalizeModuleSortLabel(value) === 'BPD & HC';
 const isPrinciplesOfUltrasoundScope = (value = '') => normalizeModuleSortLabel(value) === 'Principles of ultrasound';
 const isProbeMovementsScope = (value = '') => normalizeModuleSortLabel(value) === 'Probe Movements';
-const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC', 'Probe Movements', 'Knobology'].includes(normalizeModuleSortLabel(value));
+const isMorphologyScope = (value = '') => normalizeModuleSortLabel(value) === 'Morphology';
+const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC', 'Probe Movements', 'Knobology', 'Morphology'].includes(normalizeModuleSortLabel(value));
 
 const getAcResourceSortIndex = (topic, resourceName) => {
   const normalizedTopic = normalizeSortKey(topic);
@@ -5085,6 +5089,37 @@ const KNOBLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
   }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
 );
 
+const MORPHOLOGY_TOPIC_BY_RESOURCE = Object.fromEntries(
+  Object.entries({
+    'Mind Sparks - Sector': 'Image Formation & Sector Orientation',
+    'Mind Sparks - MCQ': 'Image Formation & Sector Orientation',
+    'Mind Sparks - Sector Orientation': 'Image Formation & Sector Orientation',
+    'Need for understanding sector orientation': 'Image Formation & Sector Orientation',
+    'Interaction - Scanning Planes': 'Image Formation & Sector Orientation',
+    'Mind Sparks - ChatBot': 'Image Formation & Sector Orientation',
+    'Mind Sparks - 3D to 2D': '3D to 2D Imaging',
+    'Mind Sparks - Scanning': '3D to 2D Imaging',
+    '2D to 3D - Picture Pick': '2D to 3D Imaging',
+    'Mind Sparks - Picture Pick': '2D to 3D Imaging',
+    'Sector - Finding with clues': 'Echo Dose',
+    'Sector Orientation': 'Echo Dose',
+    '3D to 2D': 'Echo Dose',
+    '3D to 2D Prediction': 'Echo Dose',
+  }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
+);
+
+const MORPHOLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
+  Object.entries({
+    'Mind Sparks - MCQ': 'Mind Sparks - Sector',
+    'Need for understanding sector orientation': 'Mind Sparks - Sector Orientation',
+    'Mind Sparks - ChatBot': 'Interaction - Scanning Planes',
+    'Mind Sparks - Scanning': 'Mind Sparks - 3D to 2D',
+    'Mind Sparks - Picture Pick': '2D to 3D - Picture Pick',
+    'Sector Orientation': 'Sector - Finding with clues',
+    '3D to 2D Prediction': '3D to 2D',
+  }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
+);
+
 const isKnobologyScope = (value = '') => normalizeModuleSortLabel(value) === 'Knobology';
 
 const isProbeMovementsResourceAlias = (resourceName = '') => {
@@ -5103,6 +5138,10 @@ const getDisplayResourceName = (moduleLabel, resourceName, topic = '') => {
 
   if (isKnobologyScope(moduleLabel)) {
     return KNOBLOGY_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
+  }
+
+  if (isMorphologyScope(moduleLabel)) {
+    return MORPHOLOGY_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
   }
 
   if (isProbeMovementsScope(moduleLabel) || isProbeMovementsResourceAlias(resourceName)) {
@@ -5133,6 +5172,10 @@ const getDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
 
   if (normalizedModule === 'Knobology') {
     return KNOBLOGY_TOPIC_BY_RESOURCE[normalizedResource] || topic;
+  }
+
+  if (normalizedModule === 'Morphology') {
+    return MORPHOLOGY_TOPIC_BY_RESOURCE[normalizedResource] || topic;
   }
 
   if (normalizedModule === 'Probe Movements' || isProbeMovementsResourceAlias(resourceName)) {

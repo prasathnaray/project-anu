@@ -2252,17 +2252,13 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['Knobology'], topics: ['Imaging Modes'], resources: ['Mindsparks - True/False', 'MindSparks - Imaging Modes - True / False'], order: 2 },
   { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Match', 'Knobs - Match'], order: 1 },
   { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Crossword', 'Knobs & Machine - Crossword Puzzle'], order: 2 },
-  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Image formation & sector orientation'], order: 1 },
-  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - MCQ'], order: 2 },
-  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Need for understanding sector orientation'], order: 3 },
-  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - ChatBot'], order: 4 },
-  { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['3D to 2D Imaging'], order: 1 },
-  { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['Mind Sparks - Scanning'], order: 2 },
-  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['2D to 3D Imaging'], order: 1 },
-  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['Mind Sparks - Picture Pick'], order: 2 },
-  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['Interaction - Spin Wheel'], order: 3 },
-  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['Sector Orientation'], order: 1 },
-  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['3D to 2D Prediction'], order: 2 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - Sector', 'Mind Sparks - MCQ'], order: 1 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - Sector Orientation', 'Need for understanding sector orientation'], order: 2 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Interaction - Scanning Planes', 'Mind Sparks - ChatBot'], order: 3 },
+  { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['Mind Sparks - 3D to 2D', 'Mind Sparks - Scanning'], order: 1 },
+  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['2D to 3D - Picture Pick', 'Mind Sparks - Picture Pick'], order: 1 },
+  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['Sector - Finding with clues', 'Sector Orientation'], order: 1 },
+  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['3D to 2D', '3D to 2D Prediction'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Transthalamic Plane'], order: 1 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Bi-Parietal Diameter'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Head Circumference'], order: 3 },
@@ -2518,9 +2514,11 @@ const isProbeMovementsOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Probe Movements');
 const isKnobologyOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Knobology');
+const isMorphologyOrderScope = (unitName = '') =>
+  normalizeOrderToken(unitName) === normalizeOrderToken('Morphology');
 
 const isMappedOrderScope = (unitName = '') => {
-  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName) || isKnobologyOrderScope(unitName);
+  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName) || isKnobologyOrderScope(unitName) || isMorphologyOrderScope(unitName);
 };
 
 const KNOBLOGY_TOPIC_BY_RESOURCE = {
@@ -2550,6 +2548,33 @@ const KNOBLOGY_RESOURCE_BY_ALIAS = {
   [normalizeOrderToken('Mindsparks - True/False')]: 'MindSparks - Imaging Modes - True / False',
   [normalizeOrderToken('Echo Dose - Match')]: 'Knobs - Match',
   [normalizeOrderToken('Echo Dose - Crossword')]: 'Knobs & Machine - Crossword Puzzle',
+};
+
+const MORPHOLOGY_TOPIC_BY_RESOURCE = {
+  [normalizeOrderToken('Mind Sparks - Sector')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - MCQ')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - Sector Orientation')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Need for understanding sector orientation')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Interaction - Scanning Planes')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - ChatBot')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - 3D to 2D')]: '3D to 2D Imaging',
+  [normalizeOrderToken('Mind Sparks - Scanning')]: '3D to 2D Imaging',
+  [normalizeOrderToken('2D to 3D - Picture Pick')]: '2D to 3D Imaging',
+  [normalizeOrderToken('Mind Sparks - Picture Pick')]: '2D to 3D Imaging',
+  [normalizeOrderToken('Sector - Finding with clues')]: 'Echo Dose',
+  [normalizeOrderToken('Sector Orientation')]: 'Echo Dose',
+  [normalizeOrderToken('3D to 2D')]: 'Echo Dose',
+  [normalizeOrderToken('3D to 2D Prediction')]: 'Echo Dose',
+};
+
+const MORPHOLOGY_RESOURCE_BY_ALIAS = {
+  [normalizeOrderToken('Mind Sparks - MCQ')]: 'Mind Sparks - Sector',
+  [normalizeOrderToken('Need for understanding sector orientation')]: 'Mind Sparks - Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - ChatBot')]: 'Interaction - Scanning Planes',
+  [normalizeOrderToken('Mind Sparks - Scanning')]: 'Mind Sparks - 3D to 2D',
+  [normalizeOrderToken('Mind Sparks - Picture Pick')]: '2D to 3D - Picture Pick',
+  [normalizeOrderToken('Sector Orientation')]: 'Sector - Finding with clues',
+  [normalizeOrderToken('3D to 2D Prediction')]: '3D to 2D',
 };
 
 const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = {
@@ -2637,6 +2662,10 @@ const getDisplayResourceName = (unitName, resourceName, resourceTopic = '') => {
     return KNOBLOGY_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
   }
 
+  if (isMorphologyOrderScope(unitName)) {
+    return MORPHOLOGY_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
+  }
+
   if (isProbeMovementsOrderScope(unitName)) {
     const resourceToken = normalizeOrderToken(resourceName);
     if (resourceToken === normalizeOrderToken('Probe Movements')) {
@@ -2662,6 +2691,10 @@ const getDisplayResourceTopic = (unitName, resourceTopic, resourceName) => {
 
   if (isKnobologyOrderScope(unitName)) {
     return KNOBLOGY_TOPIC_BY_RESOURCE[normalizeOrderToken(resourceName)] || resourceTopic;
+  }
+
+  if (isMorphologyOrderScope(unitName)) {
+    return MORPHOLOGY_TOPIC_BY_RESOURCE[normalizeOrderToken(resourceName)] || resourceTopic;
   }
 
   if (isAcOrderScope(unitName)) {
