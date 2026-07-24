@@ -3,19 +3,20 @@ ALTER TABLE public.resource_data
 
 DO $$
 DECLARE
-    v_certificate_id uuid := '24d9e2c4-42b0-4133-b801-d8cace4600f5';
     v_learning_module_id uuid;
 BEGIN
-    SELECT learning_module_id
+    SELECT lm.learning_module_id
     INTO v_learning_module_id
-    FROM public.learning_module
-    WHERE certificate_id = v_certificate_id
+    FROM public.learning_module lm
+    INNER JOIN public.certification_data cd
+      ON cd.certificate_id = lm.certificate_id
+    WHERE lower(trim(coalesce(cd.certificate_name, ''))) = lower('UFC')
       AND (
-        lower(trim(coalesce(course_name, ''))) = lower('Morphology')
-        OR lower(trim(coalesce(module_name, ''))) = lower('Morphology')
-        OR lower(trim(coalesce(unit_name, ''))) = lower('Morphology')
+        lower(trim(coalesce(lm.course_name, ''))) = lower('Morphology')
+        OR lower(trim(coalesce(lm.module_name, ''))) = lower('Morphology')
+        OR lower(trim(coalesce(lm.unit_name, ''))) = lower('Morphology')
       )
-    ORDER BY created_at ASC
+    ORDER BY lm.created_at ASC
     LIMIT 1;
 
     IF v_learning_module_id IS NULL THEN
@@ -24,20 +25,10 @@ BEGIN
 
     WITH resource_order(alias_name, canonical_name, canonical_topic, sort_order) AS (
         VALUES
-            ('Mind Sparks - MCQ', 'Mind Sparks - Sector', 'Image Formation & Sector Orientation', 1),
-            ('Mind Sparks - Sector', 'Mind Sparks - Sector', 'Image Formation & Sector Orientation', 1),
-            ('Need for understanding sector orientation', 'Mind Sparks - Sector Orientation', 'Image Formation & Sector Orientation', 2),
-            ('Mind Sparks - Sector Orientation', 'Mind Sparks - Sector Orientation', 'Image Formation & Sector Orientation', 2),
-            ('Mind Sparks - ChatBot', 'Interaction - Scanning Planes', 'Image Formation & Sector Orientation', 3),
-            ('Interaction - Scanning Planes', 'Interaction - Scanning Planes', 'Image Formation & Sector Orientation', 3),
-            ('Mind Sparks - Scanning', 'Mind Sparks - 3D to 2D', '3D to 2D Imaging', 1),
-            ('Mind Sparks - 3D to 2D', 'Mind Sparks - 3D to 2D', '3D to 2D Imaging', 1),
-            ('Mind Sparks - Picture Pick', '2D to 3D - Picture Pick', '2D to 3D Imaging', 1),
-            ('2D to 3D - Picture Pick', '2D to 3D - Picture Pick', '2D to 3D Imaging', 1),
-            ('Sector Orientation', 'Sector - Finding with clues', 'Echo Dose', 1),
-            ('Sector - Finding with clues', 'Sector - Finding with clues', 'Echo Dose', 1),
-            ('3D to 2D Prediction', '3D to 2D', 'Echo Dose', 2),
-            ('3D to 2D', '3D to 2D', 'Echo Dose', 2)
+            ('Image Formation and Sector Orientation', 'Image Formation & Sector Orientation', 'Image Formation & Sector Orientation', 1),
+            ('Image Formation & Sector Orientation', 'Image Formation & Sector Orientation', 'Image Formation & Sector Orientation', 1),
+            ('3D to 2D Imaging', '3D to 2D Imaging', '3D to 2D Imaging', 1),
+            ('2D to 3D Imaging', '2D to 3D Imaging', '2D to 3D Imaging', 1)
     )
     UPDATE public.resource_data rd
     SET resource_name = ro.canonical_name,
@@ -70,13 +61,9 @@ BEGIN
            item.resource_name, item.display_order, false
     FROM (
         VALUES
-            ('Learning Resource', 'Image Formation & Sector Orientation', 'Mind Sparks - Sector', 1),
-            ('Learning Resource', 'Image Formation & Sector Orientation', 'Mind Sparks - Sector Orientation', 2),
-            ('Learning Resource', 'Image Formation & Sector Orientation', 'Interaction - Scanning Planes', 3),
-            ('Learning Resource', '3D to 2D Imaging', 'Mind Sparks - 3D to 2D', 1),
-            ('Learning Resource', '2D to 3D Imaging', '2D to 3D - Picture Pick', 1),
-            ('Learning Resource', 'Echo Dose', 'Sector - Finding with clues', 1),
-            ('Learning Resource', 'Echo Dose', '3D to 2D', 2)
+            ('Learning Resource', 'Image Formation & Sector Orientation', 'Image Formation & Sector Orientation', 1),
+            ('Learning Resource', '3D to 2D Imaging', '3D to 2D Imaging', 1),
+            ('Learning Resource', '2D to 3D Imaging', '2D to 3D Imaging', 1)
     ) AS item(resource_type, resource_topic, resource_name, display_order)
     WHERE NOT EXISTS (
         SELECT 1
@@ -87,24 +74,28 @@ BEGIN
 
     UPDATE public.resource_data
     SET is_hidden = lower(trim(coalesce(resource_name, ''))) NOT IN (
-            lower('Mind Sparks - Sector'),
-            lower('Mind Sparks - Sector Orientation'),
-            lower('Interaction - Scanning Planes'),
-            lower('Mind Sparks - 3D to 2D'),
-            lower('2D to 3D - Picture Pick'),
-            lower('Sector - Finding with clues'),
-            lower('3D to 2D')
+            lower('Image Formation & Sector Orientation'),
+            lower('3D to 2D Imaging'),
+            lower('2D to 3D Imaging')
         )
     WHERE learning_module_id = v_learning_module_id
       AND (
         lower(trim(coalesce(resource_type, ''))) = lower('Learning Resource')
+        OR lower(trim(coalesce(resource_type, ''))) LIKE '%mind%spark%'
+        OR lower(trim(coalesce(resource_type, ''))) LIKE '%interaction%'
+        OR lower(trim(coalesce(resource_name, ''))) LIKE '%mind%spark%'
+        OR lower(trim(coalesce(resource_name, ''))) LIKE 'interaction%'
         OR lower(trim(coalesce(resource_name, ''))) IN (
           lower('Image formation & sector orientation'),
           lower('Mind Sparks - MCQ'),
+          lower('Mind Sparks - Sector'),
           lower('Need for understanding sector orientation'),
+          lower('Mind Sparks - Sector Orientation'),
           lower('Mind Sparks - ChatBot'),
+          lower('Interaction - Scanning Planes'),
           lower('3D to 2D Imaging'),
           lower('Mind Sparks - Scanning'),
+          lower('Mind Sparks - 3D to 2D'),
           lower('2D to 3D Imaging'),
           lower('Mind Sparks - Picture Pick'),
           lower('Interaction - Spin Wheel'),

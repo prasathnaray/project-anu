@@ -4499,20 +4499,10 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Knobology::Knobs - Match': 1,
     'Knobology::Knobs & Machine - Crossword Puzzle': 2,
 
-    'Morphology::Mind Sparks - Sector': 2,
-    'Morphology::Mind Sparks - MCQ': 2,
-    'Morphology::Mind Sparks - Sector Orientation': 3,
-    'Morphology::Need for understanding sector orientation': 3,
-    'Morphology::Interaction - Scanning Planes': 4,
-    'Morphology::Mind Sparks - ChatBot': 4,
-    'Morphology::Mind Sparks - 3D to 2D': 6,
-    'Morphology::Mind Sparks - Scanning': 6,
-    'Morphology::2D to 3D - Picture Pick': 8,
-    'Morphology::Mind Sparks - Picture Pick': 8,
-    'Morphology::Sector - Finding with clues': 10,
-    'Morphology::Sector Orientation': 10,
-    'Morphology::3D to 2D': 11,
-    'Morphology::3D to 2D Prediction': 11,
+    'Morphology::Image Formation & Sector Orientation': 1,
+    'Morphology::Image Formation and Sector Orientation': 1,
+    'Morphology::3D to 2D Imaging': 1,
+    'Morphology::2D to 3D Imaging': 1,
   }).map(([key, value]) => [normalizeSortKey(key), value])
 );
 
@@ -4854,7 +4844,6 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
       'Image Formation & Sector Orientation',
       '3D to 2D Imaging',
       '2D to 3D Imaging',
-      'Echo Dose',
     ],
   }).map(([moduleName, topics]) => [
     normalizeSortKey(moduleName),
@@ -5091,32 +5080,16 @@ const KNOBLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
 
 const MORPHOLOGY_TOPIC_BY_RESOURCE = Object.fromEntries(
   Object.entries({
-    'Mind Sparks - Sector': 'Image Formation & Sector Orientation',
-    'Mind Sparks - MCQ': 'Image Formation & Sector Orientation',
-    'Mind Sparks - Sector Orientation': 'Image Formation & Sector Orientation',
-    'Need for understanding sector orientation': 'Image Formation & Sector Orientation',
-    'Interaction - Scanning Planes': 'Image Formation & Sector Orientation',
-    'Mind Sparks - ChatBot': 'Image Formation & Sector Orientation',
-    'Mind Sparks - 3D to 2D': '3D to 2D Imaging',
-    'Mind Sparks - Scanning': '3D to 2D Imaging',
-    '2D to 3D - Picture Pick': '2D to 3D Imaging',
-    'Mind Sparks - Picture Pick': '2D to 3D Imaging',
-    'Sector - Finding with clues': 'Echo Dose',
-    'Sector Orientation': 'Echo Dose',
-    '3D to 2D': 'Echo Dose',
-    '3D to 2D Prediction': 'Echo Dose',
+    'Image Formation & Sector Orientation': 'Image Formation & Sector Orientation',
+    'Image Formation and Sector Orientation': 'Image Formation & Sector Orientation',
+    '3D to 2D Imaging': '3D to 2D Imaging',
+    '2D to 3D Imaging': '2D to 3D Imaging',
   }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
 );
 
 const MORPHOLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
   Object.entries({
-    'Mind Sparks - MCQ': 'Mind Sparks - Sector',
-    'Need for understanding sector orientation': 'Mind Sparks - Sector Orientation',
-    'Mind Sparks - ChatBot': 'Interaction - Scanning Planes',
-    'Mind Sparks - Scanning': 'Mind Sparks - 3D to 2D',
-    'Mind Sparks - Picture Pick': '2D to 3D - Picture Pick',
-    'Sector Orientation': 'Sector - Finding with clues',
-    '3D to 2D Prediction': '3D to 2D',
+    'Image Formation and Sector Orientation': 'Image Formation & Sector Orientation',
   }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
 );
 
