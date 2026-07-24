@@ -42,9 +42,10 @@ Common required fields for all question types:
 | --- | --- | --- | --- |
 | `questionType` | string enum | Yes | One of `type1`, `type2`, `annotation1`, `annotation2`, `measurement`. |
 | `questionNo` | number | Yes | Question number being submitted. Sent as form text; API converts to number. |
-| `isCorrect` | boolean | Yes | Whether the answer is correct. Send as `true` or `false` text in form-data. |
 | `session_id` | UUID string | Yes | Active II test/session ID. |
 | `resource_id` | UUID string | Yes | Resource ID for the II activity. |
+
+`isCorrect` is also required for `type1`, `type2`, `annotation1`, and `annotation2`. Send it as `true` or `false` text in form-data. For `measurement`, send `partial` instead of `isCorrect`.
 
 ### Type-Specific Required Fields
 
@@ -120,9 +121,12 @@ Used for measurement/caliper placement questions.
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `userImage` | file | Yes | Measurement image file uploaded by the user. |
+| `partial` | number enum | Yes | Measurement score. Must be exactly `0`, `0.5`, or `1`. |
 | `value` | number | Yes | Measurement value. API stores it as a decimal number. |
 | `interpretation` | string | Yes | Measurement interpretation. |
 | `caliperPlacementInterpretation` | string | Yes | Caliper placement interpretation. Stored as `caliper_placement_interpretation`. |
+
+Do not send `isCorrect` for `measurement`.
 
 Example form-data:
 
@@ -130,7 +134,7 @@ Example form-data:
 | --- | --- |
 | `questionType` | `measurement` |
 | `questionNo` | `4` |
-| `isCorrect` | `true` |
+| `partial` | `0.5` |
 | `session_id` | `021306f8-580b-4634-a809-7796b5843387` |
 | `resource_id` | `e196c6db-dc0b-4ebd-93b2-10a2125188e5` |
 | `value` | `32.5` |
@@ -177,7 +181,7 @@ Common returned fields:
 | --- | --- | --- |
 | `question_type` | string | Submitted question type. |
 | `question_no` | number | Submitted question number. |
-| `is_correct` | boolean | Correctness submitted by client. |
+| `is_correct` | boolean | Correctness submitted for non-measurement question types. |
 | `session_id` | UUID string | Session/test ID. |
 | `user_mail` | string | User email from authenticated token. |
 | `resource_id` | UUID string | Resource ID. |
@@ -200,7 +204,7 @@ Additional fields:
 | `type1` | `option_chosen` |
 | `annotation1` | `correct_label_count`, `wrong_label_count`, `unused_label_count` |
 | `annotation2` | `correct_label_count`, `wrong_label_count`, `unused_label_count` |
-| `measurement` | `value`, `interpretation`, `caliper_placement_interpretation` |
+| `measurement` | `partial`, `value`, `interpretation`, `caliper_placement_interpretation` |
 
 If the database table has generated columns such as IDs or timestamps, they are also returned because the API uses `RETURNING *`.
 
@@ -213,7 +217,7 @@ HTTP status: `400 Bad Request`
 ```json
 {
   "success": false,
-  "message": "questionType, questionNo, isCorrect, session_id, and resource_id are required"
+  "message": "questionType, questionNo, session_id, and resource_id are required"
 }
 ```
 
@@ -235,7 +239,18 @@ HTTP status: `400 Bad Request`
 ```json
 {
   "success": false,
-  "message": "Missing required fields for measurement: userImage, value, interpretation, caliperPlacementInterpretation"
+  "message": "Missing required fields for measurement: userImage, partial, value, interpretation, caliperPlacementInterpretation"
+}
+```
+
+### Invalid Measurement Partial Score
+
+HTTP status: `400 Bad Request`
+
+```json
+{
+  "success": false,
+  "message": "partial must be one of: 0, 0.5, 1"
 }
 ```
 
@@ -273,7 +288,25 @@ HTTP status: `401 Unauthorized`
 }
 ```
 
-## cURL Example
+## cURL Examples
+
+### Measurement
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=measurement" \
+  -F "questionNo=4" \
+  -F "partial=0.5" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5" \
+  -F "value=32.5" \
+  -F "interpretation=normal" \
+  -F "caliperPlacementInterpretation=good" \
+  -F "userImage=@/path/to/measurement.png"
+```
+
+### Other Question Types
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/submit-ii" \

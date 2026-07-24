@@ -5,19 +5,28 @@ info:
 
 http:
   method: POST
-  url: http:{{local_base_url}}/api/v1/submit-ii
+  url: http://{{local_base_url}}/api/v1/submit-ii
   body:
     type: multipart-form
     data:
       - name: questionType
         type: text
-        value: type2
+        value: measurement
       - name: questionNo
         type: text
-        value: "5"
-      - name: isCorrect
+        value: "4"
+      - name: partial
         type: text
-        value: "false"
+        value: "0.5"
+      - name: value
+        type: text
+        value: "32.5"
+      - name: interpretation
+        type: text
+        value: normal
+      - name: caliperPlacementInterpretation
+        type: text
+        value: good
       - name: resource_id
         type: text
         value: e196c6db-dc0b-4ebd-93b2-10a2125188e5

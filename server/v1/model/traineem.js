@@ -4006,7 +4006,7 @@ const updateTraineem = (requester, user_id, batch_id) => {
                                 code: 500,
                                 message: 'Database query failed',
                                 error: err
-                          });
+                          });  
                     } else {
                           resolve({
                                 status: 'Success',

@@ -22,6 +22,7 @@ const getMissingFields = (questionType, body, file) => {
     if (body.unusedLabelCount === undefined) missing.push('unusedLabelCount');
   }
   if (questionType === 'measurement') {
+    if (body.partial === undefined || String(body.partial).trim() === '') missing.push('partial');
     if (body.value === undefined) missing.push('value');
     if (!body.interpretation) missing.push('interpretation');
     if (!body.caliperPlacementInterpretation) missing.push('caliperPlacementInterpretation');
@@ -34,16 +35,22 @@ const createSubmission = async (req, res, next) => {
     const { questionType, questionNo, isCorrect, session_id, resource_id } = req.body;
     const requester = { ...req.user, session_id, resource_id };
 
-    if (!questionType || questionNo === undefined || isCorrect === undefined || !session_id || !resource_id) {
+    if (!questionType || questionNo === undefined || !session_id || !resource_id) {
       return res.status(400).json({
         success: false,
-        message: 'questionType, questionNo, isCorrect, session_id, and resource_id are required',
+        message: 'questionType, questionNo, session_id, and resource_id are required',
       });
     }
     if (!VALID_TYPES.includes(questionType)) {
       return res.status(400).json({
         success: false,
         message: `questionType must be one of: ${VALID_TYPES.join(', ')}`,
+      });
+    }
+    if (questionType !== 'measurement' && isCorrect === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'isCorrect is required',
       });
     }
     const missingFields = getMissingFields(questionType, req.body, req.file);
@@ -53,8 +60,17 @@ const createSubmission = async (req, res, next) => {
         message: `Missing required fields for ${questionType}: ${missingFields.join(', ')}`,
       });
     }
-    const { questionNo: qNo, optionChosen, correctLabelCount, wrongLabelCount, unusedLabelCount, value, interpretation, caliperPlacementInterpretation } = req.body;
-    const isCorrectBool = JSON.parse(String(isCorrect).toLowerCase());
+    const { questionNo: qNo, optionChosen, correctLabelCount, wrongLabelCount, unusedLabelCount, partial, value, interpretation, caliperPlacementInterpretation } = req.body;
+    const partialScore = Number(partial);
+    if (questionType === 'measurement' && ![0, 0.5, 1].includes(partialScore)) {
+      return res.status(400).json({
+        success: false,
+        message: 'partial must be one of: 0, 0.5, 1',
+      });
+    }
+    const isCorrectBool = questionType === 'measurement'
+      ? undefined
+      : JSON.parse(String(isCorrect).toLowerCase());
     let result;
     if (questionType === 'type1') {
       result = await submitType1(requester, Number(qNo), Number(optionChosen), isCorrectBool);
@@ -65,7 +81,7 @@ const createSubmission = async (req, res, next) => {
     } else if (questionType === 'annotation2') {
       result = await submitAnnotation2(requester, Number(qNo), isCorrectBool, Number(correctLabelCount), Number(wrongLabelCount), Number(unusedLabelCount), req.file);
     } else if (questionType === 'measurement') {
-      result = await submitMeasurement(requester, Number(qNo), isCorrectBool, parseFloat(value), interpretation, caliperPlacementInterpretation, req.file);
+      result = await submitMeasurement(requester, Number(qNo), partialScore, parseFloat(value), interpretation, caliperPlacementInterpretation, req.file);
     }
     res.status(result.code).json({ result });
   } catch (error) {

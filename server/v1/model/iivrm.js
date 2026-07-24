@@ -163,7 +163,7 @@ const submitAnnotation2 = (requester, questionNo, isCorrect, correctLabelCount, 
   });
 };
 
-const submitMeasurement = (requester, questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, file) => {
+const submitMeasurement = (requester, questionNo, partial, value, interpretation, caliperPlacementInterpretation, file) => {
   return new Promise((resolve, reject) => {
     const isPrivileged = [99, 101, 103].includes(Number(requester.role));
     if (!isPrivileged) {
@@ -172,9 +172,9 @@ const submitMeasurement = (requester, questionNo, isCorrect, value, interpretati
     uploadImage(file, requester)
       .then((imageData) => {
         client.query(
-          `INSERT INTO submissions (question_type, question_no, is_correct, value, interpretation, caliper_placement_interpretation, filename, original_name, storage_path, public_url, mime_type, size, session_id, user_mail, resource_id)
+          `INSERT INTO submissions (question_type, question_no, partial, value, interpretation, caliper_placement_interpretation, filename, original_name, storage_path, public_url, mime_type, size, session_id, user_mail, resource_id)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
-          ['measurement', questionNo, isCorrect, value, interpretation, caliperPlacementInterpretation, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size, requester.session_id, requester.user_mail, requester.resource_id],
+          ['measurement', questionNo, partial, value, interpretation, caliperPlacementInterpretation, imageData.filename, imageData.original_name, imageData.storage_path, imageData.public_url, imageData.mime_type, imageData.size, requester.session_id, requester.user_mail, requester.resource_id],
           async (err, result) => {
             if (err) return reject(err);
             try {
