@@ -4506,11 +4506,12 @@ const RESOURCE_ORDER = Object.fromEntries(
   }).map(([key, value]) => [normalizeSortKey(key), value])
 );
 
-const isBpdHcScope = (value = '') => normalizeModuleSortLabel(value) === 'BPD & HC';
 const isPrinciplesOfUltrasoundScope = (value = '') => normalizeModuleSortLabel(value) === 'Principles of ultrasound';
 const isProbeMovementsScope = (value = '') => normalizeModuleSortLabel(value) === 'Probe Movements';
 const isMorphologyScope = (value = '') => normalizeModuleSortLabel(value) === 'Morphology';
-const isMappedOrderScope = (value = '') => ['BPD & HC', 'AC', 'Probe Movements', 'Knobology', 'Morphology'].includes(normalizeModuleSortLabel(value));
+// BPD & HC is intentionally database-driven so one display_order change is
+// reflected consistently by My Learning and the API.
+const isMappedOrderScope = (value = '') => ['AC', 'Probe Movements', 'Knobology', 'Morphology'].includes(normalizeModuleSortLabel(value));
 
 const getAcResourceSortIndex = (topic, resourceName) => {
   const normalizedTopic = normalizeSortKey(topic);
@@ -4851,67 +4852,6 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
   ])
 );
 
-const BPD_HC_TOPIC_BY_RESOURCE = Object.fromEntries(
-  Object.entries({
-    'Transthalamic Plane': 'Fetal Head',
-    'Bi-Parietal Diameter': 'Fetal Head',
-    'Head Circumference': 'Fetal Head',
-    'Significance': 'Fetal Head',
-
-    'Anatomical Landmarks and Significance': 'Anatomical Landmarks',
-    'Anatomical Landmarks of the Transthalamic Plane': 'Anatomical Landmarks',
-    'Geometric Shapes, Key Landmarks & Significance': 'Anatomical Landmarks',
-    'Geometric shapes of key landmarks and their significance': 'Anatomical Landmarks',
-    'Mind Sparks - Anatomical Landmarks': 'Anatomical Landmarks',
-    'MindSparks - Anatomical Landmarks': 'Anatomical Landmarks',
-    'MindSparks - Quiz': 'Anatomical Landmarks',
-
-    'Imaging the plane': 'Imaging the Transthalamic Plane',
-    'Imaging the Plane': 'Imaging the Transthalamic Plane',
-    'Finding the Fetal Presentation': 'Imaging the Transthalamic Plane',
-    'Finding the fetal presentation': 'Imaging the Transthalamic Plane',
-    'How to acquire the transthalamic plane': 'Imaging the Transthalamic Plane',
-    'How To Acquire The Transthalamic Plane': 'Imaging the Transthalamic Plane',
-    'Interaction - Fetal Head Scanning Activity': 'Imaging the Transthalamic Plane',
-    'Mind Sparks - Probe Movements': 'Imaging the Transthalamic Plane',
-    'Mind Sparks - Probe movements': 'Imaging the Transthalamic Plane',
-    'MindSparks - Probe movements': 'Imaging the Transthalamic Plane',
-
-    'How to Measure BPD': 'Measurement',
-    'How To Measure BPD': 'Measurement',
-    'How to measure BPD': 'Measurement',
-    'How to Measure HC': 'Measurement',
-    'How To Measure HC': 'Measurement',
-    'How to measure HC': 'Measurement',
-
-    'Plane Acquisition Challenges & Common Errors': 'Pitfalls in Plane Acquisition and Measurement',
-    'Plane Acquisition Challenges and Common Errors': 'Pitfalls in Plane Acquisition and Measurement',
-    'Plane Acquisition Challenges and Common Measurement Errors': 'Pitfalls in Plane Acquisition and Measurement',
-    'Plane Acquisition Challenges': 'Pitfalls in Plane Acquisition and Measurement',
-    'Common Measurement Errors': 'Pitfalls in Plane Acquisition and Measurement',
-    'MindSparks - Picture Pick': 'Pitfalls in Plane Acquisition and Measurement',
-    'Mind Sparks - Picture Pick': 'Pitfalls in Plane Acquisition and Measurement',
-
-    'Image Diagnosis': 'Image Diagnosis',
-
-    'Percentile Charts & Significance': 'Image Diagnosis',
-    'Percentile Charts  & Significance': 'Image Diagnosis',
-    'Percentile Chart & Significance': 'Image Diagnosis',
-    'BPD Chart': 'Image Diagnosis',
-    'HC Chart': 'Image Diagnosis',
-    'Mind Sparks - Chart Interpretation': 'Image Diagnosis',
-    'MindSparks - Yes/No': 'Image Diagnosis',
-
-    'Image Selection': 'OB Boosters',
-    'Picture Pick': 'OB Boosters',
-    'Visual Recognition': 'OB Boosters',
-    'True / False': 'OB Boosters',
-    'True/False': 'OB Boosters',
-    'Wordsearch': 'OB Boosters',
-    'Word Search': 'OB Boosters',
-  }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
-);
-
 const AC_TOPIC_BY_RESOURCE = Object.fromEntries(
   Object.entries({
     'AC Introduction': 'Fetal Abdomen',
@@ -5117,7 +5057,7 @@ const getDisplayResourceName = (moduleLabel, resourceName, topic = '') => {
     return MORPHOLOGY_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
   }
 
-  if (isProbeMovementsScope(moduleLabel) || isProbeMovementsResourceAlias(resourceName)) {
+  if (isProbeMovementsScope(moduleLabel)) {
     const normalizedResource = normalizeSortKey(resourceName);
     if (normalizedResource === normalizeSortKey('Probe Movements')) {
       return normalizeSortKey(topic) === normalizeSortKey('Echo Dose')
@@ -5151,7 +5091,7 @@ const getDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
     return MORPHOLOGY_TOPIC_BY_RESOURCE[normalizedResource] || topic;
   }
 
-  if (normalizedModule === 'Probe Movements' || isProbeMovementsResourceAlias(resourceName)) {
+  if (normalizedModule === 'Probe Movements') {
     if (
       normalizedResource === normalizeSortKey('Probe Movements') &&
       normalizedTopic === normalizeSortKey('Echo Dose')
@@ -5174,11 +5114,9 @@ const getDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
     return AC_TOPIC_BY_RESOURCE[normalizedResource] || topic;
   }
 
-  if (!isBpdHcScope(moduleLabel)) {
-    return topic;
-  }
-
-  return BPD_HC_TOPIC_BY_RESOURCE[normalizedResource] || topic;
+  // BPD & HC names, topics, visibility, and ordering are maintained in the
+  // database. Do not remap them in the client.
+  return topic;
 };
 
 const MODULE_ORDER = ['BPD & HC', 'AC', 'FL', 'Principles of ultrasound', 'Probe Movements', 'Knobology', 'Morphology'];
@@ -5490,6 +5428,8 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
 
     const resourceRow = {
       id:               item.resource_id,
+      certificateId:    certificate_id,
+      learningModuleId: learning_module_id,
       name:             displayResourceName,
       type:             typeKey,
       topic:            resourceTopic,
@@ -7753,8 +7693,10 @@ function MyLearning() {
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const currentModules = modules[activeCert] || [];
-  const allRes         = resources[activeModule] || [];
   const activeModMeta  = currentModules.find(m => m.id === activeModule);
+  const allRes         = (resources[activeModule] || []).filter(resource =>
+    resource.learningModuleId === activeModule && resource.certificateId === activeCert
+  );
   const doneCount      = activeModMeta?.done  ?? 0;
   const totalCount     = activeModMeta?.total ?? 0;
   const pct            = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;

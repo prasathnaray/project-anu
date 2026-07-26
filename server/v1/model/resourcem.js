@@ -78,6 +78,7 @@ const getResourcesModel = (requester, module_id) => {
           ON rd.resource_id = pd.resourse_id
           AND pd.user_id = $2
         WHERE rd.module_id = $1
+          AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
         ORDER BY rd.display_order ASC NULLS LAST, rd.created_at ASC
       `;
       params = [module_id, requester.user_mail];
@@ -125,6 +126,7 @@ LEFT JOIN progress_data pd
 LEFT JOIN user_data ud 
     ON pd.user_id = ud.user_email
 WHERE rd.learning_module_id = $1
+  AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
 GROUP BY 
     rd.resource_id,
     rd.resource_name,
@@ -155,7 +157,13 @@ const getResourcesByModuleIds = (requester, moduleIds) => {
            if (!Array.isArray(moduleIds) || moduleIds.length === 0) {
                 return resolve({ status: 'No Data', code: 200, data: [] });
            }
-           client.query('select * from resource_data where module_id = ANY($1)', [moduleIds], (err, result) => {
+           client.query(`
+             SELECT *
+             FROM resource_data
+             WHERE module_id = ANY($1)
+               AND COALESCE((to_jsonb(resource_data)->>'is_hidden')::boolean, false) IS NOT TRUE
+             ORDER BY display_order ASC NULLS LAST, created_at ASC
+           `, [moduleIds], (err, result) => {
               if(err)
               {
                 reject(err)
