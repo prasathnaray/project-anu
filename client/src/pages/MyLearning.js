@@ -5455,6 +5455,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
               : (isMindSparkResource ? null : (isDone ? 100 : null)),
             sessionDate: activityScore?.session_date || null,
             sessionId: activityScore?.session_id || null,
+            resourceId: activityScore?.resource_id || item.resource_id,
             resourceType: activityScore?.resource_type || item.resource_type || null,
             resourceTopic: activityScore?.resource_topic || item.resource_topic || '',
             configuredQuestionCount: Number(activityScore?.configured_question_count || 0),
@@ -5472,7 +5473,14 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       duplicateResource.done = duplicateResource.done || resourceRow.done;
       duplicateResource.updatedAt = [duplicateResource.updatedAt, resourceRow.updatedAt].filter(Boolean).sort().pop() || null;
       duplicateResource.reAttempts = [...(duplicateResource.reAttempts || []), ...(resourceRow.reAttempts || [])];
-      if ((resourceRow.activityData?.attempts || 0) > (duplicateResource.activityData?.attempts || 0)) {
+      const resourceAttempts = resourceRow.activityData?.attempts || 0;
+      const duplicateAttempts = duplicateResource.activityData?.attempts || 0;
+      const resourceSessionDate = Date.parse(resourceRow.activityData?.sessionDate || '') || 0;
+      const duplicateSessionDate = Date.parse(duplicateResource.activityData?.sessionDate || '') || 0;
+      if (
+        resourceAttempts > duplicateAttempts ||
+        (resourceAttempts === duplicateAttempts && resourceSessionDate > duplicateSessionDate)
+      ) {
         duplicateResource.activityData = resourceRow.activityData;
       }
       return;
@@ -5539,23 +5547,38 @@ const getConfiguredAnswerKey = answer => String(
   answer?.key ?? answer?.value ?? answer?.answer ?? answer?.option ?? answer?.label ?? ''
 );
 
+const normalizeAnswerValue = value => String(value ?? '').trim().toLowerCase();
+
+const getLeadingAnswerToken = value => {
+  const normalizedValue = normalizeAnswerValue(value);
+  const markerMatch = normalizedValue.match(/^([a-z]|\d{1,3})\s*[-).:]\s*/);
+  return markerMatch?.[1] || normalizedValue;
+};
+
+const optionMatchesConfiguredKey = (option, answer) => {
+  const normalizedAnswer = normalizeAnswerValue(answer);
+  if (!normalizedAnswer) return false;
+
+  const answerToken = getLeadingAnswerToken(normalizedAnswer);
+  const optionValues = [option?.key, option?.value, option?.label, option?.text]
+    .map(normalizeAnswerValue)
+    .filter(Boolean);
+
+  return optionValues.some(optionValue =>
+    optionValue === normalizedAnswer ||
+    getLeadingAnswerToken(optionValue) === answerToken
+  );
+};
+
 const getConfiguredOptionDetails = (options, key) => {
-  const normalizedKey = String(key ?? '');
-  return (Array.isArray(options) ? options : []).find(item => {
-    const itemKey = String(item?.key ?? item?.value ?? item?.label ?? item?.text ?? '');
-    return itemKey === normalizedKey || itemKey.slice(0, 10) === normalizedKey;
-  }) || null;
+  return (Array.isArray(options) ? options : []).find(item =>
+    optionMatchesConfiguredKey(item, key)
+  ) || null;
 };
 
 const getConfiguredOptionText = (options, key) => {
   const option = getConfiguredOptionDetails(options, key);
   return option?.text ?? option?.label ?? option?.value ?? '';
-};
-
-const optionMatchesConfiguredKey = (option, key) => {
-  const optionKey = String(option?.key ?? option?.value ?? option?.label ?? option?.text ?? '');
-  const normalizedKey = String(key ?? '');
-  return optionKey === normalizedKey || optionKey.toLowerCase() === normalizedKey.toLowerCase();
 };
 
 const groupQuestionsByType = (rows) => {
@@ -6525,11 +6548,7 @@ const getMindSparkAnswerKey = answer => String(
 );
 
 const getMindSparkOptionText = (options, key) => {
-  const normalizedKey = String(key ?? '');
-  const option = (Array.isArray(options) ? options : []).find(item => {
-    const itemKey = String(item?.key ?? item?.value ?? item?.label ?? item?.text ?? '');
-    return itemKey === normalizedKey || itemKey.slice(0, 10) === normalizedKey;
-  });
+  const option = getConfiguredOptionDetails(options, key);
   return option?.text ?? option?.label ?? option?.value ?? '';
 };
 
@@ -6540,13 +6559,14 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
   const [summary, setSummary] = React.useState(null);
   const isOBResource = isOBBooster(r.topic);
   const activityLabel = isOBResource ? 'OB Booster' : 'Mindspark';
+  const attemptResourceId = r.activityData?.resourceId || r.id;
 
   React.useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
 
-    fetchMindSparkAttemptDetails(r.id, token, r.activityData?.sessionId)
+    fetchMindSparkAttemptDetails(attemptResourceId, token, r.activityData?.sessionId)
       .then(json => {
         if (!active) return;
         setDetails(Array.isArray(json?.data) ? json.data : []);
@@ -6562,7 +6582,7 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
     return () => {
       active = false;
     };
-  }, [r.id, r.activityData?.sessionId, token]);
+  }, [attemptResourceId, r.activityData?.sessionId, token]);
 
   if (loading) {
     return (
@@ -6627,11 +6647,6 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
         const answered = item.is_correct === true || item.is_correct === false;
         const right = item.is_correct === true;
         const selectedKey = String(item.option_chosen ?? '');
-        const normalizedCorrectKey = String(correctKey ?? '');
-        const optionMatches = (option, key) => {
-          const itemKey = String(option?.key ?? option?.value ?? option?.label ?? option?.text ?? '');
-          return itemKey === key || itemKey.toLowerCase() === key.toLowerCase();
-        };
 
         return (
           <div
@@ -6673,8 +6688,8 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
                       const optionKey = String(option.key ?? option.value ?? optionIndex + 1);
                       const optionText = option.text ?? option.label ?? String(option);
                       const optionImageUrl = option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url;
-                      const selected = answered && optionMatches(option, selectedKey);
-                      const correctOption = optionMatches(option, normalizedCorrectKey);
+                      const selected = answered && optionMatchesConfiguredKey(option, selectedKey);
+                      const correctOption = optionMatchesConfiguredKey(option, correctKey);
 
                       return (
                         <div
