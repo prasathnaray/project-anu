@@ -60,7 +60,6 @@
 //     { id: 'r5',  name: 'Anatomical Landmarks and Significance',  type: 'resource',  topic: 'Anatomical Landmarks',done: true  },
 //     { id: 'r6',  name: 'Mind Sparks - Anatomical Landmarks',     type: 'resource',  topic: 'Anatomical Landmarks',done: false },
 //     { id: 'r7',  name: 'How To Image The Plane',                 type: 'resource',  topic: 'Imaging the Plane',   done: true  },
-//     { id: 'r8',  name: 'Mind Sparks - Probe Movements',          type: 'resource',  topic: 'Imaging the Plane',   done: false },
 //     { id: 'r9',  name: 'How To Acquire The Transthalamic Plane', type: 'resource',  topic: 'Imaging the Plane',   done: false },
 //     { id: 'r10', name: 'Mind Sparks - Picture Pick',             type: 'resource',  topic: 'Imaging the Plane',   done: false },
 //     { id: 'r11', name: 'How To Measure BPD',                     type: 'resource',  topic: 'Measurements',        done: false },
@@ -95,7 +94,6 @@
 //     { id: 'ac_r5',  name: 'Geometric shapes of key landmarks',                 type: 'resource',  topic: 'Anatomical landmarks',done: false },
 //     { id: 'ac_r6',  name: 'Mind Sparks - Anatomical Landmarks',                type: 'resource',  topic: 'Anatomical landmarks',done: false },
 //     { id: 'ac_r7',  name: 'How to acquire the transabdominal plane',           type: 'resource',  topic: 'Imaging the plane',   done: false },
-//     { id: 'ac_r8',  name: 'Mind Sparks - Probe movements',                     type: 'resource',  topic: 'Imaging the plane',   done: false },
 //     { id: 'ac_r9',  name: 'Mind Sparks - Picture pick',                        type: 'resource',  topic: 'Imaging the plane',   done: false },
 //     { id: 'ac_r10', name: 'How to measure AC',                                 type: 'resource',  topic: 'Measurement',         done: false },
 //     { id: 'ac_r11', name: 'Mind Sparks - Picture Pick',                        type: 'resource',  topic: 'Measurement',         done: false },
@@ -127,7 +125,6 @@
 //     { id: 'fl_r5',  name: 'Geometric shapes of key landmarks',                   type: 'resource',  topic: 'Anatomical landmarks',done: false },
 //     { id: 'fl_r6',  name: 'Mind Sparks - Anatomical Landmarks',                  type: 'resource',  topic: 'Anatomical landmarks',done: false },
 //     { id: 'fl_r7',  name: 'How to acquire the femur diaphysis plane',            type: 'resource',  topic: 'Imaging the plane',   done: false },
-//     { id: 'fl_r8',  name: 'Mind Sparks - Probe movements',                       type: 'resource',  topic: 'Imaging the plane',   done: false },
 //     { id: 'fl_r9',  name: 'Mind Sparks - Picture pick',                          type: 'resource',  topic: 'Imaging the plane',   done: false },
 //     { id: 'fl_r10', name: 'How to measure FL',                                   type: 'resource',  topic: 'Measurement',         done: false },
 //     { id: 'fl_r11', name: 'MindSparks - Picture Pick',                           type: 'resource',  topic: 'Measurement',         done: false },
@@ -605,7 +602,6 @@
 //     { id: 'r4',  name: 'Significance',                           type: 'resource', topic: 'Fetal Head',          completionSource: 'progress', done: false },
 //     { id: 'r5',  name: 'Anatomical Landmarks and Significance',  type: 'resource', topic: 'Anatomical Landmarks', completionSource: 'progress', done: true  },
 //     { id: 'r7',  name: 'How To Image The Plane',                 type: 'resource', topic: 'Imaging the Plane',   completionSource: 'progress', done: true  },
-//     { id: 'r8',  name: 'Mind Sparks - Probe Movements',          type: 'resource', topic: 'Imaging the Plane',   completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'r9',  name: 'How To Acquire The Transthalamic Plane', type: 'resource', topic: 'Imaging the Plane',   completionSource: 'progress', done: false },
 //     { id: 'r11', name: 'How To Measure BPD',                     type: 'resource', topic: 'Measurements',        completionSource: 'progress', done: false },
 //     { id: 'r12', name: 'How To Measure HC',                      type: 'resource', topic: 'Measurements',        completionSource: 'progress', done: false },
@@ -648,7 +644,6 @@
 //     { id: 'ac_r14', name: 'AC chart',                                         type: 'resource', topic: 'Image Diagnosis',      completionSource: 'progress', done: false },
 //     // Mind Sparks
 //     { id: 'ac_r6',  name: 'Mind Sparks - Anatomical Landmarks',               type: 'resource', topic: 'Anatomical landmarks', completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
-//     { id: 'ac_r8',  name: 'Mind Sparks - Probe movements',                    type: 'resource', topic: 'Imaging the plane',    completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'ac_r9',  name: 'Mind Sparks - Picture pick',                       type: 'resource', topic: 'Imaging the plane',    completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'ac_r11', name: 'Mind Sparks - Picture Pick',                       type: 'resource', topic: 'Measurement',          completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'ac_r15', name: 'Mind Sparks - Chart Interpretation',               type: 'resource', topic: 'Image Diagnosis',      completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
@@ -684,7 +679,6 @@
 //     { id: 'fl_r16', name: 'AC chart',                                          type: 'resource', topic: 'Image Diagnosis',      completionSource: 'progress', done: false },
 //     // Mind Sparks
 //     { id: 'fl_r6',  name: 'Mind Sparks - Anatomical Landmarks',  type: 'resource', topic: 'Anatomical landmarks', completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
-//     { id: 'fl_r8',  name: 'Mind Sparks - Probe movements',       type: 'resource', topic: 'Imaging the plane',    completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'fl_r9',  name: 'Mind Sparks - Picture pick',          type: 'resource', topic: 'Imaging the plane',    completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'fl_r11', name: 'MindSparks - Picture Pick',           type: 'resource', topic: 'Measurement',          completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
 //     { id: 'fl_r17', name: 'Mind Sparks - Chart Interpretation',  type: 'resource', topic: 'Image Diagnosis',      completionSource: 'activity', done: false, activityData: { attempts: 0, correct: 0, total: 1 } },
@@ -1988,11 +1982,9 @@
 //   'BPD & HC::Geometric shapes of key landmarks and their significance': 2,
 //   'BPD & HC::Mind Sparks - Anatomical Landmarks': 3,
 //   'BPD & HC:: How To Image The Plane': 1,
-//   'BPD & HC::Mind Sparks - Probe Movements': 2,
 //   'BPD & HC::How To Acquire The Transthalamic Plane': 3,
 //   'BPD & HC::Mind Sparks - Picture Pick': 4,
 //   'BPD & HC::Finding the fetal presentation': 1,
-//   'BPD & HC::Mind Sparks - Probe movements': 2,
 //   'BPD & HC::How to acquire the transthalamic plane': 3,
 //   'BPD & HC::How To Measure BPD': 1,
 //   'BPD & HC::How To Measure HC': 2,
@@ -2018,7 +2010,6 @@
 //   'AC::Geometric shapes of key landmarks and their significance': 2,
 //   'AC::Mind Sparks - Anatomical Landmarks': 3,
 //   'AC::How to acquire the transabdominal plane': 1,
-//   'AC::Mind Sparks - Probe movements': 2,
 //   'AC::Mind Sparks - Picture pick': 3,
 //   'AC::How to measure AC': 1,
 //   'AC::Mind Sparks - Picture Pick': 2,
@@ -2038,7 +2029,6 @@
 //   'FL::Geometric shapes of key landmarks and their significance': 2,
 //   'FL::Mind Sparks - Anatomical Landmarks': 3,
 //   'FL::How to acquire the femur diaphysis plane': 1,
-//   'FL::Mind Sparks - Probe movements': 2,
 //   'FL::Mind Sparks - Picture pick': 3,
 //   'FL::How to measure FL': 1,
 //   'FL::MindSparks - Picture Pick': 2,
@@ -2889,11 +2879,9 @@
 //   'BPD & HC::Geometric shapes of key landmarks and their significance': 2,
 //   'BPD & HC::Mind Sparks - Anatomical Landmarks': 3,
 //   'BPD & HC:: How To Image The Plane': 1,
-//   'BPD & HC::Mind Sparks - Probe Movements': 2,
 //   'BPD & HC::How To Acquire The Transthalamic Plane': 3,
 //   'BPD & HC::Mind Sparks - Picture Pick': 4,
 //   'BPD & HC::Finding the fetal presentation': 1,
-//   'BPD & HC::Mind Sparks - Probe movements': 2,
 //   'BPD & HC::How to acquire the transthalamic plane': 3,
 //   'BPD & HC::How To Measure BPD': 1,
 //   'BPD & HC::How To Measure HC': 2,
@@ -2919,7 +2907,6 @@
 //   'AC::Geometric shapes of key landmarks and their significance': 2,
 //   'AC::Mind Sparks - Anatomical Landmarks': 3,
 //   'AC::How to acquire the transabdominal plane': 1,
-//   'AC::Mind Sparks - Probe movements': 2,
 //   'AC::Mind Sparks - Picture pick': 3,
 //   'AC::How to measure AC': 1,
 //   'AC::Mind Sparks - Picture Pick': 2,
@@ -2939,7 +2926,6 @@
 //   'FL::Geometric shapes of key landmarks and their significance': 2,
 //   'FL::Mind Sparks - Anatomical Landmarks': 3,
 //   'FL::How to acquire the femur diaphysis plane': 1,
-//   'FL::Mind Sparks - Probe movements': 2,
 //   'FL::Mind Sparks - Picture pick': 3,
 //   'FL::How to measure FL': 1,
 //   'FL::MindSparks - Picture Pick': 2,
@@ -4261,6 +4247,28 @@ const normalizeSortKey = (value = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
+const REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES = new Set([
+  'mind sparks - probe movement',
+  'mind sparks - probe movements',
+  'mindsparks - probe movement',
+  'mindsparks - probe movements',
+  'min sparks - probe movement',
+  'min sparks - probe movements',
+  'minsparks - probe movement',
+  'minsparks - probe movements',
+].map(normalizeSortKey));
+
+const isRemovedBtcBiometryProbeMindSpark = (item = {}) => {
+  const moduleLabels = [item.course_name, item.module_name, item.unit_name].map(normalizeModuleSortLabel);
+  const topic = normalizeSortKey(item.resource_topic);
+
+  return (
+    moduleLabels.some(label => ['BPD & HC', 'AC', 'FL'].includes(label)) &&
+    [normalizeSortKey('Imaging the Transthalamic Plane'), normalizeSortKey('Imaging the Plane')].includes(topic) &&
+    REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES.has(normalizeSortKey(item.resource_name))
+  );
+};
+
 const normalizeModuleSortLabel = (value = '') => {
   const normalized = normalizeSortKey(value);
   if (!normalized) return '';
@@ -4312,9 +4320,6 @@ const RESOURCE_ORDER = Object.fromEntries(
     'BPD & HC::How to acquire the transthalamic plane': 2,
     'BPD & HC::How To Acquire The Transthalamic Plane': 2,
     'BPD & HC::Interaction - Fetal Head Scanning Activity': 2,
-    'BPD & HC::Mind Sparks - Probe Movements': 3,
-    'BPD & HC::Mind Sparks - Probe movements': 3,
-    'BPD & HC::MindSparks - Probe movements': 3,
     'BPD & HC::Mind Sparks - Picture Pick': 4,
     'BPD & HC:: How To Image The Plane': 4,
 
@@ -4366,8 +4371,6 @@ const RESOURCE_ORDER = Object.fromEntries(
     'AC::Imaging the Plane': 1,
     'AC::Cephalic Presentation': 1,
     'AC::Breech Presentation': 2,
-    'AC::Mind Sparks - Probe movements': 2,
-    'AC::MindSparks - Probe movements': 2,
 
     'AC::Measurement': 1,
     'AC::Measurements': 1,
@@ -4418,8 +4421,6 @@ const RESOURCE_ORDER = Object.fromEntries(
     'FL::How to acquire the femur diaphysis plane': 1,
     'FL::Breech Presentation': 1,
     'FL::Cephalic Presentation': 2,
-    'FL::Mind Sparks - Probe movements': 2,
-    'FL::MindSparks - Probe movements': 2,
 
     'FL::Measurements': 1,
     'FL::Measurement': 1,
@@ -4547,10 +4548,6 @@ const getAcResourceSortIndex = (topic, resourceName) => {
       normalizedName === normalizeSortKey('Imaging the Plane') ||
       normalizedName === normalizeSortKey('How to acquire the transabdominal plane')
     ) return 1;
-    if (
-      normalizedName === normalizeSortKey('MindSparks - Probe movements') ||
-      normalizedName === normalizeSortKey('Mind Sparks - Probe movements')
-    ) return 2;
   }
 
   if (normalizedTopic === normalizeSortKey('Measurement') || normalizedTopic === normalizeSortKey('Measurements')) {
@@ -4873,9 +4870,6 @@ const AC_TOPIC_BY_RESOURCE = Object.fromEntries(
     'How to acquire the transabdominal plane': 'Imaging the Plane',
     'Cephalic Presentation': 'Imaging the Plane',
     'Breech Presentation': 'Imaging the Plane',
-    'Mind Sparks - Probe movements': 'Imaging the Plane',
-    'MindSparks - Probe movements': 'Imaging the Plane',
-
     'Measurement': 'Measurement',
     'Measurements': 'Measurement',
     'How to measure AC': 'Measurement',
@@ -5356,7 +5350,11 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
 
   // ── Filter to batch certificate only ─────────────────────────────────────
   const data = allowedCertificateIds.size > 0
-    ? rawData.filter(item => allowedCertificateIds.has(item.certificate_id) && item.is_hidden !== true)
+    ? rawData.filter(item =>
+        allowedCertificateIds.has(item.certificate_id) &&
+        item.is_hidden !== true &&
+        !isRemovedBtcBiometryProbeMindSpark(item)
+      )
     : [];
 
   // ── Re-attempt lookup ─────────────────────────────────────────────────────

@@ -1152,13 +1152,11 @@ const indData = (requester, user_mail) => {
 
 //   // Imaging the Plane (new BPD & HC)
 //   ' How To Image The Plane': 1,                               // ← leading space preserved
-//   'Mind Sparks - Probe Movements': 2,
 //   'How To Acquire The Transthalamic Plane': 3,
 //   'Mind Sparks - Picture Pick': 4,
 
 //   // Imaging the Transthalamic Plane (old BPD & HC)
 //   'Finding the fetal presentation': 1,
-//   'Mind Sparks - Probe movements': 2,
 //   'How to acquire the transthalamic plane': 3,
 
 //   // Measurements (new BPD & HC) / Measurement (AC, FL)
@@ -1224,7 +1222,6 @@ const indData = (requester, user_mail) => {
 
 //   // BPD & HC - Imaging the Transthalamic Plane
 //   'Finding the fetal presentation': 1,
-//   'Mind Sparks - Probe movements': 2,
 //   'How to acquire the transthalamic plane': 3,
 //   'Mind Sparks - Picture Pick': 4,
 
@@ -1980,12 +1977,9 @@ const RESOURCE_ORDER = {
   'BPD & HC::Imaging the plane': 1,
   'BPD & HC::Imaging the Plane': 1,
   'BPD & HC::Interaction - Fetal Head Scanning Activity': 2,
-  'BPD & HC::Mind Sparks - Probe Movements': 3,
   'BPD & HC::How To Acquire The Transthalamic Plane': 3,
   'BPD & HC::Mind Sparks - Picture Pick': 4,
   'BPD & HC::Finding the fetal presentation': 1,
-  'BPD & HC::Mind Sparks - Probe movements': 3,
-  'BPD & HC::MindSparks - Probe movements': 3,
   'BPD & HC::How to acquire the transthalamic plane': 3,
 
   'BPD & HC::How To Measure BPD': 1,
@@ -2031,8 +2025,6 @@ const RESOURCE_ORDER = {
   'AC::Imaging the plane': 1,
   'AC::Imaging the Plane': 1,
   'AC::How to acquire the transabdominal plane': 1,
-  'AC::Mind Sparks - Probe movements': 2,
-  'AC::MindSparks - Probe movements': 2,
   'AC::Mind Sparks - Picture pick': 3,
 
   'AC::Measurement': 1,
@@ -2071,8 +2063,6 @@ const RESOURCE_ORDER = {
 
   'FL::Imaging the plane': 1,
   'FL::How to acquire the femur diaphysis plane': 1,
-  'FL::Mind Sparks - Probe movements': 2,
-  'FL::MindSparks - Probe movements': 2,
   'FL::Mind Sparks - Picture pick': 3,
 
   'FL::How to measure FL': 1,
@@ -2118,6 +2108,33 @@ const normalizeOrderToken = (value = '') =>
   stripLearningResourceSuffix(value)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
+
+const REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES = new Set([
+  'mindsparksprobemovement',
+  'mindsparksprobemovements',
+  'minsparksprobemovement',
+  'minsparksprobemovements',
+]);
+
+const isRemovedBtcBiometryProbeMindSpark = (row = {}) => {
+  const certificate = normalizeOrderToken(row.certificate_name);
+  const moduleLabels = [row.course_name, row.module_name, row.unit_name].map(normalizeOrderToken);
+  const topic = normalizeOrderToken(row.resource_topic);
+  const resourceName = normalizeOrderToken(row.resource_name);
+
+  const isBtc = !certificate || certificate === normalizeOrderToken('BTC');
+  const isTargetUnit = moduleLabels.some(label => [
+    normalizeOrderToken('BPD & HC'),
+    normalizeOrderToken('AC'),
+    normalizeOrderToken('FL'),
+  ].includes(label));
+  const isImagingTopic = [
+    normalizeOrderToken('Imaging the Transthalamic Plane'),
+    normalizeOrderToken('Imaging the Plane'),
+  ].includes(topic);
+
+  return isBtc && isTargetUnit && isImagingTopic && REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES.has(resourceName);
+};
 
 const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
   for (const alias of entry.aliases) {
@@ -2264,7 +2281,6 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['Imaging the plane', 'Imaging the Plane', 'Finding the Fetal Presentation', 'Finding the fetal presentation'], order: 1 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['How To Acquire The Transthalamic Plane', 'How to acquire the transthalamic plane'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['Interaction - Fetal Head Scanning Activity'], order: 2 },
-  { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['Mind Sparks - Probe Movements', 'Mind Sparks - Probe movements', 'MindSparks - Probe movements'], order: 3 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Imaging the Plane', 'Imaging the Transthalamic Plane'], resources: ['Mind Sparks - Picture Pick'], order: 4 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Measurement', 'Measurements'], resources: ['How to Measure BPD', 'How To Measure BPD'], order: 1 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Measurement', 'Measurements'], resources: ['How to measure HC', 'How To Measure HC'], order: 2 },
@@ -2291,7 +2307,6 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['MindSparks - Quiz', 'Mind Sparks - Anatomical Landmarks'], order: 3 },
   { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['Cephalic Presentation'], order: 1 },
   { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['Breech Presentation'], order: 2 },
-  { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['MindSparks - Probe movements', 'Mind Sparks - Probe movements'], order: 3 },
   { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Ellipse method'], order: 1 },
   { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Two-diameter method'], order: 2 },
   { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Interaction - Landmark placement and measurement'], order: 3 },
@@ -2315,7 +2330,6 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks End card', 'Anatomical landmarks End Card', 'Interaction - Femur Bone'], order: 2 },
   { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['MindSparks - Quiz', 'Mind Sparks - Anatomical Landmarks'], order: 3 },
   { units: ['FL'], topics: ['Imaging the Plane', 'Imaging the transfemoral plane'], resources: ['Breech Presentation', 'Imaging the plane', 'How to acquire the femur diaphysis plane'], order: 1 },
-  { units: ['FL'], topics: ['Imaging the Plane', 'Imaging the transfemoral plane'], resources: ['MindSparks - Probe movements', 'Mind Sparks - Probe movements'], order: 2 },
   { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Measurement of  FL', 'Measurements', 'Measurement', 'How to measure FL'], order: 1 },
   { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Mind Sparks - Measurements', 'MindSparks - Picture Pick'], order: 2 },
   { units: ['FL'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Pitfalls', 'Pit Falls'], resources: ['Plane acquisition errors', 'Pit Falls', 'Plane Acquisition Challenges', 'Plane Acquisition Challenges and Common Errors', 'Common measurement errors', 'Common Measurement Errors', 'Artifacts'], order: 1 },
@@ -2356,9 +2370,6 @@ const BPD_HC_TOPIC_BY_RESOURCE = {
   [normalizeOrderToken('How to acquire the transthalamic plane')]: 'Imaging the Transthalamic Plane',
   [normalizeOrderToken('How To Acquire The Transthalamic Plane')]: 'Imaging the Transthalamic Plane',
   [normalizeOrderToken('Interaction - Fetal Head Scanning Activity')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('Mind Sparks - Probe Movements')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('Mind Sparks - Probe movements')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('MindSparks - Probe movements')]: 'Imaging the Transthalamic Plane',
   [normalizeOrderToken('How to Measure BPD')]: 'Measurement',
   [normalizeOrderToken('How To Measure BPD')]: 'Measurement',
   [normalizeOrderToken('How to measure BPD')]: 'Measurement',
@@ -2407,8 +2418,6 @@ const AC_TOPIC_BY_RESOURCE = {
   [normalizeOrderToken('How to acquire the transabdominal plane')]: 'Imaging the Plane',
   [normalizeOrderToken('Cephalic Presentation')]: 'Imaging the Plane',
   [normalizeOrderToken('Breech Presentation')]: 'Imaging the Plane',
-  [normalizeOrderToken('Mind Sparks - Probe movements')]: 'Imaging the Plane',
-  [normalizeOrderToken('MindSparks - Probe movements')]: 'Imaging the Plane',
   [normalizeOrderToken('Measurement')]: 'Measurement',
   [normalizeOrderToken('Measurements')]: 'Measurement',
   [normalizeOrderToken('How to measure AC')]: 'Measurement',
@@ -2463,7 +2472,6 @@ const getAcResourceOrder = (resourceTopic, resourceName) => {
 
   if (isTopic('Imaging the Plane', 'Imaging the plane', 'Imaging the transabdominal plane')) {
     if (isAny('Imaging the plane', 'Imaging the Plane', 'How to acquire the transabdominal plane')) return 1;
-    if (isAny('MindSparks - Probe movements', 'Mind Sparks - Probe movements')) return 2;
   }
 
   if (isTopic('Measurement', 'Measurements')) {
@@ -3691,13 +3699,16 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         ),
       ])
         .then(([batchData, rawCertData, vrProgressData]) => {
-          const certificates = buildCertificateTree(rawCertData);
+          const visibleCertData = rawCertData.filter(row => !isRemovedBtcBiometryProbeMindSpark(row));
+          const visibleResourceIds = new Set(visibleCertData.map(row => row.resource_id).filter(Boolean));
+          const visibleLatestProgress = vrProgressData.find(row => visibleResourceIds.has(row.resourse_id)) || null;
+          const certificates = buildCertificateTree(visibleCertData);
           resolve({
             status: 'Success',
             code: 200,
             currentBatches: batchData,
             certificates: certificates,
-            latestProgress: vrProgressData[0] || null,
+            latestProgress: visibleLatestProgress,
             loginContext: 'vr',
           });
         })
@@ -3906,10 +3917,33 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       ),
     ])
       .then(([progressData, lmsProgressData, instructorData, testData, reAttemptsData, moduleCompletion]) => {
+        const removedProgressData = progressData.filter(isRemovedBtcBiometryProbeMindSpark);
+        const visibleProgressData = progressData.filter(row => !isRemovedBtcBiometryProbeMindSpark(row));
+        const visibleLatestProgress = lmsProgressData.find(row => !isRemovedBtcBiometryProbeMindSpark(row)) || null;
+        const visibleModuleCompletion = moduleCompletion.map(moduleRow => {
+          const removedModuleResources = removedProgressData.filter(row =>
+            row.learning_module_id === moduleRow.learning_module_id
+          );
+
+          if (removedModuleResources.length === 0) return moduleRow;
+
+          return {
+            ...moduleRow,
+            total_learning_resources: Math.max(
+              0,
+              Number(moduleRow.total_learning_resources) - removedModuleResources.length
+            ),
+            completed_learning_resources: Math.max(
+              0,
+              Number(moduleRow.completed_learning_resources) -
+                removedModuleResources.filter(row => row.is_completed === true).length
+            ),
+          };
+        });
         const currentBatches = instructorData.filter(b => b.batch_status === 'current');
         const completedBatches = instructorData.filter(b => b.batch_status === 'completed');
 
-        const nextModule = [...moduleCompletion]
+        const nextModule = [...visibleModuleCompletion]
           .sort((a, b) => (UNIT_ORDER[a.unit_name] ?? 99) - (UNIT_ORDER[b.unit_name] ?? 99))
           .find(m =>
             Number(m.completed_learning_resources) < Number(m.total_learning_resources) ||
@@ -3919,13 +3953,13 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         resolve({
           status: 'Success',
           code: 200,
-          data: progressData,
-          latestProgress: lmsProgressData[0] || null,
+          data: visibleProgressData,
+          latestProgress: visibleLatestProgress,
           currentBatches: currentBatches,
           completedBatches: completedBatches,
           testQuery: testData,
           reAttempts: reAttemptsData,
-          moduleCompletion: moduleCompletion,
+          moduleCompletion: visibleModuleCompletion,
           nextModule: nextModule,
           loginContext: 'lms',
         });
