@@ -645,106 +645,52 @@ const volRecordingC = async(req, res) => {
             });
         }
         
-        // Access files from req.files
+        // Access file arrays from the multipart request.
         const recording_files = req.files?.recording_file || [];
         const audio_files = req.files?.audio_file || [];
+        const image_files = req.files?.images || [];
         
-        // Validate based on recording type
-        if (recording_type === 'shadow') {
-            // Shadow: expect exactly 1 file of each type
-            if (recording_files.length !== 1 || audio_files.length !== 1) {
+        // Both recording types require one or more files in all three groups.
+        if (recording_files.length === 0 || audio_files.length === 0 || image_files.length === 0) {
+            return res.status(400).json({
+                error: "Shadow and step recordings require at least 1 JSON file, 1 WAV file, and 1 image",
+                received: {
+                    recording_files: recording_files.length,
+                    audio_files: audio_files.length,
+                    images: image_files.length
+                }
+            });
+        }
+
+        // Validate every file before uploading any of them.
+        for (let i = 0; i < recording_files.length; i++) {
+            const recording_file = recording_files[i];
+            const fileExtension = path.extname(recording_file.originalname).slice(1).toLowerCase();
+
+            const isJsonMime = ['application/json', 'application/octet-stream'].includes(recording_file.mimetype);
+            if (!isJsonMime || fileExtension !== 'json') {
                 return res.status(400).json({
-                    error: "Shadow recording requires exactly 1 recording file and 1 audio file",
-                    received: {
-                        recording_files: recording_files.length,
-                        audio_files: audio_files.length
-                    }
+                    error: `Invalid recording file at index ${i}. Only .json files are allowed.`,
+                    received: recording_file.mimetype,
+                    filename: recording_file.originalname
                 });
             }
-        } else if (recording_type === 'step') {
-            // Step: expect exactly 1 JSON file and at least 1 audio file
-            if (recording_files.length !== 1) {
+
+            try {
+                JSON.parse(recording_file.buffer.toString('utf-8'));
+            } catch(jsonError) {
                 return res.status(400).json({
-                    error: "Step recording requires exactly 1 JSON recording file",
-                    received: {
-                        recording_files: recording_files.length
-                    }
-                });
-            }
-            
-            if (audio_files.length === 0) {
-                return res.status(400).json({
-                    error: "Step recording requires at least 1 audio file",
-                    received: {
-                        audio_files: audio_files.length
-                    }
+                    error: `Invalid JSON content at index ${i}. File contains malformed JSON.`,
+                    details: jsonError.message,
+                    filename: recording_file.originalname
                 });
             }
         }
-        
-        // Process and upload files
-        const timestamp = Date.now();
-        let uploadedRecording = null;
-        const uploadedAudio = [];
-        
-        // Process the single JSON recording file
-        const recording_file = recording_files[0];
-        
-        // Validate JSON recording file
-        if (recording_file.mimetype !== 'application/json') {
-            return res.status(400).json({
-                error: `Invalid recording file format. Only JSON files are allowed.`,
-                received: recording_file.mimetype,
-                filename: recording_file.originalname
-            });
-        }
-        
-        const fileExtension = recording_file.originalname.split('.').pop().toLowerCase();
-        if (fileExtension !== 'json') {
-            return res.status(400).json({
-                error: `Invalid file extension. Only .json files are allowed.`,
-                received: fileExtension,
-                filename: recording_file.originalname
-            });
-        }
-        
-        // Validate JSON content
-        try {
-            const fileContent = recording_file.buffer.toString('utf-8');
-            JSON.parse(fileContent);
-        } catch(jsonError) {
-            return res.status(400).json({
-                error: `Invalid JSON content. File contains malformed JSON.`,
-                details: jsonError.message,
-                filename: recording_file.originalname
-            });
-        }
-        
-        // Upload JSON recording file
-        const jsonFileName = `volume_recordings/${volume_id}_${timestamp}.json`;
-        const { data: jsonData, error: jsonError } = await client.storage
-            .from(process.env.BUCKET_NAME)
-            .upload(jsonFileName, recording_file.buffer, {
-                contentType: 'application/json',
-                upsert: false
-            });
-        
-        if (jsonError) {
-            throw new Error(`JSON upload failed: ${jsonError.message}`);
-        }
-        
-        // Get public URL for JSON
-        const { data: { publicUrl: jsonUrl } } = client.storage
-            .from(process.env.BUCKET_NAME)
-            .getPublicUrl(jsonFileName);
-        
-        uploadedRecording = jsonUrl;
-        
-        // Process all audio files
+
         for (let i = 0; i < audio_files.length; i++) {
             const audio_file = audio_files[i];
-            
-            // Validate audio file
+            const audioExtension = path.extname(audio_file.originalname).slice(1).toLowerCase();
+
             if (!audio_file.mimetype.startsWith('audio/') && audio_file.mimetype !== 'application/octet-stream') {
                 return res.status(400).json({
                     error: `Invalid audio file format at index ${i}. Only audio files are allowed.`,
@@ -753,7 +699,6 @@ const volRecordingC = async(req, res) => {
                 });
             }
             
-            const audioExtension = audio_file.originalname.split('.').pop().toLowerCase();
             if (audioExtension !== 'wav') {
                 return res.status(400).json({
                     error: `Invalid audio file extension at index ${i}. Only .wav files are allowed.`,
@@ -762,9 +707,60 @@ const volRecordingC = async(req, res) => {
                 });
             }
             
-            // Upload audio file
+        }
+
+        const imageContentTypes = {
+            png: 'image/png',
+            jpg: 'image/jpeg',
+            jpeg: 'image/jpeg',
+            webp: 'image/webp',
+            gif: 'image/gif',
+            bmp: 'image/bmp'
+        };
+        for (let i = 0; i < image_files.length; i++) {
+            const image_file = image_files[i];
+            const imageExtension = path.extname(image_file.originalname).slice(1).toLowerCase();
+            const isImageMime = image_file.mimetype.startsWith('image/') || image_file.mimetype === 'application/octet-stream';
+
+            if (!isImageMime || !imageContentTypes[imageExtension]) {
+                return res.status(400).json({
+                    error: `Invalid image file at index ${i}. Allowed extensions: png, jpg, jpeg, webp, gif, bmp.`,
+                    received: image_file.mimetype,
+                    filename: image_file.originalname
+                });
+            }
+        }
+
+        const timestamp = Date.now();
+        const uploadedRecordings = [];
+        const uploadedAudio = [];
+        const uploadedImages = [];
+
+        for (let i = 0; i < recording_files.length; i++) {
+            const recording_file = recording_files[i];
+            const jsonFileName = `volume_recordings/${volume_id}_${timestamp}_${i}.json`;
+            const { error: jsonError } = await client.storage
+                .from(process.env.BUCKET_NAME)
+                .upload(jsonFileName, recording_file.buffer, {
+                    contentType: 'application/json',
+                    upsert: false
+                });
+
+            if (jsonError) {
+                throw new Error(`JSON upload failed at index ${i}: ${jsonError.message}`);
+            }
+
+            const { data: { publicUrl: jsonUrl } } = client.storage
+                .from(process.env.BUCKET_NAME)
+                .getPublicUrl(jsonFileName);
+
+            uploadedRecordings.push(jsonUrl);
+        }
+
+        for (let i = 0; i < audio_files.length; i++) {
+            const audio_file = audio_files[i];
             const audioFileName = `volume_audio/${volume_id}_${timestamp}_${i}.wav`;
-            const { data: audioData, error: audioError } = await client.storage
+            const { error: audioError } = await client.storage
                 .from(process.env.BUCKET_NAME)
                 .upload(audioFileName, audio_file.buffer, {
                     contentType: 'audio/wav',
@@ -782,15 +778,37 @@ const volRecordingC = async(req, res) => {
             
             uploadedAudio.push(audioUrl);
         }
+
+        for (let i = 0; i < image_files.length; i++) {
+            const image_file = image_files[i];
+            const imageExtension = path.extname(image_file.originalname).slice(1).toLowerCase();
+            const imageFileName = `volume_images/${volume_id}_${timestamp}_${i}.${imageExtension}`;
+            const { error: imageError } = await client.storage
+                .from(process.env.BUCKET_NAME)
+                .upload(imageFileName, image_file.buffer, {
+                    contentType: imageContentTypes[imageExtension],
+                    upsert: false
+                });
+
+            if (imageError) {
+                throw new Error(`Image upload failed at index ${i}: ${imageError.message}`);
+            }
+
+            const { data: { publicUrl: imageUrl } } = client.storage
+                .from(process.env.BUCKET_NAME)
+                .getPublicUrl(imageFileName);
+
+            uploadedImages.push(imageUrl);
+        }
         
-        // Save to database using your model
         const dbResult = await volumeRecordingsModel(
             requester, 
             volume_id, 
             recording_name, 
             recording_type, 
-            uploadedRecording,   // Single recording URL (string)
-            uploadedAudio        // Array of audio URLs
+            uploadedRecordings,
+            uploadedAudio,
+            uploadedImages
         );
         
         // Check authorization response from model
@@ -803,9 +821,13 @@ const volRecordingC = async(req, res) => {
         res.status(200).json({
             message: `Volume ${recording_type} Recording Uploaded Successfully`,
             recordingType: recording_type,
-            recordingUrl: uploadedRecording,
+            recordingUrl: uploadedRecordings[0],
+            recordingFilesUploaded: uploadedRecordings.length,
+            recordingUrls: uploadedRecordings,
             audioFilesUploaded: uploadedAudio.length,
             audioUrls: uploadedAudio,
+            imageFilesUploaded: uploadedImages.length,
+            imageUrls: uploadedImages,
             data: dbResult
         });
     }

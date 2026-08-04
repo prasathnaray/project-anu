@@ -288,4 +288,3 @@ app.use((err, req, res, next) => {
     }
     return next(err);
 });
-module.exports = app;

@@ -21,11 +21,18 @@ http:
       - name: recording_file
         type: file
         value:
-          - C:\path\to\shadow.json
+          - C:\path\to\shadow-1.json
+          - C:\path\to\shadow-2.json
       - name: audio_file
         type: file
         value:
-          - C:\path\to\shadow.wav
+          - C:\path\to\shadow-1.wav
+          - C:\path\to\shadow-2.wav
+      - name: images
+        type: file
+        value:
+          - C:\path\to\shadow-1.png
+          - C:\path\to\shadow-2.jpg
   auth:
     type: bearer
     token: "{{token}}"

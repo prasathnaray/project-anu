@@ -40,7 +40,7 @@ Note: authorization handling is not fully consistent in the current controllers.
 | `PUT` | `/convert-vol/:volume_id` | Start volume conversion |
 | `GET` | `/converted-volumes` | List successfully converted volumes |
 | `POST` | `/volume-placement` | Upload placement JSON for a converted volume |
-| `POST` | `/uploadvolumerecording` | Upload shadow or step recording JSON plus audio |
+| `POST` | `/uploadvolumerecording` | Upload shadow or step recording JSON, audio, and images |
 | `GET` | `/shadow-recordings?volume_id=...` | Get recordings for a volume |
 | `GET` | `/volume-recording-counts` | Get shadow count and step recording files by volume |
 | `POST` | `/associateVolume` | Associate a resource with a volume and recordings |
@@ -343,7 +343,7 @@ Invalid JSON content. File contains malformed JSON.
 
 ## 8. Upload Volume Recording
 
-Uploads recording JSON and audio files to Supabase storage and inserts a row in `vol_recordings`.
+Uploads recording JSON, WAV, and image files to Supabase storage and inserts their URL arrays into `vol_recordings`.
 
 ```http
 POST /uploadvolumerecording
@@ -357,8 +357,9 @@ Form data:
 | `volume_id` | text UUID | Yes | Volume ID |
 | `recording_name` | text | Yes | Display name |
 | `recording_type` | text | Yes | Must be `shadow` or `step` |
-| `recording_file` | file | Yes | Exactly one valid JSON file |
-| `audio_file` | file | Yes | For `shadow`, exactly one `.wav`; for `step`, one or more `.wav` files |
+| `recording_file` | file | Yes | One or more valid `.json` files; repeat this field for multiple files |
+| `audio_file` | file | Yes | One or more `.wav` files; repeat this field for multiple files |
+| `images` | file | Yes | One or more `png`, `jpg`, `jpeg`, `webp`, `gif`, or `bmp` files; repeat this field for multiple files |
 
 Shadow recording example:
 
@@ -368,11 +369,15 @@ curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
   -F "volume_id=6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -F "recording_name=Shadow Demo" \
   -F "recording_type=shadow" \
-  -F "recording_file=@./shadow.json;type=application/json" \
-  -F "audio_file=@./shadow.wav;type=audio/wav"
+  -F "recording_file=@./shadow-1.json;type=application/json" \
+  -F "recording_file=@./shadow-2.json;type=application/json" \
+  -F "audio_file=@./shadow-1.wav;type=audio/wav" \
+  -F "audio_file=@./shadow-2.wav;type=audio/wav" \
+  -F "images=@./shadow-1.png;type=image/png" \
+  -F "images=@./shadow-2.jpg;type=image/jpeg"
 ```
 
-Step recording example with multiple audio files:
+Step recording example with multiple files:
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
@@ -380,9 +385,12 @@ curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
   -F "volume_id=6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -F "recording_name=Step Demo" \
   -F "recording_type=step" \
-  -F "recording_file=@./step.json;type=application/json" \
+  -F "recording_file=@./step-1.json;type=application/json" \
+  -F "recording_file=@./step-2.json;type=application/json" \
   -F "audio_file=@./step-1.wav;type=audio/wav" \
-  -F "audio_file=@./step-2.wav;type=audio/wav"
+  -F "audio_file=@./step-2.wav;type=audio/wav" \
+  -F "images=@./step-1.png;type=image/png" \
+  -F "images=@./step-2.jpg;type=image/jpeg"
 ```
 
 Success response:
@@ -391,11 +399,21 @@ Success response:
 {
   "message": "Volume step Recording Uploaded Successfully",
   "recordingType": "step",
-  "recordingUrl": "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000.json",
+  "recordingUrl": "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.json",
+  "recordingFilesUploaded": 2,
+  "recordingUrls": [
+    "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.json",
+    "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.json"
+  ],
   "audioFilesUploaded": 2,
   "audioUrls": [
     "https://example.com/storage/v1/object/public/bucket/volume_audio/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.wav",
     "https://example.com/storage/v1/object/public/bucket/volume_audio/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.wav"
+  ],
+  "imageFilesUploaded": 2,
+  "imageUrls": [
+    "https://example.com/storage/v1/object/public/bucket/volume_images/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.png",
+    "https://example.com/storage/v1/object/public/bucket/volume_images/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.jpg"
   ],
   "data": {
     "status": "Success",
@@ -406,8 +424,9 @@ Success response:
       "volume_id": "6982d3f3-8617-49a7-9b0d-d160db9adf6c",
       "recording_name": "Step Demo",
       "recording_type": "step",
-      "rec_files": "[\"https://example.com/step.json\"]",
-      "audio_files": "[\"https://example.com/step-1.wav\",\"https://example.com/step-2.wav\"]"
+      "rec_files": ["https://example.com/step-1.json", "https://example.com/step-2.json"],
+      "audio_files": ["https://example.com/step-1.wav", "https://example.com/step-2.wav"],
+      "image_files": ["https://example.com/step-1.png", "https://example.com/step-2.jpg"]
     }
   }
 }
@@ -424,19 +443,11 @@ Common validation errors:
 
 ```json
 {
-  "error": "Shadow recording requires exactly 1 recording file and 1 audio file",
+  "error": "Shadow and step recordings require at least 1 JSON file, 1 WAV file, and 1 image",
   "received": {
-    "recording_files": 1,
-    "audio_files": 0
-  }
-}
-```
-
-```json
-{
-  "error": "Step recording requires exactly 1 JSON recording file",
-  "received": {
-    "recording_files": 2
+    "recording_files": 2,
+    "audio_files": 2,
+    "images": 0
   }
 }
 ```
@@ -470,15 +481,16 @@ Success response:
     "recording_type": "shadow",
     "recording_name": "Shadow Demo",
     "recording_id": "recording-uuid",
-    "rec_files": "[\"https://example.com/shadow.json\"]",
-    "audio_files": "[\"https://example.com/shadow.wav\"]"
+    "rec_files": ["https://example.com/shadow-1.json", "https://example.com/shadow-2.json"],
+    "audio_files": ["https://example.com/shadow-1.wav", "https://example.com/shadow-2.wav"],
+    "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"]
   }
 ]
 ```
 
 ## 10. Get Volume Recording Counts
 
-Returns one row per volume with the number of shadow recordings and the JSON recording file URLs for step recordings.
+Returns one row per volume with the number of shadow recordings plus the JSON and image URLs for step recordings.
 
 ```http
 GET /volume-recording-counts
@@ -502,6 +514,9 @@ Success response:
     "shadow_recording_count": 1,
     "step_recording_files": [
       "https://example.com/storage/v1/object/public/bucket/volume_recordings/step.json"
+    ],
+    "step_recording_images": [
+      "https://example.com/storage/v1/object/public/bucket/volume_images/step.png"
     ]
   }
 ]
@@ -590,8 +605,9 @@ Success response:
     "recording_id": "11111111-1111-1111-1111-111111111111",
     "recording_name": "Shadow Demo",
     "recording_type": "shadow",
-    "rec_files": "[\"https://example.com/shadow.json\"]",
-    "audio_files": "[\"https://example.com/shadow.wav\"]"
+    "rec_files": ["https://example.com/shadow-1.json", "https://example.com/shadow-2.json"],
+    "audio_files": ["https://example.com/shadow-1.wav", "https://example.com/shadow-2.wav"],
+    "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"]
   }
 ]
 ```

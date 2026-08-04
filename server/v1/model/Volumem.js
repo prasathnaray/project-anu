@@ -594,7 +594,7 @@ const getVolumePlacementsModel = (requester, volume_id = null) => {
 // };
 
 // the above code is commented out and replaced with the following improved version
-const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_file, audio_files) => {
+const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files, image_files) => {
     return new Promise((resolve, reject) => {
         // Check user permissions
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
@@ -612,33 +612,30 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
             return reject(new Error('Missing required fields: volume_id, recording_name, or recording_type'));
         }
         
-        if (!rec_file || typeof rec_file !== 'string') {
-            return reject(new Error('rec_file must be a non-empty string (single JSON file path)'));
+        if (!Array.isArray(rec_files) || !Array.isArray(audio_files) || !Array.isArray(image_files)) {
+            return reject(new Error('rec_files, audio_files, and image_files must be arrays'));
         }
         
-        if (!Array.isArray(audio_files)) {
-            return reject(new Error('audio_files must be an array'));
+        if (rec_files.length === 0 || audio_files.length === 0 || image_files.length === 0) {
+            return reject(new Error('rec_files, audio_files, and image_files arrays cannot be empty'));
         }
         
-        if (audio_files.length === 0) {
-            return reject(new Error('audio_files array cannot be empty'));
-        }
-        
-        // Wrap single rec_file in array and convert both to JSON strings for PostgreSQL
-        const recFilesJson = JSON.stringify([rec_file]);  // Single file wrapped in array
+        // Convert URL arrays to JSON for PostgreSQL.
+        const recFilesJson = JSON.stringify(rec_files);
         const audioFilesJson = JSON.stringify(audio_files);
+        const imageFilesJson = JSON.stringify(image_files);
         
         // Insert into database
         const query = `
             INSERT INTO vol_recordings 
-            (volume_id, recording_name, recording_type, rec_files, audio_files) 
-            VALUES($1, $2, $3, $4, $5) 
+            (volume_id, recording_name, recording_type, rec_files, audio_files, image_files)
+            VALUES($1, $2, $3, $4, $5, $6)
             RETURNING *
         `;
         
         client.query(
             query, 
-            [volume_id, recording_name, recording_type, recFilesJson, audioFilesJson], 
+            [volume_id, recording_name, recording_type, recFilesJson, audioFilesJson, imageFilesJson],
             (err, result) => {
                 if (err) {
                     return reject(err);
@@ -689,10 +686,10 @@ const shadowRecoringDataModel = (requester, volume_id) => {
                 message: 'You do not have permission to upload volume recordings',
             })
         }
-        client.query(`SELECT recording_type, recording_name, recording_id, rec_files, audio_files
+        client.query(`SELECT recording_type, recording_name, recording_id, rec_files, audio_files, image_files
                       FROM vol_recordings
                       WHERE volume_id = $1
-                      GROUP BY recording_type, recording_name, recording_id, rec_files, audio_files;`,[volume_id], (err, result) => {
+                      GROUP BY recording_type, recording_name, recording_id, rec_files, audio_files, image_files;`,[volume_id], (err, result) => {
             if (err)
             {
                 return reject(err);
@@ -729,11 +726,19 @@ const getVolumeRecordingCountsModel = (requester) => {
                         WHERE step_files.file_url IS NOT NULL
                     ),
                     '[]'::jsonb
-                ) AS step_recording_files
+                ) AS step_recording_files,
+                COALESCE(
+                    jsonb_agg(DISTINCT step_images.image_url) FILTER (
+                        WHERE step_images.image_url IS NOT NULL
+                    ),
+                    '[]'::jsonb
+                ) AS step_recording_images
             FROM vol_recordings vr
             JOIN volumes v
                 ON v.volume_id = vr.volume_id
             LEFT JOIN LATERAL jsonb_array_elements_text(vr.rec_files) AS step_files(file_url)
+                ON LOWER(TRIM(vr.recording_type)) LIKE '%step%'
+            LEFT JOIN LATERAL jsonb_array_elements_text(vr.image_files) AS step_images(image_url)
                 ON LOWER(TRIM(vr.recording_type)) LIKE '%step%'
             WHERE vr.volume_id IS NOT NULL
               ${!canViewAllVolumes ? 'AND v.added_by = $1' : ''}
@@ -782,7 +787,8 @@ const getAssociatedVolumeModel = (requester, r_id) => {
                     vr.recording_name,
                     vr.recording_type,
                     vr.rec_files,
-                    vr.audio_files
+                    vr.audio_files,
+                    vr.image_files
                 FROM asso_volume av
                 JOIN volumes v
                     ON av.vol_id = v.volume_id

@@ -86,7 +86,9 @@ function VolumeList() {
           ...acc,
           [item.volume_id]: {
             shadow: Number(item.shadow_recording_count) || 0,
-            stepFiles: Array.isArray(item.step_recording_files) ? item.step_recording_files : []
+            stepFiles: Array.isArray(item.step_recording_images)
+              ? item.step_recording_images
+              : (Array.isArray(item.step_recording_files) ? item.step_recording_files : [])
           }
         }), {})
       );
