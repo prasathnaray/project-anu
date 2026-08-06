@@ -19,9 +19,11 @@ The document covers:
 - Volume conversion.
 - Converted volume listing.
 - Volume placement JSON upload.
+- Volume placement listing and per-volume lookup.
 - Volume recording upload.
 - Shadow/step recording retrieval.
 - Volume recording counts.
+- Legacy shadow recording count alias.
 - Volume/resource association.
 - Associated volume lookup.
 
@@ -36,11 +38,16 @@ New request files include:
 - `Get Volumes By Instructor.yml`
 - `Converted Volumes.yml`
 - `Volume Placement.yml`
+- `Get Volume Placements.yml`
+- `Get Volume Placements By ID.yml`
 - `Upload Volume Recording.yml`
 - `Shadow Recordings.yml`
 - `Volume Recording Counts.yml`
+- `Shadow Recording Counts Legacy.yml`
 - `Associate Volume.yml`
 - `Get Associated Volume.yml`
+
+The source-upload and conversion requests now use the shared `{{base_url_prod}}` and `{{token}}` collection variables instead of local URLs and embedded bearer tokens. The upload request also uses representative volume metadata and a placeholder `.vol` path.
 
 ## 2. Super Admin Course Mapping Form
 

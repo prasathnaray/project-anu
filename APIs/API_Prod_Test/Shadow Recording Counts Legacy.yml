@@ -1,11 +1,11 @@
 info:
-  name: Convert Volume
+  name: Shadow Recording Counts Legacy
   type: http
-  seq: 14
+  seq: 27
 
 http:
-  method: PUT
-  url: http://{{base_url_prod}}/api/v1/convert-vol/6982d3f3-8617-49a7-9b0d-d160db9adf6c
+  method: GET
+  url: http://{{base_url_prod}}/api/v1/shadow-recording-counts
   auth:
     type: bearer
     token: "{{token}}"

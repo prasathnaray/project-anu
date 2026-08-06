@@ -5,22 +5,22 @@ info:
 
 http:
   method: POST
-  url: http://localhost:4004/api/v1/sv-upload
+  url: http://{{base_url_prod}}/api/v1/sv-upload
   body:
     type: multipart-form
     data:
       - name: volume_type
         type: text
-        value: asd
+        value: Fetal Anatomy
       - name: volume_name
         type: text
-        value: adfa
+        value: FL - I0000004
       - name: volume_ga
         type: text
-        value: "2"
+        value: "22"
       - name: volume_fetal_presentation
         type: text
-        value: adcxac
+        value: Cephalic
       - name: trimester
         type: text
         value: Second Trimester
@@ -30,10 +30,10 @@ http:
       - name: file
         type: file
         value:
-          - C:\Users\igrs\Pictures\Screenshots\Screenshot 2025-06-26 111401.png
+          - C:\path\to\FL - I0000004.vol
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJha2lsQGdtYWlsLmNvbSIsInJvbGUiOiIxMDIiLCJpYXQiOjE3ODA5ODYzOTF9.88Uo121g23FuOGLxW5PeysjnAyQpBY6-gGUo5dOBfQk
+    token: "{{token}}"
 
 settings:
   encodeUrl: true

@@ -25,7 +25,7 @@ Most write and admin read operations are intended for privileged roles:
 | `99` | Super admin, can view all volumes |
 | `101` | Admin, can view all volumes |
 | `102` | Instructor/admin user, can view own volumes for some endpoints |
-| `103` | Allowed for upload and recording count only in current model rules |
+| `103` | Allowed for source-volume upload, placement upload/read, uploaded-volume listing, and recording counts; not recording upload |
 
 Note: authorization handling is not fully consistent in the current controllers. Non-privileged users may receive `401`, `500`, empty data, or no useful response depending on the endpoint.
 
@@ -40,11 +40,25 @@ Note: authorization handling is not fully consistent in the current controllers.
 | `PUT` | `/convert-vol/:volume_id` | Start volume conversion |
 | `GET` | `/converted-volumes` | List successfully converted volumes |
 | `POST` | `/volume-placement` | Upload placement JSON for a converted volume |
+| `GET` | `/volume-placements` | List all placement records; optionally filter with `volume_id` |
+| `GET` | `/volume-placements/:volume_id` | List placement records for one volume |
 | `POST` | `/uploadvolumerecording` | Upload shadow or step recording JSON, audio, and images |
 | `GET` | `/shadow-recordings?volume_id=...` | Get recordings for a volume |
 | `GET` | `/volume-recording-counts` | Get shadow count and step recording files by volume |
+| `GET` | `/shadow-recording-counts` | Legacy alias of `/volume-recording-counts` |
 | `POST` | `/associateVolume` | Associate a resource with a volume and recordings |
 | `GET` | `/get-assovol?r_id=...` | Get volume associations for a resource |
+
+## End-to-End Pipeline
+
+1. Upload the source file with `POST /sv-upload`.
+2. Review it with `GET /get-volumes` or `GET /get-volumes-by-instructor`.
+3. Approve or reject it with `PATCH /approve-volume/:status_approval/:volume_id`.
+4. Start conversion with `PUT /convert-vol/:volume_id`.
+5. Read completed conversions with `GET /converted-volumes`.
+6. Upload placement JSON with `POST /volume-placement`, then verify it with either placement-read endpoint.
+7. Upload `shadow` and `step` recordings with `POST /uploadvolumerecording`.
+8. Read recording details/counts, then associate the selected volume and recordings with a resource.
 
 ## 1. Upload Volume
 
@@ -341,6 +355,50 @@ Invalid file extension. Only .json files are allowed.
 Invalid JSON content. File contains malformed JSON.
 ```
 
+### List All Volume Placements
+
+Returns placement rows joined with the volume name. The optional `volume_id` query parameter filters the result to one volume.
+
+```http
+GET /volume-placements
+GET /volume-placements?volume_id=:volume_id
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:4004/api/v1/volume-placements" \
+  -H "Authorization: Bearer <token>"
+```
+
+Success response:
+
+```json
+[
+  {
+    "volume_id": "6982d3f3-8617-49a7-9b0d-d160db9adf6c",
+    "placed_url": "https://example.com/storage/v1/object/public/bucket/volume_placements/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000.json",
+    "created_at": "2026-06-22T10:20:00.000Z",
+    "volume_name": "FL - I0000004"
+  }
+]
+```
+
+### List Placements By Volume ID
+
+```http
+GET /volume-placements/:volume_id
+```
+
+Example:
+
+```bash
+curl -X GET "http://localhost:4004/api/v1/volume-placements/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
+  -H "Authorization: Bearer <token>"
+```
+
+The success response has the same array shape as `GET /volume-placements`. An unknown volume currently returns an empty array.
+
 ## 8. Upload Volume Recording
 
 Uploads recording JSON, WAV, and image files to Supabase storage and inserts their URL arrays into `vol_recordings`.
@@ -496,6 +554,8 @@ Returns one row per volume with the number of shadow recordings plus the JSON an
 GET /volume-recording-counts
 ```
 
+The older `GET /shadow-recording-counts` route calls the same controller and returns the same response. New clients should use `/volume-recording-counts`.
+
 Roles `99` and `101` can view all volumes. Role `102` only sees records for volumes added by the logged-in user. Role `103` is currently allowed by the model.
 
 Example:
@@ -623,8 +683,11 @@ Existing request files for volume APIs:
 - `APIs/API_Prod_Test/Get Volumes By Instructor.yml`
 - `APIs/API_Prod_Test/Converted Volumes.yml`
 - `APIs/API_Prod_Test/Volume Placement.yml`
+- `APIs/API_Prod_Test/Get Volume Placements.yml`
+- `APIs/API_Prod_Test/Get Volume Placements By ID.yml`
 - `APIs/API_Prod_Test/Upload Volume Recording.yml`
 - `APIs/API_Prod_Test/Shadow Recordings.yml`
 - `APIs/API_Prod_Test/Volume Recording Counts.yml`
+- `APIs/API_Prod_Test/Shadow Recording Counts Legacy.yml`
 - `APIs/API_Prod_Test/Associate Volume.yml`
 - `APIs/API_Prod_Test/Get Associated Volume.yml`
