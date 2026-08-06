@@ -594,7 +594,7 @@ const getVolumePlacementsModel = (requester, volume_id = null) => {
 // };
 
 // the above code is commented out and replaced with the following improved version
-const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files, image_files) => {
+const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files, image_files, manifest_file) => {
     return new Promise((resolve, reject) => {
         // Check user permissions
         const isPrivileged = [99, 101, 102].includes(Number(requester.role));
@@ -608,8 +608,8 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
         }
         
         // Validate inputs
-        if (!volume_id || !recording_name || !recording_type) {
-            return reject(new Error('Missing required fields: volume_id, recording_name, or recording_type'));
+        if (!volume_id || !recording_name || !recording_type || !manifest_file) {
+            return reject(new Error('Missing required fields: volume_id, recording_name, recording_type, or manifest_file'));
         }
         
         if (!Array.isArray(rec_files) || !Array.isArray(audio_files) || !Array.isArray(image_files)) {
@@ -628,14 +628,14 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
         // Insert into database
         const query = `
             INSERT INTO vol_recordings 
-            (volume_id, recording_name, recording_type, rec_files, audio_files, image_files)
-            VALUES($1, $2, $3, $4, $5, $6)
+            (volume_id, recording_name, recording_type, rec_files, audio_files, image_files, manifest_file)
+            VALUES($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
         `;
         
         client.query(
             query, 
-            [volume_id, recording_name, recording_type, recFilesJson, audioFilesJson, imageFilesJson],
+            [volume_id, recording_name, recording_type, recFilesJson, audioFilesJson, imageFilesJson, manifest_file],
             (err, result) => {
                 if (err) {
                     return reject(err);
@@ -686,10 +686,10 @@ const shadowRecoringDataModel = (requester, volume_id) => {
                 message: 'You do not have permission to upload volume recordings',
             })
         }
-        client.query(`SELECT recording_type, recording_name, recording_id, rec_files, audio_files, image_files
+        client.query(`SELECT recording_type, recording_name, recording_id, rec_files, audio_files, image_files, manifest_file
                       FROM vol_recordings
                       WHERE volume_id = $1
-                      GROUP BY recording_type, recording_name, recording_id, rec_files, audio_files, image_files;`,[volume_id], (err, result) => {
+                      GROUP BY recording_type, recording_name, recording_id, rec_files, audio_files, image_files, manifest_file;`,[volume_id], (err, result) => {
             if (err)
             {
                 return reject(err);
@@ -788,7 +788,8 @@ const getAssociatedVolumeModel = (requester, r_id) => {
                     vr.recording_type,
                     vr.rec_files,
                     vr.audio_files,
-                    vr.image_files
+                    vr.image_files,
+                    vr.manifest_file
                 FROM asso_volume av
                 JOIN volumes v
                     ON av.vol_id = v.volume_id

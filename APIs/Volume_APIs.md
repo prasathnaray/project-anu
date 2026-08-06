@@ -42,7 +42,7 @@ Note: authorization handling is not fully consistent in the current controllers.
 | `POST` | `/volume-placement` | Upload placement JSON for a converted volume |
 | `GET` | `/volume-placements` | List all placement records; optionally filter with `volume_id` |
 | `GET` | `/volume-placements/:volume_id` | List placement records for one volume |
-| `POST` | `/uploadvolumerecording` | Upload shadow or step recording JSON, audio, and images |
+| `POST` | `/uploadvolumerecording` | Upload shadow or step recording JSON, audio, images, and one manifest |
 | `GET` | `/shadow-recordings?volume_id=...` | Get recordings for a volume |
 | `GET` | `/volume-recording-counts` | Get shadow count and step recording files by volume |
 | `GET` | `/shadow-recording-counts` | Legacy alias of `/volume-recording-counts` |
@@ -401,7 +401,7 @@ The success response has the same array shape as `GET /volume-placements`. An un
 
 ## 8. Upload Volume Recording
 
-Uploads recording JSON, WAV, and image files to Supabase storage and inserts their URL arrays into `vol_recordings`.
+Uploads recording JSON, WAV, image, and manifest files to Supabase storage and inserts their URLs into `vol_recordings`.
 
 ```http
 POST /uploadvolumerecording
@@ -418,6 +418,7 @@ Form data:
 | `recording_file` | file | Yes | One or more valid `.json` files; repeat this field for multiple files |
 | `audio_file` | file | Yes | One or more `.wav` files; repeat this field for multiple files |
 | `images` | file | Yes | One or more `png`, `jpg`, `jpeg`, `webp`, `gif`, or `bmp` files; repeat this field for multiple files |
+| `manifest_file` | file | Yes | Exactly one valid `.json` or `.manifest` file |
 
 Shadow recording example:
 
@@ -432,7 +433,8 @@ curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
   -F "audio_file=@./shadow-1.wav;type=audio/wav" \
   -F "audio_file=@./shadow-2.wav;type=audio/wav" \
   -F "images=@./shadow-1.png;type=image/png" \
-  -F "images=@./shadow-2.jpg;type=image/jpeg"
+  -F "images=@./shadow-2.jpg;type=image/jpeg" \
+  -F "manifest_file=@./manifest.json;type=application/json"
 ```
 
 Step recording example with multiple files:
@@ -448,7 +450,8 @@ curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
   -F "audio_file=@./step-1.wav;type=audio/wav" \
   -F "audio_file=@./step-2.wav;type=audio/wav" \
   -F "images=@./step-1.png;type=image/png" \
-  -F "images=@./step-2.jpg;type=image/jpeg"
+  -F "images=@./step-2.jpg;type=image/jpeg" \
+  -F "manifest_file=@./manifest.json;type=application/json"
 ```
 
 Success response:
@@ -473,6 +476,7 @@ Success response:
     "https://example.com/storage/v1/object/public/bucket/volume_images/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.png",
     "https://example.com/storage/v1/object/public/bucket/volume_images/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.jpg"
   ],
+  "manifestUrl": "https://example.com/storage/v1/object/public/bucket/volume_manifests/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000.json",
   "data": {
     "status": "Success",
     "code": 200,
@@ -484,7 +488,8 @@ Success response:
       "recording_type": "step",
       "rec_files": ["https://example.com/step-1.json", "https://example.com/step-2.json"],
       "audio_files": ["https://example.com/step-1.wav", "https://example.com/step-2.wav"],
-      "image_files": ["https://example.com/step-1.png", "https://example.com/step-2.jpg"]
+      "image_files": ["https://example.com/step-1.png", "https://example.com/step-2.jpg"],
+      "manifest_file": "https://example.com/manifest.json"
     }
   }
 }
@@ -501,11 +506,12 @@ Common validation errors:
 
 ```json
 {
-  "error": "Shadow and step recordings require at least 1 JSON file, 1 WAV file, and 1 image",
+  "error": "Shadow and step recordings require at least 1 JSON file, 1 WAV file, 1 image, and 1 manifest file",
   "received": {
     "recording_files": 2,
     "audio_files": 2,
-    "images": 0
+    "images": 0,
+    "manifest_file": 0
   }
 }
 ```
@@ -541,7 +547,8 @@ Success response:
     "recording_id": "recording-uuid",
     "rec_files": ["https://example.com/shadow-1.json", "https://example.com/shadow-2.json"],
     "audio_files": ["https://example.com/shadow-1.wav", "https://example.com/shadow-2.wav"],
-    "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"]
+    "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"],
+    "manifest_file": "https://example.com/manifest.json"
   }
 ]
 ```

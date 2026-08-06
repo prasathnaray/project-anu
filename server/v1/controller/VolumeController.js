@@ -649,15 +649,17 @@ const volRecordingC = async(req, res) => {
         const recording_files = req.files?.recording_file || [];
         const audio_files = req.files?.audio_file || [];
         const image_files = req.files?.images || [];
+        const manifest_file = req.files?.manifest_file?.[0];
         
-        // Both recording types require one or more files in all three groups.
-        if (recording_files.length === 0 || audio_files.length === 0 || image_files.length === 0) {
+        // Both recording types require one or more files in all repeatable groups and one manifest.
+        if (recording_files.length === 0 || audio_files.length === 0 || image_files.length === 0 || !manifest_file) {
             return res.status(400).json({
-                error: "Shadow and step recordings require at least 1 JSON file, 1 WAV file, and 1 image",
+                error: "Shadow and step recordings require at least 1 JSON file, 1 WAV file, 1 image, and 1 manifest file",
                 received: {
                     recording_files: recording_files.length,
                     audio_files: audio_files.length,
-                    images: image_files.length
+                    images: image_files.length,
+                    manifest_file: manifest_file ? 1 : 0
                 }
             });
         }
@@ -731,6 +733,37 @@ const volRecordingC = async(req, res) => {
             }
         }
 
+        const manifestExtension = path.extname(manifest_file.originalname).slice(1).toLowerCase();
+        const manifestContentTypes = {
+            json: 'application/json',
+            manifest: 'text/plain'
+        };
+        const isManifestMime = [
+            'application/json',
+            'text/plain',
+            'application/octet-stream'
+        ].includes(manifest_file.mimetype);
+
+        if (!isManifestMime || !manifestContentTypes[manifestExtension]) {
+            return res.status(400).json({
+                error: 'Invalid manifest file. Only .json or .manifest files are allowed.',
+                received: manifest_file.mimetype,
+                filename: manifest_file.originalname
+            });
+        }
+
+        if (manifestExtension === 'json') {
+            try {
+                JSON.parse(manifest_file.buffer.toString('utf-8'));
+            } catch(manifestError) {
+                return res.status(400).json({
+                    error: 'Invalid manifest JSON. File contains malformed JSON.',
+                    details: manifestError.message,
+                    filename: manifest_file.originalname
+                });
+            }
+        }
+
         const timestamp = Date.now();
         const uploadedRecordings = [];
         const uploadedAudio = [];
@@ -800,6 +833,22 @@ const volRecordingC = async(req, res) => {
 
             uploadedImages.push(imageUrl);
         }
+
+        const manifestFileName = `volume_manifests/${volume_id}_${timestamp}.${manifestExtension}`;
+        const { error: manifestError } = await client.storage
+            .from(process.env.BUCKET_NAME)
+            .upload(manifestFileName, manifest_file.buffer, {
+                contentType: manifestContentTypes[manifestExtension],
+                upsert: false
+            });
+
+        if (manifestError) {
+            throw new Error(`Manifest upload failed: ${manifestError.message}`);
+        }
+
+        const { data: { publicUrl: manifestUrl } } = client.storage
+            .from(process.env.BUCKET_NAME)
+            .getPublicUrl(manifestFileName);
         
         const dbResult = await volumeRecordingsModel(
             requester, 
@@ -808,7 +857,8 @@ const volRecordingC = async(req, res) => {
             recording_type, 
             uploadedRecordings,
             uploadedAudio,
-            uploadedImages
+            uploadedImages,
+            manifestUrl
         );
         
         // Check authorization response from model
@@ -828,6 +878,7 @@ const volRecordingC = async(req, res) => {
             audioUrls: uploadedAudio,
             imageFilesUploaded: uploadedImages.length,
             imageUrls: uploadedImages,
+            manifestUrl,
             data: dbResult
         });
     }

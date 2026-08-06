@@ -33,6 +33,10 @@ http:
         value:
           - C:\path\to\shadow-1.png
           - C:\path\to\shadow-2.jpg
+      - name: manifest_file
+        type: file
+        value:
+          - C:\path\to\manifest.json
   auth:
     type: bearer
     token: "{{token}}"
