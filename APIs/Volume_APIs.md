@@ -1,87 +1,89 @@
-# Volume API Documentation
+# Volume API Reference
 
-Base URL:
+This document describes the authenticated volume workflow: source upload, approval, conversion, placement, recordings, and resource association.
 
-```text
-http://localhost:4004/api/v1
-```
+## Connection and authentication
 
-Production collection variable:
+| Environment | Base URL |
+| --- | --- |
+| Local | `http://localhost:4004/api/v1` |
+| Production collection | `http://{{base_url_prod}}/api/v1` |
 
-```text
-http://{{base_url_prod}}/api/v1
-```
-
-All volume APIs are mounted behind `Authenticate` and require:
+Every endpoint in this document is mounted behind `Authenticate` and requires a bearer token:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-Most write and admin read operations are intended for privileged roles:
+Requests use JSON unless an endpoint explicitly specifies `multipart/form-data`.
 
-| Role | Typical access |
-| --- | --- |
-| `99` | Super admin, can view all volumes |
-| `101` | Admin, can view all volumes |
-| `102` | Instructor/admin user, can view own volumes for some endpoints |
-| `103` | Allowed for source-volume upload, placement upload/read, uploaded-volume listing, and recording counts; not recording upload |
+### Role access
 
-Note: authorization handling is not fully consistent in the current controllers. Non-privileged users may receive `401`, `500`, empty data, or no useful response depending on the endpoint.
+| Capability | `99` | `101` | `102` | `103` |
+| --- | :---: | :---: | :---: | :---: |
+| Upload and list source volumes | Yes | Yes | Yes | Yes |
+| Approve, convert, and list converted volumes | Yes | Yes | Yes | No |
+| Instructor/admin volume view | All | All | Own | No |
+| Upload and read placements | Yes | Yes | Yes | Yes |
+| Upload and read recording details | Yes | Yes | Yes | No |
+| Read recording counts | All | All | Own | Own |
+| Create and read associations | Yes | Yes | Yes | No |
 
-## Endpoint Summary
+> Authorization responses are not yet uniform across all controllers. Depending on the endpoint, denied access may produce `401`, `500`, an empty response, or an empty result. The table documents the current model-level permissions.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `POST` | `/sv-upload` | Upload a source volume file and metadata |
-| `GET` | `/get-volumes` | List uploaded volumes |
-| `PATCH` | `/approve-volume/:status_approval/:volume_id` | Update volume approval status |
-| `GET` | `/get-volumes-by-instructor` | List volumes with conversion status for instructor/admin view |
-| `PUT` | `/convert-vol/:volume_id` | Start volume conversion |
-| `GET` | `/converted-volumes` | List successfully converted volumes |
-| `POST` | `/volume-placement` | Upload placement JSON for a converted volume |
-| `GET` | `/volume-placements` | List all placement records; optionally filter with `volume_id` |
-| `GET` | `/volume-placements/:volume_id` | List placement records for one volume |
-| `POST` | `/uploadvolumerecording` | Upload shadow or step recording JSON, audio, images, and one manifest |
-| `GET` | `/shadow-recordings?volume_id=...` | Get recordings for a volume |
-| `GET` | `/volume-recording-counts` | Get shadow count and step recording files by volume |
-| `GET` | `/shadow-recording-counts` | Legacy alias of `/volume-recording-counts` |
-| `POST` | `/associateVolume` | Associate a resource with a volume and recordings |
-| `GET` | `/get-assovol?r_id=...` | Get volume associations for a resource |
+## Endpoint index
 
-## End-to-End Pipeline
+| Area | Method | Endpoint | Description |
+| --- | --- | --- | --- |
+| Source | `POST` | `/sv-upload` | Upload a source volume and its metadata |
+| Source | `GET` | `/get-volumes` | List uploaded volumes |
+| Source | `PATCH` | `/approve-volume/:status_approval/:volume_id` | Approve or reject a volume |
+| Source | `GET` | `/get-volumes-by-instructor` | List volumes with conversion status |
+| Conversion | `PUT` | `/convert-vol/:volume_id` | Start an asynchronous conversion |
+| Conversion | `GET` | `/converted-volumes` | List completed conversions |
+| Placement | `POST` | `/volume-placement` | Upload placement JSON |
+| Placement | `GET` | `/volume-placements` | List placements, optionally filtered by `volume_id` |
+| Placement | `GET` | `/volume-placements/:volume_id` | List placements for one volume |
+| Recording | `POST` | `/uploadvolumerecording` | Upload recording JSON, WAV, images, and one manifest |
+| Recording | `GET` | `/shadow-recordings?volume_id=...` | List recordings for a volume |
+| Recording | `GET` | `/volume-recording-counts` | Get shadow counts and step assets by volume |
+| Recording | `GET` | `/shadow-recording-counts` | Legacy alias for recording counts |
+| Association | `POST` | `/associateVolume` | Associate a resource, volume, and recordings |
+| Association | `GET` | `/get-assovol?r_id=...` | Get associated volume data for a resource |
 
-1. Upload the source file with `POST /sv-upload`.
-2. Review it with `GET /get-volumes` or `GET /get-volumes-by-instructor`.
+## Workflow
+
+1. Upload a source volume with `POST /sv-upload`.
+2. Review it through `GET /get-volumes` or `GET /get-volumes-by-instructor`.
 3. Approve or reject it with `PATCH /approve-volume/:status_approval/:volume_id`.
 4. Start conversion with `PUT /convert-vol/:volume_id`.
-5. Read completed conversions with `GET /converted-volumes`.
-6. Upload placement JSON with `POST /volume-placement`, then verify it with either placement-read endpoint.
-7. Upload `shadow` and `step` recordings with `POST /uploadvolumerecording`.
-8. Read recording details/counts, then associate the selected volume and recordings with a resource.
+5. Retrieve completed output through `GET /converted-volumes`.
+6. Upload and verify placement JSON.
+7. Upload the `shadow` and `step` recording packages, each with one manifest.
+8. Select the required recordings and associate them with a resource.
 
-## 1. Upload Volume
+## Source volumes
 
-Uploads a volume file to Supabase storage under `volumes/<original filename>` and inserts a row in `volumes`.
+### Upload a source volume
 
 ```http
 POST /sv-upload
 Content-Type: multipart/form-data
 ```
 
-Form data:
+The file is stored at `volumes/<original-filename>`. Uploading the same object path overwrites the existing storage object because this endpoint uses `upsert: true`.
 
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `volume_type` | text | Yes | Anatomy/type label |
+| Field | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `volume_type` | text | Yes | Anatomy or volume type |
 | `volume_name` | text | Yes | Display name |
 | `volume_ga` | text | Yes | Gestational age |
-| `volume_fetal_presentation` | text | Yes | Presentation text |
-| `trimester` | text | Yes | Example: `Second Trimester` |
+| `volume_fetal_presentation` | text | Yes | Fetal presentation |
+| `trimester` | text | Yes | For example, `Second Trimester` |
 | `description` | text | Yes | Case description |
-| `file` | file | Yes | Source volume file |
+| `file` | file | Yes | One source volume file |
 
-Example:
+The default maximum file size is 100 MB. Set `MAX_VOLUME_UPLOAD_SIZE_MB` to change it.
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/sv-upload" \
@@ -95,7 +97,7 @@ curl -X POST "http://localhost:4004/api/v1/sv-upload" \
   -F "file=@./FL - I0000004.vol"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 {
@@ -104,36 +106,28 @@ Success response:
 }
 ```
 
-Error responses:
+Common errors:
 
-```json
-{
-  "error": "No file uploaded"
-}
-```
+| Status | Condition | Response |
+| --- | --- | --- |
+| `404` | File is missing | `{ "error": "No file uploaded" }` |
+| `406` | A metadata field is empty | `{ "message": "Fields should not be empty" }` |
+| `413` | File exceeds the configured limit | `{ "error": "Volume file is too large. Maximum allowed size is 100MB." }` |
 
-```json
-{
-  "message": "Fields should not be empty"
-}
-```
-
-## 2. Get Uploaded Volumes
-
-Returns uploaded volume records joined with uploader name.
+### List uploaded volumes
 
 ```http
 GET /get-volumes
 ```
 
-Example:
+Returns uploaded volumes joined with the uploader's `user_name`, newest first.
 
 ```bash
-curl -X GET "http://localhost:4004/api/v1/get-volumes" \
+curl "http://localhost:4004/api/v1/get-volumes" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
@@ -154,50 +148,42 @@ Success response:
 ]
 ```
 
-## 3. Approve Or Reject Volume
-
-Updates `volumes.status` for a volume.
+### Approve or reject a volume
 
 ```http
 PATCH /approve-volume/:status_approval/:volume_id
 ```
 
-Path parameters:
-
-| Parameter | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `status_approval` | string | Yes | Stored directly in `volumes.status`; use values agreed by the UI, such as `approved` or `rejected` |
-| `volume_id` | UUID | Yes | Volume ID |
-
-Example:
+| Path parameter | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `status_approval` | string | Yes | Value stored in `volumes.status`, such as `approved` or `rejected` |
+| `volume_id` | UUID | Yes | Volume to update |
 
 ```bash
 curl -X PATCH "http://localhost:4004/api/v1/approve-volume/approved/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```text
 Updated Successfully
 ```
 
-## 4. Get Volumes By Instructor/Admin View
-
-Returns volume rows with conversion log details. Roles `99` and `101` can view all volumes. Role `102` only sees volumes where `added_by` matches the logged-in user.
+### List volumes for instructor/admin view
 
 ```http
 GET /get-volumes-by-instructor
 ```
 
-Example:
+Roles `99` and `101` receive all volumes. Role `102` receives only volumes whose `added_by` value matches the authenticated user's email.
 
 ```bash
-curl -X GET "http://localhost:4004/api/v1/get-volumes-by-instructor" \
+curl "http://localhost:4004/api/v1/get-volumes-by-instructor" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
@@ -222,79 +208,62 @@ Success response:
 ]
 ```
 
-## 5. Start Volume Conversion
+## Conversion
 
-Validates the UUID, checks that the volume exists, prevents duplicate conversion while `conversion_process_status` is true, writes/updates `volume_conv_logs`, and starts the Python conversion process asynchronously.
+### Start conversion
 
 ```http
 PUT /convert-vol/:volume_id
 ```
 
-Path parameters:
+The endpoint validates the UUID, verifies that the volume exists, prevents concurrent conversion for the same volume, updates `volume_conv_logs`, and submits the asynchronous conversion job.
 
-| Parameter | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `volume_id` | UUID | Yes | Existing volume ID |
+| Path parameter | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `volume_id` | UUID | Yes | Existing source volume |
 
-Example:
+Conversion starts are limited to one request per authenticated user every two minutes.
 
 ```bash
 curl -X PUT "http://localhost:4004/api/v1/convert-vol/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 {
   "success": true,
   "volume_id": "6982d3f3-8617-49a7-9b0d-d160db9adf6c",
+  "job_id": "conversion-job-id",
   "status": "RUNNING",
   "message": "Volume conversion started successfully",
   "timestamp": "2026-06-22T10:10:00.000Z"
 }
 ```
 
-Error responses:
+| Status | Condition | Error value |
+| --- | --- | --- |
+| `400` | Invalid UUID | `Invalid volume ID format` |
+| `401` | Role is not allowed | `You do not have permission to convert volumes` |
+| `404` | Volume does not exist | `Volume not found` |
+| `409` | Conversion is already active | `Conversion already in progress for this volume` |
+| `429` | Per-user rate limit exceeded | `Too many conversion requests. Please wait.` |
 
-```json
-{
-  "success": false,
-  "error": "Invalid volume ID format"
-}
-```
-
-```json
-{
-  "success": false,
-  "error": "Volume not found"
-}
-```
-
-```json
-{
-  "success": false,
-  "error": "Conversion already in progress for this volume",
-  "volume_id": "6982d3f3-8617-49a7-9b0d-d160db9adf6c"
-}
-```
-
-## 6. Get Converted Volumes
-
-Returns completed conversion logs joined with volume name and optional placement URL.
+### List completed conversions
 
 ```http
 GET /converted-volumes
 ```
 
-Example:
+Returns completed conversion logs joined with `volume_name` and an optional placement URL.
 
 ```bash
-curl -X GET "http://localhost:4004/api/v1/converted-volumes" \
+curl "http://localhost:4004/api/v1/converted-volumes" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
@@ -307,28 +276,26 @@ Success response:
     "output_file": "https://example.com/output.nii",
     "error_message": null,
     "volume_name": "FL - I0000004",
-    "placed_url": "https://example.com/volume_placements/file.json"
+    "placed_url": "https://example.com/volume_placements/placement.json"
   }
 ]
 ```
 
-## 7. Upload Volume Placement
+## Placements
 
-Uploads a placement JSON file to Supabase storage under `volume_placements/<volume_id>_<timestamp>.json` and inserts a row in `volume_placements`.
+### Upload placement JSON
 
 ```http
 POST /volume-placement
 Content-Type: multipart/form-data
 ```
 
-Form data:
-
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
+| Field | Type | Required | Description |
+| --- | --- | :---: | --- |
 | `volume_id` | text UUID | Yes | Converted volume ID |
-| `placed_file` | file | Yes | Must be valid `.json` with MIME type `application/json` |
+| `placed_file` | file | Yes | Valid `.json` with MIME type `application/json` |
 
-Example:
+The file is stored at `volume_placements/<volume_id>_<timestamp>.json`.
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/volume-placement" \
@@ -337,7 +304,7 @@ curl -X POST "http://localhost:4004/api/v1/volume-placement" \
   -F "placed_file=@./placement.json;type=application/json"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 {
@@ -346,81 +313,98 @@ Success response:
 }
 ```
 
-Validation errors:
+Validation failures return `400 Bad Request` as plain text:
 
-```text
-No file uploaded
-Invalid file format. Only JSON files are allowed.
-Invalid file extension. Only .json files are allowed.
-Invalid JSON content. File contains malformed JSON.
-```
+- `No file uploaded`
+- `Invalid file format. Only JSON files are allowed.`
+- `Invalid file extension. Only .json files are allowed.`
+- `Invalid JSON content. File contains malformed JSON.`
 
-### List All Volume Placements
-
-Returns placement rows joined with the volume name. The optional `volume_id` query parameter filters the result to one volume.
+### List placements
 
 ```http
 GET /volume-placements
 GET /volume-placements?volume_id=:volume_id
 ```
 
-Example:
+The optional query parameter filters the result to one volume.
+
+| Query parameter | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `volume_id` | UUID | No | Volume filter |
 
 ```bash
-curl -X GET "http://localhost:4004/api/v1/volume-placements" \
+curl "http://localhost:4004/api/v1/volume-placements?volume_id=6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
   {
     "volume_id": "6982d3f3-8617-49a7-9b0d-d160db9adf6c",
-    "placed_url": "https://example.com/storage/v1/object/public/bucket/volume_placements/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000.json",
+    "placed_url": "https://example.com/storage/v1/object/public/bucket/volume_placements/placement.json",
     "created_at": "2026-06-22T10:20:00.000Z",
     "volume_name": "FL - I0000004"
   }
 ]
 ```
 
-### List Placements By Volume ID
+### List placements by path ID
 
 ```http
 GET /volume-placements/:volume_id
 ```
 
-Example:
-
 ```bash
-curl -X GET "http://localhost:4004/api/v1/volume-placements/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
+curl "http://localhost:4004/api/v1/volume-placements/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -H "Authorization: Bearer <token>"
 ```
 
-The success response has the same array shape as `GET /volume-placements`. An unknown volume currently returns an empty array.
+The response has the same array shape as `GET /volume-placements`. An unknown volume returns an empty array.
 
-## 8. Upload Volume Recording
+## Recordings
 
-Uploads recording JSON, WAV, image, and manifest files to Supabase storage and inserts their URLs into `vol_recordings`.
+### Recording package contract
+
+Each `shadow` or `step` request contains three repeatable file groups and exactly one manifest.
+
+| Multipart field | Count | Accepted files | Storage prefix | Database column |
+| --- | ---: | --- | --- | --- |
+| `recording_file` | 1-20 | Valid `.json` | `volume_recordings/` | `rec_files` JSONB array |
+| `audio_file` | 1-20 | `.wav` | `volume_audio/` | `audio_files` JSONB array |
+| `images` | 1-20 | `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp` | `volume_images/` | `image_files` JSONB array |
+| `manifest_file` | Exactly 1 | `.json` or `.manifest` | `volume_manifests/` | `manifest_file` text |
+
+Each file may be at most 50 MB. A request can contain no more than 61 files in total. JSON recording files and `.json` manifests are parsed before any upload begins.
+
+The `manifest_file` database column is introduced by:
+
+```text
+server/v1/migrations/20260806_add_manifest_to_volume_recordings.sql
+```
+
+Apply this migration before deploying the updated recording endpoint.
+
+### Upload a recording package
 
 ```http
 POST /uploadvolumerecording
 Content-Type: multipart/form-data
 ```
 
-Form data:
-
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `volume_id` | text UUID | Yes | Volume ID |
+| Field | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `volume_id` | text UUID | Yes | Parent volume ID |
 | `recording_name` | text | Yes | Display name |
-| `recording_type` | text | Yes | Must be `shadow` or `step` |
-| `recording_file` | file | Yes | One or more valid `.json` files; repeat this field for multiple files |
-| `audio_file` | file | Yes | One or more `.wav` files; repeat this field for multiple files |
-| `images` | file | Yes | One or more `png`, `jpg`, `jpeg`, `webp`, `gif`, or `bmp` files; repeat this field for multiple files |
-| `manifest_file` | file | Yes | Exactly one valid `.json` or `.manifest` file |
+| `recording_type` | text | Yes | `shadow` or `step` |
+| `recording_file` | file | Yes | Repeat for each recording JSON |
+| `audio_file` | file | Yes | Repeat for each WAV file |
+| `images` | file | Yes | Repeat for each image |
+| `manifest_file` | file | Yes | Supply once only |
 
-Shadow recording example:
+Example with two files in each repeatable group:
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
@@ -437,46 +421,31 @@ curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
   -F "manifest_file=@./manifest.json;type=application/json"
 ```
 
-Step recording example with multiple files:
+For a step recording, use `recording_type=step` and the corresponding step assets.
 
-```bash
-curl -X POST "http://localhost:4004/api/v1/uploadvolumerecording" \
-  -H "Authorization: Bearer <token>" \
-  -F "volume_id=6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
-  -F "recording_name=Step Demo" \
-  -F "recording_type=step" \
-  -F "recording_file=@./step-1.json;type=application/json" \
-  -F "recording_file=@./step-2.json;type=application/json" \
-  -F "audio_file=@./step-1.wav;type=audio/wav" \
-  -F "audio_file=@./step-2.wav;type=audio/wav" \
-  -F "images=@./step-1.png;type=image/png" \
-  -F "images=@./step-2.jpg;type=image/jpeg" \
-  -F "manifest_file=@./manifest.json;type=application/json"
-```
-
-Success response:
+Success - `200 OK`:
 
 ```json
 {
-  "message": "Volume step Recording Uploaded Successfully",
-  "recordingType": "step",
-  "recordingUrl": "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.json",
+  "message": "Volume shadow Recording Uploaded Successfully",
+  "recordingType": "shadow",
+  "recordingUrl": "https://example.com/storage/v1/object/public/bucket/volume_recordings/shadow-1.json",
   "recordingFilesUploaded": 2,
   "recordingUrls": [
-    "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.json",
-    "https://example.com/storage/v1/object/public/bucket/volume_recordings/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.json"
+    "https://example.com/storage/v1/object/public/bucket/volume_recordings/shadow-1.json",
+    "https://example.com/storage/v1/object/public/bucket/volume_recordings/shadow-2.json"
   ],
   "audioFilesUploaded": 2,
   "audioUrls": [
-    "https://example.com/storage/v1/object/public/bucket/volume_audio/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.wav",
-    "https://example.com/storage/v1/object/public/bucket/volume_audio/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.wav"
+    "https://example.com/storage/v1/object/public/bucket/volume_audio/shadow-1.wav",
+    "https://example.com/storage/v1/object/public/bucket/volume_audio/shadow-2.wav"
   ],
   "imageFilesUploaded": 2,
   "imageUrls": [
-    "https://example.com/storage/v1/object/public/bucket/volume_images/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_0.png",
-    "https://example.com/storage/v1/object/public/bucket/volume_images/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000_1.jpg"
+    "https://example.com/storage/v1/object/public/bucket/volume_images/shadow-1.png",
+    "https://example.com/storage/v1/object/public/bucket/volume_images/shadow-2.jpg"
   ],
-  "manifestUrl": "https://example.com/storage/v1/object/public/bucket/volume_manifests/6982d3f3-8617-49a7-9b0d-d160db9adf6c_1780910000000.json",
+  "manifestUrl": "https://example.com/storage/v1/object/public/bucket/volume_manifests/manifest.json",
   "data": {
     "status": "Success",
     "code": 200,
@@ -484,18 +453,18 @@ Success response:
     "data": {
       "recording_id": "recording-uuid",
       "volume_id": "6982d3f3-8617-49a7-9b0d-d160db9adf6c",
-      "recording_name": "Step Demo",
-      "recording_type": "step",
-      "rec_files": ["https://example.com/step-1.json", "https://example.com/step-2.json"],
-      "audio_files": ["https://example.com/step-1.wav", "https://example.com/step-2.wav"],
-      "image_files": ["https://example.com/step-1.png", "https://example.com/step-2.jpg"],
+      "recording_name": "Shadow Demo",
+      "recording_type": "shadow",
+      "rec_files": ["https://example.com/shadow-1.json", "https://example.com/shadow-2.json"],
+      "audio_files": ["https://example.com/shadow-1.wav", "https://example.com/shadow-2.wav"],
+      "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"],
       "manifest_file": "https://example.com/manifest.json"
     }
   }
 }
 ```
 
-Common validation errors:
+Common validation errors - `400 Bad Request`:
 
 ```json
 {
@@ -510,34 +479,32 @@ Common validation errors:
   "received": {
     "recording_files": 2,
     "audio_files": 2,
-    "images": 0,
+    "images": 2,
     "manifest_file": 0
   }
 }
 ```
 
-## 9. Get Recordings For A Volume
+Other validation failures identify the invalid file index, MIME type, extension, filename, or malformed JSON content.
 
-Returns recording metadata for a volume.
+### List recordings for a volume
 
 ```http
 GET /shadow-recordings?volume_id=:volume_id
 ```
 
-Query parameters:
+Despite the route name, this query returns both shadow and step recording rows for the volume.
 
-| Parameter | Type | Required | Notes |
-| --- | --- | --- | --- |
-| `volume_id` | UUID | Yes | Volume ID |
-
-Example:
+| Query parameter | Type | Required | Description |
+| --- | --- | :---: | --- |
+| `volume_id` | UUID | Yes | Parent volume ID |
 
 ```bash
-curl -X GET "http://localhost:4004/api/v1/shadow-recordings?volume_id=6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
+curl "http://localhost:4004/api/v1/shadow-recordings?volume_id=6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
@@ -553,26 +520,22 @@ Success response:
 ]
 ```
 
-## 10. Get Volume Recording Counts
-
-Returns one row per volume with the number of shadow recordings plus the JSON and image URLs for step recordings.
+### Get recording counts
 
 ```http
 GET /volume-recording-counts
 ```
 
-The older `GET /shadow-recording-counts` route calls the same controller and returns the same response. New clients should use `/volume-recording-counts`.
+Returns one row per volume with the shadow recording count and deduplicated JSON/image URLs for step recordings. It does not currently include step audio or manifest URLs.
 
-Roles `99` and `101` can view all volumes. Role `102` only sees records for volumes added by the logged-in user. Role `103` is currently allowed by the model.
-
-Example:
+`GET /shadow-recording-counts` is a legacy alias with the same controller and response.
 
 ```bash
-curl -X GET "http://localhost:4004/api/v1/volume-recording-counts" \
+curl "http://localhost:4004/api/v1/volume-recording-counts" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
@@ -589,7 +552,7 @@ Success response:
 ]
 ```
 
-Unauthorized response:
+Unauthorized - `401 Unauthorized`:
 
 ```json
 {
@@ -597,25 +560,21 @@ Unauthorized response:
 }
 ```
 
-## 11. Associate Resource, Volume, And Recordings
+## Resource associations
 
-Creates a row in `asso_volume`.
+### Associate a resource, volume, and recordings
 
 ```http
 POST /associateVolume
 Content-Type: application/json
 ```
 
-Body:
-
-| Field | Type | Required | Notes |
-| --- | --- | --- | --- |
+| Body field | Type | Required | Description |
+| --- | --- | :---: | --- |
 | `r_id` | UUID | Yes | Resource ID |
 | `volume_id` | UUID | Yes | Volume ID |
 | `shadowrec_id` | UUID | Yes | Shadow recording ID |
 | `steprec_id` | UUID | Yes | Step recording ID |
-
-Example:
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/associateVolume" \
@@ -629,34 +588,28 @@ curl -X POST "http://localhost:4004/api/v1/associateVolume" \
   }'
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```text
 Associated Successfully
 ```
 
-## 12. Get Associated Volume By Resource
-
-Returns resource, volume, and recording data for a resource association.
+### Get associated volume data
 
 ```http
 GET /get-assovol?r_id=:resource_id
 ```
 
-Query parameters:
-
-| Parameter | Type | Required | Notes |
-| --- | --- | --- | --- |
+| Query parameter | Type | Required | Description |
+| --- | --- | :---: | --- |
 | `r_id` | UUID | Yes | Resource ID |
 
-Example:
-
 ```bash
-curl -X GET "http://localhost:4004/api/v1/get-assovol?r_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5" \
+curl "http://localhost:4004/api/v1/get-assovol?r_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5" \
   -H "Authorization: Bearer <token>"
 ```
 
-Success response:
+Success - `200 OK`:
 
 ```json
 [
@@ -674,27 +627,32 @@ Success response:
     "recording_type": "shadow",
     "rec_files": ["https://example.com/shadow-1.json", "https://example.com/shadow-2.json"],
     "audio_files": ["https://example.com/shadow-1.wav", "https://example.com/shadow-2.wav"],
-    "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"]
+    "image_files": ["https://example.com/shadow-1.png", "https://example.com/shadow-2.jpg"],
+    "manifest_file": "https://example.com/manifest.json"
   }
 ]
 ```
 
-## Bruno Request Files
+The current query joins recordings by `volume_id`, so a volume with multiple recordings can produce multiple rows.
 
-Existing request files for volume APIs:
+## Bruno request files
 
-- `APIs/API_Prod_Test/Volume upload.yml`
-- `APIs/API_Prod_Test/COnversion.yml`
-- `APIs/API_Prod_Test/Get Volumes.yml`
-- `APIs/API_Prod_Test/Approve Volume.yml`
-- `APIs/API_Prod_Test/Get Volumes By Instructor.yml`
-- `APIs/API_Prod_Test/Converted Volumes.yml`
-- `APIs/API_Prod_Test/Volume Placement.yml`
-- `APIs/API_Prod_Test/Get Volume Placements.yml`
-- `APIs/API_Prod_Test/Get Volume Placements By ID.yml`
-- `APIs/API_Prod_Test/Upload Volume Recording.yml`
-- `APIs/API_Prod_Test/Shadow Recordings.yml`
-- `APIs/API_Prod_Test/Volume Recording Counts.yml`
-- `APIs/API_Prod_Test/Shadow Recording Counts Legacy.yml`
-- `APIs/API_Prod_Test/Associate Volume.yml`
-- `APIs/API_Prod_Test/Get Associated Volume.yml`
+The production API collection contains the following volume requests:
+
+| Area | Request file |
+| --- | --- |
+| Source | `APIs/API_Prod_Test/Volume upload.yml` |
+| Source | `APIs/API_Prod_Test/Get Volumes.yml` |
+| Source | `APIs/API_Prod_Test/Approve Volume.yml` |
+| Source | `APIs/API_Prod_Test/Get Volumes By Instructor.yml` |
+| Conversion | `APIs/API_Prod_Test/COnversion.yml` |
+| Conversion | `APIs/API_Prod_Test/Converted Volumes.yml` |
+| Placement | `APIs/API_Prod_Test/Volume Placement.yml` |
+| Placement | `APIs/API_Prod_Test/Get Volume Placements.yml` |
+| Placement | `APIs/API_Prod_Test/Get Volume Placements By ID.yml` |
+| Recording | `APIs/API_Prod_Test/Upload Volume Recording.yml` |
+| Recording | `APIs/API_Prod_Test/Shadow Recordings.yml` |
+| Recording | `APIs/API_Prod_Test/Volume Recording Counts.yml` |
+| Recording | `APIs/API_Prod_Test/Shadow Recording Counts Legacy.yml` |
+| Association | `APIs/API_Prod_Test/Associate Volume.yml` |
+| Association | `APIs/API_Prod_Test/Get Associated Volume.yml` |
