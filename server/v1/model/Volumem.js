@@ -73,7 +73,7 @@ const getUploadedVolume = (requester) => {
             } else {
                 resolve({
                     status: 'Success',
-                    code: 200,
+                    code: 200, 
                     data: result.rows
                 });
             }
