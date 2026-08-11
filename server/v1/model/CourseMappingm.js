@@ -69,15 +69,25 @@ const ensureCourseMappingTable = async () => {
     await client.query(query);
 };
 
-const resolveVolume = async (trimester, anatomy_type, volume_name) => {
+const volumeOwnershipFilter = (requester, startIndex) => Number(requester.role) === 99
+    ? { sql: `owner_scope = 'super_admin'`, params: [] }
+    : { sql: `owner_scope = 'institution' AND owner_centre_id = $${startIndex}`, params: [requester.centre_id] };
+
+const resolveVolume = async (requester, trimester, anatomy_type, volume_name) => {
+    if (Number(requester.role) !== 99 && !requester.centre_id) {
+        return { code: 403, message: 'Your account is not linked to an institution.' };
+    }
+    const exactScope = volumeOwnershipFilter(requester, 3);
     const exactQuery = `
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
-          AND LOWER(TRIM(trimester)) = LOWER(TRIM($2));
+          AND LOWER(TRIM(trimester)) = LOWER(TRIM($2))
+          AND ${exactScope.sql}
+          AND ownership_review_required = false;
     `;
 
-    const exactResult = await client.query(exactQuery, [volume_name, trimester]);
+    const exactResult = await client.query(exactQuery, [volume_name, trimester, ...exactScope.params]);
 
     if (exactResult.rows.length === 1) {
         return { data: exactResult.rows[0] };
@@ -99,14 +109,17 @@ const resolveVolume = async (trimester, anatomy_type, volume_name) => {
     }
 
     // Fallback for legacy rows created before trimester started being persisted.
+    const fallbackScope = volumeOwnershipFilter(requester, 2);
     const fallbackQuery = `
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
+          AND ${fallbackScope.sql}
+          AND ownership_review_required = false
         ORDER BY created_at DESC NULLS LAST;
     `;
 
-    const fallbackResult = await client.query(fallbackQuery, [volume_name]);
+    const fallbackResult = await client.query(fallbackQuery, [volume_name, ...fallbackScope.params]);
 
     if (fallbackResult.rows.length === 0) {
         return {
@@ -209,7 +222,7 @@ const createCourseMappingModel = async (
 
     await ensureCourseMappingTable();
 
-    const volumeResult = await resolveVolume(trimester, anatomy_type, volume_name);
+    const volumeResult = await resolveVolume(requester, trimester, anatomy_type, volume_name);
     if (volumeResult.code) {
         return volumeResult;
     }
@@ -327,9 +340,12 @@ const getCourseMappingsModel = async (requester, filters = {}) => {
     const conditions = [];
     const values = [];
 
-    if (Number(requester.role) === 102) {
-        values.push(requester.user_mail);
-        conditions.push(`cm.created_by = $${values.length}`);
+    if ([101, 102].includes(Number(requester.role))) {
+        if (!requester.centre_id) {
+            return { status: 'Forbidden', code: 403, message: 'Your account is not linked to an institution.' };
+        }
+        values.push(requester.centre_id);
+        conditions.push(`v.owner_scope = 'institution' AND v.owner_centre_id = $${values.length}`);
     }
 
     if (filters.trimester) {
@@ -366,6 +382,7 @@ const getCourseMappingsModel = async (requester, filters = {}) => {
             cm.*,
             ud.user_name AS created_by_name
         FROM public.course_mapping cm
+        JOIN public.volumes v ON v.volume_id = cm.volume_id
         LEFT JOIN public.user_data ud
             ON ud.user_email = cm.created_by
         ${whereClause}

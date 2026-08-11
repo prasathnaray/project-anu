@@ -980,17 +980,8 @@ function NavBar() {
           .eq("approver_id", tokenRes.user_mail)
           .is("status", false),
 
-        // Pending trainee queries (admin/instructor only)
-        ...(isAdmin
-          ? [
-              supabase
-                .from("queries_data")
-                .select("query_id, subject, created_by, status, created_at", {
-                  count: "exact",
-                })
-                .eq("status", "pending"),
-            ]
-          : [Promise.resolve({ data: [], count: 0 })]),
+        // Query notifications require tenant-aware API data; direct table reads are intentionally disabled.
+        Promise.resolve({ data: [], count: 0 }),
       ]);
 
       // Enrich volume entries with uploader names
@@ -1064,7 +1055,7 @@ function NavBar() {
       .channel("course_availability")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "course_availability" },
+        { event: "INSERT", schema: "public", table: "course_availability", filter: `user_id=eq.${tokenRes.user_mail}` },
         async (payload) => {
           if (payload.new.user_id === tokenRes.user_mail) {
             setCount((prev) => prev + 1);
@@ -1074,59 +1065,28 @@ function NavBar() {
       )
       .subscribe();
 
-    const traineeChannel = supabase
-      .channel("targeted_learning")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "targeted_learning" },
-        async (payload) => {
-          if (payload.new.user_id === tokenRes.user_mail) {
-            setNotify((prev) => [payload.new, ...prev]);
-            setCount((prev) => prev + 1);
-          }
-        }
-      )
-      .subscribe();
+    // Array-based targeted-learning subscriptions cannot be safely tenant-filtered here.
+    const traineeChannel = null;
 
-    const volumeChannel = supabase
+    const volumeChannel = Number(tokenRes.role) === 99 ? supabase
       .channel("volumes")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "volumes" },
         async (payload) => {
-          if ([101, 102, 103].includes(Number(tokenRes.role))) {
-            setNotify((prev) => [
-              { ...payload.new, type: "volumes" },
-              ...prev,
-            ]);
-            setCount((prev) => prev + 1);
-          }
+          setNotify((prev) => [
+            { ...payload.new, type: "volumes" },
+            ...prev,
+          ]);
+          setCount((prev) => prev + 1);
         }
       )
-      .subscribe();
-
-    const queriesChannel = supabase
-      .channel("queries_data")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "queries_data" },
-        async (payload) => {
-          if (isAdmin) {
-            setNotify((prev) => [
-              { ...payload.new, type: "query" },
-              ...prev,
-            ]);
-            setCount((prev) => prev + 1);
-          }
-        }
-      )
-      .subscribe();
+      .subscribe() : null;
 
     return () => {
       supabase.removeChannel(courseChannel);
-      supabase.removeChannel(traineeChannel);
-      supabase.removeChannel(volumeChannel);
-      supabase.removeChannel(queriesChannel);
+      if (traineeChannel) supabase.removeChannel(traineeChannel);
+      if (volumeChannel) supabase.removeChannel(volumeChannel);
     };
   }, []);
 

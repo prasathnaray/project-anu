@@ -1,6 +1,10 @@
 const client = require('../utils/conn.js');
 const supabase = require('../supaBaseClient.js');
-const hasCenterScope = (requester) => Boolean(requester?.centre_id);
+const {
+    createCourse,
+    listCourses,
+    setPublication
+} = require('./ContentAccessm');
 
 const coursem = (requester) => {
     return new Promise((resolve, reject) => {
@@ -32,108 +36,18 @@ const coursem = (requester) => {
         });
     })
 }
-const createCertificatem = (certificate_name, curiculum_id, requester) => {
-    return new Promise((resolve, reject) => {
-        const isPriviledged = [99].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: 'You do not have permission to access this course data.'
-            })
-        }
-        client.query('INSERT INTO certification_data(certificate_name, curiculum_id) VALUES($1, $2)', [certificate_name, curiculum_id], (err, result) => {
-                if(err)
-                {
-                    return reject(err);
-                }
-                else
-                {
-                    return resolve(result);
-                }
-        })
-    })
-}
-const getCoursem = (requester) => {
-    return new Promise((resolve, reject) => {
-        const role = Number(requester.role);
-        let query = "";
-        let params = [];
-        if (role == 101) {
-            if (!hasCenterScope(requester)) {
-                return resolve({
-                    status: 'Unauthorized',
-                    code: 401,
-                    message: 'Your account is not linked to a scan center.'
-                });
-            }
-            query = `
-                SELECT 
-                    cd.certificate_id,
-                    cd.certificate_name,
-                    bd.batch_name, 
-                    bd.batch_start_date,
-                    bd.batch_end_date,
-                    ca.access_status 
-                FROM certification_data cd
-                LEFT JOIN batch_data bd
-                    ON bd.certification_data @> to_jsonb(cd.certificate_id::text)
-                    AND bd.centre_id = $1
-                JOIN course_availability ca 
-                    ON trim(both '"' from cd.certificate_id::text) = trim(both '"' from ca.certificate_id::text)
-                WHERE ca.access_status = true;
-            `;
-            params = [requester.centre_id];
-        } else if (role === 99) {
-            // Super Admin Query
-            query = `
-                SELECT 
-                    * 
-                FROM certification_data;
-            `;
-        } else if ([103, 102].includes(role)) {
-            if (!hasCenterScope(requester)) {
-                return resolve({
-                    status: 'Unauthorized',
-                    code: 401,
-                    message: 'Your account is not linked to a scan center.'
-                });
-            }
-            query = `
-                SELECT 
-                    cd.certificate_id,
-                    cd.certificate_name,
-                    bd.batch_name, 
-                    bd.batch_start_date,
-                    bd.batch_end_date,
-                    ca.access_status 
-                FROM certification_data cd
-                LEFT JOIN batch_data bd
-                    ON bd.certification_data @> to_jsonb(cd.certificate_id::text)
-                    AND bd.centre_id = $1
-                JOIN course_availability ca 
-                    ON trim(both '"' from cd.certificate_id::text) = trim(both '"' from ca.certificate_id::text)
-                WHERE ca.access_status = true;
-            `;
-            params = [requester.centre_id];
-        } else {
-            // Unauthorized
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: 'You do not have permission to access this course data.'
-            });
-        }
-        client.query(query, params, (err, result) => {
-            if (err) {
-                return reject(err);
-            } else {
-                return resolve(result);
-            }
-        });
+const createCertificatem = async (certificate_name, curiculum_id, requester) => {
+    const course = await createCourse(requester, {
+        name: certificate_name,
+        curriculumId: curiculum_id,
+        courseKind: 'core'
     });
+    return { rowCount: 1, rows: [course] };
 };
+
+const getCoursem = async (requester) => ({
+    rows: await listCourses(requester, Number(requester.role) === 103 ? 'assigned' : 'management')
+});
 const getCoursesByCurm = (curiculum_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99, 101].includes(Number(requester.role));
@@ -157,29 +71,10 @@ const getCoursesByCurm = (curiculum_id, requester) => {
         })
     })
 }
-const deleteCoursem = (course_id, requester) => {
-    return new Promise((resolve, reject) => {
-        const isPriviledged = [99, 101].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: "You don't have a permission"
-            })
-        }
-        client.query('DELETE FROM certification_data WHERE certificate_id=$1', [course_id], (err, result) => {
-            if(err)
-            {
-                return reject(err)
-            }
-            else
-            {
-                return resolve(result);
-            }
-        })
-    })
-}
+const deleteCoursem = async (course_id, requester) => {
+    await setPublication(requester, course_id, 'archived');
+    return { rowCount: 1 };
+};
 
 const tagCoursem = async(user_id, certificate_id, requester) => {
     return new Promise((resolve, reject) => {

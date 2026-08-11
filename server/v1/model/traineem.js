@@ -128,7 +128,7 @@ const getTraineesm = (requester, page, limit) => {
         let params = [];
 
         // ADMIN (role 101)
-        if (Number(requester.role) === 101) {
+        if ([101, 102].includes(Number(requester.role))) {
             query = `
                 SELECT COUNT(*) OVER() AS total_count,
                        ud.user_profile_photo,

@@ -73,6 +73,10 @@ const associateVolumeRouter = require('./routes/associateVolumeRouter.js');
 const GetShadowRecordingRouter = require('./routes/GetShadowRecordingRoute.js');
 const getAssocVolumeRouter = require('./routes/getAssoVolumeRoute.js');
 const courseMappingRouter = require('./routes/courseMappingRoute.js');
+const contentAccessRouter = require('./routes/contentAccessRoute.js');
+const mrContentRouter = require('./routes/mrContentRoute.js');
+const institutionRouter = require('./routes/institutionRoute.js');
+const superAdminRouter = require('./routes/superAdminRoute.js');
 //
 const createscanCentersRouter = require('./routes/createScanCentersRoute.js');
 const mindSparkRouter = require('./routes/mindSparkRoute.js');
@@ -234,6 +238,10 @@ app.use('/api/v1', Authenticate, volumePlacementRouter);
 app.use('/api/v1', Authenticate, volumeRecordingRouter);
 app.use('/api/v1', Authenticate, associateVolumeRouter);
 app.use('/api/v1', Authenticate, courseMappingRouter);
+app.use('/api/v1', Authenticate, contentAccessRouter);
+app.use('/api/v1', Authenticate, mrContentRouter);
+app.use('/api/v1', Authenticate, institutionRouter);
+app.use('/api/v1', Authenticate, superAdminRouter);
 //recordings
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
 //associated volume  

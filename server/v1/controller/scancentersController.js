@@ -1,5 +1,5 @@
 // controllers/scanCenterController.js
-const { createScancentrem, getscancenterm } = require("../model/scancentrem");
+const { createScancentrem, getscancenterm, addInstitutionAdmin } = require("../model/scancentrem");
 const {mindsparkm} = require('../model/resourcem');
 const createScanCenterC = async(req, res) => {
     try {
@@ -80,8 +80,18 @@ const mindsparkController = async (request, res) => {
         });
     }
 };
+const addInstitutionAdminC = async (req, res) => {
+    try {
+        const result = await addInstitutionAdmin(req.user, req.params.institutionId, req.body);
+        return res.status(result.code || 201).json(result);
+    } catch (error) {
+        console.error('Error adding institution admin:', error);
+        return res.status(500).json({ code: 500, status: 'Error', message: 'Internal server error' });
+    }
+};
 module.exports = {
     createScanCenterC,
     mindsparkController,
-    getScanCentersC
+    getScanCentersC,
+    addInstitutionAdminC
 };

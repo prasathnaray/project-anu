@@ -61,6 +61,20 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
         <div className={`${buttonOpen===false ? "md:px-[4px] pt-4": "md:px-[50px] pt-4"}`}><button><img src={logo} /></button></div>
         <div className="">
             <ul className={`${buttonOpen === false ? "py-3 px-[7px]" : "py-5 px-8"}`}>
+              <li className="mb-1 mt-2">
+                <button
+                  onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                  onClick={() => navigate("/course-access")}
+                  className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 ${
+                    data === "/course-access" ? "bg-[#8DC63F] text-white" : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                  }`}
+                >
+                  <BookOpen size={20} />
+                  <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>
+                    {tokdata.role == 103 ? "Assigned Courses" : tokdata.role == 99 ? "Content Access" : "Course Library"}
+                  </div>
+                </button>
+              </li>
               {tokdata.role == 99 && 
               <>
                   <li className={`${data==="/curriculum"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/curriculum" className={`${data==="/curriculum" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><BookCheck size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Curriculum</div></a></li>
@@ -315,6 +329,18 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                           <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Reports</div>
                       </button>
                 </li> */}
+                <li className="mb-1 mt-2">
+                  <button
+                    onMouseDown={(e) => ripple.create(e, "dark", "circle")}
+                    onClick={() => navigate("/volume-management")}
+                    className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 ${
+                      data === "/volume-management" ? "bg-[#8DC63F] text-white" : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                    }`}
+                  >
+                    <MessageSquareText size={20} />
+                    <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Volumes</div>
+                  </button>
+                </li>
                 <li
                   className={`fixed bottom-0 left-0 flex items-center ${
                     buttonOpen ? "justify-center" : "justify-center"

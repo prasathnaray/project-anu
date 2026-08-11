@@ -1,7 +1,15 @@
-const client = require('../utils/supaBaseConfig.js');
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel} = require("../model/Volumem");
+const client = require('../supaBaseClient.js');
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel} = require("../model/Volumem");
 const path = require('path');
+const { randomUUID } = require('crypto');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const contentBucket = () => process.env.PRIVATE_CONTENT_BUCKET || process.env.BUCKET_NAME;
+const ownerPrefix = (requester, volume = null) => {
+    const scope = volume?.owner_scope || (Number(requester.role) === 99 ? 'super_admin' : 'institution');
+    const centreId = volume?.owner_centre_id || requester.centre_id;
+    return scope === 'super_admin' ? 'global' : `institutions/${centreId}`;
+};
+const safeName = (name) => path.basename(name).replace(/[^a-zA-Z0-9._-]/g, '_');
 const VolumeController = async(req, res) => {
     const requester = req.user;
     try
@@ -29,9 +37,12 @@ const VolumeController = async(req, res) => {
             })
             
         }
-        const filePath = `volumes/${file.originalname}`;
+        if (![99, 101, 102].includes(Number(requester.role)) || (Number(requester.role) !== 99 && !requester.centre_id)) {
+            return res.status(403).json({ message: 'You do not have permission to upload volumes.' });
+        }
+        const filePath = `${ownerPrefix(requester)}/${randomUUID()}/source/${safeName(file.originalname)}`;
         const { data, error } = await client.storage
-                        .from(process.env.BUCKET_NAME)
+                        .from(contentBucket())
                         .upload(filePath, file.buffer, {
                         contentType: file.mimetype,
                         upsert: true,
@@ -49,6 +60,7 @@ const VolumeController = async(req, res) => {
             description,
             filePath
         )
+        if (result.code) return res.status(result.code).json(result);
         if(result.rowCount == 1)
         {
             res.status(200).json({
@@ -68,6 +80,7 @@ const getVolumeDataC = async(req, res) => {
     try
     {
         const result = await getUploadedVolume(requester)
+        if (result.code !== 200) return res.status(result.code).json(result);
         res.status(200).send(result.data);
     }
     catch(err)
@@ -82,7 +95,9 @@ const volumeApprovalC = async(req, res) => {
     const volume_id = req.params.volume_id;
     try
     {
-        await VolumeApprovalModel(requester, status_approval, volume_id)
+        const result = await VolumeApprovalModel(requester, status_approval, volume_id)
+        if (result.code) return res.status(result.code).json(result);
+        if (result.rowCount === 0) return res.status(404).json({ message: 'Volume not found.' });
         res.status(200).send("Updated Successfully");
     }
     catch(err)
@@ -96,6 +111,7 @@ const getVolumeInstructorViewController = async(req, res) => {
     try
     {
         const result = await getVolumeInstructorViewModel(requester);
+        if (result.code) return res.status(result.code).json(result);
         res.status(200).send(result.rows);
     }
     catch(err)
@@ -136,8 +152,8 @@ const updateVolumeConController = async (req, res) => {
     }
     try {
         const result = await volumeConversionModel(requester, volume_id);
-        if (result.code === 401) {
-            return res.status(401).json({
+        if (result.code && result.code !== 200) {
+            return res.status(result.code).json({
                 success: false,
                 error: result.message
             });
@@ -226,6 +242,8 @@ const volumePlacementController = async(req, res) => {
     const {volume_id} = req.body;
     const placed_file = req.file;
     try {
+        const ownedVolume = await assertVolumeEditableModel(requester, volume_id);
+        if (!ownedVolume) return res.status(404).json({ message: 'Volume not found.' });
         if(!placed_file) {
             return res.status(400).send("No file uploaded");
         }
@@ -246,9 +264,9 @@ const volumePlacementController = async(req, res) => {
             return res.status(400).send("Invalid JSON content. File contains malformed JSON.");
         }
         
-        const fileName = `volume_placements/${volume_id}_${Date.now()}.json`;
+        const fileName = `${ownerPrefix(requester, ownedVolume)}/${volume_id}/placements/${Date.now()}.json`;
         const { data, error } = await client.storage
-            .from(process.env.BUCKET_NAME)
+            .from(contentBucket())
             .upload(fileName, placed_file.buffer, {
                 contentType: 'application/json',
                 upsert: false
@@ -258,15 +276,12 @@ const volumePlacementController = async(req, res) => {
             throw new Error(`Supabase upload failed: ${error.message}`);
         }
         
-        const { data: { publicUrl } } = client.storage
-            .from(process.env.BUCKET_NAME)
-            .getPublicUrl(fileName);
-        
-        await placedVolumeConversionModel(requester, volume_id, publicUrl);
+        const placement = await placedVolumeConversionModel(requester, volume_id, fileName);
+        if (placement.code) return res.status(placement.code).json(placement);
         
         res.status(200).send({
             message: "Volume Placed Successfully",
-            fileUrl: publicUrl
+            assetPath: fileName
         });
     }
     catch(err) {
@@ -279,8 +294,8 @@ const getVolumePlacementsController = async(req, res) => {
     const volume_id = req.params.volume_id || req.query.volume_id || null;
     try {
         const result = await getVolumePlacementsModel(requester, volume_id);
-        if (result.code === 401) {
-            return res.status(401).json({
+        if (result.code && result.code !== 200) {
+            return res.status(result.code).json({
                 error: result.message
             });
         }
@@ -637,6 +652,9 @@ const volRecordingC = async(req, res) => {
     const {volume_id, recording_name, recording_type} = req.body;
     
     try {
+        const ownedVolume = await assertVolumeEditableModel(requester, volume_id);
+        if (!ownedVolume) return res.status(404).json({ message: 'Volume not found.' });
+        const storagePrefix = `${ownerPrefix(requester, ownedVolume)}/${volume_id}`;
         // Validate recording_type
         if (!recording_type || !['shadow', 'step'].includes(recording_type)) {
             return res.status(400).json({
@@ -771,9 +789,9 @@ const volRecordingC = async(req, res) => {
 
         for (let i = 0; i < recording_files.length; i++) {
             const recording_file = recording_files[i];
-            const jsonFileName = `volume_recordings/${volume_id}_${timestamp}_${i}.json`;
+            const jsonFileName = `${storagePrefix}/recordings/${timestamp}_${i}.json`;
             const { error: jsonError } = await client.storage
-                .from(process.env.BUCKET_NAME)
+                .from(contentBucket())
                 .upload(jsonFileName, recording_file.buffer, {
                     contentType: 'application/json',
                     upsert: false
@@ -783,18 +801,14 @@ const volRecordingC = async(req, res) => {
                 throw new Error(`JSON upload failed at index ${i}: ${jsonError.message}`);
             }
 
-            const { data: { publicUrl: jsonUrl } } = client.storage
-                .from(process.env.BUCKET_NAME)
-                .getPublicUrl(jsonFileName);
-
-            uploadedRecordings.push(jsonUrl);
+            uploadedRecordings.push(jsonFileName);
         }
 
         for (let i = 0; i < audio_files.length; i++) {
             const audio_file = audio_files[i];
-            const audioFileName = `volume_audio/${volume_id}_${timestamp}_${i}.wav`;
+            const audioFileName = `${storagePrefix}/audio/${timestamp}_${i}.wav`;
             const { error: audioError } = await client.storage
-                .from(process.env.BUCKET_NAME)
+                .from(contentBucket())
                 .upload(audioFileName, audio_file.buffer, {
                     contentType: 'audio/wav',
                     upsert: false
@@ -804,20 +818,15 @@ const volRecordingC = async(req, res) => {
                 throw new Error(`Audio upload failed at index ${i}: ${audioError.message}`);
             }
             
-            // Get public URL for audio
-            const { data: { publicUrl: audioUrl } } = client.storage
-                .from(process.env.BUCKET_NAME)
-                .getPublicUrl(audioFileName);
-            
-            uploadedAudio.push(audioUrl);
+            uploadedAudio.push(audioFileName);
         }
 
         for (let i = 0; i < image_files.length; i++) {
             const image_file = image_files[i];
             const imageExtension = path.extname(image_file.originalname).slice(1).toLowerCase();
-            const imageFileName = `volume_images/${volume_id}_${timestamp}_${i}.${imageExtension}`;
+            const imageFileName = `${storagePrefix}/images/${timestamp}_${i}.${imageExtension}`;
             const { error: imageError } = await client.storage
-                .from(process.env.BUCKET_NAME)
+                .from(contentBucket())
                 .upload(imageFileName, image_file.buffer, {
                     contentType: imageContentTypes[imageExtension],
                     upsert: false
@@ -827,16 +836,12 @@ const volRecordingC = async(req, res) => {
                 throw new Error(`Image upload failed at index ${i}: ${imageError.message}`);
             }
 
-            const { data: { publicUrl: imageUrl } } = client.storage
-                .from(process.env.BUCKET_NAME)
-                .getPublicUrl(imageFileName);
-
-            uploadedImages.push(imageUrl);
+            uploadedImages.push(imageFileName);
         }
 
-        const manifestFileName = `volume_manifests/${volume_id}_${timestamp}.${manifestExtension}`;
+        const manifestFileName = `${storagePrefix}/manifests/${timestamp}.${manifestExtension}`;
         const { error: manifestError } = await client.storage
-            .from(process.env.BUCKET_NAME)
+            .from(contentBucket())
             .upload(manifestFileName, manifest_file.buffer, {
                 contentType: manifestContentTypes[manifestExtension],
                 upsert: false
@@ -846,10 +851,6 @@ const volRecordingC = async(req, res) => {
             throw new Error(`Manifest upload failed: ${manifestError.message}`);
         }
 
-        const { data: { publicUrl: manifestUrl } } = client.storage
-            .from(process.env.BUCKET_NAME)
-            .getPublicUrl(manifestFileName);
-        
         const dbResult = await volumeRecordingsModel(
             requester, 
             volume_id, 
@@ -858,12 +859,12 @@ const volRecordingC = async(req, res) => {
             uploadedRecordings,
             uploadedAudio,
             uploadedImages,
-            manifestUrl
+            manifestFileName
         );
         
         // Check authorization response from model
-        if (dbResult.status === 'Unauthorized') {
-            return res.status(401).json({
+        if (dbResult.code && dbResult.code !== 200) {
+            return res.status(dbResult.code).json({
                 error: dbResult.message
             });
         }
@@ -921,8 +922,8 @@ const volumeRecordingCountsController = async(req, res) => {
     try
     {
         const result = await getVolumeRecordingCountsModel(requester);
-        if (result.code === 401) {
-            return res.status(401).json({
+        if (result.code && result.code !== 200) {
+            return res.status(result.code).json({
                 error: result.message
             });
         }

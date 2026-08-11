@@ -1,48 +1,10 @@
-const client = require('../utils/conn');
-const getCertByCurm = (curiculum_id, requester) => {
-    return new Promise((resolve, reject) => {
-        const isPriviledged = [99, 101, 102].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: "You don't have a persmission"
-            })
-        }
-        client.query('SELECT * FROM certification_data WHERE curiculum_id=$1',[curiculum_id], (err, result) => {
-            if(err)
-            {
-                return reject(err)
-            }
-            else
-            {
-                return resolve(result)
-            }
-        })
-    })
-}
-const getCertDetailsByIdm = (certification_id, requester) => {
-    return new Promise((resolve, reject) => {
-        const isPriviledged = [99, 101].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: "You don't have a persmission"
-            })
-        }
-        client.query('SELECT * FROM certification_data WHERE certificate_id=$1',[certification_id], (err, result) => {    
-            if(err)
-            {
-                return reject(err)
-            }
-            else
-            {
-                return resolve(result.rows)
-            }
-        })
-    })
-}
+const { listCourses, assertCourseReadable } = require('./ContentAccessm');
+const getCertByCurm = async (curiculum_id, requester) => ({
+    rows: (await listCourses(requester, Number(requester.role) === 103 ? 'assigned' : 'management'))
+        .filter((course) => String(course.curiculum_id || '') === String(curiculum_id))
+});
+
+const getCertDetailsByIdm = async (certification_id, requester) => [
+    await assertCourseReadable(requester, certification_id)
+];
 module.exports = {getCertByCurm, getCertDetailsByIdm}

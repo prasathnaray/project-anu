@@ -2,106 +2,46 @@
 const client = require('../utils/conn');
 const { HashPassword } = require('../utils/hash.js'); // Adjust path if needed
 
-const createScancentrem = (requester, data) => {
-    return new Promise(async (resolve, reject) => {
-        const isPrivileged = [99].includes(Number(requester.role));
-        
-        if (!isPrivileged) {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: 'You do not have permission to access this profile.'
-            });
+const createScancentrem = async (requester, data) => {
+    if (Number(requester.role) !== 99) {
+        return { status: 'Forbidden', code: 403, message: 'Only Super Admin can create institutions.' };
+    }
+    if (!requester.user_mail) throw new Error('Admin user email is required. User session may be invalid.');
+    const transactionClient = await client.connect();
+    try {
+        await transactionClient.query('BEGIN');
+        const userCheck = await transactionClient.query('SELECT user_email FROM user_data WHERE user_email = $1', [data.center_email]);
+        if (userCheck.rows.length > 0) {
+            await transactionClient.query('ROLLBACK');
+            return { status: 'Conflict', code: 409, message: 'A user with this email already exists.' };
         }
-
-        // Check if requester.user_mail exists
-        if (!requester.user_mail) {
-            return reject(new Error('Admin user email is required. User session may be invalid.'));
-        }
-
-        // Start a transaction
-        try {
-            await client.query('BEGIN');
-
-            // 1. Check if user with this email already exists
-            const userCheck = await client.query(
-                'SELECT user_email FROM user_data WHERE user_email = $1',
-                [data.center_email]
-            );
-
-            if (userCheck.rows.length > 0) {
-                await client.query('ROLLBACK');
-                return resolve({
-                    status: 'error',
-                    code: 400,
-                    message: 'A user with this email already exists'
-                });
-            }
-
-            // 2. Create the scan center
-            const centerResult = await client.query(
-                'INSERT INTO scan_centers(center_name, center_email, center_phone, center_address, admin_user_email, status) VALUES($1, $2, $3, $4, $5, $6) RETURNING *',
-                [
-                    data.center_name,
-                    data.center_email,
-                    data.center_phone,
-                    data.center_address,
-                    data.center_email,
-                    data.status || 'Pending'
-                ]
-            );
-
-            const createdCenter = centerResult.rows[0];
-
-            // 3. Generate a temporary password
-            const tempPassword = generateTemporaryPassword();
-            
-            // 4. Hash the password using your utility
-            const hashedPassword = await HashPassword(tempPassword);
-
-            // 5. Create the user login account
-            const userResult = await client.query(
-                `INSERT INTO user_data(
-                    user_email, 
-                    user_name, 
-                    user_contact_num, 
-                    user_password, 
-                    user_role, 
-                    status, 
-                    centre_id,
-                    center_name
-                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_email, user_name, user_role, status, centre_id`,
-                [
-                    data.center_email,
-                    data.center_name,
-                    data.center_phone,
-                    hashedPassword,
-                    data.user_role || '101', // Default role for scan center admin
-                    'active',
-                    createdCenter.center_id,
-                    data.center_name
-                ]
-            );
-
-            // 6. Commit the transaction
-            await client.query('COMMIT');
-
-            return resolve({
-                status: 'success',
-                code: 201,
-                data: {
-                    center: createdCenter,
-                    user: userResult.rows[0],
-                    temporaryPassword: tempPassword // Send this via email in production
-                }
-            });
-
-        } catch (err) {
-            // Rollback on error
-            await client.query('ROLLBACK');
-            return reject(err);
-        }
-    });
+        const centerResult = await transactionClient.query(
+            `INSERT INTO scan_centers(center_name, center_email, center_phone, center_address, admin_user_email, status)
+             VALUES($1, $2, $3, $4, $5, $6) RETURNING *`,
+            [data.center_name, data.center_email, data.center_phone, data.center_address, data.center_email, data.status || 'Pending']
+        );
+        const createdCenter = centerResult.rows[0];
+        const tempPassword = generateTemporaryPassword();
+        const hashedPassword = await HashPassword(tempPassword);
+        const userResult = await transactionClient.query(
+            `INSERT INTO user_data
+                (user_email, user_name, user_contact_num, user_password, user_role, status, centre_id, center_name)
+             VALUES($1, $2, $3, $4, '101', 'active', $5, $6)
+             RETURNING user_email, user_name, user_role, status, centre_id`,
+            [data.center_email, data.center_name, data.center_phone, hashedPassword, createdCenter.center_id, data.center_name]
+        );
+        await transactionClient.query('COMMIT');
+        return {
+            status: 'success',
+            code: 201,
+            data: { center: createdCenter, user: userResult.rows[0], temporaryPassword: tempPassword }
+        };
+    } catch (err) {
+        await transactionClient.query('ROLLBACK');
+        throw err;
+    } finally {
+        transactionClient.release();
+    }
 };
 
 // Helper function to generate temporary password
@@ -154,7 +94,53 @@ const getscancenterm = (requester) => {
         }
     });
 }
+
+const addInstitutionAdmin = async (requester, centreId, data) => {
+    if (Number(requester.role) !== 99) {
+        return { status: 'Forbidden', code: 403, message: 'Only Super Admin can add institution administrators.' };
+    }
+    if (!data.user_email?.trim() || !data.user_name?.trim()) {
+        return { status: 'Validation Error', code: 400, message: 'user_email and user_name are required.' };
+    }
+    const email = data.user_email.trim().toLowerCase();
+    const transactionClient = await client.connect();
+    try {
+        await transactionClient.query('BEGIN');
+        const centerResult = await transactionClient.query(
+            'SELECT center_id, center_name FROM scan_centers WHERE center_id = $1',
+            [centreId]
+        );
+        if (centerResult.rows.length === 0) {
+            await transactionClient.query('ROLLBACK');
+            return { status: 'Not Found', code: 404, message: 'Institution not found.' };
+        }
+        const duplicate = await transactionClient.query('SELECT 1 FROM user_data WHERE user_email = $1', [email]);
+        if (duplicate.rows.length > 0) {
+            await transactionClient.query('ROLLBACK');
+            return { status: 'Conflict', code: 409, message: 'A user with this email already exists.' };
+        }
+        const temporaryPassword = generateTemporaryPassword();
+        const hashedPassword = await HashPassword(temporaryPassword);
+        const center = centerResult.rows[0];
+        const result = await transactionClient.query(
+            `INSERT INTO user_data
+                (user_email, user_name, user_contact_num, user_password, user_role, status, centre_id, center_name)
+             VALUES ($1, $2, $3, $4, '101', 'active', $5, $6)
+             RETURNING user_email, user_name, user_role, status, centre_id, center_name`,
+            [email, data.user_name.trim(), data.user_contact_num || null, hashedPassword, centreId, center.center_name]
+        );
+        await transactionClient.query('COMMIT');
+        return { status: 'Success', code: 201, data: { user: result.rows[0], temporaryPassword } };
+    } catch (error) {
+        await transactionClient.query('ROLLBACK');
+        throw error;
+    } finally {
+        transactionClient.release();
+    }
+};
+
 module.exports = {
     createScancentrem,
-    getscancenterm
+    getscancenterm,
+    addInstitutionAdmin
 };

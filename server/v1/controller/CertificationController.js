@@ -14,7 +14,7 @@ const getCertificationByCurController = async(req, res) => {
     catch(err)
     {
         console.log(err);
-        res.status(500).send(err);
+        res.status(err.statusCode || 500).json({ message: err.statusCode ? err.message : 'Internal server error' });
     }
 }
 const GetCertificationDetailsByIds = async(req, res) => {
@@ -28,6 +28,7 @@ const GetCertificationDetailsByIds = async(req, res) => {
     catch(err)
     {
         console.log(err)
+        return res.status(err.statusCode || 500).json({ message: err.statusCode ? err.message : 'Internal server error' });
     }
 }
 module.exports = {getCertificationByCurController, GetCertificationDetailsByIds}

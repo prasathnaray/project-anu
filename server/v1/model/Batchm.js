@@ -191,7 +191,7 @@ const createBatchm = (batch_name, batch_start_date, batch_end_date, certificatio
 const getBatchm = (requester, page, limit) => {
     return new Promise((resolve, reject) => {
 
-        const isAdmin = Number(requester.role) === 101;
+        const isAdmin = [101, 102].includes(Number(requester.role));
         const offset = (page - 1) * limit;
         let query;
         let params;

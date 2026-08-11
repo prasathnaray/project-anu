@@ -19,7 +19,7 @@ const createLearningController = async (req, res) => {
     } 
     catch (err) {
         console.log(err);
-        res.status(500).send(err);
+        res.status(err.statusCode || 500).json({ message: err.statusCode ? err.message : 'Internal server error' });
     }
 };
 const getLearningByIdController = async (req, res) => { 
@@ -31,7 +31,7 @@ const getLearningByIdController = async (req, res) => {
     }
     catch (err) {
         console.log(err);
-        res.status(500).send(err);
+        res.status(err.statusCode || 500).json({ message: err.statusCode ? err.message : 'Internal server error' });
     }
 };
 const getResourceBylmandrtController = async (req, res) => {
@@ -42,7 +42,7 @@ const getResourceBylmandrtController = async (req, res) => {
         res.status(200).send(result);
     }
     catch (err) {
-        res.status(500).send(err);
+        res.status(err.statusCode || 500).json({ message: err.statusCode ? err.message : 'Internal server error' });
         console.log(err);
     }
 };

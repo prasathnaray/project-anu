@@ -59,7 +59,8 @@ const updateConversionFailure = async (volumeId, errorMessage) => {
     await client.query(
       `
       UPDATE volumes
-      SET conversion_process_status = false
+      SET conversion_process_status = false,
+          lifecycle_status = 'failed'
       WHERE volume_id = $1
       `,
       [volumeId]

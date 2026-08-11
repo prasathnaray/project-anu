@@ -29,14 +29,23 @@ const Authenticate = (req, res, next) => {
             if (err) return res.status(403).json({ status: 'Forbidden: Invalid token' });
             try {
                 const result = await client.query(
-                    'SELECT centre_id, center_name FROM public.user_data WHERE user_email = $1',
+                    `SELECT user_role, status, centre_id, center_name
+                     FROM public.user_data
+                     WHERE user_email = $1`,
                     [user.user_mail]
                 );
-                const dbUser = result.rows[0] || {};
+                const dbUser = result.rows[0];
+                if (!dbUser) {
+                    return res.status(403).json({ status: 'Forbidden: Account no longer exists' });
+                }
+                if (String(dbUser.status).toLowerCase() !== 'active') {
+                    return res.status(403).json({ status: 'Forbidden: Account is not active' });
+                }
                 req.user = {
                     ...user,
-                    centre_id: user.centre_id || dbUser.centre_id || null,
-                    center_name: user.center_name || dbUser.center_name || null
+                    role: dbUser.user_role,
+                    centre_id: dbUser.centre_id || null,
+                    center_name: dbUser.center_name || null
                 };
                 next();
             } catch (queryErr) {
