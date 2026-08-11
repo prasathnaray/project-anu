@@ -1,5 +1,4 @@
 const { GenderRatio, UserStats, InteractionsAttemptStatsM, ActivityLastScoresM, SkillCompetencyM, PerformanceMetricsM } = require("../model/AnalyticsModel")
-
 const GenderRatioC = async(req, res) => {
     const requester = req.user;
     try
