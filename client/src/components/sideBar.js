@@ -71,7 +71,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 >
                   <BookOpen size={20} />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>
-                    {tokdata.role == 103 ? "Assigned Courses" : tokdata.role == 99 ? "Content Access" : "Course Library"}
+                    {tokdata.role == 103 ? "Assigned Courses" : tokdata.role == 99 ? "Content Access" : "Library"}
                   </div>
                 </button>
               </li>
