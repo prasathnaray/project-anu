@@ -312,7 +312,6 @@ import React from "react";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import NavBar from "../components/navBar";
 import SideBar from "../components/sideBar";
-import IMAGE_URL from "../API/imageUrl";
 import TraineeProfileAPI from "../API/TraineeProfileAPI";
 import HalfDonut from "../charts/ResourceCompletion";
 import StreakHeatmap from "../charts/StreaksChart";
@@ -458,7 +457,7 @@ function TraineeIndividual() {
                         <div className="w-5 h-5 border-4 border-[#8DC63F] border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <img
-                          src={IMAGE_URL + `${counts.img}`}
+                          src={counts.img || "/default-profile.png"}
                           alt="Profile"
                           className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer transition-all duration-300 hover:scale-105"
                         />

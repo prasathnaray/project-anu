@@ -3,7 +3,7 @@ set -euo pipefail
 
 echo "[entrypoint] Starting volume conversion"
 echo "[entrypoint] VOLUME_ID=${VOLUME_ID:-}"
-echo "[entrypoint] SUPABASE_INPUT_PATH=${SUPABASE_INPUT_PATH:-}"
+echo "[entrypoint] S3_INPUT_KEY=${S3_INPUT_KEY:-${SUPABASE_INPUT_PATH:-}}"
 echo "[entrypoint] VOLUME_NAME=${VOLUME_NAME:-}"
 
 exec timeout 7200 xvfb-run -a /opt/Slicer/Slicer \

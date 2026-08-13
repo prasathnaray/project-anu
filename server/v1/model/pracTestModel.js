@@ -1,6 +1,6 @@
 const client = require('../utils/conn');
-const supabase = require('../utils/supaBaseConfig.js');
 const path = require('path');
+const { uploadAsset, signAsset } = require('../utils/storageAdapter');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 // const submitSession = async (requester, sessionType, sessionNumber, resource_id, session_id, payload, imageMap) => {
@@ -616,10 +616,11 @@ const submitSession = async (
 
   /** Upload a file to Supabase storage, throws on failure */
   const uploadToStorage = async (path, file) => {
-    const { error } = await supabase.storage
-      .from(process.env.BUCKET_NAME)
-      .upload(path, file.buffer, { contentType: file.mimetype, upsert: true });
-    if (error) throw new Error(`Storage upload failed [${path}]: ${error.message}`);
+    const uploaded = await uploadAsset({
+      sourceBucket: process.env.BUCKET_NAME, objectKey: path, body: file.buffer,
+      contentType: file.mimetype, upsert: true
+    });
+    return uploaded.reference;
   };
 
   // ─── Aliases ──────────────────────────────────────────────────────────────
@@ -766,15 +767,15 @@ const submitSession = async (
       const userFile     = imageMap[m.type]?.user;
       const expertFile   = imageMap[m.type]?.expert;
 
-      const userFilePath = userFile
+      let userFilePath = userFile
         ? `measurement_images/${sessionId}_${m.type}_user_${timestamp}`
         : null;
-      const expertFilePath = expertFile
+      let expertFilePath = expertFile
         ? `measurement_images/${sessionId}_${m.type}_expert_${timestamp}`
         : null;
 
-      if (userFile) await uploadToStorage(userFilePath, userFile);
-      if (expertFile) await uploadToStorage(expertFilePath, expertFile);
+      if (userFile) userFilePath = await uploadToStorage(userFilePath, userFile);
+      if (expertFile) expertFilePath = await uploadToStorage(expertFilePath, expertFile);
 
       await dbClient.query(
         `INSERT INTO measurements (
@@ -906,11 +907,7 @@ const submitSession = async (
 const isValidUUID = (value) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
-const getPublicUrl = (storagePath) => {
-  if (!storagePath) return null;
-  const { data } = supabase.storage.from(process.env.BUCKET_NAME).getPublicUrl(storagePath);
-  return data?.publicUrl || null;
-};
+const getPublicUrl = (storagePath) => signAsset(storagePath);
 
 const parseJson = (value, fallback = null) => {
   if (value == null) return fallback;
@@ -1067,8 +1064,8 @@ const getPracTestAttemptDetails = async (requester, resource_id) => {
       },
       userImagePath: row.user_image_id || null,
       expertImagePath: row.expert_image_id || null,
-      userImageUrl: getPublicUrl(row.user_image_id),
-      expertImageUrl: getPublicUrl(row.expert_image_id),
+      userImageUrl: await getPublicUrl(row.user_image_id),
+      expertImageUrl: await getPublicUrl(row.expert_image_id),
     });
   }
 

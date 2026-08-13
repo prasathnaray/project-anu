@@ -1,0 +1,58 @@
+{
+  "jobDefinitionName": "vol-conversion-job",
+  "type": "container",
+  "parameters": {},
+  "containerProperties": {
+    "image": "299822065337.dkr.ecr.ap-south-1.amazonaws.com/vol-conversion@sha256:0e125c80c8a53c4b976f9a9107d26f9f4b0ce3455c4041be4c0443de418224e7",
+    "command": [
+      "missing-volume-id",
+      "missing-input-path",
+      "missing-volume-name"
+    ],
+    "jobRoleArn": "arn:aws:iam::299822065337:role/vol-conversion-batch-job-role",
+    "executionRoleArn": "arn:aws:iam::299822065337:role/vol-conversion-batch-execution-role",
+    "volumes": [],
+    "environment": [
+      { "name": "NIFTI_OUTPUT_DIR", "value": "/tmp/nifti-output" },
+      { "name": "VOL_INPUT_DIR", "value": "/tmp/vol-input" },
+      { "name": "AWS_REGION", "value": "ap-south-1" },
+      { "name": "AWS_S3_BUCKET", "value": "project-anu-content-299822065337-ap-south-1" }
+    ],
+    "mountPoints": [],
+    "ulimits": [],
+    "resourceRequirements": [
+      { "value": "2", "type": "VCPU" },
+      { "value": "8192", "type": "MEMORY" }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/aws/batch/vol-conversion",
+        "awslogs-region": "ap-south-1",
+        "awslogs-stream-prefix": "vol-conversion"
+      },
+      "secretOptions": []
+    },
+    "secrets": [
+      {
+        "name": "SUPABASE_URL",
+        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/supabase-hzqGuN:SUPABASE_URL::"
+      },
+      {
+        "name": "SUPABASE_KEY",
+        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/supabase-hzqGuN:SUPABASE_KEY::"
+      },
+      {
+        "name": "SUPABASE_BUCKET",
+        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/supabase-hzqGuN:SUPABASE_BUCKET::"
+      }
+    ],
+    "networkConfiguration": { "assignPublicIp": "ENABLED" },
+    "fargatePlatformConfiguration": { "platformVersion": "LATEST" },
+    "ephemeralStorage": { "sizeInGiB": 50 }
+  },
+  "platformCapabilities": ["FARGATE"],
+  "retryStrategy": { "attempts": 1, "evaluateOnExit": [] },
+  "timeout": { "attemptDurationSeconds": 7200 },
+  "tags": {}
+}

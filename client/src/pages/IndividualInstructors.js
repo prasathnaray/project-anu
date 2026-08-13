@@ -152,7 +152,7 @@ function IndividualInstructors() {
                                               <div className="text-center mt-2">
                                                   <div className="flex justify-center items-center">
                                                       <img
-                                                        src={`https://rnrnzmqtvcyqhpakynls.supabase.co/storage/v1/object/public/projectanu/${insData?.user_profile_photo}`}
+                                                        src={insData?.user_profile_photo || "/default-profile.png"}
                                                         alt="Profile"
                                                         className="mb-4 hover:opacity-80 border-4 border-[#8DC63F] w-24 h-24 rounded-full cursor-pointer transition-all duration-300 hover:scale-105"
                                                       />

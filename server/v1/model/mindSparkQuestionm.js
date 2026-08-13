@@ -1,12 +1,42 @@
 const client = require('../utils/conn');
 const path = require('path');
-const supabase = require('../supaBaseClient');
+const { uploadAsset, signAsset } = require('../utils/storageAdapter');
 
 const isAdmin = (requester) => [99, 101, 102].includes(Number(requester.role));
 const canRead = (requester) => [99, 101, 102, 103].includes(Number(requester.role));
 const ASSET_BUCKET = process.env.MINDSPARK_ASSET_BUCKET || process.env.BUCKET_NAME || 'question-images';
 
 const safePathPart = (value) => String(value || 'unknown').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+const hydrateAssetValue = async (value, key = '') => {
+    if (Array.isArray(value)) return Promise.all(value.map((item) => hydrateAssetValue(item)));
+    if (value && typeof value === 'object') {
+        const output = {};
+        for (const [childKey, child] of Object.entries(value)) {
+            const isUrlField = typeof child === 'string' && ['url', 'image_url', 'public_url'].includes(childKey);
+            const isStorageReference = isUrlField && (
+                /supabase\.co\/storage\/v1\/object\//.test(child)
+                || child.startsWith('projectanu/')
+                || child.startsWith('question-images/')
+            );
+            if (isStorageReference) output[`${childKey}_storage_path`] = child;
+            output[childKey] = await hydrateAssetValue(child, childKey);
+        }
+        return output;
+    }
+    if (typeof value !== 'string' || !['url', 'image_url', 'public_url'].includes(key)) return value;
+    const isStorageReference = /supabase\.co\/storage\/v1\/object\//.test(value)
+        || value.startsWith('projectanu/')
+        || value.startsWith('question-images/');
+    return isStorageReference ? signAsset(value, { defaultSourceBucket: ASSET_BUCKET }) : value;
+};
+
+const hydrateQuestion = async (row) => ({
+    ...row,
+    assets: await hydrateAssetValue(row.assets),
+    options: await hydrateAssetValue(row.options),
+    metadata: await hydrateAssetValue(row.metadata)
+});
 
 const ensureMindSparkQuestionsTable = async () => {
     await client.query(`
@@ -164,15 +194,10 @@ const uploadMindSparkAsset = async (requester, file) => {
     const ext = path.extname(file.originalname || '') || '.png';
     const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
     const storagePath = `mindspark/${safePathPart(requester.user_mail)}/${filename}`;
-    const { error } = await supabase.storage
-        .from(ASSET_BUCKET)
-        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
-
-    if (error) {
-        throw error;
-    }
-
-    const { data: urlData } = supabase.storage.from(ASSET_BUCKET).getPublicUrl(storagePath);
+    const uploaded = await uploadAsset({
+        sourceBucket: ASSET_BUCKET, objectKey: storagePath, body: file.buffer,
+        contentType: file.mimetype, upsert: false
+    });
 
     return {
         status: 'Success',
@@ -180,8 +205,8 @@ const uploadMindSparkAsset = async (requester, file) => {
         data: {
             filename,
             original_name: file.originalname,
-            storage_path: storagePath,
-            public_url: urlData.publicUrl,
+            storage_path: uploaded.reference,
+            public_url: await signAsset(uploaded.reference),
             mime_type: file.mimetype,
             size: file.size,
         }
@@ -219,7 +244,7 @@ const getMindSparkQuestions = async (requester, { resource_id, mindspark_no, inc
         values
     );
 
-    return { status: 'Success', code: 200, data: result.rows };
+    return { status: 'Success', code: 200, data: await Promise.all(result.rows.map(hydrateQuestion)) };
 };
 
 const updateMindSparkQuestion = async (requester, questionId, payload) => {
@@ -280,7 +305,7 @@ const updateMindSparkQuestion = async (requester, questionId, payload) => {
         ]
     );
 
-    return { status: 'Success', code: 200, data: result.rows[0] ?? null };
+    return { status: 'Success', code: 200, data: result.rows[0] ? await hydrateQuestion(result.rows[0]) : null };
 };
 
 const deleteMindSparkQuestion = async (requester, questionId) => {
@@ -394,7 +419,7 @@ const getMindSparkAttemptDetails = async (requester, { resource_id, session_id }
     return {
         status: 'Success',
         code: 200,
-        data: rows,
+        data: await Promise.all(rows.map(hydrateQuestion)),
         summary: {
             session_id: latestSessionId,
             total_questions: total,

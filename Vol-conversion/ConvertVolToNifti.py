@@ -11,6 +11,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 import slicer
+import boto3
 from supabase import Client, create_client
 
 
@@ -39,24 +40,25 @@ def get_supabase_client():
     return create_client(require_env("SUPABASE_URL"), require_env("SUPABASE_KEY"))
 
 
-def get_bucket_name():
+def get_source_bucket_name():
     return os.environ.get("SUPABASE_BUCKET") or os.environ.get("BUCKET_NAME") or DEFAULT_BUCKET
 
 
-def normalize_storage_path(value, bucket_name):
+def normalize_storage_key(value, source_bucket):
     parsed = urlparse(value)
     if parsed.scheme and parsed.netloc:
-        marker = f"/storage/v1/object/public/{bucket_name}/"
+        marker = f"/storage/v1/object/public/{source_bucket}/"
         if marker in parsed.path:
-            return unquote(parsed.path.split(marker, 1)[1])
+            return f"{source_bucket}/{unquote(parsed.path.split(marker, 1)[1])}"
 
-        signed_marker = f"/storage/v1/object/sign/{bucket_name}/"
+        signed_marker = f"/storage/v1/object/sign/{source_bucket}/"
         if signed_marker in parsed.path:
-            return unquote(parsed.path.split(signed_marker, 1)[1])
+            return f"{source_bucket}/{unquote(parsed.path.split(signed_marker, 1)[1])}"
 
-        raise RuntimeError("Input URL is not a Supabase Storage URL for the configured bucket")
+        raise RuntimeError("Input URL is not a recognized storage URL")
 
-    return value.lstrip("/")
+    normalized = value.lstrip("/")
+    return normalized if normalized.startswith(f"{source_bucket}/") else f"{source_bucket}/{normalized}"
 
 
 def safe_filename(storage_path):
@@ -65,47 +67,34 @@ def safe_filename(storage_path):
     return re.sub(r"[^A-Za-z0-9._ -]+", "_", name)
 
 
-def download_input(supabase: Client, bucket_name, storage_path, volume_id):
+def download_input(s3, bucket_name, storage_key, volume_id):
     INPUT_DIR.mkdir(parents=True, exist_ok=True)
-    local_path = INPUT_DIR / f"{volume_id}_{safe_filename(storage_path)}"
+    local_path = INPUT_DIR / f"{volume_id}_{safe_filename(storage_key)}"
 
-    log_message(f"Downloading input from Supabase: {bucket_name}/{storage_path}")
-    response = supabase.storage.from_(bucket_name).download(storage_path)
-
-    if isinstance(response, str):
-        file_bytes = response.encode("utf-8")
-    else:
-        file_bytes = bytes(response)
-
-    local_path.write_bytes(file_bytes)
+    log_message(f"Downloading input from S3: {bucket_name}/{storage_key}")
+    s3.download_file(bucket_name, storage_key, str(local_path))
     log_message(f"Downloaded {local_path.stat().st_size} bytes to {local_path}")
     return local_path
 
 
-def upload_output(supabase: Client, bucket_name, local_path, volume_id):
-    file_bytes = local_path.read_bytes()
-    storage_path = f"converted_vol_files/{local_path.name}"
+def upload_output(s3, bucket_name, source_bucket, local_path, volume_id):
+    storage_key = f"{source_bucket}/converted_vol_files/{local_path.name}"
 
-    log_message(f"Uploading output to Supabase: {bucket_name}/{storage_path}")
-    supabase.storage.from_(bucket_name).upload(
-        path=storage_path,
-        file=file_bytes,
-        file_options={
-            "content-type": "application/octet-stream",
-            "upsert": "true",
-        },
+    log_message(f"Uploading output to S3: {bucket_name}/{storage_key}")
+    s3.upload_file(
+        str(local_path), bucket_name, storage_key,
+        ExtraArgs={"ContentType": "application/octet-stream"},
     )
 
-    public_url = supabase.storage.from_(bucket_name).get_public_url(storage_path)
-    file_size_bytes = len(file_bytes)
+    file_size_bytes = local_path.stat().st_size
     file_size_kb = round(file_size_bytes / 1024, 2)
     file_size_mb = round(file_size_kb / 1024, 2)
 
     return {
         "success": True,
         "volume_id": volume_id,
-        "storage_path": storage_path,
-        "public_url": public_url,
+        "storage_path": storage_key,
+        "public_url": storage_key,
         "file_size_bytes": file_size_bytes,
         "file_size_kb": file_size_kb,
         "file_size_mb": file_size_mb,
@@ -231,7 +220,7 @@ def exit_slicer(exit_code):
 
 def get_job_inputs():
     volume_id = os.environ.get("VOLUME_ID")
-    raw_input_path = os.environ.get("SUPABASE_INPUT_PATH") or os.environ.get("VOL_INPUT_PATH")
+    raw_input_path = os.environ.get("S3_INPUT_KEY") or os.environ.get("SUPABASE_INPUT_PATH") or os.environ.get("VOL_INPUT_PATH")
     volume_name = os.environ.get("VOLUME_NAME")
 
     if not volume_id and len(sys.argv) > 1:
@@ -245,7 +234,7 @@ def get_job_inputs():
     if not volume_id:
         missing.append("VOLUME_ID")
     if not raw_input_path:
-        missing.append("SUPABASE_INPUT_PATH")
+        missing.append("S3_INPUT_KEY")
 
     if missing:
         raise RuntimeError(f"Missing job input: {', '.join(missing)}")
@@ -262,12 +251,14 @@ def main():
     log_message(f"Volume name: {volume_name}")
 
     supabase = get_supabase_client()
-    bucket_name = get_bucket_name()
-    storage_path = normalize_storage_path(raw_input_path, bucket_name)
+    source_bucket = get_source_bucket_name()
+    bucket_name = require_env("AWS_S3_BUCKET")
+    storage_key = normalize_storage_key(raw_input_path, source_bucket)
+    s3 = boto3.client("s3", region_name=os.environ.get("AWS_REGION", "ap-south-1"))
 
-    local_input = download_input(supabase, bucket_name, storage_path, volume_id)
+    local_input = download_input(s3, bucket_name, storage_key, volume_id)
     local_output = convert_to_nifti(local_input, volume_id, volume_name)
-    result = upload_output(supabase, bucket_name, local_output, volume_id)
+    result = upload_output(s3, bucket_name, source_bucket, local_output, volume_id)
     update_conversion_success(supabase, volume_id, result)
     emit_result(result)
 

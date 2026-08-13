@@ -95,6 +95,7 @@ const normalizeTextValue = (value) => String(value ?? "").trim();
 
 const normalizeOptionImageFields = (option = {}) => ({
   image_url: normalizeImageValue(option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url),
+  image_storage_path: normalizeImageValue(option.image_url_storage_path ?? option.image_storage_path),
   image_alt: String(option.image_alt ?? option.imageAlt ?? option.alt ?? ""),
 });
 
@@ -279,6 +280,7 @@ export const formatQuestionForForm = (question, index) => {
     feedback_wrong: question.feedback_wrong ?? "",
     ob_unit: question.metadata?.ob_unit ?? question.metadata?.unit ?? OB_BOOSTER_UNITS[0],
     image_url: imageAsset?.url ?? "",
+    image_storage_path: imageAsset?.url_storage_path ?? "",
     image_alt: imageAsset?.alt ?? imageAsset?.name ?? "",
     video_url: videoAsset?.url ?? question.metadata?.video_url ?? "",
     video_title: videoAsset?.title ?? videoAsset?.name ?? question.metadata?.video_title ?? "",
@@ -340,7 +342,7 @@ export const buildQuestionPayload = (question, index) => {
     .map((option) => ({
       key: option.key.trim(),
       text: option.text.trim(),
-      image_url: normalizeImageValue(option.image_url),
+      image_url: normalizeImageValue(option.image_storage_path || option.image_url),
       image_alt: String(option.image_alt ?? "").trim(),
     }))
     .filter((option) => option.key || option.text || option.image_url)
@@ -353,7 +355,7 @@ export const buildQuestionPayload = (question, index) => {
 
   const parsedAssets = parseJsonText(question.assetsText, []);
   const parsedMetadata = parseJsonText(question.metadataText, {});
-  const questionImageUrl = normalizeImageValue(question.image_url);
+  const questionImageUrl = normalizeImageValue(question.image_storage_path || question.image_url);
   const questionVideoUrl = normalizeImageValue(question.video_url);
   const feedbackCases = Object.fromEntries(
     Object.entries(question.feedback_cases ?? {})

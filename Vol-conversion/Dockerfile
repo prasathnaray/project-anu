@@ -73,7 +73,7 @@ RUN ldd /opt/Slicer/bin/PythonSlicer | sort \
     && ! ldd /opt/Slicer/bin/PythonSlicer | grep "not found"
 
 RUN /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir --upgrade pip \
-    && /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir supabase
+    && /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir boto3 supabase
 
 RUN xvfb-run -a /opt/Slicer/Slicer --no-main-window --disable-cli-modules --python-code "print('slicer-startup-ok'); slicer.app.exit(0)"
 RUN xvfb-run -a /opt/Slicer/Slicer --no-main-window --disable-cli-modules --python-code "assert hasattr(slicer.modules, 'kretzfilereader'), 'kretzfilereader module not loaded'; print('kretz-reader-ok'); slicer.app.exit(0)"
@@ -83,6 +83,6 @@ COPY ConvertVolToNifti.py /app/ConvertVolToNifti.py
 COPY run_conversion.py /app/run_conversion.py
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
-RUN VOLUME_ID=dry-run SUPABASE_INPUT_PATH=dry-run VOLUME_NAME=dry-run CONVERSION_DRY_RUN=1 /app/entrypoint.sh
+RUN VOLUME_ID=dry-run S3_INPUT_KEY=dry-run VOLUME_NAME=dry-run CONVERSION_DRY_RUN=1 /app/entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -118,6 +118,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
             ? {
                 ...question,
                 image_url: uploaded.public_url,
+                image_storage_path: uploaded.storage_path,
                 image_alt: question.image_alt || uploaded.original_name || "",
               }
             : question
@@ -150,6 +151,7 @@ function MindSparkQuestionModal({ isVisible, onClose, resource }) {
               ? {
                   ...option,
                   image_url: uploaded.public_url,
+                  image_storage_path: uploaded.storage_path,
                   image_alt: option.image_alt || uploaded.original_name || "",
                 }
               : option

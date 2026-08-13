@@ -4,6 +4,8 @@ conversion_logs/
 nifti_output/
 temp_downloads/
 temp_nifti/
+__pycache__/
+*.pyc
 *.nii
 *.vol
 *.log

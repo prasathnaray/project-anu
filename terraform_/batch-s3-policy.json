@@ -1,0 +1,20 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ProjectAnuVolumeStorage",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "arn:aws:s3:::project-anu-content-299822065337-ap-south-1/projectanu/volumes/*",
+        "arn:aws:s3:::project-anu-content-299822065337-ap-south-1/projectanu/global/*",
+        "arn:aws:s3:::project-anu-content-299822065337-ap-south-1/projectanu/institutions/*",
+        "arn:aws:s3:::project-anu-content-299822065337-ap-south-1/projectanu/converted_vol_files/*"
+      ]
+    }
+  ]
+}

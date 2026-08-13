@@ -1,4 +1,5 @@
 const {getInstructorsm, deleteInstructorsm, updateInstructorsm, instDataAnalysisModel} = require('../model/instructorm');
+const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
 
 const getInstructorData = async(req, res) => {
     const requester = req.user;
@@ -10,7 +11,7 @@ const getInstructorData = async(req, res) => {
         if (result.code) {
             return res.status(result.code).json(result);
         }
-        res.status(200).send(result.rows);
+        res.status(200).send(await hydrateStorageFields(result.rows));
     }
     catch(err)
     {
@@ -64,7 +65,7 @@ const insDataAnalysisController = async(req, res) => {
     try
     {
         const response = await instDataAnalysisModel(requester, people_id);
-        res.status(200).send(response.rows)
+        res.status(200).send(await hydrateStorageFields(response.rows))
     }
     catch(err)
     {

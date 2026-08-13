@@ -2,6 +2,12 @@
 
 The converter is designed to run as an AWS Batch Fargate job.
 
+The CodeBuild deployment uses `Dockerfile.deploy` to layer application changes on
+the currently published image. This preserves the tested Slicer extensions while
+updating the converter and Python storage dependencies. `Dockerfile` remains the
+full image definition for rebuilding the Slicer runtime when updated extension
+package identifiers are available.
+
 ## Backend Environment
 
 Set these in `server/v1/.env` or the deployed backend environment:
@@ -12,9 +18,14 @@ AWS_ACCESS_KEY_ID=<aws-access-key-with-batch-submit-permission>
 AWS_SECRET_ACCESS_KEY=<aws-secret-key>
 VOL_CONVERSION_JOB_QUEUE=vol-conversion-queue
 VOL_CONVERSION_JOB_DEFINITION=vol-conversion-job
+AWS_S3_BUCKET=project-anu-content-299822065337-ap-south-1
 ```
 
 The backend route `PUT /api/v1/convert-vol/:volume_id` submits a Batch job and returns the AWS Batch `job_id`.
+
+The tracked Batch definition in `terraform_/batch-job-definition.json` pins the
+deployed ECR digest. Register a new revision after every converter image publish;
+updating only the `latest` tag does not update an already registered Batch revision.
 
 ## Batch Container Environment
 
@@ -24,12 +35,14 @@ The Batch job definition must inject these secrets into the container:
 SUPABASE_URL=<supabase-project-url>
 SUPABASE_KEY=<supabase-service-role-key>
 SUPABASE_BUCKET=projectanu
+AWS_S3_BUCKET=project-anu-content-299822065337-ap-south-1
+AWS_REGION=ap-south-1
 ```
 
 The container command receives three arguments from the backend:
 
 ```text
-<volume_id> <supabase_input_storage_path> <volume_name>
+<volume_id> <s3_input_storage_key> <volume_name>
 ```
 
 ## Required AWS Permissions

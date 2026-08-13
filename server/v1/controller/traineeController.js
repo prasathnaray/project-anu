@@ -1,7 +1,8 @@
 const {getTraineesm, traineem, disableTraineem, deleteTraineem, indData, indDatauuid, updateTraineem} = require('../model/traineem.js');
 const {HashPassword} = require('../utils/hash.js');
-const client = require('../utils/supaBaseConfig.js');
 const path = require('path');
+const { uploadAsset, signAsset } = require('../utils/storageAdapter');
+const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const TraineeController = async(req, res) => {
         const requester = req.user;
@@ -9,7 +10,7 @@ const TraineeController = async(req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         try {
                 const result = await getTraineesm(requester, page, limit);
-                res.status(200).send(result);
+                res.status(200).send(await hydrateStorageFields(result));
         } catch (err) {
                 res.status(500).send({
                         status: 'Error',
@@ -37,24 +38,23 @@ const CreateTraineeController = async (req, res) => {
                         })
                 }
                 const filePath = `trainee_images/${file.originalname}`;
-                const { data, error } = await client.storage
-                        .from(process.env.BUCKET_NAME)
-                        .upload(filePath, file.buffer, {
+                const uploaded = await uploadAsset({
+                        sourceBucket: process.env.BUCKET_NAME,
+                        objectKey: filePath,
+                        body: file.buffer,
                         contentType: file.mimetype,
-                        upsert: true,
-                        });
-                if (error) {
-                                return res.status(500).json({ status: 'Error', message: error.message });
-                }
+                        upsert: true
+                });
                 let hashedPass = await HashPassword(user_password); ;
-                const result = await traineem(filePath, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, user_batch, requester);
+                const result = await traineem(uploaded.reference, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, user_batch, requester);
                 if (result.code && result.code !== 200) {
                         return res.status(result.code).json(result);
                 }
                 res.status(200).json({
                         status: 'Success',
-                        message: 'File uploaded to Supabase Storage.',
-                        filePath: filePath,
+                        message: 'Profile image uploaded.',
+                        filePath: uploaded.reference,
+                        fileUrl: await signAsset(uploaded.reference),
                         result: result,
                 });  
         }
@@ -116,7 +116,7 @@ const deleteTraineec = async(req, res)=> {
 const indController = async(req, res) => {
         try {
                 const result = await indData(req.user, req.params.user_mail);
-                res.status(200).send(result);       
+                res.status(200).send(await hydrateStorageFields(result));       
         } catch (error) {
                 res.status(500).send(err);
         }
@@ -128,7 +128,7 @@ const induuidController = async(req, res) => {
         try
         {
                 const result = await indDatauuid(requester, people_id, isVr);
-                res.status(200).send(result);
+                res.status(200).send(await hydrateStorageFields(result));
         }
         catch(err)
         {

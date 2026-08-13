@@ -8,7 +8,6 @@ import {
   EllipsisVertical,
   X,
 } from "lucide-react";
-import IMAGE_URL from "../API/imageUrl";
 import GetIntructorsAPI from "../API/GetIntructorsAPI";
 import { Navigate, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -331,7 +330,7 @@ function Instructors() {
                         >
                           <td className="py-2 px-4">
                             <img
-                              src={IMAGE_URL + instructor.user_profile_photo}
+                              src={instructor.user_profile_photo || "/default-profile.png"}
                               className="w-10 h-10 rounded-full object-cover cursor-pointer"
                               alt="profile"
                             />

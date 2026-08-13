@@ -72,6 +72,10 @@ const updateConversionFailure = async (volumeId, errorMessage) => {
 
 const submitConversionJob = async ({ volumeId, storagePath, volumeName }) => {
   const { jobQueue, jobDefinition } = getBatchConfig();
+  const sourceBucket = process.env.BUCKET_NAME || 'projectanu';
+  const legacySupabasePath = String(storagePath).startsWith(`${sourceBucket}/`)
+    ? String(storagePath).slice(sourceBucket.length + 1)
+    : String(storagePath);
 
   const command = new SubmitJobCommand({
     jobName: makeJobName(volumeId),
@@ -80,7 +84,9 @@ const submitConversionJob = async ({ volumeId, storagePath, volumeName }) => {
     containerOverrides: {
       environment: [
         { name: 'VOLUME_ID', value: String(volumeId) },
-        { name: 'SUPABASE_INPUT_PATH', value: String(storagePath) },
+        { name: 'S3_INPUT_KEY', value: String(storagePath) },
+        { name: 'SUPABASE_INPUT_PATH', value: legacySupabasePath },
+        { name: 'AWS_S3_BUCKET', value: String(process.env.AWS_S3_BUCKET || '') },
         { name: 'VOLUME_NAME', value: String(volumeName || 'volume') },
       ],
     },

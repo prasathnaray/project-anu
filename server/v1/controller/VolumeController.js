@@ -1,7 +1,8 @@
-const client = require('../supaBaseClient.js');
 const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel} = require("../model/Volumem");
 const path = require('path');
 const { randomUUID } = require('crypto');
+const { uploadAsset, signAsset, signAssets } = require('../utils/storageAdapter');
+const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const contentBucket = () => process.env.PRIVATE_CONTENT_BUCKET || process.env.BUCKET_NAME;
 const ownerPrefix = (requester, volume = null) => {
@@ -41,15 +42,13 @@ const VolumeController = async(req, res) => {
             return res.status(403).json({ message: 'You do not have permission to upload volumes.' });
         }
         const filePath = `${ownerPrefix(requester)}/${randomUUID()}/source/${safeName(file.originalname)}`;
-        const { data, error } = await client.storage
-                        .from(contentBucket())
-                        .upload(filePath, file.buffer, {
-                        contentType: file.mimetype,
-                        upsert: true,
-                        });
-        if (error) {
-            return res.status(500).json({ status: 'Error', message: error.message });
-        }
+        const uploaded = await uploadAsset({
+            sourceBucket: contentBucket(),
+            objectKey: filePath,
+            body: file.buffer,
+            contentType: file.mimetype,
+            upsert: true
+        });
         const result = await svUploadModel(
             requester,
             volume_type,
@@ -58,7 +57,7 @@ const VolumeController = async(req, res) => {
             volume_fetal_presentation,
             trimester,
             description,
-            filePath
+            uploaded.reference
         )
         if (result.code) return res.status(result.code).json(result);
         if(result.rowCount == 1)
@@ -81,7 +80,7 @@ const getVolumeDataC = async(req, res) => {
     {
         const result = await getUploadedVolume(requester)
         if (result.code !== 200) return res.status(result.code).json(result);
-        res.status(200).send(result.data);
+        res.status(200).send(await hydrateStorageFields(result.data));
     }
     catch(err)
     {
@@ -112,7 +111,7 @@ const getVolumeInstructorViewController = async(req, res) => {
     {
         const result = await getVolumeInstructorViewModel(requester);
         if (result.code) return res.status(result.code).json(result);
-        res.status(200).send(result.rows);
+        res.status(200).send(await hydrateStorageFields(result.rows));
     }
     catch(err)
     {
@@ -194,7 +193,7 @@ const getConvVolumeListController = async(req, res) => {
     try
     {
         const response = await getConvertedVolumeList(requester);
-        res.status(200).json(response.data.rows);
+        res.status(200).json(await hydrateStorageFields(response.data.rows));
     }
     catch(err)
     {
@@ -265,23 +264,21 @@ const volumePlacementController = async(req, res) => {
         }
         
         const fileName = `${ownerPrefix(requester, ownedVolume)}/${volume_id}/placements/${Date.now()}.json`;
-        const { data, error } = await client.storage
-            .from(contentBucket())
-            .upload(fileName, placed_file.buffer, {
-                contentType: 'application/json',
-                upsert: false
-            });
+        const uploaded = await uploadAsset({
+            sourceBucket: contentBucket(),
+            objectKey: fileName,
+            body: placed_file.buffer,
+            contentType: 'application/json',
+            upsert: false
+        });
         
-        if(error) {
-            throw new Error(`Supabase upload failed: ${error.message}`);
-        }
-        
-        const placement = await placedVolumeConversionModel(requester, volume_id, fileName);
+        const placement = await placedVolumeConversionModel(requester, volume_id, uploaded.reference);
         if (placement.code) return res.status(placement.code).json(placement);
         
         res.status(200).send({
             message: "Volume Placed Successfully",
-            assetPath: fileName
+            assetPath: uploaded.reference,
+            assetUrl: await signAsset(uploaded.reference)
         });
     }
     catch(err) {
@@ -300,7 +297,7 @@ const getVolumePlacementsController = async(req, res) => {
             });
         }
 
-        res.status(200).json(result.data);
+        res.status(200).json(await hydrateStorageFields(result.data));
     }
     catch(err) {
         console.error('Get volume placements error:', err);
@@ -790,66 +787,39 @@ const volRecordingC = async(req, res) => {
         for (let i = 0; i < recording_files.length; i++) {
             const recording_file = recording_files[i];
             const jsonFileName = `${storagePrefix}/recordings/${timestamp}_${i}.json`;
-            const { error: jsonError } = await client.storage
-                .from(contentBucket())
-                .upload(jsonFileName, recording_file.buffer, {
-                    contentType: 'application/json',
-                    upsert: false
-                });
-
-            if (jsonError) {
-                throw new Error(`JSON upload failed at index ${i}: ${jsonError.message}`);
-            }
-
-            uploadedRecordings.push(jsonFileName);
+            const uploaded = await uploadAsset({
+                sourceBucket: contentBucket(), objectKey: jsonFileName, body: recording_file.buffer,
+                contentType: 'application/json', upsert: false
+            });
+            uploadedRecordings.push(uploaded.reference);
         }
 
         for (let i = 0; i < audio_files.length; i++) {
             const audio_file = audio_files[i];
             const audioFileName = `${storagePrefix}/audio/${timestamp}_${i}.wav`;
-            const { error: audioError } = await client.storage
-                .from(contentBucket())
-                .upload(audioFileName, audio_file.buffer, {
-                    contentType: 'audio/wav',
-                    upsert: false
-                });
-            
-            if (audioError) {
-                throw new Error(`Audio upload failed at index ${i}: ${audioError.message}`);
-            }
-            
-            uploadedAudio.push(audioFileName);
+            const uploaded = await uploadAsset({
+                sourceBucket: contentBucket(), objectKey: audioFileName, body: audio_file.buffer,
+                contentType: 'audio/wav', upsert: false
+            });
+            uploadedAudio.push(uploaded.reference);
         }
 
         for (let i = 0; i < image_files.length; i++) {
             const image_file = image_files[i];
             const imageExtension = path.extname(image_file.originalname).slice(1).toLowerCase();
             const imageFileName = `${storagePrefix}/images/${timestamp}_${i}.${imageExtension}`;
-            const { error: imageError } = await client.storage
-                .from(contentBucket())
-                .upload(imageFileName, image_file.buffer, {
-                    contentType: imageContentTypes[imageExtension],
-                    upsert: false
-                });
-
-            if (imageError) {
-                throw new Error(`Image upload failed at index ${i}: ${imageError.message}`);
-            }
-
-            uploadedImages.push(imageFileName);
+            const uploaded = await uploadAsset({
+                sourceBucket: contentBucket(), objectKey: imageFileName, body: image_file.buffer,
+                contentType: imageContentTypes[imageExtension], upsert: false
+            });
+            uploadedImages.push(uploaded.reference);
         }
 
         const manifestFileName = `${storagePrefix}/manifests/${timestamp}.${manifestExtension}`;
-        const { error: manifestError } = await client.storage
-            .from(contentBucket())
-            .upload(manifestFileName, manifest_file.buffer, {
-                contentType: manifestContentTypes[manifestExtension],
-                upsert: false
-            });
-
-        if (manifestError) {
-            throw new Error(`Manifest upload failed: ${manifestError.message}`);
-        }
+        const uploadedManifest = await uploadAsset({
+            sourceBucket: contentBucket(), objectKey: manifestFileName, body: manifest_file.buffer,
+            contentType: manifestContentTypes[manifestExtension], upsert: false
+        });
 
         const dbResult = await volumeRecordingsModel(
             requester, 
@@ -859,7 +829,7 @@ const volRecordingC = async(req, res) => {
             uploadedRecordings,
             uploadedAudio,
             uploadedImages,
-            manifestFileName
+            uploadedManifest.reference
         );
         
         // Check authorization response from model
@@ -869,16 +839,22 @@ const volRecordingC = async(req, res) => {
             });
         }
         
+        const [recordingUrls, audioUrls, imageUrls, manifestUrl] = await Promise.all([
+            signAssets(uploadedRecordings),
+            signAssets(uploadedAudio),
+            signAssets(uploadedImages),
+            signAsset(uploadedManifest.reference)
+        ]);
         res.status(200).json({
             message: `Volume ${recording_type} Recording Uploaded Successfully`,
             recordingType: recording_type,
-            recordingUrl: uploadedRecordings[0],
+            recordingUrl: recordingUrls[0],
             recordingFilesUploaded: uploadedRecordings.length,
-            recordingUrls: uploadedRecordings,
+            recordingUrls,
             audioFilesUploaded: uploadedAudio.length,
-            audioUrls: uploadedAudio,
+            audioUrls,
             imageFilesUploaded: uploadedImages.length,
-            imageUrls: uploadedImages,
+            imageUrls,
             manifestUrl,
             data: dbResult
         });
@@ -910,7 +886,7 @@ const shadowRecordingDataController = async(req, res) => {
     try
     {
         const result = await shadowRecoringDataModel(requester, volume_id);
-        res.status(200).send(result.rows);
+        res.status(200).send(await hydrateStorageFields(result.rows));
     }
     catch(err)
     {
@@ -927,7 +903,7 @@ const volumeRecordingCountsController = async(req, res) => {
                 error: result.message
             });
         }
-        res.status(200).send(result.data);
+        res.status(200).send(await hydrateStorageFields(result.data));
     }
     catch(err)
     {
@@ -940,7 +916,7 @@ const getAssociatedVolumeController = async(req, res) => {
     try
     {
         const result = await getAssociatedVolumeModel(requester, r_id);
-        res.status(200).send(result.rows);
+        res.status(200).send(await hydrateStorageFields(result.rows));
     }
     catch(err)
     {

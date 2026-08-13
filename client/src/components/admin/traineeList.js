@@ -312,7 +312,6 @@ import {
   X,
 } from "lucide-react";
 import TraineeListAPI from "../../API/TraineeListAPI";
-import IMAGE_URL from "../../API/imageUrl";
 import showDisableConfirmToast from "../../utils/showDisableConfirmToast";
 import showEnableConfirmToast from "../../utils/showEnableConfirmToast";
 import DeleteTraineeToast from "../../utils/deleteTraineeToast";
@@ -592,7 +591,7 @@ function TraineeList() {
                         >
                           <td className="py-2 px-4">
                             <img
-                              src={IMAGE_URL + trainee.user_profile_photo}
+                              src={trainee.user_profile_photo || "/default-profile.png"}
                               className="w-10 h-10 rounded-full cursor-pointer object-cover"
                               alt="profile"
                               onError={(e) =>

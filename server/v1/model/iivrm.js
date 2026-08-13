@@ -1,7 +1,6 @@
 const client = require('../utils/conn');
 const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const { uploadAsset, signAsset } = require('../utils/storageAdapter');
 const BUCKET = process.env.BUCKET_NAME || 'question-images';
 
 const updateProgress = async (userId, resourceId) => {
@@ -40,16 +39,16 @@ const uploadImage = (file, requester) => {
       const ext = path.extname(file.originalname);
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
       const storagePath = `iisub/${filename}`;
-      const { error } = await supabase.storage
-        .from(BUCKET)
-        .upload(storagePath, file.buffer, { contentType: file.mimetype, upsert: false });
-      if (error) return reject(error);
-      const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+      const uploaded = await uploadAsset({
+        sourceBucket: BUCKET, objectKey: storagePath, body: file.buffer,
+        contentType: file.mimetype, upsert: false
+      });
       return resolve({
         filename,
         original_name: file.originalname,
-        storage_path: storagePath,
-        public_url: urlData.publicUrl,
+        storage_path: uploaded.reference,
+        public_url: uploaded.reference,
+        signed_url: await signAsset(uploaded.reference),
         mime_type: file.mimetype,
         size: file.size,
       });
@@ -101,7 +100,7 @@ const submitType2 = (requester, questionNo, isCorrect, file) => {
             } catch (progressErr) {
               console.error('Failed to update progress after submitType2:', progressErr);
             }
-            return resolve({ status: 'Submission Successful', code: 201, data: result.rows[0] });
+            return resolve({ status: 'Submission Successful', code: 201, data: { ...result.rows[0], public_url: imageData.signed_url } });
           }
         );
       })
@@ -128,7 +127,7 @@ const submitAnnotation1 = (requester, questionNo, isCorrect, correctLabelCount, 
             } catch (progressErr) {
               console.error('Failed to update progress after submitAnnotation1:', progressErr);
             }
-            return resolve({ status: 'Submission Successful', code: 201, data: result.rows[0] });
+            return resolve({ status: 'Submission Successful', code: 201, data: { ...result.rows[0], public_url: imageData.signed_url } });
           }
         );
       })
@@ -155,7 +154,7 @@ const submitAnnotation2 = (requester, questionNo, isCorrect, correctLabelCount, 
             } catch (progressErr) {
               console.error('Failed to update progress after submitAnnotation2:', progressErr);
             }
-            return resolve({ status: 'Submission Successful', code: 201, data: result.rows[0] });
+            return resolve({ status: 'Submission Successful', code: 201, data: { ...result.rows[0], public_url: imageData.signed_url } });
           }
         );
       })
@@ -182,7 +181,7 @@ const submitMeasurement = (requester, questionNo, partial, value, interpretation
             } catch (progressErr) {
               console.error('Failed to update progress after submitMeasurement:', progressErr);
             }
-            return resolve({ status: 'Submission Successful', code: 201, data: result.rows[0] });
+            return resolve({ status: 'Submission Successful', code: 201, data: { ...result.rows[0], public_url: imageData.signed_url } });
           }
         );
       })

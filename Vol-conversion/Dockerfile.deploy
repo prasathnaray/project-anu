@@ -1,0 +1,15 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+USER root
+
+RUN /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir boto3 supabase
+
+WORKDIR /app
+COPY ConvertVolToNifti.py /app/ConvertVolToNifti.py
+COPY run_conversion.py /app/run_conversion.py
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+RUN VOLUME_ID=dry-run S3_INPUT_KEY=dry-run VOLUME_NAME=dry-run CONVERSION_DRY_RUN=1 /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
