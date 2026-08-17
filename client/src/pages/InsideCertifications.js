@@ -385,7 +385,7 @@ function InsideCertifications() {
     if (token) decoded = jwtDecode(token);
   } catch (_) {}
 
-  if (decoded.role != 101 && decoded.role != 102 && decoded.role != 99) {
+  if (decoded.role != 101 && decoded.role != 102 && decoded.role != 99 && decoded.role != 103) {
     return <Navigate to="/" replace />;
   }
   
