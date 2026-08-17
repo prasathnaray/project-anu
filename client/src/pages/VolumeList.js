@@ -143,7 +143,7 @@ function VolumeList() {
   ), [volumesDatumm]);
 
   const uploaderName = sessionStorage.getItem('user_name') || decoded.user_mail || '';
-  if (![99, 102, 103].includes(userRole)) {
+  if (![99, 102, 103, 101].includes(userRole)) {
     return <Navigate to="/" replace />;
   }
 

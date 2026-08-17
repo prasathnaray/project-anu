@@ -368,7 +368,7 @@ const getMindSparkAttemptDetails = async (requester, { resource_id, session_id }
             }
         };
     }
-
+   
     const result = await client.query(
         `WITH latest_submissions AS (
             SELECT *
