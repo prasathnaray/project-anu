@@ -3,7 +3,7 @@
   "type": "container",
   "parameters": {},
   "containerProperties": {
-    "image": "299822065337.dkr.ecr.ap-south-1.amazonaws.com/vol-conversion@sha256:0e125c80c8a53c4b976f9a9107d26f9f4b0ce3455c4041be4c0443de418224e7",
+    "image": "299822065337.dkr.ecr.ap-south-1.amazonaws.com/vol-conversion@sha256:4c3301118a8ca5fa53a91d5f8761eac5736b4c7fa61f67c996b488b9f4be823b",
     "command": [
       "missing-volume-id",
       "missing-input-path",
@@ -16,6 +16,7 @@
       { "name": "NIFTI_OUTPUT_DIR", "value": "/tmp/nifti-output" },
       { "name": "VOL_INPUT_DIR", "value": "/tmp/vol-input" },
       { "name": "AWS_REGION", "value": "ap-south-1" },
+      { "name": "SUPABASE_BUCKET", "value": "projectanu" },
       { "name": "AWS_S3_BUCKET", "value": "project-anu-content-299822065337-ap-south-1" }
     ],
     "mountPoints": [],
@@ -35,16 +36,8 @@
     },
     "secrets": [
       {
-        "name": "SUPABASE_URL",
-        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/supabase-hzqGuN:SUPABASE_URL::"
-      },
-      {
-        "name": "SUPABASE_KEY",
-        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/supabase-hzqGuN:SUPABASE_KEY::"
-      },
-      {
-        "name": "SUPABASE_BUCKET",
-        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/supabase-hzqGuN:SUPABASE_BUCKET::"
+        "name": "DATABASE_URL",
+        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/database-url-X15QsE"
       }
     ],
     "networkConfiguration": { "assignPublicIp": "ENABLED" },

@@ -73,7 +73,7 @@ RUN ldd /opt/Slicer/bin/PythonSlicer | sort \
     && ! ldd /opt/Slicer/bin/PythonSlicer | grep "not found"
 
 RUN /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir --upgrade pip \
-    && /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir boto3 supabase
+    && /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir boto3 psycopg2-binary
 
 RUN xvfb-run -a /opt/Slicer/Slicer --no-main-window --disable-cli-modules --python-code "print('slicer-startup-ok'); slicer.app.exit(0)"
 RUN xvfb-run -a /opt/Slicer/Slicer --no-main-window --disable-cli-modules --python-code "assert hasattr(slicer.modules, 'kretzfilereader'), 'kretzfilereader module not loaded'; print('kretz-reader-ok'); slicer.app.exit(0)"

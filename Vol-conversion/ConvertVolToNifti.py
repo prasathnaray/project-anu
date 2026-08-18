@@ -12,7 +12,7 @@ from urllib.parse import unquote, urlparse
 
 import slicer
 import boto3
-from supabase import Client, create_client
+import psycopg2
 
 
 DEFAULT_BUCKET = "projectanu"
@@ -36,8 +36,12 @@ def require_env(name):
     return value
 
 
-def get_supabase_client():
-    return create_client(require_env("SUPABASE_URL"), require_env("SUPABASE_KEY"))
+def get_database_connection():
+    return psycopg2.connect(
+        require_env("DATABASE_URL"),
+        sslmode=os.environ.get("PGSSLMODE", "require"),
+        connect_timeout=int(os.environ.get("PGCONNECT_TIMEOUT", "15")),
+    )
 
 
 def get_source_bucket_name():
@@ -101,44 +105,77 @@ def upload_output(s3, bucket_name, source_bucket, local_path, volume_id):
     }
 
 
-def update_conversion_success(supabase: Client, volume_id, result):
+def update_conversion_success(volume_id, result):
     log_message("Updating conversion status: success")
-    completed_at = datetime.now(timezone.utc).isoformat()
-    supabase.table("volume_conv_logs").update(
-        {
-            "conversion_completion": True,
-            "completed_at": completed_at,
-            "error_message": None,
-            "output_file": result["storage_path"],
-            "output_size": result["file_size_bytes"],
-            "output_size_kb": result["file_size_kb"],
-            "output_size_mb": result["file_size_mb"],
-            "public_url": result["public_url"],
-        }
-    ).eq("volume_id", volume_id).execute()
+    connection = get_database_connection()
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE volume_conv_logs
+                    SET conversion_completion = true,
+                        completed_at = %s,
+                        error_message = NULL,
+                        output_file = %s,
+                        output_size = %s,
+                        output_size_kb = %s,
+                        output_size_mb = %s,
+                        public_url = %s
+                    WHERE volume_id = %s
+                    """,
+                    (
+                        datetime.now(timezone.utc),
+                        result["storage_path"],
+                        result["file_size_bytes"],
+                        result["file_size_kb"],
+                        result["file_size_mb"],
+                        result["public_url"],
+                        volume_id,
+                    ),
+                )
+                cursor.execute(
+                    """
+                    UPDATE volumes
+                    SET conversion_process_status = false,
+                        converted_file_path = %s
+                    WHERE volume_id = %s
+                    """,
+                    (result["storage_path"], volume_id),
+                )
+                if cursor.rowcount != 1:
+                    raise RuntimeError(f"Volume not found while recording conversion success: {volume_id}")
+    finally:
+        connection.close()
 
-    supabase.table("volumes").update(
-        {
-            "conversion_process_status": False,
-            "converted_file_path": result["storage_path"],
-        }
-    ).eq("volume_id", volume_id).execute()
 
-
-def update_conversion_failure(supabase: Client, volume_id, error_message):
+def update_conversion_failure(volume_id, error_message):
     log_message("Updating conversion status: failure")
-    completed_at = datetime.now(timezone.utc).isoformat()
-    supabase.table("volume_conv_logs").update(
-        {
-            "conversion_completion": False,
-            "completed_at": completed_at,
-            "error_message": error_message[:1000],
-        }
-    ).eq("volume_id", volume_id).execute()
-
-    supabase.table("volumes").update(
-        {"conversion_process_status": False}
-    ).eq("volume_id", volume_id).execute()
+    connection = get_database_connection()
+    try:
+        with connection:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE volume_conv_logs
+                    SET conversion_completion = false,
+                        completed_at = %s,
+                        error_message = %s
+                    WHERE volume_id = %s
+                    """,
+                    (datetime.now(timezone.utc), error_message[:1000], volume_id),
+                )
+                cursor.execute(
+                    """
+                    UPDATE volumes
+                    SET conversion_process_status = false,
+                        lifecycle_status = 'failed'
+                    WHERE volume_id = %s
+                    """,
+                    (volume_id,),
+                )
+    finally:
+        connection.close()
 
 
 def convert_to_nifti(input_path, volume_id, volume_name):
@@ -250,7 +287,6 @@ def main():
     log_message(f"Input: {raw_input_path}")
     log_message(f"Volume name: {volume_name}")
 
-    supabase = get_supabase_client()
     source_bucket = get_source_bucket_name()
     bucket_name = require_env("AWS_S3_BUCKET")
     storage_key = normalize_storage_key(raw_input_path, source_bucket)
@@ -259,12 +295,11 @@ def main():
     local_input = download_input(s3, bucket_name, storage_key, volume_id)
     local_output = convert_to_nifti(local_input, volume_id, volume_name)
     result = upload_output(s3, bucket_name, source_bucket, local_output, volume_id)
-    update_conversion_success(supabase, volume_id, result)
+    update_conversion_success(volume_id, result)
     emit_result(result)
 
 
 if __name__ == "__main__":
-    supabase_client = None
     current_volume_id = os.environ.get("VOLUME_ID") or (sys.argv[1] if len(sys.argv) > 1 else None)
     exit_code = 0
 
@@ -275,7 +310,6 @@ if __name__ == "__main__":
             log_message("Dry run requested; Slicer script launch is healthy")
             exit_slicer(0)
 
-        supabase_client = get_supabase_client()
         main()
     except Exception as exc:
         exit_code = 1
@@ -283,9 +317,9 @@ if __name__ == "__main__":
         log_message(f"ERROR: {error_message}")
         log_message(traceback.format_exc())
 
-        if supabase_client is not None and current_volume_id:
+        if current_volume_id:
             try:
-                update_conversion_failure(supabase_client, current_volume_id, error_message)
+                update_conversion_failure(current_volume_id, error_message)
             except Exception as status_exc:
                 log_message(f"Failed to update conversion failure status: {status_exc}")
 

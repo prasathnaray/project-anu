@@ -29,15 +29,18 @@ updating only the `latest` tag does not update an already registered Batch revis
 
 ## Batch Container Environment
 
-The Batch job definition must inject these secrets into the container:
+The Batch job definition must inject the database connection secret into the container:
 
 ```env
-SUPABASE_URL=<supabase-project-url>
-SUPABASE_KEY=<supabase-service-role-key>
+DATABASE_URL=<postgres-connection-url>
 SUPABASE_BUCKET=projectanu
 AWS_S3_BUCKET=project-anu-content-299822065337-ap-south-1
 AWS_REGION=ap-south-1
 ```
+
+`SUPABASE_BUCKET` remains only as the logical prefix used by existing storage
+references. Source and converted files are stored in S3, while conversion status
+is written through the direct PostgreSQL connection.
 
 The container command receives three arguments from the backend:
 

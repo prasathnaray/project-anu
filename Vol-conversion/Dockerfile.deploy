@@ -3,7 +3,7 @@ FROM ${BASE_IMAGE}
 
 USER root
 
-RUN /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir boto3 supabase
+RUN /opt/Slicer/bin/PythonSlicer -m pip install --no-cache-dir boto3 psycopg2-binary
 
 WORKDIR /app
 COPY ConvertVolToNifti.py /app/ConvertVolToNifti.py
