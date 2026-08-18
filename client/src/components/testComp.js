@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Stage, StageEvents } from "amazon-ivs-web-broadcast";
+import {
+  Stage,
+  StageEvents,
+  SubscribeType,
+} from "amazon-ivs-web-broadcast";
 import { jwtDecode } from "jwt-decode";
 import APP_URL from "../API/config";
 
@@ -235,61 +239,139 @@ import APP_URL from "../API/config";
 export default function IvsSubscriber({ onParticipantUpdate }) {
   const videoRef = useRef(null);
   const stageRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
+    let isCancelled = false;
+    const videoElement = videoRef.current;
+    const mediaStream = new MediaStream();
+
     async function connectToStage() {
-      const tokenn = localStorage.getItem("user_token");
-      const decoded = jwtDecode(tokenn);
-      const userMail = decoded.user_mail;
+      try {
+        const userToken = localStorage.getItem("user_token");
+        if (!userToken) {
+          throw new Error("No user token found");
+        }
 
-      const res = await fetch(APP_URL+'/api/v1/tokenn', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stageArn: "arn:aws:ivs:ap-south-1:299822065337:stage/zFMYIVZchIZO",
-          userId: userMail,
-          capabilities: ["SUBSCRIBE"],
-        }),
-      });
+        const decoded = jwtDecode(userToken);
 
-      const { result } = await res.json();
-      const stage = new Stage(result.data.token, {
-        shouldSubscribeToParticipant: () => true,
-        getSubscribeConfiguration: () => ({ video: true, audio: true }),
-      });
+        const res = await fetch(`${APP_URL}/api/v1/tokenn`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            stageArn: "arn:aws:ivs:ap-south-1:299822065337:stage/zFMYIVZchIZO",
+            userId: decoded.user_mail,
+            capabilities: ["SUBSCRIBE"],
+          }),
+        });
 
-      stageRef.current = stage;
+        if (!res.ok) {
+          throw new Error(`Token request failed: ${res.status}`);
+        }
 
-      stage.on(StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED, (participant, streams) => {
-        onParticipantUpdate?.(participant);
-        streams.forEach((remoteStream) => {
-          if (remoteStream.streamType === "video") {
-            const ms = new MediaStream([remoteStream.mediaStreamTrack]);
-            if (videoRef.current) {
-              videoRef.current.srcObject = ms;
-              videoRef.current.play().catch(console.error);
+        const { result } = await res.json();
+        const token = result?.data?.token;
+        if (!token) {
+          throw new Error("No IVS stage token received");
+        }
+
+        if (isCancelled) return;
+
+        const stage = new Stage(token, {
+          shouldSubscribeToParticipant: () => SubscribeType.AUDIO_VIDEO,
+        });
+
+        stageRef.current = stage;
+
+        stage.on(
+          StageEvents.STAGE_PARTICIPANT_STREAMS_ADDED,
+          (participant, streams) => {
+            onParticipantUpdate?.(participant);
+
+            streams.forEach((remoteStream) => {
+              const track = remoteStream.mediaStreamTrack;
+              const isAlreadyAdded = mediaStream
+                .getTracks()
+                .some((existingTrack) => existingTrack.id === track.id);
+
+              if (!isAlreadyAdded) {
+                mediaStream.addTrack(track);
+              }
+            });
+
+            if (videoElement) {
+              videoElement.srcObject = mediaStream;
+              videoElement.play().catch((error) => {
+                console.warn("Media autoplay was blocked:", error);
+              });
             }
           }
-        });
-      });
+        );
 
-      await stage.join();
+        stage.on(
+          StageEvents.STAGE_PARTICIPANT_STREAMS_REMOVED,
+          (_participant, streams) => {
+            streams.forEach((remoteStream) => {
+              mediaStream.removeTrack(remoteStream.mediaStreamTrack);
+            });
+          }
+        );
+
+        await stage.join();
+      } catch (error) {
+        if (!isCancelled) {
+          console.error("Failed to join IVS stage:", error);
+        }
+      }
     }
 
     connectToStage();
 
-    return () => stageRef.current?.leave();
-  }, []);
+    return () => {
+      isCancelled = true;
+      stageRef.current?.leave();
+      stageRef.current = null;
+
+      mediaStream.getTracks().forEach((track) => track.stop());
+
+      if (videoElement) {
+        videoElement.srcObject = null;
+      }
+    };
+  }, [onParticipantUpdate]);
+
+  const toggleAudio = async () => {
+    if (!videoRef.current) return;
+
+    const nextMutedState = !isMuted;
+    videoRef.current.muted = nextMutedState;
+    setIsMuted(nextMutedState);
+
+    if (!nextMutedState) {
+      try {
+        await videoRef.current.play();
+      } catch (error) {
+        console.error("Unable to enable stream audio:", error);
+      }
+    }
+  };
 
   return (
-    <div className="flex justify-center items-center h-screen">
-          <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="w-full bg-black"
-          />
+    <div className="flex justify-center items-center h-screen relative">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={isMuted}
+        className="w-full bg-black"
+      />
+      <button
+        type="button"
+        onClick={toggleAudio}
+        className="absolute top-4 right-4 px-4 py-2 bg-black bg-opacity-70 text-white rounded"
+      >
+        {isMuted ? "Enable audio" : "Mute audio"}
+      </button>
     </div>
   );
 }
