@@ -71,15 +71,27 @@ function VolumeList() {
       setListLoading(true);
     }
     try {
-      const [result, shadowCountResult] = await Promise.all([
+      const [volumeResult, shadowCountResult] = await Promise.allSettled([
         isSuperAdmin
           ? GetVolumeDataAPI(token)
           : GetVolInsAPI(),
         GetShadowRecordingCountsAPI()
       ]);
 
+      if (volumeResult.status === 'rejected') {
+        throw volumeResult.reason;
+      }
+
+      const result = volumeResult.value;
       const volumes = Array.isArray(result?.data) ? result.data : [];
-      const counts = Array.isArray(shadowCountResult?.data) ? shadowCountResult.data : [];
+      const counts = shadowCountResult.status === 'fulfilled' && Array.isArray(shadowCountResult.value?.data)
+        ? shadowCountResult.value.data
+        : [];
+
+      if (shadowCountResult.status === 'rejected') {
+        console.error('Failed to load volume recording counts:', shadowCountResult.reason);
+      }
+
       setVolumesDatumm(volumes);
       setVolumeRecordingCounts(
         counts.reduce((acc, item) => ({
