@@ -193,6 +193,9 @@ const getConvVolumeListController = async(req, res) => {
     try
     {
         const response = await getConvertedVolumeList(requester);
+        if (response.code && response.code !== 200) {
+            return res.status(response.code).json({ error: response.message });
+        }
         res.status(200).json(await hydrateStorageFields(response.data.rows));
     }
     catch(err)
@@ -872,7 +875,9 @@ const assocVolumeController = async(req, res) => {
     const {r_id, volume_id, shadowrec_id, steprec_id} = req.body;
     try
     {
-        await associateVolumeModel(requester, r_id, volume_id, shadowrec_id, steprec_id);
+        const result = await associateVolumeModel(requester, r_id, volume_id, shadowrec_id, steprec_id);
+        if (result.code) return res.status(result.code).json({ error: result.message });
+        if (result.rowCount === 0) return res.status(404).json({ message: 'Volume not found.' });
         res.status(200).send("Associated Successfully");
     }
     catch(err)
@@ -886,6 +891,7 @@ const shadowRecordingDataController = async(req, res) => {
     try
     {
         const result = await shadowRecoringDataModel(requester, volume_id);
+        if (result.code) return res.status(result.code).json({ error: result.message });
         res.status(200).send(await hydrateStorageFields(result.rows));
     }
     catch(err)
@@ -916,6 +922,7 @@ const getAssociatedVolumeController = async(req, res) => {
     try
     {
         const result = await getAssociatedVolumeModel(requester, r_id);
+        if (result.code) return res.status(result.code).json({ error: result.message });
         res.status(200).send(await hydrateStorageFields(result.rows));
     }
     catch(err)

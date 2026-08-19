@@ -11,7 +11,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
-import GetVolumeDataAPI from '../API/GetVolumeDataAPI';
 import volumeConvAPI from '../API/volumeConvAPI';
 import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
 import CustomCloseButton from '../utils/CustomCloseButton'
@@ -24,7 +23,6 @@ function VolumeList() {
   const token = localStorage.getItem('user_token');
   const decoded = jwtDecode(token);
   const userRole = Number(decoded.role);
-  const isSuperAdmin = userRole === 99;
   const fileInputRef = React.useRef(null);
   const [fileName, setFileName] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
@@ -72,9 +70,7 @@ function VolumeList() {
     }
     try {
       const [volumeResult, shadowCountResult] = await Promise.allSettled([
-        isSuperAdmin
-          ? GetVolumeDataAPI(token)
-          : GetVolInsAPI(),
+        GetVolInsAPI(),
         GetShadowRecordingCountsAPI()
       ]);
 
@@ -115,7 +111,7 @@ function VolumeList() {
         setListLoading(false);
       }
     }
-  }, [isSuperAdmin, token]);
+  }, []);
 
   React.useEffect(() => {
     handleAPICall();
@@ -155,7 +151,7 @@ function VolumeList() {
   ), [volumesDatumm]);
 
   const uploaderName = sessionStorage.getItem('user_name') || decoded.user_mail || '';
-  if (![99, 102, 103, 101].includes(userRole)) {
+  if (![99, 101, 102].includes(userRole)) {
     return <Navigate to="/" replace />;
   }
 

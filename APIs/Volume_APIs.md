@@ -19,17 +19,16 @@ Requests use JSON unless an endpoint explicitly specifies `multipart/form-data`.
 
 ### Role access
 
-| Capability | `99` | `101` | `102` | `103` |
-| --- | :---: | :---: | :---: | :---: |
-| Upload and list source volumes | Yes | Yes | Yes | Yes |
-| Approve, convert, and list converted volumes | Yes | Yes | Yes | No |
-| Instructor/admin volume view | All | All | Own | No |
-| Upload and read placements | Yes | Yes | Yes | Yes |
-| Upload and read recording details | Yes | Yes | Yes | No |
-| Read recording counts | All | All | Own | Own |
-| Create and read associations | Yes | Yes | Yes | No |
+| Role | Manageable volumes |
+| --- | --- |
+| `99` Super Admin | Only volumes uploaded by that authenticated user |
+| `101` Institution Admin | Own uploads and role-`102` uploads from the same institution |
+| `102` Instructor | Only volumes uploaded by that authenticated user |
+| `103` Trainee | No volume-management access |
 
-> Authorization responses are not yet uniform across all controllers. Depending on the endpoint, denied access may produce `401`, `500`, an empty response, or an empty result. The table documents the current model-level permissions.
+The same scope applies to source lists, approval, conversion, placements, recordings, validation, associations, the MR workspace, and course-mapping selection. A role-`101` user's upload is not visible to another role-`101` user. Uploader role is captured at upload time, so later account role changes do not alter historical access.
+
+List endpoints return only accessible records. An inaccessible volume identifier is reported as `404 Not Found`; a role without volume-management permission receives `403 Forbidden`.
 
 ## Endpoint index
 
@@ -120,7 +119,7 @@ Common errors:
 GET /get-volumes
 ```
 
-Returns uploaded volumes joined with the uploader's `user_name`, newest first.
+Returns accessible uploaded volumes joined with the uploader's `user_name`, newest first, according to the role-access rules above.
 
 ```bash
 curl "http://localhost:4004/api/v1/get-volumes" \
@@ -176,7 +175,7 @@ Updated Successfully
 GET /get-volumes-by-instructor
 ```
 
-Roles `99` and `101` receive all volumes. Role `102` receives only volumes whose `added_by` value matches the authenticated user's email.
+Role `99` and role `102` receive only their own volumes. Role `101` receives their own volumes plus volumes uploaded by role `102` users in the same institution.
 
 ```bash
 curl "http://localhost:4004/api/v1/get-volumes-by-instructor" \
@@ -245,7 +244,7 @@ Success - `200 OK`:
 | Status | Condition | Error value |
 | --- | --- | --- |
 | `400` | Invalid UUID | `Invalid volume ID format` |
-| `401` | Role is not allowed | `You do not have permission to convert volumes` |
+| `403` | Role is not allowed | `You do not have permission to convert volumes` |
 | `404` | Volume does not exist | `Volume not found` |
 | `409` | Conversion is already active | `Conversion already in progress for this volume` |
 | `429` | Per-user rate limit exceeded | `Too many conversion requests. Please wait.` |
@@ -552,7 +551,7 @@ Success - `200 OK`:
 ]
 ```
 
-Unauthorized - `401 Unauthorized`:
+Forbidden - `403 Forbidden`:
 
 ```json
 {

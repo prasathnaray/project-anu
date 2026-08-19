@@ -10,6 +10,7 @@ const {
     requireInstitution,
     canEditOwnedEntity
 } = require('../Auth/authorization');
+const { volumeAccessScope } = require('../Auth/volumeAuthorization');
 
 const COURSE_KINDS = ['core', 'specialized', 'institution'];
 const PUBLICATION_STATES = ['draft', 'published', 'archived'];
@@ -391,15 +392,19 @@ const getEffectiveAccess = async (requester, courseId) => {
 
 const listMigrationReview = async (requester) => {
     requireRole(requester, [ROLES.SUPER_ADMIN]);
+    const volumeScope = volumeAccessScope(requester, 'v', 1);
     const [courses, volumes, mappings] = await Promise.all([
         client.query(`SELECT * FROM certification_data WHERE ownership_review_required = true ORDER BY created_at`),
-        client.query(`SELECT volume_id, volume_name, added_by, created_at FROM volumes WHERE ownership_review_required = true ORDER BY created_at`),
+        client.query(`SELECT v.volume_id, v.volume_name, v.added_by, v.created_at
+                      FROM volumes v
+                      WHERE v.ownership_review_required = true AND ${volumeScope.clause}
+                      ORDER BY v.created_at`, volumeScope.params),
         client.query(`SELECT cm.*, v.owner_scope, v.owner_centre_id, v.ownership_review_required AS volume_review_required
                       FROM course_mapping cm
                       JOIN volumes v ON v.volume_id = cm.volume_id
                       LEFT JOIN course_mapping_migrations cmm ON cmm.mapping_id = cm.mapping_id
-                      WHERE cmm.mapping_id IS NULL
-                      ORDER BY cm.created_at`)
+                      WHERE cmm.mapping_id IS NULL AND ${volumeScope.clause}
+                      ORDER BY cm.created_at`, volumeScope.params)
             .catch(() => ({ rows: [] }))
     ]);
     return { courses: courses.rows, volumes: volumes.rows, courseMappings: mappings.rows };
@@ -432,6 +437,7 @@ const resolveCourseOwnership = async (requester, courseId, input) => {
 
 const resolveVolumeOwnership = async (requester, volumeId, input) => {
     requireRole(requester, [ROLES.SUPER_ADMIN]);
+    const volumeScope = volumeAccessScope(requester, 'volumes', 4);
     if (!['super_admin', 'institution'].includes(input.ownerScope)) throw new HttpError(400, 'Invalid ownerScope.');
     const institutionOwned = input.ownerScope === 'institution';
     if (institutionOwned && !input.institutionId) throw new HttpError(400, 'institutionId is required for institution ownership.');
@@ -442,8 +448,9 @@ const resolveVolumeOwnership = async (requester, volumeId, input) => {
     }
     const result = await client.query(
         `UPDATE volumes SET owner_scope = $1, owner_centre_id = $2, ownership_review_required = false
-         WHERE volume_id = $3 RETURNING volume_id, volume_name, owner_scope, owner_centre_id`,
-        [input.ownerScope, input.institutionId || null, volumeId]
+         WHERE volume_id = $3 AND ${volumeScope.clause}
+         RETURNING volume_id, volume_name, owner_scope, owner_centre_id`,
+        [input.ownerScope, input.institutionId || null, volumeId, ...volumeScope.params]
     );
     if (result.rows.length === 0) throw new HttpError(404, 'Volume not found.');
     await audit(client, requester, 'volume.ownership_resolved', 'volume', volumeId, input.institutionId || null, input);
@@ -452,6 +459,7 @@ const resolveVolumeOwnership = async (requester, volumeId, input) => {
 
 const migrateCourseMapping = async (requester, mappingId, input) => {
     requireRole(requester, [ROLES.SUPER_ADMIN]);
+    const volumeScope = volumeAccessScope(requester, 'v', 2);
     const db = await client.connect();
     await db.query('BEGIN');
     try {
@@ -459,9 +467,9 @@ const migrateCourseMapping = async (requester, mappingId, input) => {
             `SELECT cm.*, v.owner_scope, v.owner_centre_id, v.ownership_review_required
              FROM course_mapping cm JOIN volumes v ON v.volume_id = cm.volume_id
              LEFT JOIN course_mapping_migrations cmm ON cmm.mapping_id = cm.mapping_id
-             WHERE cm.mapping_id = $1 AND cmm.mapping_id IS NULL
+             WHERE cm.mapping_id = $1 AND cmm.mapping_id IS NULL AND ${volumeScope.clause}
              FOR UPDATE OF cm`,
-            [mappingId]
+            [mappingId, ...volumeScope.params]
         );
         if (mappingResult.rows.length === 0) throw new HttpError(404, 'Unmigrated course mapping not found.');
         const mapping = mappingResult.rows[0];

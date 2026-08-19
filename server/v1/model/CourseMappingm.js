@@ -1,5 +1,6 @@
 const client = require('../utils/conn');
 const { randomUUID } = require('crypto');
+const { volumeAccessScope } = require('../Auth/volumeAuthorization');
 
 const ALLOWED_TRIMESTERS = [
     'First Trimester',
@@ -69,21 +70,15 @@ const ensureCourseMappingTable = async () => {
     await client.query(query);
 };
 
-const volumeOwnershipFilter = (requester, startIndex) => Number(requester.role) === 99
-    ? { sql: `owner_scope = 'super_admin'`, params: [] }
-    : { sql: `owner_scope = 'institution' AND owner_centre_id = $${startIndex}`, params: [requester.centre_id] };
-
 const resolveVolume = async (requester, trimester, anatomy_type, volume_name) => {
-    if (Number(requester.role) !== 99 && !requester.centre_id) {
-        return { code: 403, message: 'Your account is not linked to an institution.' };
-    }
-    const exactScope = volumeOwnershipFilter(requester, 3);
+    const exactScope = volumeAccessScope(requester, 'volumes', 3);
+    if (!exactScope) return { code: 403, message: 'You do not have permission to use volumes.' };
     const exactQuery = `
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
           AND LOWER(TRIM(trimester)) = LOWER(TRIM($2))
-          AND ${exactScope.sql}
+          AND ${exactScope.clause}
           AND ownership_review_required = false;
     `;
 
@@ -109,12 +104,12 @@ const resolveVolume = async (requester, trimester, anatomy_type, volume_name) =>
     }
 
     // Fallback for legacy rows created before trimester started being persisted.
-    const fallbackScope = volumeOwnershipFilter(requester, 2);
+    const fallbackScope = volumeAccessScope(requester, 'volumes', 2);
     const fallbackQuery = `
         SELECT volume_id, volume_name, volume_type, trimester
         FROM public.volumes
         WHERE LOWER(TRIM(volume_name)) = LOWER(TRIM($1))
-          AND ${fallbackScope.sql}
+          AND ${fallbackScope.clause}
           AND ownership_review_required = false
         ORDER BY created_at DESC NULLS LAST;
     `;
@@ -168,34 +163,9 @@ const validateRecording = async (recordingId, volumeId, recordingType, fieldName
         return null;
     }
 
-    const fallbackQuery = `
-        SELECT recording_id, recording_type, volume_id
-        FROM public.vol_recordings
-        WHERE recording_id = $1
-        LIMIT 1;
-    `;
-
-    const fallbackResult = await client.query(fallbackQuery, [recordingId]);
-
-    if (fallbackResult.rows.length === 0) {
-        return {
-            code: 404,
-            message: `${fieldName} does not exist in vol_recordings.`
-        };
-    }
-
-    const matchedRecording = fallbackResult.rows[0];
-
-    if (matchedRecording.volume_id !== volumeId) {
-        return {
-            code: 409,
-            message: `${fieldName} belongs to a different volume.`
-        };
-    }
-
     return {
-        code: 409,
-        message: `${fieldName} exists for this volume, but its recording_type is '${matchedRecording.recording_type}', not '${recordingType}'.`
+        code: 404,
+        message: `${fieldName} was not found for this volume.`
     };
 };
 
@@ -337,16 +307,10 @@ const getCourseMappingsModel = async (requester, filters = {}) => {
 
     await ensureCourseMappingTable();
 
-    const conditions = [];
-    const values = [];
-
-    if ([101, 102].includes(Number(requester.role))) {
-        if (!requester.centre_id) {
-            return { status: 'Forbidden', code: 403, message: 'Your account is not linked to an institution.' };
-        }
-        values.push(requester.centre_id);
-        conditions.push(`v.owner_scope = 'institution' AND v.owner_centre_id = $${values.length}`);
-    }
+    const scope = volumeAccessScope(requester, 'v', 1);
+    if (!scope) return { status: 'Forbidden', code: 403, message: 'You do not have permission to view course mappings.' };
+    const conditions = [scope.clause, 'v.ownership_review_required = false'];
+    const values = [...scope.params];
 
     if (filters.trimester) {
         values.push(filters.trimester);

@@ -3,7 +3,6 @@ const {
     ROLES,
     COURSE_EDITOR_ROLES,
     HttpError,
-    isSuperAdmin,
     requireRole,
     requireInstitution,
     canEditOwnedEntity
@@ -15,22 +14,12 @@ const {
     audit
 } = require('./ContentAccessm');
 const { signPrivateAsset, signPrivateAssets, signedUrlTtlSeconds } = require('../utils/privateAssetUrls');
+const { canManageVolume, volumeAccessScope } = require('../Auth/volumeAuthorization');
 
-const getWorkspace = async (requester, requestedCentreId = null) => {
+const getWorkspace = async (requester) => {
     requireRole(requester, COURSE_EDITOR_ROLES);
-    let conditions;
-    let values;
-    if (isSuperAdmin(requester) && requestedCentreId) {
-        conditions = `v.owner_scope = 'institution' AND v.owner_centre_id = $1`;
-        values = [requestedCentreId];
-        await audit(client, requester, 'workspace.cross_tenant_viewed', 'institution', requestedCentreId, requestedCentreId);
-    } else if (isSuperAdmin(requester)) {
-        conditions = `v.owner_scope = 'super_admin'`;
-        values = [];
-    } else {
-        conditions = `v.owner_scope = 'institution' AND v.owner_centre_id = $1`;
-        values = [requireInstitution(requester)];
-    }
+    const scope = volumeAccessScope(requester, 'v', 1);
+    if (!scope) throw new HttpError(403, 'You do not have permission to manage volumes.');
 
     const result = await client.query(
         `SELECT v.volume_id, v.volume_name, v.volume_type, v.trimester, v.volume_ga,
@@ -47,10 +36,10 @@ const getWorkspace = async (requester, requestedCentreId = null) => {
                 ) FILTER (WHERE vr.recording_id IS NOT NULL), '[]'::jsonb) AS recordings
          FROM volumes v
          LEFT JOIN vol_recordings vr ON vr.volume_id = v.volume_id
-         WHERE ${conditions} AND v.ownership_review_required = false
+         WHERE ${scope.clause} AND v.ownership_review_required = false
          GROUP BY v.volume_id
          ORDER BY v.created_at DESC`,
-        values
+        scope.params
     );
     return result.rows;
 };
@@ -132,14 +121,14 @@ const validateRecording = async (requester, recordingId, state) => {
     requireRole(requester, COURSE_EDITOR_ROLES);
     if (!['validated', 'rejected', 'draft'].includes(state)) throw new HttpError(400, 'Invalid validation state.');
     const found = await client.query(
-        `SELECT vr.recording_id, v.volume_id, v.owner_scope, v.owner_centre_id
+        `SELECT vr.recording_id, v.volume_id, v.added_by, v.uploader_role, v.owner_scope, v.owner_centre_id
          FROM vol_recordings vr JOIN volumes v ON v.volume_id = vr.volume_id
          WHERE vr.recording_id = $1`,
         [recordingId]
     );
     if (found.rows.length === 0) throw new HttpError(404, 'Recording not found.');
     const volume = found.rows[0];
-    if (!canEditOwnedEntity(requester, volume.owner_scope, volume.owner_centre_id)) throw new HttpError(404, 'Recording not found.');
+    if (!canManageVolume(requester, volume)) throw new HttpError(404, 'Recording not found.');
     const result = await client.query(
         `UPDATE vol_recordings
          SET validation_status = $1,
@@ -163,13 +152,13 @@ const attachContent = async (requester, courseId, input) => {
         throw new HttpError(400, 'volumeId and at least one recording ID are required.');
     }
     const volumeResult = await client.query(
-        `SELECT volume_id, owner_scope, owner_centre_id, ownership_review_required
+        `SELECT volume_id, added_by, uploader_role, owner_scope, owner_centre_id, ownership_review_required
          FROM volumes WHERE volume_id = $1`,
         [input.volumeId]
     );
     if (volumeResult.rows.length === 0) throw new HttpError(404, 'Volume not found.');
     const volume = volumeResult.rows[0];
-    if (!canEditOwnedEntity(requester, volume.owner_scope, volume.owner_centre_id)) throw new HttpError(404, 'Volume not found.');
+    if (!canManageVolume(requester, volume)) throw new HttpError(404, 'Volume not found.');
     if (course.owner_scope !== volume.owner_scope || String(course.owner_centre_id || '') !== String(volume.owner_centre_id || '')) {
         throw new HttpError(409, 'Course content must have the same owner as the course.');
     }

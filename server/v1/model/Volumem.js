@@ -1,23 +1,12 @@
 const client = require('../utils/conn.js');
 const {startVolumeConversion} = require('../utils/startPythonProcess.js');
 const { ROLES, COURSE_EDITOR_ROLES } = require('../Auth/authorization.js');
-
-const volumeScope = (requester, alias = 'v', parameterNumber = 1) => {
-    const role = Number(requester?.role);
-    if (role === ROLES.SUPER_ADMIN) return { clause: 'TRUE', params: [] };
-    if ([ROLES.INSTITUTION_ADMIN, ROLES.TUTOR].includes(role) && requester?.centre_id) {
-        return {
-            clause: `${alias}.owner_scope = 'institution' AND ${alias}.owner_centre_id = $${parameterNumber}`,
-            params: [requester.centre_id]
-        };
-    }
-    return null;
-};
+const { volumeAccessScope } = require('../Auth/volumeAuthorization.js');
 
 const denied = (message) => ({ status: 'Forbidden', code: 403, message });
 
 const assertVolumeEditableModel = async (requester, volumeId) => {
-    const scope = volumeScope(requester, 'v', 2);
+    const scope = volumeAccessScope(requester, 'v', 2);
     if (!scope) return null;
     const result = await client.query(
         `SELECT v.volume_id, v.owner_scope, v.owner_centre_id
@@ -60,11 +49,12 @@ const svUploadModel = (
                 description,
                 volume_file,
                 added_by,
+                uploader_role,
                 owner_scope,
                 owner_centre_id,
                 ownership_review_required
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, false)
             RETURNING *;
         `;
 
@@ -79,6 +69,7 @@ const svUploadModel = (
                 description,
                 volume_file,
                 requester.user_mail,
+                Number(requester.role),
                 ownerScope,
                 ownerScope === 'institution' ? requester.centre_id : null
             ],
@@ -93,7 +84,7 @@ const svUploadModel = (
 };
 const getUploadedVolume = (requester) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester);
+        const scope = volumeAccessScope(requester);
         if (!scope) return resolve(denied('You do not have permission to view uploaded volumes.'));
         const query = `SELECT v.*, ud.user_name
                        FROM volumes v
@@ -115,7 +106,7 @@ const getUploadedVolume = (requester) => {
 };
 const VolumeApprovalModel = (requester, status_approval, volume_id) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'volumes', 3);
+        const scope = volumeAccessScope(requester, 'volumes', 3);
         if (!scope) return resolve(denied('You do not have permission to update volumes.'));
         client.query(
             `UPDATE volumes SET status = $1 WHERE volume_id = $2 AND ${scope.clause} AND ownership_review_required = false`,
@@ -258,7 +249,7 @@ const VolumeApprovalModel = (requester, status_approval, volume_id) => {
 
 const getVolumeInstructorViewModel = (requester) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester);
+        const scope = volumeAccessScope(requester);
         if (!scope) return resolve(denied('You do not have permission to view uploaded volumes.'));
         
         // Build query based on role
@@ -366,15 +357,16 @@ const getVolumeInstructorViewModel = (requester) => {
 // };
 const volumeConversionModel = (requester, volume_id) => {
     return new Promise(async (resolve, reject) => {
-        const scope = volumeScope(requester);
+        const scope = volumeAccessScope(requester);
         if (!scope) return resolve(denied('You do not have permission to convert volumes.'));
         const startedBy = requester.user_mail;
         try {
+            const volumeIdScope = volumeAccessScope(requester, 'v', 2);
             const volumeCheck = await client.query(
                 `SELECT v.volume_id, v.volume_name, v.conversion_process_status
-                 FROM volumes v WHERE v.volume_id = $1 AND ${volumeScope(requester, 'v', 2).clause}
+                 FROM volumes v WHERE v.volume_id = $1 AND ${volumeIdScope.clause}
                    AND v.ownership_review_required = false`,
-                [volume_id, ...volumeScope(requester, 'v', 2).params]
+                [volume_id, ...volumeIdScope.params]
             );
             if (volumeCheck.rows.length === 0) {
                 return resolve({
@@ -443,7 +435,7 @@ const volumeConversionModel = (requester, volume_id) => {
 //list of converted volumes nii /nrrd files
 const getConvertedVolumeList = (requester) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 2);
+        const scope = volumeAccessScope(requester, 'v', 2);
         if (!scope) return resolve(denied('You do not have permission to view converted volumes.'));
         const query = `SELECT 
   vcl.*,
@@ -476,7 +468,7 @@ vcl.completed_at DESC;`;
 }
 const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
       return new Promise((resolve, reject) => {
-            const scope = volumeScope(requester, 'v', 3);
+            const scope = volumeAccessScope(requester, 'v', 3);
             if (!scope) return resolve(denied('You do not have permission to place volumes.'));
             client.query(
                 `WITH authorized_volume AS (
@@ -501,7 +493,7 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
 }
 const getVolumePlacementsModel = (requester, volume_id = null) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 1);
+        const scope = volumeAccessScope(requester, 'v', 1);
         if (!scope) return resolve(denied('You do not have permission to view volume placements.'));
 
         let query = `
@@ -600,7 +592,7 @@ const getVolumePlacementsModel = (requester, volume_id = null) => {
 // the above code is commented out and replaced with the following improved version
 const volumeRecordingsModel = (requester, volume_id, recording_name, recording_type, rec_files, audio_files, image_files, manifest_file) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 9);
+        const scope = volumeAccessScope(requester, 'v', 9);
         if (!scope) return resolve(denied('You do not have permission to upload volume recordings.'));
         
         // Validate inputs
@@ -656,12 +648,12 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
 
 const associateVolumeModel = (requester, r_id, volume_id, shadowrec_id, steprec_id) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 5);
+        const scope = volumeAccessScope(requester, 'v', 5);
         if (!scope) return resolve(denied('You do not have permission to associate volumes.'));
         client.query(
             `INSERT INTO asso_volume(r_id, vol_id, shadowrec_id, steprec_id)
              SELECT $1, $2, $3, $4 FROM volumes v
-             WHERE v.volume_id = $2 AND ${scope.clause}`,
+             WHERE v.volume_id = $2 AND ${scope.clause} AND v.ownership_review_required = false`,
             [r_id, volume_id, shadowrec_id, steprec_id, ...scope.params],
             (err, result) => {
             if (err)
@@ -677,7 +669,7 @@ const associateVolumeModel = (requester, r_id, volume_id, shadowrec_id, steprec_
 }
 const shadowRecoringDataModel = (requester, volume_id) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 2);
+        const scope = volumeAccessScope(requester, 'v', 2);
         if (!scope) return resolve(denied('You do not have permission to view volume recordings.'));
         client.query(`SELECT vr.recording_type, vr.recording_name, vr.recording_id, vr.rec_files, vr.audio_files, vr.image_files, vr.manifest_file, vr.validation_status
                       FROM vol_recordings vr
@@ -699,7 +691,7 @@ const shadowRecoringDataModel = (requester, volume_id) => {
 }
 const getVolumeRecordingCountsModel = (requester) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 1);
+        const scope = volumeAccessScope(requester, 'v', 1);
         if (!scope) return resolve(denied('You do not have permission to view volume recordings.'));
         const query = `
             SELECT 
@@ -751,7 +743,7 @@ const getVolumeRecordingCountsModel = (requester) => {
 }
 const getAssociatedVolumeModel = (requester, r_id) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeScope(requester, 'v', 2);
+        const scope = volumeAccessScope(requester, 'v', 2);
         if (!scope) return resolve(denied('You do not have permission to view associated volumes.'));
         client.query(`
                 SELECT 

@@ -11,7 +11,7 @@ const handle = (operation, status = 200) => async (req, res) => {
 };
 
 module.exports = {
-    getWorkspace: handle((req) => model.getWorkspace(req.user, req.query.institutionId)),
+    getWorkspace: handle((req) => model.getWorkspace(req.user)),
     getMrCourses: handle((req) => model.getMrCourses(req.user)),
     getCoursePackage: handle((req) => model.getCoursePackage(req.user, req.params.courseId)),
     validateRecording: handle((req) => model.validateRecording(req.user, req.params.recordingId, req.body.state)),
