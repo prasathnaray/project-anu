@@ -6,11 +6,12 @@ const client = new Pool({
     rejectUnauthorized: false,
   },
 });
-client.connect(err => {
+client.connect((err, connection, release) => {
   if (err) {
     console.error('Connection error', err.stack);
   } else {
     console.log('Connected');
+    release();
   }
 });
 module.exports = client;

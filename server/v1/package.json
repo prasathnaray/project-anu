@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "migrate:private-volumes": "node scripts/applyPrivateVolumeMigration.js"
   },
   "keywords": [],
   "author": "",

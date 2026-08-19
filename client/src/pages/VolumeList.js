@@ -311,7 +311,7 @@ function VolumeList() {
       handleMenuClose();
     }
   };
-
+  console.log("token", jwtDecode(token).role);
   return (
     <div className="flex flex-col min-h-screen">
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
@@ -399,7 +399,9 @@ function VolumeList() {
                   <tr>
                     <th className="py-2 px-4 font-semibold">Volume ID</th>
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
-                    <th className="py-2 px-4 font-semibold">Approval Status</th>
+                    {jwtDecode(token).role !== '99' && (
+                      <th className="py-2 px-4 font-semibold">Approval Status</th>
+                    )}
                     <th className="py-2 px-4 font-semibold">Conversion Status</th>
                     <th className="py-2 px-4 font-semibold">Shadow Recordings</th>
                     <th className="py-2 px-4 font-semibold">Step Recording Image</th>
@@ -433,7 +435,8 @@ function VolumeList() {
                           {volume.volume_id.slice(0, 8).toUpperCase()}
                         </td>
                         <td className="py-2 px-4 font-medium">{volume.volume_name}</td>
-                        <td className="py-2 px-4">
+                        {jwtDecode(token).role !== '99' && (
+                          <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
                             volume.status 
                               ? 'bg-green-100 text-green-700' 
@@ -442,6 +445,7 @@ function VolumeList() {
                             {volume.status ? 'Approved' : 'Pending'}
                           </span>
                         </td>
+                        )}
                         <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
                             conversionStatus === 'completed'
