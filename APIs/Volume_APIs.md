@@ -54,7 +54,7 @@ List endpoints return only accessible records. An inaccessible volume identifier
 
 1. Upload a source volume with `POST /sv-upload`.
 2. Review it through `GET /get-volumes` or `GET /get-volumes-by-instructor`.
-3. Approve or reject it with `PATCH /approve-volume/:status_approval/:volume_id`.
+3. For role `101` or `102` uploads, approve or reject it with `PATCH /approve-volume/:status_approval/:volume_id`. Role `99` uploads are approved automatically.
 4. Start conversion with `PUT /convert-vol/:volume_id`.
 5. Retrieve completed output through `GET /converted-volumes`.
 6. Upload and verify placement JSON.
@@ -83,6 +83,8 @@ The file is stored at `volumes/<original-filename>`. Uploading the same object p
 | `file` | file | Yes | One source volume file |
 
 The default maximum file size is 100 MB. Set `MAX_VOLUME_UPLOAD_SIZE_MB` to change it.
+
+Volumes uploaded by a role-`99` Super Admin are created with `status: true`, so they do not require a separate approval step or an `approver_id`. The role-`99` volume-list responses omit `approver_id`. Other permitted uploaders are created with `status: false` and remain pending until reviewed.
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/sv-upload" \
@@ -139,7 +141,7 @@ Success - `200 OK`:
     "trimester": "Second Trimester",
     "description": "Sample fetal anatomy case details",
     "volume_file": "volumes/FL - I0000004.vol",
-    "status": "pending",
+    "status": false,
     "added_by": "admin@anu.in",
     "created_at": "2026-06-22T10:00:00.000Z",
     "user_name": "Admin"
@@ -155,11 +157,11 @@ PATCH /approve-volume/:status_approval/:volume_id
 
 | Path parameter | Type | Required | Description |
 | --- | --- | :---: | --- |
-| `status_approval` | string | Yes | Value stored in `volumes.status`, such as `approved` or `rejected` |
+| `status_approval` | boolean | Yes | Value stored in `volumes.status`: `true` approves and `false` rejects |
 | `volume_id` | UUID | Yes | Volume to update |
 
 ```bash
-curl -X PATCH "http://localhost:4004/api/v1/approve-volume/approved/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
+curl -X PATCH "http://localhost:4004/api/v1/approve-volume/true/6982d3f3-8617-49a7-9b0d-d160db9adf6c" \
   -H "Authorization: Bearer <token>"
 ```
 

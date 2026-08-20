@@ -5,7 +5,7 @@ info:
 
 http:
   method: PATCH
-  url: http://{{base_url_prod}}/api/v1/approve-volume/approved/6982d3f3-8617-49a7-9b0d-d160db9adf6c
+  url: http://{{base_url_prod}}/api/v1/approve-volume/true/6982d3f3-8617-49a7-9b0d-d160db9adf6c
   auth:
     type: bearer
     token: "{{token}}"

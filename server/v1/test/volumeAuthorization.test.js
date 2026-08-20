@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { ROLES } = require('../Auth/authorization');
-const { canManageVolume, volumeAccessScope } = require('../Auth/volumeAuthorization');
+const { canManageVolume, volumeAccessScope, volumeUploaderScope } = require('../Auth/volumeAuthorization');
 
 const requester = (email, role, centreId = null) => ({ user_mail: email, role, centre_id: centreId });
 const volume = (email, uploaderRole, centreId = null) => ({
@@ -59,6 +59,19 @@ test('institution admin SQL scope includes only same-centre role-102 uploads', (
             params: ['admin@example.test', ROLES.TUTOR, 'centre-a']
         }
     );
+});
+
+test('uploader-only SQL scope never includes another user\'s uploads', () => {
+    assert.deepEqual(
+        volumeUploaderScope(requester('admin@example.test', ROLES.INSTITUTION_ADMIN, 'centre-a'), 'v', 2),
+        { clause: 'v.added_by = $2', params: ['admin@example.test'] }
+    );
+    assert.deepEqual(
+        volumeUploaderScope(requester('tutor@example.test', ROLES.TUTOR, 'centre-a'), 'volumes', 4),
+        { clause: 'volumes.added_by = $4', params: ['tutor@example.test'] }
+    );
+    assert.equal(volumeUploaderScope(requester('trainee@example.test', ROLES.TRAINEE, 'centre-a')), null);
+    assert.equal(volumeUploaderScope(null), null);
 });
 
 test('stored uploader role keeps the instructor exception stable after account role changes', () => {

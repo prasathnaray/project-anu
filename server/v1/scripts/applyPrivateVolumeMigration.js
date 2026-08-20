@@ -2,11 +2,16 @@ const fs = require('fs/promises');
 const path = require('path');
 const client = require('../utils/conn');
 
-const migrationPath = path.resolve(__dirname, '../migrations/20260819_private_volume_management.sql');
+const migrationPaths = [
+    path.resolve(__dirname, '../migrations/20260819_private_volume_management.sql'),
+    path.resolve(__dirname, '../migrations/20260820_super_admin_volume_approval.sql')
+];
 
 const run = async () => {
-    const sql = await fs.readFile(migrationPath, 'utf8');
-    await client.query(sql);
+    for (const migrationPath of migrationPaths) {
+        const sql = await fs.readFile(migrationPath, 'utf8');
+        await client.query(sql);
+    }
     const result = await client.query(
         `SELECT column_name, data_type
          FROM information_schema.columns
@@ -15,7 +20,7 @@ const run = async () => {
            AND column_name = 'uploader_role'`
     );
     if (result.rows.length !== 1) throw new Error('volumes.uploader_role was not created.');
-    console.log('Private volume migration applied successfully.');
+    console.log('Private volume migrations applied successfully.');
 };
 
 run()

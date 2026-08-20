@@ -32,4 +32,14 @@ const volumeAccessScope = (requester, alias = 'v', parameterNumber = 1) => {
     };
 };
 
-module.exports = { canManageVolume, volumeAccessScope };
+const volumeUploaderScope = (requester, alias = 'v', parameterNumber = 1) => {
+    const role = roleOf(requester);
+    if (!requester?.user_mail || !COURSE_EDITOR_ROLES.includes(role)) return null;
+
+    return {
+        clause: `${alias}.added_by = $${parameterNumber}`,
+        params: [requester.user_mail]
+    };
+};
+
+module.exports = { canManageVolume, volumeAccessScope, volumeUploaderScope };

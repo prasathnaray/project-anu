@@ -1,9 +1,13 @@
 const client = require('../utils/conn.js');
 const {startVolumeConversion} = require('../utils/startPythonProcess.js');
 const { ROLES, COURSE_EDITOR_ROLES } = require('../Auth/authorization.js');
-const { volumeAccessScope } = require('../Auth/volumeAuthorization.js');
+const { volumeAccessScope, volumeUploaderScope } = require('../Auth/volumeAuthorization.js');
 
 const denied = (message) => ({ status: 'Forbidden', code: 403, message });
+const visibleVolumeRows = (requester, rows) => {
+    if (Number(requester.role) !== ROLES.SUPER_ADMIN) return rows;
+    return rows.map(({ approver_id, ...volume }) => volume);
+};
 
 const assertVolumeEditableModel = async (requester, volumeId) => {
     const scope = volumeAccessScope(requester, 'v', 2);
@@ -35,7 +39,10 @@ const svUploadModel = (
             });
         }
 
-        const ownerScope = Number(requester.role) === ROLES.SUPER_ADMIN ? 'super_admin' : 'institution';
+        const isSuperAdmin = Number(requester.role) === ROLES.SUPER_ADMIN;
+        const ownerScope = isSuperAdmin ? 'super_admin' : 'institution';
+        const approverColumn = isSuperAdmin ? ', approver_id' : '';
+        const approverValue = isSuperAdmin ? ', NULL' : '';
         if (ownerScope === 'institution' && !requester.centre_id) {
             return resolve(denied('Your account is not linked to an institution.'));
         }
@@ -52,9 +59,10 @@ const svUploadModel = (
                 uploader_role,
                 owner_scope,
                 owner_centre_id,
+                status${approverColumn},
                 ownership_review_required
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, false)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12${approverValue}, false)
             RETURNING *;
         `;
 
@@ -71,7 +79,8 @@ const svUploadModel = (
                 requester.user_mail,
                 Number(requester.role),
                 ownerScope,
-                ownerScope === 'institution' ? requester.centre_id : null
+                ownerScope === 'institution' ? requester.centre_id : null,
+                isSuperAdmin
             ],
             (err, result) => {
             if (err) {
@@ -98,7 +107,7 @@ const getUploadedVolume = (requester) => {
                 resolve({
                     status: 'Success',
                     code: 200, 
-                    data: result.rows
+                    data: visibleVolumeRows(requester, result.rows)
                 });
             }
         });
@@ -290,6 +299,7 @@ const getVolumeInstructorViewModel = (requester) => {
                 });
             }
             
+            result.rows = visibleVolumeRows(requester, result.rows);
             return resolve(result);
         });
     });
@@ -435,7 +445,7 @@ const volumeConversionModel = (requester, volume_id) => {
 //list of converted volumes nii /nrrd files
 const getConvertedVolumeList = (requester) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeAccessScope(requester, 'v', 2);
+        const scope = volumeUploaderScope(requester, 'v', 2);
         if (!scope) return resolve(denied('You do not have permission to view converted volumes.'));
         const query = `SELECT 
   vcl.*,

@@ -399,7 +399,7 @@ function VolumeList() {
                   <tr>
                     <th className="py-2 px-4 font-semibold">Volume ID</th>
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
-                    {jwtDecode(token).role !== '99' && (
+                    {userRole !== 99 && (
                       <th className="py-2 px-4 font-semibold">Approval Status</th>
                     )}
                     <th className="py-2 px-4 font-semibold">Conversion Status</th>
@@ -435,7 +435,7 @@ function VolumeList() {
                           {volume.volume_id.slice(0, 8).toUpperCase()}
                         </td>
                         <td className="py-2 px-4 font-medium">{volume.volume_name}</td>
-                        {jwtDecode(token).role !== '99' && (
+                        {userRole !== 99 && (
                           <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
                             volume.status 
