@@ -5377,14 +5377,7 @@ function TraineeDashboard() {
       : certificateResources,
     [certificateResources, selectedCourse]);
 
-  const overallProgressLabel = useMemo(() => {
-    if (selectedCertificate) {
-      return certificates.find(cert => cert.id === selectedCertificate)?.label || 'Certification';
-    }
-    if (!certificates.length) return 'All certifications';
-    if (certificates.length === 1) return certificates[0].label;
-    return certificates.map(cert => cert.label).join(' + ');
-  }, [certificates, selectedCertificate]);
+  const overallProgressLabel = 'All';
 
   const selectedCertificateLabel = useMemo(
     () => certificates.find(cert => cert.id === selectedCertificate)?.label || '',
