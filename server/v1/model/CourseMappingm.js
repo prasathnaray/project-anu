@@ -11,7 +11,8 @@ const ALLOWED_TRIMESTERS = [
 const ALLOWED_MODULES = [
     'Biometry',
     'Six Step',
-    '20 + 2 planes'
+    '20 + 2 planes',
+    'SVT Course'
 ];
 
 const ALLOWED_COURSE_TYPES = [
@@ -23,10 +24,12 @@ const ALLOWED_COURSE_TYPES = [
     't2',
     'Practice',
     'Test',
-    'Free scan'
+    'Free scan',
+    'Free Scan',
+    'Single Plane'
 ];
 
-const isPrivilegedUser = (requester) => [99, 101, 102].includes(Number(requester.role));
+const isPrivilegedUser = (requester) => [99, 101].includes(Number(requester.role));
 
 const ensureCourseMappingTable = async () => {
     const query = `

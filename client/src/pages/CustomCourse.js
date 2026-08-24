@@ -13,8 +13,8 @@ import CustomCloseButton from '../utils/CustomCloseButton';
 import AddCourse from '../components/admin/AddCourse';
 
 const TRIMESTERS = ['First Trimester', 'Second Trimester', 'Third Trimester'];
-const MODULES = ['Biometry', 'Six Step', '20 + 2 planes'];
-const COURSE_TYPES = ['Practice', 'Test', 'Free scan'];
+const CUSTOM_COURSE_MODULE = 'SVT Course';
+const COURSE_TYPES = ['Free Scan', 'Single Plane'];
 
 const emptyForm = {
   course_name: '',
@@ -24,7 +24,6 @@ const emptyForm = {
   trimester: '',
   anatomy_type: '',
   volume_name: '',
-  module_name: '',
   course_type: '',
   shadow_recording_id: '',
   step_recording_id: '',
@@ -137,7 +136,7 @@ function CustomCourse() {
     fetchRecordings(selectedVolume.volume_id);
   }, [selectedVolume]);
 
-  if (userRole !== 102) {
+  if (![99, 101].includes(userRole)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -164,8 +163,8 @@ function CustomCourse() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.trimester || !formData.anatomy_type || !formData.volume_name || !formData.module_name || !formData.course_type) {
-      toast.error('Please fill course name, description, doctor name, volume, trimester, module, and course type.');
+    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.trimester || !formData.anatomy_type || !formData.volume_name || !formData.course_type) {
+      toast.error('Please fill course name, description, doctor name, volume, trimester, and course type.');
       return;
     }
 
@@ -176,7 +175,7 @@ function CustomCourse() {
       trimester: formData.trimester,
       anatomy_type: formData.anatomy_type,
       volume_name: formData.volume_name,
-      module_name: formData.module_name,
+      module_name: CUSTOM_COURSE_MODULE,
       course_type: formData.course_type,
       shadow_recording_id: formData.shadow_recording_id || null,
       step_recording_id: formData.step_recording_id || null,
@@ -385,23 +384,6 @@ function CustomCourse() {
                 value={formData.anatomy_type}
                 InputProps={{ readOnly: true }}
               />
-
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Module"
-                name="module_name"
-                value={formData.module_name}
-                onChange={handleChange}
-              >
-                <MenuItem value="">Select Module</MenuItem>
-                {MODULES.map((module) => (
-                  <MenuItem key={module} value={module}>
-                    {module}
-                  </MenuItem>
-                ))}
-              </TextField>
 
               <TextField
                 select

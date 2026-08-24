@@ -22,7 +22,8 @@ const PrivateRoute = ({ allowedRoles }) => {
       { prefixes: ['/academics', '/course-mapping', '/reatt-data', '/curriculum'], roles: [99] },
       { prefixes: ['/instructors'], roles: [99, 101] },
       { prefixes: ['/trainees'], roles: [99, 101, 102] },
-      { prefixes: ['/volume-management', '/custom-course'], roles: [99, 101, 102] },
+      { prefixes: ['/volume-management'], roles: [99, 101, 102] },
+      { prefixes: ['/custom-course'], roles: [99, 101] },
       { prefixes: ['/my-learning', '/my-progress'], roles: [103] }
     ];
     const matchedRule = routeRoleRules.find((rule) => rule.prefixes.some((prefix) => location.pathname.toLowerCase().startsWith(prefix)));
