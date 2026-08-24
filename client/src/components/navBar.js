@@ -1151,11 +1151,11 @@ function NavBar() {
               )}
 
               {/* Search */}
-              <div className="px-3 py-2 ms-1 text-gray-200">
+              {/* <div className="px-3 py-2 ms-1 text-gray-200">
                 <button aria-label="Search">
                   <Search size={20} />
                 </button>
-              </div>
+              </div> */}
 
               {/* Fullscreen toggle */}
               <div className="px-3 py-2 ms-1 text-gray-200">
@@ -1266,12 +1266,12 @@ function NavBar() {
                     >
                       Profile
                     </button>
-                    <button
+                    {/* <button
                       className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
                       onClick={() => navigate("/settings")}
                     >
                       Settings
-                    </button>
+                    </button> */}
                     <button
                       className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
                       onClick={handleLogout}
