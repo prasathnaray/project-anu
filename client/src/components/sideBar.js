@@ -462,7 +462,8 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     </button>
   </li>
 )}
-<li className="mb-1 mt-2">
+{[99, 103].includes(Number(tokdata.role)) && (
+  <li className="mb-1 mt-2">
                 <button
                   onMouseDown={(e) => ripple.create(e, "dark", "circle")}
                   onClick={() => navigate("/course-access")}
@@ -472,10 +473,11 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 >
                   <BookOpen size={20} />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>
-                    {tokdata.role == 103 ? "Assigned Courses" : tokdata.role == 99 ? "Content Access" : "Library"}
+                    {Number(tokdata.role) === 103 ? "Assigned Courses" : "Content Access"}
                   </div>
                 </button>
-              </li>
+  </li>
+)}
             </ul> 
         </div>
   </div>
