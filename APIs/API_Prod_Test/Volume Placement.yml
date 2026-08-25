@@ -11,17 +11,19 @@ http:
     data:
       - name: volume_id
         type: text
-        value: 6982d3f3-8617-49a7-9b0d-d160db9adf6c
+        value: daa5f55c-82ba-4987-a47f-c54f56a7e57b
       - name: placed_file
         type: file
         value:
-          - C:\path\to\placement.json
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-1.json
+        contentType: application/json; charset=utf-8
   auth:
     type: bearer
-    token: "{{token}}"
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhZG1pbkBhbnUuaW4iLCJyb2xlIjoiMTAxIiwiY2VudHJlX2lkIjoiNTU0MDRmNDUtMzQyZC00NWRhLTk4YjEtMDgxYmY3YWE1MmUwIiwiY2VudGVyX25hbWUiOiJUZXN0MTIzIiwiaWF0IjoxNzg3NjM5NDE3fQ.mS-skLTdOv0oPh_SGl-k5MvIGBggj8wsSrTsm6OqozE
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

@@ -137,8 +137,14 @@ app.get('/health', (req, res) => {
         code: 200
     });
 });
-//enables
-app.use(express.json({ limit: process.env.REQUEST_BODY_LIMIT || '100mb' }));
+// GET and HEAD requests do not use request bodies. Some API clients send a
+// literal `null` body with a JSON content type, which strict JSON parsing
+// rejects before the request reaches its route handler.
+app.use(express.json({
+    limit: process.env.REQUEST_BODY_LIMIT || '100mb',
+    type: (req) => !['GET', 'HEAD'].includes(req.method)
+        && Boolean(req.is(['application/json', 'application/*+json']))
+}));
 app.use(express.urlencoded({ extended: true, limit: process.env.REQUEST_BODY_LIMIT || '100mb' }));
 //Auth route
 //routes
@@ -277,6 +283,13 @@ app.use('/api/v1/', Authenticate, performanceMetricsRouter);
 app.use('/api/v1/', Authenticate, reattRouter);
 app.use('/api/v1/', Authenticate, challengeRouter);
 app.use((err, req, res, next) => {
+    if (err?.code === 'EAI_AGAIN') {
+        res.set('Retry-After', '2');
+        return res.status(503).json({
+            error: 'Database temporarily unavailable. Please retry.'
+        });
+    }
+
     if (err instanceof multer.MulterError) {
         const maxUploadSizeMb = Number(process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100);
 

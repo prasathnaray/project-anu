@@ -1,6 +1,7 @@
 const client = require('../utils/conn');
 const { randomUUID } = require('crypto');
 const { volumeAccessScope } = require('../Auth/volumeAuthorization');
+const { courseMappingOwnership, courseMappingReadScope } = require('../Auth/courseMappingAuthorization');
 
 const ALLOWED_TRIMESTERS = [
     'First Trimester',
@@ -47,6 +48,8 @@ const ensureCourseMappingTable = async () => {
             shadow_recording_id uuid NULL,
             step_recording_id uuid NULL,
             created_by character varying(100) NOT NULL,
+            owner_scope text NULL,
+            owner_centre_id uuid NULL,
             created_at timestamp without time zone DEFAULT now(),
             updated_at timestamp without time zone DEFAULT now()
         );
@@ -68,6 +71,15 @@ const ensureCourseMappingTable = async () => {
 
         ALTER TABLE public.course_mapping
             ADD COLUMN IF NOT EXISTS doctor_name character varying(255);
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS owner_scope text;
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS owner_centre_id uuid;
+
+        CREATE INDEX IF NOT EXISTS idx_course_mapping_owner
+            ON public.course_mapping(owner_scope, owner_centre_id);
     `;
 
     await client.query(query);
@@ -193,6 +205,15 @@ const createCourseMappingModel = async (
         };
     }
 
+    const ownership = courseMappingOwnership(requester);
+    if (!ownership) {
+        return {
+            status: 'Forbidden',
+            code: 403,
+            message: 'Your account is not linked to an institution.'
+        };
+    }
+
     await ensureCourseMappingTable();
 
     const volumeResult = await resolveVolume(requester, trimester, anatomy_type, volume_name);
@@ -236,6 +257,8 @@ const createCourseMappingModel = async (
                 ($5::uuid IS NULL AND step_recording_id IS NULL) OR
                 step_recording_id = $5::uuid
               )
+          AND owner_scope = $6
+          AND owner_centre_id IS NOT DISTINCT FROM $7::uuid
         LIMIT 1;
     `;
 
@@ -244,7 +267,9 @@ const createCourseMappingModel = async (
         module_name,
         course_type,
         shadow_recording_id || null,
-        step_recording_id || null
+        step_recording_id || null,
+        ownership.ownerScope,
+        ownership.ownerCentreId
     ]);
 
     if (duplicateResult.rows.length > 0) {
@@ -270,9 +295,11 @@ const createCourseMappingModel = async (
             course_type,
             shadow_recording_id,
             step_recording_id,
-            created_by
+            created_by,
+            owner_scope,
+            owner_centre_id
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING *;
     `;
 
@@ -289,7 +316,9 @@ const createCourseMappingModel = async (
         course_type,
         shadow_recording_id || null,
         step_recording_id || null,
-        requester.user_mail
+        requester.user_mail,
+        ownership.ownerScope,
+        ownership.ownerCentreId
     ]);
 
     return {
@@ -299,19 +328,10 @@ const createCourseMappingModel = async (
     };
 };
 
-const getCourseMappingsModel = async (requester, filters = {}) => {
-    if (!isPrivilegedUser(requester)) {
-        return {
-            status: 'Unauthorized',
-            code: 401,
-            message: 'You do not have permission to view course mappings.'
-        };
-    }
+const buildCourseMappingListScope = (requester, filters = {}) => {
+    const scope = courseMappingReadScope(requester, 'cm', 1);
+    if (!scope) return null;
 
-    await ensureCourseMappingTable();
-
-    const scope = volumeAccessScope(requester, 'v', 1);
-    if (!scope) return { status: 'Forbidden', code: 403, message: 'You do not have permission to view course mappings.' };
     const conditions = [scope.clause, 'v.ownership_review_required = false'];
     const values = [...scope.params];
 
@@ -340,9 +360,17 @@ const getCourseMappingsModel = async (requester, filters = {}) => {
         conditions.push(`LOWER(TRIM(cm.course_type)) = LOWER(TRIM($${values.length}))`);
     }
 
-    const whereClause = conditions.length > 0
-        ? `WHERE ${conditions.join(' AND ')}`
-        : '';
+    return {
+        whereClause: `WHERE ${conditions.join(' AND ')}`,
+        values
+    };
+};
+
+const getCourseMappingsModel = async (requester, filters = {}) => {
+    const queryScope = buildCourseMappingListScope(requester, filters);
+    if (!queryScope) return { status: 'Forbidden', code: 403, message: 'You do not have permission to view course mappings.' };
+
+    await ensureCourseMappingTable();
 
     const query = `
         SELECT
@@ -352,11 +380,70 @@ const getCourseMappingsModel = async (requester, filters = {}) => {
         JOIN public.volumes v ON v.volume_id = cm.volume_id
         LEFT JOIN public.user_data ud
             ON ud.user_email = cm.created_by
-        ${whereClause}
+        ${queryScope.whereClause}
         ORDER BY cm.created_at DESC;
     `;
 
-    const result = await client.query(query, values);
+    const result = await client.query(query, queryScope.values);
+
+    return {
+        status: 'Success',
+        code: 200,
+        data: result.rows
+    };
+};
+
+const getCourseMappingsWithRecordingsModel = async (requester, filters = {}) => {
+    const queryScope = buildCourseMappingListScope(requester, filters);
+    if (!queryScope) return { status: 'Forbidden', code: 403, message: 'You do not have permission to view course mappings.' };
+
+    await ensureCourseMappingTable();
+
+    const query = `
+        SELECT
+            cm.*,
+            ud.user_name AS created_by_name,
+            CASE WHEN shadow_vr.recording_id IS NULL THEN NULL ELSE jsonb_build_object(
+                'recording_id', shadow_vr.recording_id,
+                'recording_name', shadow_vr.recording_name,
+                'recording_type', shadow_vr.recording_type,
+                'rec_files', shadow_vr.rec_files,
+                'audio_files', shadow_vr.audio_files,
+                'image_files', shadow_vr.image_files,
+                'manifest_file', shadow_vr.manifest_file,
+                'validation_status', shadow_vr.validation_status,
+                'created_at', shadow_vr.created_at,
+                'created_by', shadow_vr.created_by
+            ) END AS shadow_recording,
+            CASE WHEN step_vr.recording_id IS NULL THEN NULL ELSE jsonb_build_object(
+                'recording_id', step_vr.recording_id,
+                'recording_name', step_vr.recording_name,
+                'recording_type', step_vr.recording_type,
+                'rec_files', step_vr.rec_files,
+                'audio_files', step_vr.audio_files,
+                'image_files', step_vr.image_files,
+                'manifest_file', step_vr.manifest_file,
+                'validation_status', step_vr.validation_status,
+                'created_at', step_vr.created_at,
+                'created_by', step_vr.created_by
+            ) END AS step_recording
+        FROM public.course_mapping cm
+        JOIN public.volumes v ON v.volume_id = cm.volume_id
+        LEFT JOIN public.user_data ud
+            ON ud.user_email = cm.created_by
+        LEFT JOIN public.vol_recordings shadow_vr
+            ON shadow_vr.recording_id = cm.shadow_recording_id
+           AND shadow_vr.volume_id = cm.volume_id
+           AND LOWER(TRIM(shadow_vr.recording_type)) LIKE 'shadow%'
+        LEFT JOIN public.vol_recordings step_vr
+            ON step_vr.recording_id = cm.step_recording_id
+           AND step_vr.volume_id = cm.volume_id
+           AND LOWER(TRIM(step_vr.recording_type)) LIKE 'step%'
+        ${queryScope.whereClause}
+        ORDER BY cm.created_at DESC;
+    `;
+
+    const result = await client.query(query, queryScope.values);
 
     return {
         status: 'Success',
@@ -370,5 +457,6 @@ module.exports = {
     ALLOWED_MODULES,
     ALLOWED_COURSE_TYPES,
     createCourseMappingModel,
-    getCourseMappingsModel
+    getCourseMappingsModel,
+    getCourseMappingsWithRecordingsModel
 };

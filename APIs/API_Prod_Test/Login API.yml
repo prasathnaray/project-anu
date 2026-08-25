@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "user_mail": "kamal@gmail.com",
+        "user_mail": "admin@anu.in",
         "user_password": "test1"
       }
   auth:

@@ -3,8 +3,18 @@ const {
     ALLOWED_MODULES,
     ALLOWED_COURSE_TYPES,
     createCourseMappingModel,
-    getCourseMappingsModel
+    getCourseMappingsModel,
+    getCourseMappingsWithRecordingsModel
 } = require('../model/CourseMappingm');
+const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
+
+const mappingFiltersFromQuery = (query) => ({
+    trimester: query.trimester,
+    anatomy_type: query.anatomy_type,
+    volume_name: query.volume_name,
+    module_name: query.module_name,
+    course_type: query.course_type
+});
 
 const createCourseMappingController = async (req, res) => {
     const requester = req.user;
@@ -89,22 +99,9 @@ const createCourseMappingController = async (req, res) => {
 
 const getCourseMappingsController = async (req, res) => {
     const requester = req.user;
-    const {
-        trimester,
-        anatomy_type,
-        volume_name,
-        module_name,
-        course_type
-    } = req.query;
 
     try {
-        const result = await getCourseMappingsModel(requester, {
-            trimester,
-            anatomy_type,
-            volume_name,
-            module_name,
-            course_type
-        });
+        const result = await getCourseMappingsModel(requester, mappingFiltersFromQuery(req.query));
 
         if (result.code && result.code !== 200) {
             return res.status(result.code).json(result);
@@ -125,7 +122,34 @@ const getCourseMappingsController = async (req, res) => {
     }
 };
 
+const getCourseMappingsWithRecordingsController = async (req, res) => {
+    try {
+        const result = await getCourseMappingsWithRecordingsModel(
+            req.user,
+            mappingFiltersFromQuery(req.query)
+        );
+
+        if (result.code !== 200) {
+            return res.status(result.code).json(result);
+        }
+
+        return res.status(200).json({
+            code: 200,
+            status: 'Success',
+            data: await hydrateStorageFields(result.data)
+        });
+    } catch (err) {
+        console.error('getCourseMappingsWithRecordingsController error:', err);
+        return res.status(500).json({
+            code: 500,
+            status: 'Error',
+            message: err.message || 'Internal server error'
+        });
+    }
+};
+
 module.exports = {
     createCourseMappingController,
-    getCourseMappingsController
+    getCourseMappingsController,
+    getCourseMappingsWithRecordingsController
 };

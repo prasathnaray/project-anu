@@ -26,7 +26,7 @@ require.cache[conversionPath] = {
     exports: { startVolumeConversion: () => {} }
 };
 
-const { svUploadModel, getUploadedVolume, getVolumeInstructorViewModel } = require('../model/Volumem');
+const { svUploadModel, getUploadedVolume, getVolumeInstructorViewModel, getRecordingsModel } = require('../model/Volumem');
 
 const upload = (requester) => svUploadModel(
     requester,
@@ -47,11 +47,13 @@ test('Super Admin volume uploads are approved automatically', async () => {
     assert.equal(capturedQuery.params[11], true);
 });
 
-test('institution volume uploads still require approval', async () => {
+test('institution admin volume uploads are approved automatically', async () => {
     await upload({ user_mail: 'admin@example.test', role: 101, centre_id: 'centre-a' });
     assert.doesNotMatch(capturedQuery.sql, /status, approver_id/);
-    assert.equal(capturedQuery.params[11], false);
+    assert.equal(capturedQuery.params[11], true);
+});
 
+test('instructor volume uploads still require approval', async () => {
     await upload({ user_mail: 'tutor@example.test', role: 102, centre_id: 'centre-a' });
     assert.equal(capturedQuery.params[11], false);
 });
@@ -73,4 +75,17 @@ test('institution volume responses retain approver_id', async () => {
 
     const uploaded = await getUploadedVolume(requester);
     assert.equal(uploaded.data[0].approver_id, 'reviewer@example.test');
+});
+
+test('recordings are fetched by volume only for the authenticated creator', async () => {
+    const requester = { user_mail: 'creator@example.test', role: 102, centre_id: 'centre-a' };
+    const volumeId = 'volume-a';
+    queryRows = [{ recording_id: 'recording-a', volume_id: volumeId, created_by: requester.user_mail }];
+
+    const result = await getRecordingsModel(requester, volumeId);
+
+    assert.match(capturedQuery.sql, /WHERE vr\.created_by = \$1/);
+    assert.match(capturedQuery.sql, /AND vr\.volume_id = \$2/);
+    assert.deepEqual(capturedQuery.params, [requester.user_mail, volumeId]);
+    assert.deepEqual(result.data, queryRows);
 });

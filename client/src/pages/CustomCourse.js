@@ -12,7 +12,6 @@ import { CreateCourseMappingAPI, GetCourseMappingsAPI } from '../API/CourseMappi
 import CustomCloseButton from '../utils/CustomCloseButton';
 import AddCourse from '../components/admin/AddCourse';
 
-const TRIMESTERS = ['First Trimester', 'Second Trimester', 'Third Trimester'];
 const CUSTOM_COURSE_MODULE = 'SVT Course';
 const COURSE_TYPES = ['Free Scan', 'Single Plane'];
 
@@ -49,14 +48,6 @@ function CustomCourse() {
     () => volumes.find((volume) => volume.volume_id === formData.volume_id),
     [formData.volume_id, volumes]
   );
-
-  const trimesterOptions = useMemo(() => {
-    const existingTrimesters = volumes
-      .map((volume) => volume.trimester?.trim())
-      .filter(Boolean);
-    const uniqueTrimesters = Array.from(new Set(existingTrimesters));
-    return uniqueTrimesters.length > 0 ? uniqueTrimesters : TRIMESTERS;
-  }, [volumes]);
 
   const shadowRecordings = useMemo(
     () => recordings.filter((recording) => recording.recording_type?.toLowerCase().includes('shadow')),
@@ -163,8 +154,13 @@ function CustomCourse() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.trimester || !formData.anatomy_type || !formData.volume_name || !formData.course_type) {
-      toast.error('Please fill course name, description, doctor name, volume, trimester, and course type.');
+    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.volume_id || !formData.anatomy_type || !formData.volume_name || !formData.course_type) {
+      toast.error('Please fill course name, description, doctor name, volume, and course type.');
+      return;
+    }
+
+    if (!formData.trimester) {
+      toast.error('The selected volume does not have trimester information.');
       return;
     }
 
@@ -355,24 +351,6 @@ function CustomCourse() {
                 {volumes.map((volume) => (
                   <MenuItem key={volume.volume_id} value={volume.volume_id}>
                     {volume.volume_name} - {volume.volume_type || 'Anatomy not set'}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Trimester"
-                name="trimester"
-                value={formData.trimester}
-                onChange={handleChange}
-                disabled={volumeLoading}
-              >
-                <MenuItem value="">Select Trimester</MenuItem>
-                {trimesterOptions.map((trimester) => (
-                  <MenuItem key={trimester} value={trimester}>
-                    {trimester}
                   </MenuItem>
                 ))}
               </TextField>

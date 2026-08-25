@@ -1,0 +1,18 @@
+info:
+  name: Courses with recordings
+  type: http
+  seq: 28
+
+http:
+  method: GET
+  url: http://{{local_base_url}}/api/v1/course-mappings/with-recordings
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJha2lsQGdtYWlsLmNvbSIsInJvbGUiOiIxMDIiLCJjZW50cmVfaWQiOiI1NTQwNGY0NS0zNDJkLTQ1ZGEtOThiMS0wODFiZjdhYTUyZTAiLCJjZW50ZXJfbmFtZSI6IlRlc3QxMjMiLCJpYXQiOjE3ODc2NDIzNTB9.xuedvAlpt9TGf5LGxXRlh5gDoTo0Z9P8V6fn5jFRp8M
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

@@ -1,4 +1,4 @@
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel} = require("../model/Volumem");
 const path = require('path');
 const { randomUUID } = require('crypto');
 const { uploadAsset, signAsset, signAssets } = require('../utils/storageAdapter');
@@ -687,7 +687,12 @@ const volRecordingC = async(req, res) => {
             const recording_file = recording_files[i];
             const fileExtension = path.extname(recording_file.originalname).slice(1).toLowerCase();
 
-            const isJsonMime = ['application/json', 'application/octet-stream'].includes(recording_file.mimetype);
+            const recordingMime = String(recording_file.mimetype || '').split(';')[0].trim().toLowerCase();
+            const isJsonMime = [
+                'application/json',
+                'application/octet-stream',
+                'multipart/mixed'
+            ].includes(recordingMime);
             if (!isJsonMime || fileExtension !== 'json') {
                 return res.status(400).json({
                     error: `Invalid recording file at index ${i}. Only .json files are allowed.`,
@@ -710,8 +715,9 @@ const volRecordingC = async(req, res) => {
         for (let i = 0; i < audio_files.length; i++) {
             const audio_file = audio_files[i];
             const audioExtension = path.extname(audio_file.originalname).slice(1).toLowerCase();
+            const audioMime = String(audio_file.mimetype || '').split(';')[0].trim().toLowerCase();
 
-            if (!audio_file.mimetype.startsWith('audio/') && audio_file.mimetype !== 'application/octet-stream') {
+            if (!audioMime.startsWith('audio/') && !['application/octet-stream', 'multipart/mixed'].includes(audioMime)) {
                 return res.status(400).json({
                     error: `Invalid audio file format at index ${i}. Only audio files are allowed.`,
                     received: audio_file.mimetype,
@@ -740,7 +746,9 @@ const volRecordingC = async(req, res) => {
         for (let i = 0; i < image_files.length; i++) {
             const image_file = image_files[i];
             const imageExtension = path.extname(image_file.originalname).slice(1).toLowerCase();
-            const isImageMime = image_file.mimetype.startsWith('image/') || image_file.mimetype === 'application/octet-stream';
+            const imageMime = String(image_file.mimetype || '').split(';')[0].trim().toLowerCase();
+            const isImageMime = imageMime.startsWith('image/')
+                || ['application/octet-stream', 'multipart/mixed'].includes(imageMime);
 
             if (!isImageMime || !imageContentTypes[imageExtension]) {
                 return res.status(400).json({
@@ -759,8 +767,9 @@ const volRecordingC = async(req, res) => {
         const isManifestMime = [
             'application/json',
             'text/plain',
-            'application/octet-stream'
-        ].includes(manifest_file.mimetype);
+            'application/octet-stream',
+            'multipart/mixed'
+        ].includes(String(manifest_file.mimetype || '').split(';')[0].trim().toLowerCase());
 
         if (!isManifestMime || !manifestContentTypes[manifestExtension]) {
             return res.status(400).json({
@@ -899,6 +908,28 @@ const shadowRecordingDataController = async(req, res) => {
         res.status(500).send(err)
     }
 }
+const getRecordingsController = async(req, res) => {
+    try {
+        const { volume_id } = req.query;
+        if (typeof volume_id !== 'string' || !volume_id.trim()) {
+            return res.status(400).json({ error: 'volume_id is required' });
+        }
+
+        const result = await getRecordingsModel(req.user, volume_id.trim());
+        if (result.code !== 200) {
+            return res.status(result.code).json({ error: result.message });
+        }
+
+        return res.status(200).json(await hydrateStorageFields(result.data));
+    }
+    catch(err) {
+        console.error('Get recordings error:', err);
+        return res.status(500).json({
+            error: 'Internal server error',
+            message: err.message
+        });
+    }
+}
 const volumeRecordingCountsController = async(req, res) => {
     const requester = req.user;
     try
@@ -930,4 +961,4 @@ const getAssociatedVolumeController = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, getRecordingsController, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}

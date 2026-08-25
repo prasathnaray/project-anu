@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://{{base_url_prod}}/api/v1/uploadvolumerecording
+  url: http://{{local_base_url}}/api/v1/uploadvolumerecording
   body:
     type: multipart-form
     data:
@@ -21,28 +21,33 @@ http:
       - name: recording_file
         type: file
         value:
-          - C:\path\to\shadow-1.json
-          - C:\path\to\shadow-2.json
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-1.json
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-2.json
+        contentType: multipart/mixed
       - name: audio_file
         type: file
         value:
-          - C:\path\to\shadow-1.wav
-          - C:\path\to\shadow-2.wav
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-1.wav
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-2.wav
+        contentType: multipart/mixed
       - name: images
         type: file
         value:
-          - C:\path\to\shadow-1.png
-          - C:\path\to\shadow-2.jpg
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-1.png
+          - C:\Users\igrs\Downloads\shadow_demo_files\shadow-2.jpg
+        contentType: multipart/mixed
       - name: manifest_file
         type: file
         value:
-          - C:\path\to\manifest.json
+          - C:\Users\igrs\Downloads\shadow_demo_files\manifest.json
+        contentType: application/json; charset=utf-8
   auth:
     type: bearer
-    token: "{{token}}"
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJha2lsQGdtYWlsLmNvbSIsInJvbGUiOiIxMDIiLCJjZW50cmVfaWQiOiI1NTQwNGY0NS0zNDJkLTQ1ZGEtOThiMS0wODFiZjdhYTUyZTAiLCJjZW50ZXJfbmFtZSI6IlRlc3QxMjMiLCJpYXQiOjE3ODc2MzYwODB9.GsqwU9ntBd6IpQ7gz-WZuM9S2rMHnZRMx1OfcXp58-M
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

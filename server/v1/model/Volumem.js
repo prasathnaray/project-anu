@@ -39,7 +39,9 @@ const svUploadModel = (
             });
         }
 
-        const isSuperAdmin = Number(requester.role) === ROLES.SUPER_ADMIN;
+        const requesterRole = Number(requester.role);
+        const isSuperAdmin = requesterRole === ROLES.SUPER_ADMIN;
+        const isAutoApproved = [ROLES.SUPER_ADMIN, ROLES.INSTITUTION_ADMIN].includes(requesterRole);
         const ownerScope = isSuperAdmin ? 'super_admin' : 'institution';
         const approverColumn = isSuperAdmin ? ', approver_id' : '';
         const approverValue = isSuperAdmin ? ', NULL' : '';
@@ -77,10 +79,10 @@ const svUploadModel = (
                 description,
                 volume_file,
                 requester.user_mail,
-                Number(requester.role),
+                requesterRole,
                 ownerScope,
                 ownerScope === 'institution' ? requester.centre_id : null,
-                isSuperAdmin
+                isAutoApproved
             ],
             (err, result) => {
             if (err) {
@@ -478,7 +480,7 @@ vcl.completed_at DESC;`;
 }
 const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
       return new Promise((resolve, reject) => {
-            const scope = volumeAccessScope(requester, 'v', 3);
+            const scope = volumeAccessScope(requester, 'v', 4);
             if (!scope) return resolve(denied('You do not have permission to place volumes.'));
             client.query(
                 `WITH authorized_volume AS (
@@ -486,10 +488,10 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
                     WHERE v.volume_id = $1 AND ${scope.clause} AND v.ownership_review_required = false
                     RETURNING v.volume_id
                  )
-                 INSERT INTO volume_placements (volume_id, placed_url, created_at)
-                 SELECT volume_id, $2, NOW() FROM authorized_volume
+                 INSERT INTO volume_placements (volume_id, placed_url, placed_by, created_at)
+                 SELECT volume_id, $2, $3, NOW() FROM authorized_volume
                  RETURNING *`,
-                [volume_id, placed_url, ...scope.params],
+                [volume_id, placed_url, requester.user_mail, ...scope.params],
                 (err, result) => {
                 if (err) {
                     return reject(err);
@@ -514,8 +516,12 @@ const getVolumePlacementsModel = (requester, volume_id = null) => {
             LEFT JOIN volumes v
                 ON vp.volume_id = v.volume_id
         `;
-        const values = [...scope.params];
-        const conditions = [scope.clause, 'v.ownership_review_required = false'];
+        const values = [...scope.params, requester.user_mail];
+        const conditions = [
+            scope.clause,
+            'v.ownership_review_required = false',
+            `v.added_by = $${values.length}`
+        ];
 
         if (volume_id) {
             values.push(volume_id);
@@ -651,6 +657,32 @@ const volumeRecordingsModel = (requester, volume_id, recording_name, recording_t
                         data: result.rows[0]
                     });
                 }
+            }
+        );
+    });
+};
+
+const getRecordingsModel = (requester, volume_id) => {
+    return new Promise((resolve, reject) => {
+        if (!requester?.user_mail) {
+            return resolve(denied('Authenticated user email is required.'));
+        }
+
+        client.query(
+            `SELECT vr.*
+             FROM vol_recordings vr
+             WHERE vr.created_by = $1
+               AND vr.volume_id = $2
+             ORDER BY vr.created_at DESC`,
+            [requester.user_mail, volume_id],
+            (err, result) => {
+                if (err) return reject(err);
+
+                return resolve({
+                    status: 'Success',
+                    code: 200,
+                    data: result.rows
+                });
             }
         );
     });
@@ -793,4 +825,4 @@ const getAssociatedVolumeModel = (requester, r_id) => {
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel};
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel};

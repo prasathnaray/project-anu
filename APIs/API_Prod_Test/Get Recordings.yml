@@ -1,11 +1,15 @@
 info:
-  name: Get Volume Placements
+  name: Get Recordings
   type: http
-  seq: 25
+  seq: 28
 
 http:
   method: GET
-  url: http://{{local_base_url}}/api/v1/volume-placements/daa5f55c-82ba-4987-a47f-c54f56a7e57b
+  url: http://{{local_base_url}}/api/v1/recordings?volume_id=daa5f55c-82ba-4987-a47f-c54f56a7e57b
+  params:
+    - name: volume_id
+      value: daa5f55c-82ba-4987-a47f-c54f56a7e57b
+      type: query
   auth:
     type: bearer
     token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhZG1pbkBhbnUuaW4iLCJyb2xlIjoiMTAxIiwiY2VudHJlX2lkIjoiNTU0MDRmNDUtMzQyZC00NWRhLTk4YjEtMDgxYmY3YWE1MmUwIiwiY2VudGVyX25hbWUiOiJUZXN0MTIzIiwiaWF0IjoxNzg3NjM5NTQzfQ.CdS8c_P6yH8DywVTFKcZIzK9_X5Y4_osBoy_IcMMt2g

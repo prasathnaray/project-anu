@@ -26,7 +26,9 @@ Requests use JSON unless an endpoint explicitly specifies `multipart/form-data`.
 | `102` Instructor | Only volumes uploaded by that authenticated user |
 | `103` Trainee | No volume-management access |
 
-The same scope applies to source lists, approval, conversion, placements, recordings, validation, associations, the MR workspace, and course-mapping selection. A role-`101` user's upload is not visible to another role-`101` user. Uploader role is captured at upload time, so later account role changes do not alter historical access.
+The same volume scope applies to source lists, approval, conversion, placements, recordings, validation, associations, and the MR workspace. A role-`101` user's volume upload is not visible to another role-`101` user. Uploader role is captured at upload time, so later account role changes do not alter historical volume access.
+
+Course mappings use institution ownership instead: a mapping created by role `101` is visible to authenticated roles `101`, `102`, and `103` whose current `centre_id` matches the mapping's `owner_centre_id`. Role-`99` mappings are global-owned but remain visible only to the Super Admin who created them. The server derives ownership from the authenticated database user; clients must not submit or control `owner_centre_id`.
 
 List endpoints return only accessible records. An inaccessible volume identifier is reported as `404 Not Found`; a role without volume-management permission receives `403 Forbidden`.
 
@@ -49,12 +51,15 @@ List endpoints return only accessible records. An inaccessible volume identifier
 | Recording | `GET` | `/shadow-recording-counts` | Legacy alias for recording counts |
 | Association | `POST` | `/associateVolume` | Associate a resource, volume, and recordings |
 | Association | `GET` | `/get-assovol?r_id=...` | Get associated volume data for a resource |
+| Course mapping | `POST` | `/course-mappings` | Create a server-scoped course mapping |
+| Course mapping | `GET` | `/course-mappings` | List mappings visible to the authenticated center |
+| Course mapping | `GET` | `/course-mappings/with-recordings` | List visible mappings with shadow and step recording data |
 
 ## Workflow
 
 1. Upload a source volume with `POST /sv-upload`.
 2. Review it through `GET /get-volumes` or `GET /get-volumes-by-instructor`.
-3. For role `101` or `102` uploads, approve or reject it with `PATCH /approve-volume/:status_approval/:volume_id`. Role `99` uploads are approved automatically.
+3. Role `99` and `101` uploads are approved automatically. For role `102` uploads, approve or reject with `PATCH /approve-volume/:status_approval/:volume_id`.
 4. Start conversion with `PUT /convert-vol/:volume_id`.
 5. Retrieve completed output through `GET /converted-volumes`.
 6. Upload and verify placement JSON.
@@ -84,7 +89,7 @@ The file is stored at `volumes/<original-filename>`. Uploading the same object p
 
 The default maximum file size is 100 MB. Set `MAX_VOLUME_UPLOAD_SIZE_MB` to change it.
 
-Volumes uploaded by a role-`99` Super Admin are created with `status: true`, so they do not require a separate approval step or an `approver_id`. The role-`99` volume-list responses omit `approver_id`. Other permitted uploaders are created with `status: false` and remain pending until reviewed.
+Volumes uploaded by a role-`99` Super Admin or role-`101` Institution Admin are created with `status: true`, so they do not require a separate approval step. Role-`99` uploads do not have an `approver_id`, and role-`99` volume-list responses omit that field. Role-`102` Instructor uploads are created with `status: false` and remain pending until reviewed.
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/sv-upload" \
@@ -635,6 +640,26 @@ Success - `200 OK`:
 ```
 
 The current query joins recordings by `volume_id`, so a volume with multiple recordings can produce multiple rows.
+
+## Course mapping lists
+
+Both list endpoints accept the optional query filters `trimester`, `anatomy_type`, `volume_name`, `module_name`, and `course_type`. Institution users receive only mappings whose `owner_centre_id` matches their current authenticated `centre_id`.
+
+### List courses
+
+```http
+GET /course-mappings
+```
+
+Returns course-mapping rows with linked recording IDs but without loading the recording files.
+
+### List courses with recordings
+
+```http
+GET /course-mappings/with-recordings
+```
+
+Returns the same course rows with nullable `shadow_recording` and `step_recording` objects. Each object contains its recording metadata, JSON files, audio files, image files, manifest, and validation status. Stored private asset references are returned as signed URLs.
 
 ## Bruno request files
 
