@@ -32,6 +32,7 @@ const MODULES = {
     { id: 'usp',   label: 'Principles of Ultrasound', course: 'Principles of Ultrasound' },
     { id: 'probe', label: 'Probe Movements',          course: 'Probe Movements', locked: true },
     { id: 'knobology', label: 'Knobology',              course: 'Knobology' },
+    { id: 'morphology', label: 'Morphology',              course: 'Morphology' },
   ],
 };
 
@@ -134,12 +135,26 @@ const RESOURCES = {
     { id: 'usp_t1', name: 'Test 1',                  type: 'test',     topic: '', done: false },
   ],
   knobology: [
+    { id: 'knob_r0', name: 'Overview of Ultrasound Machine', type: 'resource', topic: 'Overview of Ultrasound Machine', done: false },
+    { id: 'knob_r1a', name: 'Functions of Knobs', type: 'resource', topic: 'Function of the Knobs', done: false },
     { id: 'knob_r1', name: 'Interaction - Ultrasound Machine Interaction', type: 'resource', topic: 'Function of the Knobs', done: false },
-    { id: 'knob_r2', name: 'Interaction - Knobology Interaction Activity', type: 'resource', topic: 'Function of the Knobs', done: false },
-    { id: 'knob_r3', name: 'Mind Sparks - US Machine - Quiz', type: 'resource', topic: 'Function of the Knobs', done: false },
-    { id: 'knob_r4', name: 'MindSparks - Imaging Modes - True / False', type: 'resource', topic: 'Imaging Modes', done: false },
-    { id: 'knob_r5', name: 'Knobs - Match', type: 'resource', topic: 'Echo Dose', done: false },
-    { id: 'knob_r6', name: 'Knobs & Machine - Crossword Puzzle', type: 'resource', topic: 'Echo Dose', done: false },
+    { id: 'knob_r2', name: 'Interaction - Knobology Optimization Activity', type: 'resource', topic: 'Function of the Knobs', done: false },
+    { id: 'knob_r3', name: 'Mind Sparks - Quiz', type: 'resource', topic: 'Function of the Knobs', done: false },
+    { id: 'knob_r3a', name: 'Imaging Modes', type: 'resource', topic: 'Imaging Modes', done: false },
+    { id: 'knob_r4', name: 'MindSparks - True / False', type: 'resource', topic: 'Imaging Modes', done: false },
+    { id: 'knob_r5', name: 'Match', type: 'resource', topic: 'Echo Dose', done: false },
+    { id: 'knob_r6', name: 'Crossword', type: 'resource', topic: 'Echo Dose', done: false },
+  ],
+  morphology: [
+    { id: 'morph_r1', name: 'Image Formation & Sector Orientation', type: 'resource', topic: 'Image Formation & Sector Orientation', done: false },
+    { id: 'morph_r2', name: 'Mind Sparks - MCQs', type: 'resource', topic: 'Image Formation & Sector Orientation', done: false },
+    { id: 'morph_r3', name: '3D to 2D Imaging', type: 'resource', topic: '3D to 2D Imaging', done: false },
+    { id: 'morph_r4', name: 'Mind Sparks - Scanning', type: 'resource', topic: '3D to 2D Imaging', done: false },
+    { id: 'morph_r5', name: '2D to 3D Imaging', type: 'resource', topic: '2D to 3D Imaging', done: false },
+    { id: 'morph_r6', name: 'Interaction - Spin Wheel', type: 'resource', topic: '2D to 3D Imaging', done: false },
+    { id: 'morph_r7', name: 'Mind Sparks - Picture Pick', type: 'resource', topic: '2D to 3D Imaging', done: false },
+    { id: 'morph_r8', name: 'Chatbot', type: 'resource', topic: 'Echo Dose', done: false },
+    { id: 'morph_r9', name: '3D to 2D Prediction', type: 'resource', topic: 'Echo Dose', done: false },
   ],
 };
 

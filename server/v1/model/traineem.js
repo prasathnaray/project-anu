@@ -2185,7 +2185,10 @@ const UNIT_TOPIC_ORDER = {
     [normalizeOrderToken('Interaction Activity')]: 8,
     [normalizeOrderToken('7. iNTERACTION Activity')]: 8,
     [normalizeOrderToken('Echogenicity')]: 9,
-    [normalizeOrderToken('Artifacts')]: 10,
+    [normalizeOrderToken('Image Optimization')]: 10,
+    [normalizeOrderToken('Image Otimization Activity')]: 11,
+    [normalizeOrderToken('Image Optimization Activity')]: 11,
+    [normalizeOrderToken('Artifacts')]: 12,
   },
   'Probe Movements': {
     [normalizeOrderToken('Anatomy planes')]: 1,
@@ -2197,6 +2200,7 @@ const UNIT_TOPIC_ORDER = {
     [normalizeOrderToken('Echo Dose')]: 5,
   },
   Knobology: {
+    [normalizeOrderToken('Overview of Ultrasound Machine')]: 1,
     [normalizeOrderToken('Overview of ultrasound machine')]: 1,
     [normalizeOrderToken('Function of the Knobs')]: 2,
     [normalizeOrderToken('Imaging Modes')]: 3,
@@ -2206,6 +2210,7 @@ const UNIT_TOPIC_ORDER = {
     [normalizeOrderToken('Image Formation & Sector Orientation')]: 1,
     [normalizeOrderToken('3D to 2D Imaging')]: 2,
     [normalizeOrderToken('2D to 3D Imaging')]: 3,
+    [normalizeOrderToken('Echo Dose')]: 4,
   },
   AC: {
     [normalizeOrderToken('AC - Fetal Abdomen')]: 1,
@@ -2269,18 +2274,24 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Drag & Drop - Directional terms'], order: 1 },
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['True or False - Probe Orientation'], order: 2 },
   { units: ['Probe Movements'], topics: ['Echo Dose'], resources: ['Probe movements - Real-time', 'Probe movements'], order: 3 },
-  { units: ['Knobology'], topics: ['Overview of ultrasound machine'], resources: ['Ultrasound machine'], order: 1 },
+  { units: ['Knobology'], topics: ['Overview of Ultrasound Machine', 'Overview of ultrasound machine'], resources: ['Overview of Ultrasound Machine', 'Ultrasound machine'], order: 1 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Functions of Knobs', 'Functions of knobs', 'Function of knobs'], order: 1 },
   { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Interaction - Ultrasound Machine Interaction'], order: 2 },
-  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Mindsparks - Quiz', 'Mind Sparks - US Machine - Quiz'], order: 4 },
-  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Functions of knobs', 'Function of knobs'], order: 1 },
-  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Mindsparks - Drag & Drop', 'Interaction - Knobology Interaction Activity'], order: 3 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Interaction - Knobology Optimization Activity', 'Interaction - Knobology Interaction Activity', 'Mindsparks - Drag & Drop'], order: 3 },
+  { units: ['Knobology'], topics: ['Function of the Knobs'], resources: ['Mind Sparks - Quiz', 'Mindsparks - Quiz', 'Mind Sparks - US Machine - Quiz'], order: 4 },
   { units: ['Knobology'], topics: ['Imaging Modes'], resources: ['Imaging Modes', 'Imaging modes'], order: 1 },
-  { units: ['Knobology'], topics: ['Imaging Modes'], resources: ['Mindsparks - True/False', 'MindSparks - Imaging Modes - True / False'], order: 2 },
-  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Match', 'Knobs - Match'], order: 1 },
-  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Echo Dose - Crossword', 'Knobs & Machine - Crossword Puzzle'], order: 2 },
+  { units: ['Knobology'], topics: ['Imaging Modes'], resources: ['MindSparks - True / False', 'Mindsparks - True/False', 'MindSparks - Imaging Modes - True / False'], order: 2 },
+  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Match', 'Echo Dose - Match', 'Knobs - Match'], order: 1 },
+  { units: ['Knobology'], topics: ['Echo Dose'], resources: ['Crossword', 'Echo Dose - Crossword', 'Knobs & Machine - Crossword Puzzle'], order: 2 },
   { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Image Formation & Sector Orientation', 'Image Formation and Sector Orientation'], order: 1 },
+  { units: ['Morphology'], topics: ['Image Formation & Sector Orientation'], resources: ['Mind Sparks - MCQs', 'Mind Sparks - MCQ'], order: 2 },
   { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['3D to 2D Imaging'], order: 1 },
+  { units: ['Morphology'], topics: ['3D to 2D Imaging'], resources: ['Mind Sparks - Scanning'], order: 2 },
   { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['2D to 3D Imaging'], order: 1 },
+  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['Interaction - Spin Wheel'], order: 2 },
+  { units: ['Morphology'], topics: ['2D to 3D Imaging'], resources: ['Mind Sparks - Picture Pick'], order: 3 },
+  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['Chatbot', 'Mind Sparks - ChatBot'], order: 1 },
+  { units: ['Morphology'], topics: ['Echo Dose'], resources: ['3D to 2D Prediction'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Transthalamic Plane'], order: 1 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Bi-Parietal Diameter'], order: 2 },
   { units: ['BPD & HC', 'BPD/HC'], topics: ['Fetal Head', 'Fetal Head (BPD & HC)'], resources: ['Head Circumference'], order: 3 },
@@ -2504,48 +2515,83 @@ const isMappedOrderScope = (unitName = '') => {
 };
 
 const KNOBLOGY_TOPIC_BY_RESOURCE = {
-  [normalizeOrderToken('Ultrasound machine')]: 'Overview of ultrasound machine',
+  [normalizeOrderToken('Ultrasound machine')]: 'Overview of Ultrasound Machine',
+  [normalizeOrderToken('Overview of Ultrasound Machine')]: 'Overview of Ultrasound Machine',
   [normalizeOrderToken('Interaction - Ultrasound Machine Interaction')]: 'Function of the Knobs',
   [normalizeOrderToken('Mindsparks - Quiz')]: 'Function of the Knobs',
   [normalizeOrderToken('Mind Sparks - US Machine - Quiz')]: 'Function of the Knobs',
+  [normalizeOrderToken('Mind Sparks - Quiz')]: 'Function of the Knobs',
   [normalizeOrderToken('Functions of knobs')]: 'Function of the Knobs',
   [normalizeOrderToken('Function of knobs')]: 'Function of the Knobs',
+  [normalizeOrderToken('Functions of Knobs')]: 'Function of the Knobs',
   [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Function of the Knobs',
   [normalizeOrderToken('Interaction - Knobology Interaction Activity')]: 'Function of the Knobs',
+  [normalizeOrderToken('Interaction - Knobology Optimization Activity')]: 'Function of the Knobs',
   [normalizeOrderToken('Imaging Modes')]: 'Imaging Modes',
   [normalizeOrderToken('Imaging modes')]: 'Imaging Modes',
   [normalizeOrderToken('Mindsparks - True/False')]: 'Imaging Modes',
   [normalizeOrderToken('MindSparks - Imaging Modes - True / False')]: 'Imaging Modes',
+  [normalizeOrderToken('MindSparks - True / False')]: 'Imaging Modes',
   [normalizeOrderToken('Echo Dose - Match')]: 'Echo Dose',
   [normalizeOrderToken('Knobs - Match')]: 'Echo Dose',
+  [normalizeOrderToken('Match')]: 'Echo Dose',
+  [normalizeOrderToken('Crossword')]: 'Echo Dose',
   [normalizeOrderToken('Echo Dose - Crossword')]: 'Echo Dose',
   [normalizeOrderToken('Knobs & Machine - Crossword Puzzle')]: 'Echo Dose',
 };
 
 const KNOBLOGY_RESOURCE_BY_ALIAS = {
-  [normalizeOrderToken('Mindsparks - Quiz')]: 'Mind Sparks - US Machine - Quiz',
-  [normalizeOrderToken('Functions of knobs')]: 'Function of knobs',
-  [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Interaction - Knobology Interaction Activity',
-  [normalizeOrderToken('Imaging Modes')]: 'Imaging modes',
-  [normalizeOrderToken('Mindsparks - True/False')]: 'MindSparks - Imaging Modes - True / False',
-  [normalizeOrderToken('Echo Dose - Match')]: 'Knobs - Match',
-  [normalizeOrderToken('Echo Dose - Crossword')]: 'Knobs & Machine - Crossword Puzzle',
+  [normalizeOrderToken('Ultrasound machine')]: 'Overview of Ultrasound Machine',
+  [normalizeOrderToken('Overview of Ultrasound Machine')]: 'Overview of Ultrasound Machine',
+  [normalizeOrderToken('Mindsparks - Quiz')]: 'Mind Sparks - Quiz',
+  [normalizeOrderToken('Mind Sparks - US Machine - Quiz')]: 'Mind Sparks - Quiz',
+  [normalizeOrderToken('Mind Sparks - Quiz')]: 'Mind Sparks - Quiz',
+  [normalizeOrderToken('Functions of knobs')]: 'Functions of Knobs',
+  [normalizeOrderToken('Function of knobs')]: 'Functions of Knobs',
+  [normalizeOrderToken('Functions of Knobs')]: 'Functions of Knobs',
+  [normalizeOrderToken('Mindsparks - Drag & Drop')]: 'Interaction - Knobology Optimization Activity',
+  [normalizeOrderToken('Interaction - Knobology Interaction Activity')]: 'Interaction - Knobology Optimization Activity',
+  [normalizeOrderToken('Interaction - Knobology Optimization Activity')]: 'Interaction - Knobology Optimization Activity',
+  [normalizeOrderToken('Imaging Modes')]: 'Imaging Modes',
+  [normalizeOrderToken('Mindsparks - True/False')]: 'MindSparks - True / False',
+  [normalizeOrderToken('MindSparks - Imaging Modes - True / False')]: 'MindSparks - True / False',
+  [normalizeOrderToken('MindSparks - True / False')]: 'MindSparks - True / False',
+  [normalizeOrderToken('Echo Dose - Match')]: 'Match',
+  [normalizeOrderToken('Knobs - Match')]: 'Match',
+  [normalizeOrderToken('Match')]: 'Match',
+  [normalizeOrderToken('Crossword')]: 'Crossword',
+  [normalizeOrderToken('Echo Dose - Crossword')]: 'Crossword',
+  [normalizeOrderToken('Knobs & Machine - Crossword Puzzle')]: 'Crossword',
 };
 
 const MORPHOLOGY_TOPIC_BY_RESOURCE = {
   [normalizeOrderToken('Image Formation & Sector Orientation')]: 'Image Formation & Sector Orientation',
   [normalizeOrderToken('Image Formation and Sector Orientation')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - MCQ')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - MCQs')]: 'Image Formation & Sector Orientation',
   [normalizeOrderToken('3D to 2D Imaging')]: '3D to 2D Imaging',
+  [normalizeOrderToken('Mind Sparks - Scanning')]: '3D to 2D Imaging',
   [normalizeOrderToken('2D to 3D Imaging')]: '2D to 3D Imaging',
+  [normalizeOrderToken('Interaction - Spin Wheel')]: '2D to 3D Imaging',
+  [normalizeOrderToken('Mind Sparks - Picture Pick')]: '2D to 3D Imaging',
+  [normalizeOrderToken('Mind Sparks - ChatBot')]: 'Echo Dose',
+  [normalizeOrderToken('Chatbot')]: 'Echo Dose',
+  [normalizeOrderToken('3D to 2D Prediction')]: 'Echo Dose',
 };
 
 const MORPHOLOGY_RESOURCE_BY_ALIAS = {
   [normalizeOrderToken('Image Formation and Sector Orientation')]: 'Image Formation & Sector Orientation',
+  [normalizeOrderToken('Mind Sparks - MCQ')]: 'Mind Sparks - MCQs',
+  [normalizeOrderToken('Mind Sparks - MCQs')]: 'Mind Sparks - MCQs',
+  [normalizeOrderToken('Mind Sparks - ChatBot')]: 'Chatbot',
+  [normalizeOrderToken('Chatbot')]: 'Chatbot',
 };
 
 const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = {
   [normalizeOrderToken('Interaction')]: 'Interaction of ultrasound waves',
   [normalizeOrderToken('Interaction - ultrasound waves')]: 'Interaction of ultrasound waves',
+  [normalizeOrderToken('Image Optimization Activity')]: 'Image Otimization Activity',
+  [normalizeOrderToken('Image Otimization Activity')]: 'Image Otimization Activity',
 };
 
 const PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS = {
@@ -2625,6 +2671,12 @@ const getDisplayResourceName = (unitName, resourceName, resourceTopic = '') => {
   }
 
   if (isPrinciplesOfUltrasoundOrderScope(unitName)) {
+    if (
+      [normalizeOrderToken('Image Optimization Activity'), normalizeOrderToken('Image Otimization Activity')].includes(normalizeOrderToken(resourceTopic)) &&
+      normalizeOrderToken(resourceName) === normalizeOrderToken('Interaction')
+    ) {
+      return 'Interaction';
+    }
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
   }
 

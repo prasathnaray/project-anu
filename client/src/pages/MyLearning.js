@@ -4446,7 +4446,8 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Principles of ultrasound::Interaction - ultrasound waves': 6,
     'Principles of ultrasound::7. iNTERACTION Activity': 8,
     'Principles of ultrasound::Echogenicity': 9,
-    'Principles of ultrasound::Artifacts': 10,
+    'Principles of ultrasound::Image Optimization': 10,
+    'Principles of ultrasound::Artifacts': 12,
 
     'Probe Movements::Anatomy planes': 1,
     'Probe Movements::Anatomy Plane': 1,
@@ -4475,19 +4476,32 @@ const RESOURCE_ORDER = Object.fromEntries(
     'Probe Movements::Probe movements - Real-time': 12,
 
     'Knobology::Ultrasound machine': 1,
+    'Knobology::Overview of Ultrasound Machine': 1,
+    'Knobology::Functions of Knobs': 1,
     'Knobology::Interaction - Ultrasound Machine Interaction': 2,
-    'Knobology::Mind Sparks - US Machine - Quiz': 4,
+    'Knobology::Mind Sparks - Quiz': 4,
     'Knobology::Function of knobs': 1,
     'Knobology::Interaction - Knobology Interaction Activity': 3,
+    'Knobology::Interaction - Knobology Optimization Activity': 3,
     'Knobology::Imaging modes': 1,
+    'Knobology::Imaging Modes': 1,
     'Knobology::MindSparks - Imaging Modes - True / False': 2,
+    'Knobology::MindSparks - True / False': 2,
     'Knobology::Knobs - Match': 1,
+    'Knobology::Match': 1,
     'Knobology::Knobs & Machine - Crossword Puzzle': 2,
+    'Knobology::Crossword': 2,
 
     'Morphology::Image Formation & Sector Orientation': 1,
     'Morphology::Image Formation and Sector Orientation': 1,
+    'Morphology::Mind Sparks - MCQs': 2,
     'Morphology::3D to 2D Imaging': 1,
+    'Morphology::Mind Sparks - Scanning': 2,
     'Morphology::2D to 3D Imaging': 1,
+    'Morphology::Interaction - Spin Wheel': 2,
+    'Morphology::Mind Sparks - Picture Pick': 3,
+    'Morphology::Chatbot': 1,
+    'Morphology::3D to 2D Prediction': 2,
   }).map(([key, value]) => [normalizeSortKey(key), value])
 );
 
@@ -4727,6 +4741,8 @@ const TOPIC_ORDER = [
   'Interaction of ultrasound waves',
   'Interaction Activity',
   'Echogenicity',
+  'Image Optimization',
+  'Image Otimization Activity',
   'Artifacts',
   'Anatomy planes',
   'Anatomy Plane',
@@ -4811,6 +4827,8 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
       'Interaction of ultrasound waves',
       'Interaction Activity',
       'Echogenicity',
+      'Image Optimization',
+      'Image Otimization Activity',
       'Artifacts',
     ],
     'Probe Movements': [
@@ -4833,6 +4851,7 @@ const TOPIC_ORDER_BY_MODULE = Object.fromEntries(
       'Image Formation & Sector Orientation',
       '3D to 2D Imaging',
       '2D to 3D Imaging',
+      'Echo Dose',
     ],
   }).map(([moduleName, topics]) => [
     normalizeSortKey(moduleName),
@@ -4896,6 +4915,8 @@ const PRINCIPLES_OF_ULTRASOUND_TOPIC_BY_ALIAS = Object.fromEntries(
   Object.entries({
     'Interaction': 'Interaction of ultrasound waves',
     'Interaction - ultrasound waves': 'Interaction of ultrasound waves',
+    'Image Optimization Activity': 'Image Otimization Activity',
+    'Image Otimization Activity': 'Image Otimization Activity',
   }).map(([topic, canonicalTopic]) => [normalizeSortKey(topic), canonicalTopic])
 );
 
@@ -4977,20 +4998,27 @@ const PROBE_MOVEMENTS_RESOURCE_BY_ALIAS = Object.fromEntries(
 
 const KNOBLOGY_TOPIC_BY_RESOURCE = Object.fromEntries(
   Object.entries({
-    'Ultrasound machine': 'Overview of ultrasound machine',
+    'Ultrasound machine': 'Overview of Ultrasound Machine',
+    'Overview of Ultrasound Machine': 'Overview of Ultrasound Machine',
     'Interaction - Ultrasound Machine Interaction': 'Function of the Knobs',
     'Mindsparks - Quiz': 'Function of the Knobs',
     'Mind Sparks - US Machine - Quiz': 'Function of the Knobs',
+    'Mind Sparks - Quiz': 'Function of the Knobs',
     'Functions of knobs': 'Function of the Knobs',
     'Function of knobs': 'Function of the Knobs',
+    'Functions of Knobs': 'Function of the Knobs',
     'Mindsparks - Drag & Drop': 'Function of the Knobs',
     'Interaction - Knobology Interaction Activity': 'Function of the Knobs',
+    'Interaction - Knobology Optimization Activity': 'Function of the Knobs',
     'Imaging Modes': 'Imaging Modes',
     'Imaging modes': 'Imaging Modes',
     'Mindsparks - True/False': 'Imaging Modes',
     'MindSparks - Imaging Modes - True / False': 'Imaging Modes',
+    'MindSparks - True / False': 'Imaging Modes',
     'Echo Dose - Match': 'Echo Dose',
     'Knobs - Match': 'Echo Dose',
+    'Match': 'Echo Dose',
+    'Crossword': 'Echo Dose',
     'Echo Dose - Crossword': 'Echo Dose',
     'Knobs & Machine - Crossword Puzzle': 'Echo Dose',
   }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
@@ -5011,13 +5039,22 @@ const BIOMETRY_RESOURCE_BY_ALIAS = Object.fromEntries(
 
 const KNOBLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
   Object.entries({
-    'Mindsparks - Quiz': 'Mind Sparks - US Machine - Quiz',
-    'Functions of knobs': 'Function of knobs',
-    'Mindsparks - Drag & Drop': 'Interaction - Knobology Interaction Activity',
-    'Imaging Modes': 'Imaging modes',
-    'Mindsparks - True/False': 'MindSparks - Imaging Modes - True / False',
-    'Echo Dose - Match': 'Knobs - Match',
-    'Echo Dose - Crossword': 'Knobs & Machine - Crossword Puzzle',
+    'Ultrasound machine': 'Overview of Ultrasound Machine',
+    'Overview of ultrasound machine': 'Overview of Ultrasound Machine',
+    'Mindsparks - Quiz': 'Mind Sparks - Quiz',
+    'Mind Sparks - US Machine - Quiz': 'Mind Sparks - Quiz',
+    'Functions of knobs': 'Functions of Knobs',
+    'Function of knobs': 'Functions of Knobs',
+    'Mindsparks - Drag & Drop': 'Interaction - Knobology Optimization Activity',
+    'Interaction - Knobology Interaction Activity': 'Interaction - Knobology Optimization Activity',
+    'Imaging modes': 'Imaging Modes',
+    'Mindsparks - True/False': 'MindSparks - True / False',
+    'MindSparks - Imaging Modes - True / False': 'MindSparks - True / False',
+    'Echo Dose - Match': 'Match',
+    'Knobs - Match': 'Match',
+    'Crossword': 'Crossword',
+    'Echo Dose - Crossword': 'Crossword',
+    'Knobs & Machine - Crossword Puzzle': 'Crossword',
   }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
 );
 
@@ -5025,14 +5062,26 @@ const MORPHOLOGY_TOPIC_BY_RESOURCE = Object.fromEntries(
   Object.entries({
     'Image Formation & Sector Orientation': 'Image Formation & Sector Orientation',
     'Image Formation and Sector Orientation': 'Image Formation & Sector Orientation',
+    'Mind Sparks - MCQ': 'Image Formation & Sector Orientation',
+    'Mind Sparks - MCQs': 'Image Formation & Sector Orientation',
     '3D to 2D Imaging': '3D to 2D Imaging',
+    'Mind Sparks - Scanning': '3D to 2D Imaging',
     '2D to 3D Imaging': '2D to 3D Imaging',
+    'Interaction - Spin Wheel': '2D to 3D Imaging',
+    'Mind Sparks - Picture Pick': '2D to 3D Imaging',
+    'Mind Sparks - ChatBot': 'Echo Dose',
+    'Chatbot': 'Echo Dose',
+    '3D to 2D Prediction': 'Echo Dose',
   }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
 );
 
 const MORPHOLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
   Object.entries({
     'Image Formation and Sector Orientation': 'Image Formation & Sector Orientation',
+    'Mind Sparks - MCQ': 'Mind Sparks - MCQs',
+    'Mind Sparks - MCQs': 'Mind Sparks - MCQs',
+    'Mind Sparks - ChatBot': 'Chatbot',
+    'Chatbot': 'Chatbot',
   }).map(([resourceName, canonicalName]) => [normalizeSortKey(resourceName), canonicalName])
 );
 
@@ -5053,6 +5102,12 @@ const getDisplayResourceName = (moduleLabel, resourceName, topic = '') => {
   }
 
   if (isPrinciplesOfUltrasoundScope(moduleLabel)) {
+    if (
+      [normalizeSortKey('Image Optimization Activity'), normalizeSortKey('Image Otimization Activity')].includes(normalizeSortKey(topic)) &&
+      normalizeSortKey(resourceName) === normalizeSortKey('Interaction')
+    ) {
+      return 'Interaction';
+    }
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
   }
 
