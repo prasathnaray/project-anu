@@ -5185,16 +5185,37 @@ const getPracticeNumber = (name = '') => {
 const practiceShowsLog      = name => { const n = getPracticeNumber(name); return n !== null && n >= 1 && n <= 4; };
 const practiceShowsFeedback = name => { const n = getPracticeNumber(name); return n !== null && n >= 3 && n <= 4; };
 
-const formatDate = d => {
-  if (!d) return '—';
-  try { return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
-  catch { return d; }
+const parseValidDate = value => {
+  if (value === null || value === undefined) return null;
+
+  const normalizedValue = typeof value === 'string' ? value.trim() : value;
+  if (
+    normalizedValue === '' ||
+    (typeof normalizedValue === 'string' && ['n/a', 'null', 'undefined', 'invalid date'].includes(normalizedValue.toLowerCase()))
+  ) {
+    return null;
+  }
+
+  try {
+    const date = normalizedValue instanceof Date ? normalizedValue : new Date(normalizedValue);
+    return Number.isNaN(date.getTime()) ? null : date;
+  } catch {
+    return null;
+  }
 };
 
-const formatDateTime = d => {
-  if (!d) return '—';
-  try { return new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-  catch { return d; }
+const formatDate = value => {
+  const date = parseValidDate(value);
+  return date
+    ? date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+};
+
+const formatDateTime = value => {
+  const date = parseValidDate(value);
+  return date
+    ? date.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '—';
 };
 
 const scoreMeta = pct => {
