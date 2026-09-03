@@ -2109,14 +2109,14 @@ const normalizeOrderToken = (value = '') =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
 
-const REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES = new Set([
+const REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES = new Set([
   'mindsparksprobemovement',
   'mindsparksprobemovements',
   'minsparksprobemovement',
   'minsparksprobemovements',
 ]);
 
-const isRemovedBtcBiometryProbeMindSpark = (row = {}) => {
+const isRemovedBtcAcFlProbeMindSpark = (row = {}) => {
   const certificate = normalizeOrderToken(row.certificate_name);
   const moduleLabels = [row.course_name, row.module_name, row.unit_name].map(normalizeOrderToken);
   const topic = normalizeOrderToken(row.resource_topic);
@@ -2124,7 +2124,6 @@ const isRemovedBtcBiometryProbeMindSpark = (row = {}) => {
 
   const isBtc = !certificate || certificate === normalizeOrderToken('BTC');
   const isTargetUnit = moduleLabels.some(label => [
-    normalizeOrderToken('BPD & HC'),
     normalizeOrderToken('AC'),
     normalizeOrderToken('FL'),
   ].includes(label));
@@ -2133,7 +2132,7 @@ const isRemovedBtcBiometryProbeMindSpark = (row = {}) => {
     normalizeOrderToken('Imaging the Plane'),
   ].includes(topic);
 
-  return isBtc && isTargetUnit && isImagingTopic && REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES.has(resourceName);
+  return isBtc && isTargetUnit && isImagingTopic && REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES.has(resourceName);
 };
 
 const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
@@ -2351,55 +2350,6 @@ const RESOURCE_ORDER_BY_TOPIC = RESOURCE_ORDER_BY_TOPIC_ALIASES.reduce((orderMap
   return orderMap;
 }, {});
 
-const BPD_HC_TOPIC_BY_RESOURCE = {
-  [normalizeOrderToken('Transthalamic Plane')]: 'Fetal Head',
-  [normalizeOrderToken('Bi-Parietal Diameter')]: 'Fetal Head',
-  [normalizeOrderToken('Head Circumference')]: 'Fetal Head',
-  [normalizeOrderToken('Significance')]: 'Fetal Head',
-  [normalizeOrderToken('Anatomical Landmarks and Significance')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('Anatomical Landmarks of the Transthalamic Plane')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('Geometric Shapes, Key Landmarks & Significance')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('Geometric shapes of key landmarks and their significance')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('Mind Sparks - Anatomical Landmarks')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('MindSparks - Anatomical Landmarks')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('MindSparks - Quiz')]: 'Anatomical Landmarks',
-  [normalizeOrderToken('Imaging the plane')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('Imaging the Plane')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('Finding the Fetal Presentation')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('Finding the fetal presentation')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('How to acquire the transthalamic plane')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('How To Acquire The Transthalamic Plane')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('Interaction - Fetal Head Scanning Activity')]: 'Imaging the Transthalamic Plane',
-  [normalizeOrderToken('How to Measure BPD')]: 'Measurement',
-  [normalizeOrderToken('How To Measure BPD')]: 'Measurement',
-  [normalizeOrderToken('How to measure BPD')]: 'Measurement',
-  [normalizeOrderToken('How to Measure HC')]: 'Measurement',
-  [normalizeOrderToken('How To Measure HC')]: 'Measurement',
-  [normalizeOrderToken('How to measure HC')]: 'Measurement',
-  [normalizeOrderToken('Plane Acquisition Challenges & Common Errors')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('Plane Acquisition Challenges and Common Errors')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('Plane Acquisition Challenges and Common Measurement Errors')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('Plane Acquisition Challenges')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('Common Measurement Errors')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('MindSparks - Picture Pick')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('Mind Sparks - Picture Pick')]: 'Pitfalls in Plane Acquisition and Measurement',
-  [normalizeOrderToken('Image Diagnosis')]: 'Image Diagnosis',
-  [normalizeOrderToken('Percentile Charts & Significance')]: 'Image Diagnosis',
-  [normalizeOrderToken('Percentile Charts  & Significance')]: 'Image Diagnosis',
-  [normalizeOrderToken('Percentile Chart & Significance')]: 'Image Diagnosis',
-  [normalizeOrderToken('BPD Chart')]: 'Image Diagnosis',
-  [normalizeOrderToken('HC Chart')]: 'Image Diagnosis',
-  [normalizeOrderToken('Mind Sparks - Chart Interpretation')]: 'Image Diagnosis',
-  [normalizeOrderToken('MindSparks - Yes/No')]: 'Image Diagnosis',
-  [normalizeOrderToken('Image Selection')]: 'OB Boosters',
-  [normalizeOrderToken('Picture Pick')]: 'OB Boosters',
-  [normalizeOrderToken('Visual Recognition')]: 'OB Boosters',
-  [normalizeOrderToken('True / False')]: 'OB Boosters',
-  [normalizeOrderToken('True/False')]: 'OB Boosters',
-  [normalizeOrderToken('Wordsearch')]: 'OB Boosters',
-  [normalizeOrderToken('Word Search')]: 'OB Boosters',
-};
-
 const AC_TOPIC_BY_RESOURCE = {
   [normalizeOrderToken('AC Introduction')]: 'Fetal Abdomen',
   [normalizeOrderToken('Transabdominal plane')]: 'Fetal Abdomen',
@@ -2505,11 +2455,6 @@ const getResourceOrder = (unit_name, resource_topic, resource_name) =>
   RESOURCE_ORDER[`${unit_name}::${resource_name}`] ??
   99;
 
-const isBpdHcOrderScope = (unitName = '') => {
-  const token = normalizeOrderToken(unitName);
-  return token === normalizeOrderToken('BPD & HC') || (token.includes('bpd') && token.includes('hc'));
-};
-
 const isAcOrderScope = (unitName = '') => normalizeOrderToken(unitName).startsWith(normalizeOrderToken('AC'));
 const isPrinciplesOfUltrasoundOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Principles of ultrasound');
@@ -2521,7 +2466,8 @@ const isMorphologyOrderScope = (unitName = '') =>
   normalizeOrderToken(unitName) === normalizeOrderToken('Morphology');
 
 const isMappedOrderScope = (unitName = '') => {
-  return isBpdHcOrderScope(unitName) || isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName) || isKnobologyOrderScope(unitName) || isMorphologyOrderScope(unitName);
+  // BPD & HC is maintained by resource_data.resource_topic/display_order.
+  return isAcOrderScope(unitName) || isProbeMovementsOrderScope(unitName) || isKnobologyOrderScope(unitName) || isMorphologyOrderScope(unitName);
 };
 
 const KNOBLOGY_TOPIC_BY_RESOURCE = {
@@ -2712,11 +2658,8 @@ const getDisplayResourceTopic = (unitName, resourceTopic, resourceName) => {
     return PROBE_MOVEMENTS_TOPIC_BY_RESOURCE[resourceToken] || resourceTopic;
   }
 
-  if (!isBpdHcOrderScope(unitName)) {
-    return resourceTopic;
-  }
-
-  return BPD_HC_TOPIC_BY_RESOURCE[normalizeOrderToken(resourceName)] || resourceTopic;
+  // BPD & HC names and topics are canonicalized by the database migration.
+  return resourceTopic;
 };
 
 const COURSE_ORDER_BY_CERTIFICATE = {
@@ -3699,7 +3642,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         ),
       ])
         .then(([batchData, rawCertData, vrProgressData]) => {
-          const visibleCertData = rawCertData.filter(row => !isRemovedBtcBiometryProbeMindSpark(row));
+          const visibleCertData = rawCertData.filter(row => !isRemovedBtcAcFlProbeMindSpark(row));
           const visibleResourceIds = new Set(visibleCertData.map(row => row.resource_id).filter(Boolean));
           const visibleLatestProgress = vrProgressData.find(row => visibleResourceIds.has(row.resourse_id)) || null;
           const certificates = buildCertificateTree(visibleCertData);
@@ -3917,9 +3860,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       ),
     ])
       .then(([progressData, lmsProgressData, instructorData, testData, reAttemptsData, moduleCompletion]) => {
-        const removedProgressData = progressData.filter(isRemovedBtcBiometryProbeMindSpark);
-        const visibleProgressData = progressData.filter(row => !isRemovedBtcBiometryProbeMindSpark(row));
-        const visibleLatestProgress = lmsProgressData.find(row => !isRemovedBtcBiometryProbeMindSpark(row)) || null;
+        const removedProgressData = progressData.filter(isRemovedBtcAcFlProbeMindSpark);
+        const visibleProgressData = progressData.filter(row => !isRemovedBtcAcFlProbeMindSpark(row));
+        const visibleLatestProgress = lmsProgressData.find(row => !isRemovedBtcAcFlProbeMindSpark(row)) || null;
         const visibleModuleCompletion = moduleCompletion.map(moduleRow => {
           const removedModuleResources = removedProgressData.filter(row =>
             row.learning_module_id === moduleRow.learning_module_id

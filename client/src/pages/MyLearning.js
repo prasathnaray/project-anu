@@ -4247,7 +4247,7 @@ const normalizeSortKey = (value = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES = new Set([
+const REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES = new Set([
   'mind sparks - probe movement',
   'mind sparks - probe movements',
   'mindsparks - probe movement',
@@ -4258,14 +4258,14 @@ const REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES = new Set([
   'minsparks - probe movements',
 ].map(normalizeSortKey));
 
-const isRemovedBtcBiometryProbeMindSpark = (item = {}) => {
+const isRemovedBtcAcFlProbeMindSpark = (item = {}) => {
   const moduleLabels = [item.course_name, item.module_name, item.unit_name].map(normalizeModuleSortLabel);
   const topic = normalizeSortKey(item.resource_topic);
 
   return (
-    moduleLabels.some(label => ['BPD & HC', 'AC', 'FL'].includes(label)) &&
+    moduleLabels.some(label => ['AC', 'FL'].includes(label)) &&
     [normalizeSortKey('Imaging the Transthalamic Plane'), normalizeSortKey('Imaging the Plane')].includes(topic) &&
-    REMOVED_BTC_BIOMETRY_PROBE_MINDSPARK_NAMES.has(normalizeSortKey(item.resource_name))
+    REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES.has(normalizeSortKey(item.resource_name))
   );
 };
 
@@ -5374,7 +5374,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     ? rawData.filter(item =>
         allowedCertificateIds.has(item.certificate_id) &&
         item.is_hidden !== true &&
-        !isRemovedBtcBiometryProbeMindSpark(item)
+        !isRemovedBtcAcFlProbeMindSpark(item)
       )
     : [];
 
