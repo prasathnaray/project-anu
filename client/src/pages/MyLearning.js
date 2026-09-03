@@ -4247,28 +4247,6 @@ const normalizeSortKey = (value = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES = new Set([
-  'mind sparks - probe movement',
-  'mind sparks - probe movements',
-  'mindsparks - probe movement',
-  'mindsparks - probe movements',
-  'min sparks - probe movement',
-  'min sparks - probe movements',
-  'minsparks - probe movement',
-  'minsparks - probe movements',
-].map(normalizeSortKey));
-
-const isRemovedBtcAcFlProbeMindSpark = (item = {}) => {
-  const moduleLabels = [item.course_name, item.module_name, item.unit_name].map(normalizeModuleSortLabel);
-  const topic = normalizeSortKey(item.resource_topic);
-
-  return (
-    moduleLabels.some(label => ['AC', 'FL'].includes(label)) &&
-    [normalizeSortKey('Imaging the Transthalamic Plane'), normalizeSortKey('Imaging the Plane')].includes(topic) &&
-    REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES.has(normalizeSortKey(item.resource_name))
-  );
-};
-
 const normalizeModuleSortLabel = (value = '') => {
   const normalized = normalizeSortKey(value);
   if (!normalized) return '';
@@ -4366,11 +4344,14 @@ const RESOURCE_ORDER = Object.fromEntries(
     'AC::Geometric shapes of key landmarks and their significance': 1,
     'AC::Mind Sparks - Anatomical Landmarks': 2,
     'AC::MindSparks - Quiz': 2,
+    'AC::Mind Sparks - Quiz': 2,
 
     'AC::Imaging the plane': 1,
     'AC::Imaging the Plane': 1,
     'AC::Cephalic Presentation': 1,
     'AC::Breech Presentation': 2,
+    'AC::Mind Sparks - Probe movements': 2,
+    'AC::Mind Sparks - Probe Movements': 2,
 
     'AC::Measurement': 1,
     'AC::Measurements': 1,
@@ -4394,6 +4375,7 @@ const RESOURCE_ORDER = Object.fromEntries(
     'AC::AC Chart': 1,
     'AC::Mind Sparks - Chart Interpretation': 2,
     'AC::MindSparks - True/False': 2,
+    'AC::Mind Sparks - True/False': 2,
 
     'AC::ALM - Crossword': 1,
     'AC::Crossword puzzle': 1,
@@ -4421,6 +4403,8 @@ const RESOURCE_ORDER = Object.fromEntries(
     'FL::How to acquire the femur diaphysis plane': 1,
     'FL::Breech Presentation': 1,
     'FL::Cephalic Presentation': 2,
+    'FL::MindSparks - Probe movements': 2,
+    'FL::Mind Sparks - Probe Movements': 2,
 
     'FL::Measurements': 1,
     'FL::Measurement': 1,
@@ -4538,6 +4522,7 @@ const getAcResourceSortIndex = (topic, resourceName) => {
     ) return 1;
     if (
       normalizedName === normalizeSortKey('MindSparks - Quiz') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Quiz') ||
       normalizedName === normalizeSortKey('Mind Sparks - Anatomical Landmarks')
     ) return 2;
   }
@@ -4548,6 +4533,11 @@ const getAcResourceSortIndex = (topic, resourceName) => {
       normalizedName === normalizeSortKey('Imaging the Plane') ||
       normalizedName === normalizeSortKey('How to acquire the transabdominal plane')
     ) return 1;
+    if (
+      normalizedName === normalizeSortKey('Mind Sparks - Probe movements') ||
+      normalizedName === normalizeSortKey('Mind Sparks - Probe Movements') ||
+      normalizedName === normalizeSortKey('MindSparks - Probe movements')
+    ) return 2;
   }
 
   if (normalizedTopic === normalizeSortKey('Measurement') || normalizedTopic === normalizeSortKey('Measurements')) {
@@ -4595,6 +4585,7 @@ const getAcResourceSortIndex = (topic, resourceName) => {
     ) return 1;
     if (
       normalizedName === normalizeSortKey('MindSparks - True/False') ||
+      normalizedName === normalizeSortKey('Mind Sparks - True/False') ||
       normalizedName === normalizeSortKey('Mind Sparks - Chart Interpretation')
     ) return 2;
   }
@@ -4864,12 +4855,16 @@ const AC_TOPIC_BY_RESOURCE = Object.fromEntries(
     'Geometric shapes of key landmarks and their significance': 'Anatomical Landmarks',
     'Mind Sparks - Anatomical Landmarks': 'Anatomical Landmarks',
     'MindSparks - Quiz': 'Anatomical Landmarks',
+    'Mind Sparks - Quiz': 'Anatomical Landmarks',
 
     'Imaging the plane': 'Imaging the Plane',
     'Imaging the Plane': 'Imaging the Plane',
     'How to acquire the transabdominal plane': 'Imaging the Plane',
     'Cephalic Presentation': 'Imaging the Plane',
     'Breech Presentation': 'Imaging the Plane',
+    'Mind Sparks - Probe movements': 'Imaging the Plane',
+    'Mind Sparks - Probe Movements': 'Imaging the Plane',
+    'MindSparks - Probe movements': 'Imaging the Plane',
     'Measurement': 'Measurement',
     'Measurements': 'Measurement',
     'How to measure AC': 'Measurement',
@@ -4888,6 +4883,7 @@ const AC_TOPIC_BY_RESOURCE = Object.fromEntries(
     'AC Chart': 'Image Diagnosis',
     'Mind Sparks - Chart Interpretation': 'Image Diagnosis',
     'MindSparks - True/False': 'Image Diagnosis',
+    'Mind Sparks - True/False': 'Image Diagnosis',
 
     'ALM - Crossword': 'OB Boosters',
     'Crossword puzzle': 'OB Boosters',
@@ -5000,6 +4996,19 @@ const KNOBLOGY_TOPIC_BY_RESOURCE = Object.fromEntries(
   }).map(([resourceName, topic]) => [normalizeSortKey(resourceName), topic])
 );
 
+const BIOMETRY_RESOURCE_BY_ALIAS = Object.fromEntries(
+  [
+    'MindSparks - Probe movements',
+    'MindSparks - Probe movement',
+    'MindSparks - Probe Movements',
+    'Mind Sparks - Probe movements',
+    'Mind Sparks - Probe movement',
+    'Mind Sparks - Probe Movements',
+    'Min Sparks - Probe movement',
+    'Min Sparks - Probe movements',
+  ].map(resourceName => [normalizeSortKey(resourceName), 'Mind Sparks - Probe Movements'])
+);
+
 const KNOBLOGY_RESOURCE_BY_ALIAS = Object.fromEntries(
   Object.entries({
     'Mindsparks - Quiz': 'Mind Sparks - US Machine - Quiz',
@@ -5039,6 +5048,10 @@ const isProbeMovementsResourceAlias = (resourceName = '') => {
 };
 
 const getDisplayResourceName = (moduleLabel, resourceName, topic = '') => {
+  if (['AC', 'FL'].includes(normalizeModuleSortLabel(moduleLabel))) {
+    return BIOMETRY_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
+  }
+
   if (isPrinciplesOfUltrasoundScope(moduleLabel)) {
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeSortKey(resourceName)] || resourceName;
   }
@@ -5373,8 +5386,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
   const data = allowedCertificateIds.size > 0
     ? rawData.filter(item =>
         allowedCertificateIds.has(item.certificate_id) &&
-        item.is_hidden !== true &&
-        !isRemovedBtcAcFlProbeMindSpark(item)
+        item.is_hidden !== true
       )
     : [];
 
@@ -5726,6 +5738,8 @@ function buildTopicGroups(items, orderScope = '') {
     });
   return { accordions, directRows };
 }
+
+export { transformApiData, buildTopicGroups };
 
 // ─── IMAGE INTERPRETATION MODAL ───────────────────────────────────────────────
 

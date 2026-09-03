@@ -2021,11 +2021,14 @@ const RESOURCE_ORDER = {
   'AC::Geometric shapes of key landmarks and their significance': 1,
   'AC::Mind Sparks - Anatomical Landmarks': 2,
   'AC::MindSparks - Quiz': 2,
+  'AC::Mind Sparks - Quiz': 2,
 
   'AC::Imaging the plane': 1,
   'AC::Imaging the Plane': 1,
   'AC::How to acquire the transabdominal plane': 1,
   'AC::Mind Sparks - Picture pick': 3,
+  'AC::Mind Sparks - Probe movements': 2,
+  'AC::Mind Sparks - Probe Movements': 2,
 
   'AC::Measurement': 1,
   'AC::Measurements': 1,
@@ -2040,6 +2043,7 @@ const RESOURCE_ORDER = {
   'AC::AC Chart': 1,
   'AC::Mind Sparks - Chart Interpretation': 2,
   'AC::MindSparks - True/False': 2,
+  'AC::Mind Sparks - True/False': 2,
 
   'AC::Crossword puzzle': 1,
   'AC::True/False': 2,
@@ -2064,6 +2068,8 @@ const RESOURCE_ORDER = {
   'FL::Imaging the plane': 1,
   'FL::How to acquire the femur diaphysis plane': 1,
   'FL::Mind Sparks - Picture pick': 3,
+  'FL::MindSparks - Probe movements': 2,
+  'FL::Mind Sparks - Probe Movements': 2,
 
   'FL::How to measure FL': 1,
   'FL::Measurement of  FL': 1,
@@ -2109,31 +2115,36 @@ const normalizeOrderToken = (value = '') =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '');
 
-const REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES = new Set([
-  'mindsparksprobemovement',
-  'mindsparksprobemovements',
-  'minsparksprobemovement',
-  'minsparksprobemovements',
-]);
-
-const isRemovedBtcAcFlProbeMindSpark = (row = {}) => {
-  const certificate = normalizeOrderToken(row.certificate_name);
-  const moduleLabels = [row.course_name, row.module_name, row.unit_name].map(normalizeOrderToken);
-  const topic = normalizeOrderToken(row.resource_topic);
-  const resourceName = normalizeOrderToken(row.resource_name);
-
-  const isBtc = !certificate || certificate === normalizeOrderToken('BTC');
-  const isTargetUnit = moduleLabels.some(label => [
-    normalizeOrderToken('AC'),
-    normalizeOrderToken('FL'),
-  ].includes(label));
-  const isImagingTopic = [
-    normalizeOrderToken('Imaging the Transthalamic Plane'),
-    normalizeOrderToken('Imaging the Plane'),
-  ].includes(topic);
-
-  return isBtc && isTargetUnit && isImagingTopic && REMOVED_BTC_AC_FL_PROBE_MINDSPARK_NAMES.has(resourceName);
-};
+// The AC and FL probe-movement Mind Sparks were hidden by an older data
+// cleanup. Keep them visible even when a deployed database has not yet been
+// repaired by the restoration migrations.
+const RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL = `
+  lower(trim(coalesce(rd.resource_type, ''))) = lower('Learning Resource')
+  AND regexp_replace(lower(coalesce(rd.resource_topic, '')), '[^a-z0-9]+', '', 'g') IN (
+    'imagingtheplane',
+    'imagingthetransabdominalplane',
+    'imagingthetransfemoralplane'
+  )
+  AND regexp_replace(lower(coalesce(rd.resource_name, '')), '[^a-z0-9]+', '', 'g') IN (
+    'mindsparksprobemovement',
+    'mindsparksprobemovements',
+    'minsparksprobemovement',
+    'minsparksprobemovements'
+  )
+  AND EXISTS (
+    SELECT 1
+    FROM learning_module restored_lm
+    JOIN certification_data restored_cd
+      ON restored_cd.certificate_id = restored_lm.certificate_id
+    WHERE restored_lm.learning_module_id = rd.learning_module_id
+      AND lower(trim(coalesce(restored_cd.certificate_name, ''))) = lower('BTC')
+      AND (
+        regexp_replace(lower(coalesce(restored_lm.course_name, '')), '[^a-z0-9]+', '', 'g') IN ('ac', 'aclearningresource', 'fl', 'fllearningresource')
+        OR regexp_replace(lower(coalesce(restored_lm.module_name, '')), '[^a-z0-9]+', '', 'g') IN ('ac', 'aclearningresource', 'fl', 'fllearningresource')
+        OR regexp_replace(lower(coalesce(restored_lm.unit_name, '')), '[^a-z0-9]+', '', 'g') IN ('ac', 'aclearningresource', 'fl', 'fllearningresource')
+      )
+  )
+`;
 
 const TOPIC_ORDER = TOPIC_ORDER_ALIASES.reduce((orderMap, entry) => {
   for (const alias of entry.aliases) {
@@ -2303,9 +2314,10 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['AC'], topics: ['AC - Fetal Abdomen', 'Fetal abdomen', 'Fetal Abdomen'], resources: ['Significance'], order: 3 },
   { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks', 'Anatomical landmarks of the transabdominal plane', 'Anatomical Landmarks of the Transabdominal Plane'], order: 1 },
   { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Mind Sparks - Geometric landmarks', 'Geometric shapes of key landmarks and their significance'], order: 2 },
-  { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['MindSparks - Quiz', 'Mind Sparks - Anatomical Landmarks'], order: 3 },
+  { units: ['AC'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['MindSparks - Quiz', 'Mind Sparks - Quiz', 'Mind Sparks - Anatomical Landmarks'], order: 2 },
   { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['Cephalic Presentation'], order: 1 },
   { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['Breech Presentation'], order: 2 },
+  { units: ['AC'], topics: ['Imaging the Plane', 'Imaging the transabdominal plane'], resources: ['MindSparks - Probe movements', 'Mind Sparks - Probe movements', 'Mind Sparks - Probe Movements'], order: 2 },
   { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Ellipse method'], order: 1 },
   { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Two-diameter method'], order: 2 },
   { units: ['AC'], topics: ['Measurement', 'Measurements'], resources: ['Interaction - Landmark placement and measurement'], order: 3 },
@@ -2316,7 +2328,7 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['AC'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Pitfalls', 'Pit Falls'], resources: ['MindSparks - Picture Pick', 'Mind Sparks - Picture Pick'], order: 4 },
   { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['Image Diagnosis'], order: 1 },
   { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['AC chart'], order: 2 },
-  { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['MindSparks - True/False', 'Mind Sparks - Chart Interpretation'], order: 3 },
+  { units: ['AC'], topics: ['Image Diagnosis', 'Image diagnosis'], resources: ['MindSparks - True/False', 'Mind Sparks - True/False', 'Mind Sparks - Chart Interpretation'], order: 2 },
   { units: ['AC'], topics: ['OB Boosters'], resources: ['ALM - Crossword', 'Crossword puzzle'], order: 1 },
   { units: ['AC'], topics: ['OB Boosters'], resources: ['True/False'], order: 2 },
   { units: ['AC'], topics: ['OB Boosters'], resources: ['Picture Pick'], order: 3 },
@@ -2329,6 +2341,7 @@ const RESOURCE_ORDER_BY_TOPIC_ALIASES = [
   { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['Anatomical landmarks End card', 'Anatomical landmarks End Card', 'Interaction - Femur Bone'], order: 2 },
   { units: ['FL'], topics: ['Anatomical Landmarks', 'Anatomical landmarks'], resources: ['MindSparks - Quiz', 'Mind Sparks - Anatomical Landmarks'], order: 3 },
   { units: ['FL'], topics: ['Imaging the Plane', 'Imaging the transfemoral plane'], resources: ['Breech Presentation', 'Imaging the plane', 'How to acquire the femur diaphysis plane'], order: 1 },
+  { units: ['FL'], topics: ['Imaging the Plane', 'Imaging the transfemoral plane'], resources: ['MindSparks - Probe movements', 'Mind Sparks - Probe movements', 'Mind Sparks - Probe Movements'], order: 2 },
   { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Measurement of  FL', 'Measurements', 'Measurement', 'How to measure FL'], order: 1 },
   { units: ['FL'], topics: ['Measurement', 'Measurements'], resources: ['Mind Sparks - Measurements', 'MindSparks - Picture Pick'], order: 2 },
   { units: ['FL'], topics: ['Pitfalls in Plane Acquisition and Measurement', 'Pitfalls', 'Pit Falls'], resources: ['Plane acquisition errors', 'Pit Falls', 'Plane Acquisition Challenges', 'Plane Acquisition Challenges and Common Errors', 'Common measurement errors', 'Common Measurement Errors', 'Artifacts'], order: 1 },
@@ -2363,11 +2376,15 @@ const AC_TOPIC_BY_RESOURCE = {
   [normalizeOrderToken('Geometric shapes of key landmarks and their significance')]: 'Anatomical Landmarks',
   [normalizeOrderToken('Mind Sparks - Anatomical Landmarks')]: 'Anatomical Landmarks',
   [normalizeOrderToken('MindSparks - Quiz')]: 'Anatomical Landmarks',
+  [normalizeOrderToken('Mind Sparks - Quiz')]: 'Anatomical Landmarks',
   [normalizeOrderToken('Imaging the plane')]: 'Imaging the Plane',
   [normalizeOrderToken('Imaging the Plane')]: 'Imaging the Plane',
   [normalizeOrderToken('How to acquire the transabdominal plane')]: 'Imaging the Plane',
   [normalizeOrderToken('Cephalic Presentation')]: 'Imaging the Plane',
   [normalizeOrderToken('Breech Presentation')]: 'Imaging the Plane',
+  [normalizeOrderToken('Mind Sparks - Probe movements')]: 'Imaging the Plane',
+  [normalizeOrderToken('Mind Sparks - Probe Movements')]: 'Imaging the Plane',
+  [normalizeOrderToken('MindSparks - Probe movements')]: 'Imaging the Plane',
   [normalizeOrderToken('Measurement')]: 'Measurement',
   [normalizeOrderToken('Measurements')]: 'Measurement',
   [normalizeOrderToken('How to measure AC')]: 'Measurement',
@@ -2384,11 +2401,26 @@ const AC_TOPIC_BY_RESOURCE = {
   [normalizeOrderToken('AC Chart')]: 'Image Diagnosis',
   [normalizeOrderToken('Mind Sparks - Chart Interpretation')]: 'Image Diagnosis',
   [normalizeOrderToken('MindSparks - True/False')]: 'Image Diagnosis',
+  [normalizeOrderToken('Mind Sparks - True/False')]: 'Image Diagnosis',
   [normalizeOrderToken('ALM - Crossword')]: 'OB Boosters',
   [normalizeOrderToken('Crossword puzzle')]: 'OB Boosters',
   [normalizeOrderToken('True/False')]: 'OB Boosters',
   [normalizeOrderToken('Picture Pick')]: 'OB Boosters',
 };
+
+const BIOMETRY_RESOURCE_BY_ALIAS = [
+  'MindSparks - Probe movements',
+  'MindSparks - Probe movement',
+  'MindSparks - Probe Movements',
+  'Mind Sparks - Probe movements',
+  'Mind Sparks - Probe movement',
+  'Mind Sparks - Probe Movements',
+  'Min Sparks - Probe movement',
+  'Min Sparks - Probe movements',
+].reduce((aliases, resourceName) => {
+  aliases[normalizeOrderToken(resourceName)] = 'Mind Sparks - Probe Movements';
+  return aliases;
+}, {});
 
 const getTopicOrder = (unitName, topic) => {
   const normalizedUnitName = normalizeOrderToken(unitName);
@@ -2417,11 +2449,12 @@ const getAcResourceOrder = (resourceTopic, resourceName) => {
 
   if (isTopic('Anatomical Landmarks', 'Anatomical landmarks')) {
     if (isAny('Anatomical landmarks', 'Anatomical landmarks of the transabdominal plane', 'Anatomical Landmarks of the Transabdominal Plane', 'Mind Sparks - Geometric landmarks', 'Geometric shapes of key landmarks and their significance')) return 1;
-    if (isAny('MindSparks - Quiz', 'Mind Sparks - Anatomical Landmarks')) return 2;
+    if (isAny('MindSparks - Quiz', 'Mind Sparks - Quiz', 'Mind Sparks - Anatomical Landmarks')) return 2;
   }
 
   if (isTopic('Imaging the Plane', 'Imaging the plane', 'Imaging the transabdominal plane')) {
     if (isAny('Imaging the plane', 'Imaging the Plane', 'How to acquire the transabdominal plane')) return 1;
+    if (isAny('MindSparks - Probe movements', 'Mind Sparks - Probe movements', 'Mind Sparks - Probe Movements')) return 2;
   }
 
   if (isTopic('Measurement', 'Measurements')) {
@@ -2437,7 +2470,7 @@ const getAcResourceOrder = (resourceTopic, resourceName) => {
 
   if (isTopic('Image Diagnosis', 'Image diagnosis')) {
     if (isAny('AC chart', 'AC Chart', 'Image Diagnosis')) return 1;
-    if (isAny('MindSparks - True/False', 'Mind Sparks - Chart Interpretation')) return 2;
+    if (isAny('MindSparks - True/False', 'Mind Sparks - True/False', 'Mind Sparks - Chart Interpretation')) return 2;
   }
 
   if (isTopic('OB Boosters')) {
@@ -2587,6 +2620,10 @@ const PROBE_MOVEMENTS_RESOURCE_BY_ALIAS = {
 };
 
 const getDisplayResourceName = (unitName, resourceName, resourceTopic = '') => {
+  if (isAcOrderScope(unitName) || normalizeOrderToken(unitName) === normalizeOrderToken('FL')) {
+    return BIOMETRY_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
+  }
+
   if (isPrinciplesOfUltrasoundOrderScope(unitName)) {
     return PRINCIPLES_OF_ULTRASOUND_RESOURCE_BY_ALIAS[normalizeOrderToken(resourceName)] || resourceName;
   }
@@ -3569,7 +3606,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
           rd.resource_type,
           rd.resource_topic,
           rd.display_order,
-          COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) AS is_hidden,
+          CASE
+            WHEN ${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL} THEN false
+            ELSE COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false)
+          END AS is_hidden,
           up.user_id AS progress_user_id,
           up.is_completed,
           up.updated_at,
@@ -3579,7 +3619,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         JOIN learning_module lm ON lm.certificate_id = ac.certificate_id
         JOIN resource_data rd
           ON rd.learning_module_id = lm.learning_module_id
-         AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+         AND (
+           COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+           OR (${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL})
+         )
         LEFT JOIN user_progress up ON up.resourse_id = rd.resource_id
         LEFT JOIN test_reattempts tr ON tr.resource_id = rd.resource_id
         LEFT JOIN reatt_config rc
@@ -3614,7 +3657,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         FROM progress_data pd
         LEFT JOIN resource_data rd
           ON pd.resourse_id = rd.resource_id
-         AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+         AND (
+           COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+           OR (${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL})
+         )
         WHERE pd.user_id = (
           SELECT user_email 
           FROM user_data 
@@ -3642,10 +3688,9 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         ),
       ])
         .then(([batchData, rawCertData, vrProgressData]) => {
-          const visibleCertData = rawCertData.filter(row => !isRemovedBtcAcFlProbeMindSpark(row));
-          const visibleResourceIds = new Set(visibleCertData.map(row => row.resource_id).filter(Boolean));
+          const visibleResourceIds = new Set(rawCertData.map(row => row.resource_id).filter(Boolean));
           const visibleLatestProgress = vrProgressData.find(row => visibleResourceIds.has(row.resourse_id)) || null;
-          const certificates = buildCertificateTree(visibleCertData);
+          const certificates = buildCertificateTree(rawCertData);
           resolve({
             status: 'Success',
             code: 200,
@@ -3682,7 +3727,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         ui.user_name, ui.user_profile_photo, ui.user_role,
         lm.certificate_id, lm.course_name, lm.module_name, lm.unit_name, lm.learning_module_id,
         rd.resource_id, rd.resource_name, rd.resource_type, rd.resource_topic, rd.display_order,
-        COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) AS is_hidden,
+        CASE
+          WHEN ${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL} THEN false
+          ELSE COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false)
+        END AS is_hidden,
         pdt.user_id AS progress_user_id,
         pdt.is_completed,
         pdt.updated_at
@@ -3690,7 +3738,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       CROSS JOIN learning_module lm
       LEFT JOIN resource_data rd
         ON lm.learning_module_id = rd.learning_module_id
-       AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+       AND (
+         COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+         OR (${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL})
+       )
       LEFT JOIN pdt ON pdt.rid = rd.resource_id
       ORDER BY
         lm.course_name,
@@ -3723,7 +3774,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       FROM progress_data pd
       LEFT JOIN resource_data rd
         ON pd.resourse_id = rd.resource_id
-       AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+       AND (
+         COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+         OR (${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL})
+       )
       LEFT JOIN learning_module lm ON rd.learning_module_id = lm.learning_module_id
       LEFT JOIN certification_data cd ON lm.certificate_id = cd.certificate_id
       WHERE pd.user_id = (
@@ -3732,7 +3786,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         WHERE people_id = $1
       )
       AND pd.is_completed = TRUE
-      AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+      AND (
+        COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+        OR (${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL})
+      )
       ORDER BY pd.updated_at DESC NULLS LAST, rd.created_at DESC NULLS LAST
       LIMIT 1;
     `;
@@ -3822,7 +3879,10 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       FROM learning_module lm
       LEFT JOIN resource_data rd
         ON lm.learning_module_id = rd.learning_module_id
-       AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+       AND (
+         COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
+         OR (${RESTORED_BTC_BIOMETRY_PROBE_MINDSPARK_SQL})
+       )
       LEFT JOIN pdt ON pdt.rid = rd.resource_id
       GROUP BY lm.learning_module_id, lm.course_name, lm.module_name, lm.unit_name;
     `;
@@ -3860,33 +3920,11 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       ),
     ])
       .then(([progressData, lmsProgressData, instructorData, testData, reAttemptsData, moduleCompletion]) => {
-        const removedProgressData = progressData.filter(isRemovedBtcAcFlProbeMindSpark);
-        const visibleProgressData = progressData.filter(row => !isRemovedBtcAcFlProbeMindSpark(row));
-        const visibleLatestProgress = lmsProgressData.find(row => !isRemovedBtcAcFlProbeMindSpark(row)) || null;
-        const visibleModuleCompletion = moduleCompletion.map(moduleRow => {
-          const removedModuleResources = removedProgressData.filter(row =>
-            row.learning_module_id === moduleRow.learning_module_id
-          );
-
-          if (removedModuleResources.length === 0) return moduleRow;
-
-          return {
-            ...moduleRow,
-            total_learning_resources: Math.max(
-              0,
-              Number(moduleRow.total_learning_resources) - removedModuleResources.length
-            ),
-            completed_learning_resources: Math.max(
-              0,
-              Number(moduleRow.completed_learning_resources) -
-                removedModuleResources.filter(row => row.is_completed === true).length
-            ),
-          };
-        });
+        const visibleLatestProgress = lmsProgressData[0] || null;
         const currentBatches = instructorData.filter(b => b.batch_status === 'current');
         const completedBatches = instructorData.filter(b => b.batch_status === 'completed');
 
-        const nextModule = [...visibleModuleCompletion]
+        const nextModule = [...moduleCompletion]
           .sort((a, b) => (UNIT_ORDER[a.unit_name] ?? 99) - (UNIT_ORDER[b.unit_name] ?? 99))
           .find(m =>
             Number(m.completed_learning_resources) < Number(m.total_learning_resources) ||
@@ -3896,13 +3934,13 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         resolve({
           status: 'Success',
           code: 200,
-          data: visibleProgressData,
+          data: progressData,
           latestProgress: visibleLatestProgress,
           currentBatches: currentBatches,
           completedBatches: completedBatches,
           testQuery: testData,
           reAttempts: reAttemptsData,
-          moduleCompletion: visibleModuleCompletion,
+          moduleCompletion: moduleCompletion,
           nextModule: nextModule,
           loginContext: 'lms',
         });
