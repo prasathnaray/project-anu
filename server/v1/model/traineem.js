@@ -105,7 +105,7 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
 const getTraineesm = (requester, page, limit) => {
     return new Promise((resolve, reject) => {
 
-        const isPrivileged = [101, 102].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
@@ -114,7 +114,7 @@ const getTraineesm = (requester, page, limit) => {
             });
         }
 
-        if (!hasCenterScope(requester)) {
+        if (Number(requester.role) !== 99 && !hasCenterScope(requester)) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -127,8 +127,37 @@ const getTraineesm = (requester, page, limit) => {
         let query = "";
         let params = [];
 
+        // SUPER ADMIN (role 99)
+        if (Number(requester.role) === 99) {
+            query = `
+                SELECT COUNT(*) OVER() AS total_count,
+                       ud.user_profile_photo,
+                       ud.people_id,
+                       ud.user_name,
+                       ud.user_email,
+                       ud.user_contact_num,
+                       ud.user_dob,
+                       ud.user_gender,
+                       ud.status,
+                       bpd.batch_id,
+                       bpd.user_id,
+                       bd.batch_name,
+                       bd.batch_start_date,
+                       bd.batch_end_date
+                FROM public.user_data ud
+                LEFT JOIN public.batch_people_data bpd 
+                    ON ud.user_email = bpd.user_id
+                LEFT JOIN public.batch_data bd 
+                    ON bd.batch_id = ANY(bpd.batch_id)
+                WHERE ud.user_role = '103'
+                ORDER BY ud.user_name
+                LIMIT $1 OFFSET $2
+            `;
+            params = [limit, offset];
+        }
+
         // ADMIN (role 101)
-        if ([101, 102].includes(Number(requester.role))) {
+        else if (Number(requester.role) === 101) {
             query = `
                 SELECT COUNT(*) OVER() AS total_count,
                        ud.user_profile_photo,
