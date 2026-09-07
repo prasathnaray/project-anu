@@ -1,4 +1,4 @@
-const model = require('../model/SuperAdminm');
+const model = require('../model/superAdminm');
 const { sendError } = require('./ContentAccessController');
 
 const list = async (req, res) => {
@@ -17,4 +17,12 @@ const create = async (req, res) => {
     }
 };
 
-module.exports = { list, create };
+const getStats = async (req, res) => {
+    try {
+        return res.status(200).json({ code: 200, status: 'Success', data: await model.getSuperAdminStats(req.user) });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
+module.exports = { list, create, getStats };

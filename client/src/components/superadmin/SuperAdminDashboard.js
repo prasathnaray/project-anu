@@ -18,6 +18,7 @@ import GetIntructorsAPI from '../../API/GetIntructorsAPI';
 import TraineeListAPI from '../../API/TraineeListAPI';
 import UserStatsAPI from '../../API/UserStatsAPI';
 import getDashboardAPI from '../../API/dashboardAPI';
+import SuperAdminStatsAPI from '../../API/SuperAdminStatsAPI';
 import { useNavigate } from 'react-router-dom';
 
 function SuperAdminDashboard() {
@@ -29,6 +30,7 @@ function SuperAdminDashboard() {
 
   const [dashboardState, setDashboardState] = useState('dashboard');
   const [dashboardData, setDashboardData] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [stats, setStats] = useState({
     institutions: null,
     students: null,
@@ -38,66 +40,71 @@ function SuperAdminDashboard() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     const fetchDashboardStats = async () => {
       try {
         const token = localStorage.getItem('user_token');
+        let data = null;
         try {
-          const dashRes = await getDashboardAPI();
-          if (dashRes?.data) setDashboardData(dashRes.data);
-        } catch (e) {
-          console.log('Dashboard API error:', e);
+          const response = await SuperAdminStatsAPI(token);
+          if (response?.data?.data) data = response.data.data;
+          else if (response?.data) data = response.data;
+        } catch (e1) {
+          const dashRes = await getDashboardAPI(token);
+          if (dashRes?.data) {
+            data = {
+              institutions: dashRes.data.superAdminMetrics?.institutions,
+              students: dashRes.data.superAdminMetrics?.students,
+              instructors: dashRes.data.superAdminMetrics?.instructors,
+              courses: dashRes.data.superAdminMetrics?.courses,
+              activeUsers: dashRes.data.superAdminMetrics?.active_users,
+              activeUsersList: dashRes.data.activeUsersList,
+              TopPerformingTraineesGlobal: dashRes.data.TopPerformingTraineesGlobal,
+              PlatformRecentActivity: dashRes.data.PlatformRecentActivity,
+            };
+          }
         }
 
-        const [instRes, coursesRes, instructorsRes, traineesRes, userStatsRes] = await Promise.allSettled([
-          GetScanCentersAPI(token, 1, 100),
-          GetCoursesAPI(token),
-          GetIntructorsAPI(token, 1, 100),
-          TraineeListAPI(1, 100),
-          UserStatsAPI(token)
-        ]);
-
-        let instCount = null;
-        if (instRes.status === 'fulfilled' && instRes.value?.data) {
-          instCount = Array.isArray(instRes.value.data) ? instRes.value.data.length : (instRes.value.data.total ?? null);
+        if (isMounted && data) {
+          setDashboardData(data);
+          setStats({
+            institutions: data.institutions != null ? Number(data.institutions).toLocaleString() : '0',
+            students: data.students != null ? Number(data.students).toLocaleString() : '0',
+            instructors: data.instructors != null ? Number(data.instructors).toLocaleString() : '0',
+            courses: data.courses != null ? Number(data.courses).toLocaleString() : '0',
+            activeUsers: (data.activeUsers ?? data.active_users) != null ? Number(data.activeUsers ?? data.active_users).toLocaleString() : '0',
+          });
         }
-
-        let coursesCount = null;
-        if (coursesRes.status === 'fulfilled' && coursesRes.value?.data) {
-          coursesCount = Array.isArray(coursesRes.value.data) ? coursesRes.value.data.length : (coursesRes.value.data.total ?? null);
-        }
-
-        let instructorsCount = null;
-        if (instructorsRes.status === 'fulfilled' && instructorsRes.value?.data) {
-          const rawCount = Array.isArray(instructorsRes.value.data) ? instructorsRes.value.data.length : instructorsRes.value.data.total;
-          instructorsCount = rawCount == null ? null : Number(rawCount).toLocaleString();
-        }
-
-        let traineesCount = null;
-        if (traineesRes.status === 'fulfilled' && traineesRes.value?.data) {
-          const rawCount = Array.isArray(traineesRes.value.data) ? traineesRes.value.data.length : traineesRes.value.data.total;
-          traineesCount = rawCount == null ? null : Number(rawCount).toLocaleString();
-        }
-
-        let activeCount = null;
-        if (userStatsRes.status === 'fulfilled' && userStatsRes.value?.data) {
-          const rawCount = userStatsRes.value.data.activeUsers ?? userStatsRes.value.data.totalActive;
-          activeCount = rawCount == null ? null : Number(rawCount).toLocaleString();
-        }
-
-        setStats({
-          institutions: instCount,
-          students: traineesCount,
-          instructors: instructorsCount,
-          courses: coursesCount,
-          activeUsers: activeCount,
-        });
       } catch (err) {
-        console.error('Error fetching dashboard stats:', err);
+        console.error('Error fetching superadmin stats:', err);
       }
     };
 
     fetchDashboardStats();
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  const getRoleLabel = (role) => {
+    const r = String(role);
+    if (r === '99') return { text: 'Super Admin', bg: 'bg-purple-100 text-purple-700' };
+    if (r === '101') return { text: 'Admin', bg: 'bg-blue-100 text-blue-700' };
+    if (r === '102') return { text: 'Instructor', bg: 'bg-amber-100 text-amber-700' };
+    if (r === '103') return { text: 'Student', bg: 'bg-emerald-100 text-emerald-700' };
+    return { text: 'User', bg: 'bg-gray-100 text-gray-700' };
+  };
+
+  const activeUsers = dashboardData?.activeUsersList || [];
+  const filteredActiveUsers = activeUsers.filter((user) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (user.user_name && user.user_name.toLowerCase().includes(term)) ||
+      (user.user_email && user.user_email.toLowerCase().includes(term)) ||
+      (user.centre_name && user.centre_name.toLowerCase().includes(term))
+    );
+  });
 
   const RenderGenderPie = () => (
     <div className="flex items-center justify-center gap-6 my-4">
@@ -183,7 +190,7 @@ function SuperAdminDashboard() {
                           <Landmark size={36} />
                         </div>
                         <div className="text-2xl font-bold text-gray-700">
-                          {stats.institutions}
+                          {stats.institutions ?? '...'}
                         </div>
                       </div>
                     </div>
@@ -199,7 +206,7 @@ function SuperAdminDashboard() {
                           <GraduationCap size={36} />
                         </div>
                         <div className="text-2xl font-bold text-gray-700">
-                          {stats.students}
+                          {stats.students ?? '...'}
                         </div>
                       </div>
                     </div>
@@ -215,7 +222,7 @@ function SuperAdminDashboard() {
                           <Presentation size={36} />
                         </div>
                         <div className="text-2xl font-bold text-gray-700">
-                          {stats.instructors}
+                          {stats.instructors ?? '...'}
                         </div>
                       </div>
                     </div>
@@ -231,7 +238,7 @@ function SuperAdminDashboard() {
                           <BookOpen size={36} />
                         </div>
                         <div className="text-2xl font-bold text-gray-700">
-                          {stats.courses}
+                          {stats.courses ?? '...'}
                         </div>
                       </div>
                     </div>
@@ -239,6 +246,7 @@ function SuperAdminDashboard() {
                     {/* Card 5: Active Users */}
                     <div
                       className="border p-2 rounded shadow-md cursor-pointer hover:shadow-lg transition-all"
+                      onClick={() => setDashboardState('users')}
                     >
                       <span className="font-semibold text-xs text-gray-600 block truncate">Active Users</span>
                       <div className="flex justify-between items-center px-1 pt-4">
@@ -246,7 +254,7 @@ function SuperAdminDashboard() {
                           <Activity size={36} />
                         </div>
                         <div className="text-2xl font-bold text-gray-700">
-                          {stats.activeUsers}
+                          {stats.activeUsers ?? '...'}
                         </div>
                       </div>
                     </div>

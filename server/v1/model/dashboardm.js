@@ -4,6 +4,25 @@ const getDashboardDatam = (requester) => {
     return new Promise((resolve, reject) => {
         const role = Number(requester.role);
 
+        if (role === 99) {
+            client.query(
+                `SELECT
+                    (SELECT COUNT(*) FROM scan_centers) AS institutions,
+                    (SELECT COUNT(*) FROM user_data WHERE user_role = '103') AS students,
+                    (SELECT COUNT(*) FROM user_data WHERE user_role = '102') AS instructors,
+                    (SELECT COUNT(*) FROM certification_data) AS courses,
+                    (SELECT COUNT(DISTINCT la.user_id)
+                     FROM login_activity la
+                     JOIN user_data ud ON ud.user_email = la.user_id
+                     WHERE la.logged_at >= NOW() - INTERVAL '24 hours') AS active_users`,
+                (err, result) => {
+                    if (err) return reject(err);
+                    resolve({ superAdminMetrics: result.rows[0] });
+                }
+            );
+            return;
+        }
+
         // ─── Role 101: Full Dashboard ───────────────────────────────────
         if (role === 101) {
             if (!requester.centre_id) {
@@ -150,10 +169,10 @@ const getDashboardDatam = (requester) => {
             });
 
             Promise.all([
-                getTraineesIns, 
-                getBatchDas, 
-                TLStats, 
-                CourseDataList, 
+                getTraineesIns,
+                getBatchDas,
+                TLStats,
+                CourseDataList,
                 BatchPerUserList,
                 TotalResources,
                 TopPerformingTraineesGlobal,
@@ -162,10 +181,10 @@ const getDashboardDatam = (requester) => {
                 InstructorVolumeActivity
             ])
                 .then(([
-                    getTraineesIns, 
-                    getBatchDas, 
-                    TLStats, 
-                    CourseDataList, 
+                    getTraineesIns,
+                    getBatchDas,
+                    TLStats,
+                    CourseDataList,
                     BatchPerUserList,
                     TotalResources,
                     TopPerformingTraineesGlobal,
