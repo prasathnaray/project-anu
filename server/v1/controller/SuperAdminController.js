@@ -19,7 +19,8 @@ const create = async (req, res) => {
 
 const getStats = async (req, res) => {
     try {
-        return res.status(200).json({ code: 200, status: 'Success', data: await model.getSuperAdminStats(req.user) });
+        const statsData = await model.getSuperAdminStats(req.user);
+        return res.status(200).json({ code: 200, status: 'Success', ...statsData, data: statsData });
     } catch (error) {
         return sendError(res, error);
     }

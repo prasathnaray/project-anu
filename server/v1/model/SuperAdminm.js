@@ -53,18 +53,17 @@ const getSuperAdminStats = async (requester) => {
 
     const activeUsersListQuery = client.query(
         `SELECT 
-            la.user_id,
-            ud.user_name,
             ud.user_email,
+            ud.user_name,
             ud.user_role,
             ud.user_profile_photo,
             COALESCE(sc.center_name, ud.center_name) AS centre_name,
             MAX(la.logged_at) AS last_login
          FROM login_activity la
          JOIN user_data ud ON ud.user_email = la.user_id
-         LEFT JOIN scan_centers sc ON sc.center_id = ud.centre_id
+         LEFT JOIN scan_centers sc ON sc.center_id::text = ud.centre_id::text
          WHERE la.logged_at >= NOW() - INTERVAL '24 hours'
-         GROUP BY la.user_id, ud.user_name, ud.user_email, ud.user_role, ud.user_profile_photo, sc.center_name, ud.center_name
+         GROUP BY ud.user_email, ud.user_name, ud.user_role, ud.user_profile_photo, sc.center_name, ud.center_name
          ORDER BY last_login DESC;`
     );
 
@@ -106,24 +105,121 @@ const getSuperAdminStats = async (requester) => {
         LIMIT 5;`
     );
 
-    const [metricsRes, activeUsersRes, topTraineesRes, recentActivityRes] = await Promise.all([
+    const institutionActivityQuery = client.query(
+        `SELECT 
+            sc.center_name AS institution,
+            COUNT(ud.user_email) AS students,
+            COALESCE(sc.status, 'Active') AS status
+         FROM scan_centers sc
+         LEFT JOIN user_data ud ON (ud.centre_id::text = sc.center_id::text AND ud.user_role = '103')
+         GROUP BY sc.center_name, sc.status
+         ORDER BY students DESC
+         LIMIT 5;`
+    );
+
+    const recentInstitutionsQuery = client.query(
+        `SELECT 
+            center_name AS name,
+            COALESCE(center_email, admin_user_email) AS email,
+            COALESCE(status, 'Active') AS status
+         FROM scan_centers
+         ORDER BY created_at DESC
+         LIMIT 5;`
+    );
+
+    const courseApprovalsQuery = client.query(
+        `SELECT 
+            cd.certificate_name AS course_name,
+            COALESCE(sc.center_name, 'Super Admin') AS institution,
+            CASE 
+                WHEN cd.publication_status = 'published' THEN 'Approved'
+                ELSE 'Pending'
+            END AS status
+         FROM certification_data cd
+         LEFT JOIN scan_centers sc ON sc.center_id::text = cd.owner_centre_id::text
+         ORDER BY cd.created_at DESC
+         LIMIT 10;`
+    );
+
+    const courseDistributionQuery = client.query(
+        `SELECT 
+            CASE 
+                WHEN course_kind = 'institution' OR owner_scope = 'institution' THEN 'Institution'
+                WHEN course_kind = 'core' THEN 'Core'
+                WHEN course_kind = 'specialized' THEN 'Specialized'
+                ELSE 'General'
+            END AS category,
+            COUNT(*)::int AS count
+         FROM certification_data
+         GROUP BY category
+         ORDER BY count DESC;`
+    );
+
+    const platformGrowthQuery = client.query(
+        `SELECT 
+            TO_CHAR(d.month, 'Mon') as month,
+            (SELECT COUNT(*)::int FROM user_data WHERE user_role = '103' AND created_at <= d.month + INTERVAL '1 month - 1 day') as students,
+            (SELECT COUNT(*)::int FROM certification_data WHERE created_at <= d.month + INTERVAL '1 month - 1 day') as courses
+         FROM generate_series(
+            DATE_TRUNC('month', NOW() - INTERVAL '5 months'),
+            DATE_TRUNC('month', NOW()),
+            INTERVAL '1 month'
+         ) d(month)
+         ORDER BY d.month;`
+    );
+
+    const [
+        metricsRes,
+        activeUsersRes,
+        topTraineesRes,
+        recentActivityRes,
+        instActivityRes,
+        recentInstRes,
+        courseApprovalsRes,
+        courseDistRes,
+        platformGrowthRes
+    ] = await Promise.all([
         metricsQuery,
         activeUsersListQuery,
         topTraineesQuery,
-        recentActivityQuery
+        recentActivityQuery,
+        institutionActivityQuery,
+        recentInstitutionsQuery,
+        courseApprovalsQuery,
+        courseDistributionQuery,
+        platformGrowthQuery
     ]);
 
     const m = metricsRes.rows[0] || {};
+    const inst = Number(m.institutions || 0);
+    const stud = Number(m.students || 0);
+    const instr = Number(m.instructors || 0);
+    const crs = Number(m.courses || 0);
+    const act = Number(m.active_users || 0);
 
     return {
-        institutions: Number(m.institutions || 0),
-        students: Number(m.students || 0),
-        instructors: Number(m.instructors || 0),
-        courses: Number(m.courses || 0),
-        activeUsers: Number(m.active_users || 0),
+        superAdminMetrics: {
+            institutions: inst,
+            students: stud,
+            instructors: instr,
+            courses: crs,
+            active_users: act,
+            activeUsers: act
+        },
+        institutions: inst,
+        students: stud,
+        instructors: instr,
+        courses: crs,
+        activeUsers: act,
+        active_users: act,
         activeUsersList: activeUsersRes.rows || [],
         TopPerformingTraineesGlobal: topTraineesRes.rows || [],
-        PlatformRecentActivity: recentActivityRes.rows || []
+        PlatformRecentActivity: recentActivityRes.rows || [],
+        institutionActivity: instActivityRes.rows || [],
+        recentInstitutions: recentInstRes.rows || [],
+        courseApprovals: courseApprovalsRes.rows || [],
+        courseDistribution: courseDistRes.rows || [],
+        platformGrowth: platformGrowthRes.rows || []
     };
 };
 
