@@ -4496,7 +4496,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import NavBar from '../navBar';
 import SideBar from '../sideBar';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import OverallCompletion from '../../charts/OverallCompletion';
 import { GetQueriesAPI } from '../../API/GetQueriesAPI';
 import {
@@ -4526,8 +4526,8 @@ const RadialRing = ({ pct = 0, size = 56, stroke = 5, color = '#8DC63F', bg = '#
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={bg} strokeWidth={stroke} />
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={bg} strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
           strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
           style={{ transition: 'stroke-dasharray 0.7s ease' }} />
       </svg>
@@ -5182,6 +5182,7 @@ const getNextItemMeta = item => {
 
 function TraineeDashboard() {
   const { people_id } = useParams();
+  const navigate = useNavigate();
   const [buttonOpen, setButtonOpen] = useState(true);
 
   // ── Profile ───────────────────────────────────────────────
@@ -5648,10 +5649,10 @@ function TraineeDashboard() {
     ]
   );
 
-  const totalResources    = filteredResources.length;
-  const completed         = useMemo(() => filteredResources.filter(r => r.is_completed).length, [filteredResources]);
-  const attempted         = (individualTraineeProfile?.testQuery ?? []).length;
-  const totalAttempts     = interactionStats.data.reduce((s, r) => s + Number(r.attempt_count), 0);
+  const totalResources = filteredResources.length;
+  const completed = useMemo(() => filteredResources.filter(r => r.is_completed).length, [filteredResources]);
+  const attempted = (individualTraineeProfile?.testQuery ?? []).length;
+  const totalAttempts = interactionStats.data.reduce((s, r) => s + Number(r.attempt_count), 0);
 
   const activityScoreByResourceId = useMemo(
     () =>
@@ -5960,7 +5961,7 @@ function TraineeDashboard() {
 
   // ── Helpers ───────────────────────────────────────────────
   const fmtDT = ds => { if (!ds || ds === 'N/A') return 'N/A'; const d = new Date(ds); if (isNaN(d)) return 'N/A'; return d.toLocaleString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' }); };
-  const fmtD  = ds => { if (!ds || ds === 'N/A') return 'N/A'; const d = new Date(ds); if (isNaN(d)) return 'N/A'; return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }); };
+  const fmtD = ds => { if (!ds || ds === 'N/A') return 'N/A'; const d = new Date(ds); if (isNaN(d)) return 'N/A'; return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }); };
   const calcAvgScore = s => { if (!s) return null; const v = [s.plane_identification, s.image_optimization, s.measurement, s.diagnostic_interpretation].map(Number).filter(n => !isNaN(n)); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
 
   const Spinner = ({ color = '#8DC63F', size = 5 }) => (
@@ -6115,54 +6116,54 @@ function TraineeDashboard() {
       },
       ...(isBTCCertificate
         ? [
-            {
-              label: 'OB',
-              value: latestOBSummary ? `${latestOBSummary.correct}/${latestOBSummary.totalQ}` : '—',
-              sub: latestOBScore?.resource_name || 'OB Booster',
-              color: '#f97316',
-              ring: latestOBSummary
-                ? Math.round((latestOBSummary.correct / Math.max(latestOBSummary.totalQ, 1)) * 100)
-                : 0,
-            },
-            {
-              label: 'II',
-              value: latestImageInterpretation
-                ? `${latestImageInterpretation.is_completed ? 1 : 0}/1`
-                : '—',
-              sub: latestImageInterpretation?.resource_name || 'Image Interp.',
-              color: '#a78bfa',
-              ring: latestImageInterpretation
-                ? (latestImageInterpretation.is_completed ? 100 : 0)
-                : 0,
-            },
-            {
-              label: 'T',
-              value: activeTestScore ? `${calcAvgScore(activeTestScore) ?? '—'}%` : '—',
-              sub: activeTestScore ? (activeTestScore.resource_name || 'Last Test') : 'Last Test',
-              color: '#3b82f6',
-              ring: activeTestScore ? calcAvgScore(activeTestScore) ?? 0 : 0,
-            },
-          ]
+          {
+            label: 'OB',
+            value: latestOBSummary ? `${latestOBSummary.correct}/${latestOBSummary.totalQ}` : '—',
+            sub: latestOBScore?.resource_name || 'OB Booster',
+            color: '#f97316',
+            ring: latestOBSummary
+              ? Math.round((latestOBSummary.correct / Math.max(latestOBSummary.totalQ, 1)) * 100)
+              : 0,
+          },
+          {
+            label: 'II',
+            value: latestImageInterpretation
+              ? `${latestImageInterpretation.is_completed ? 1 : 0}/1`
+              : '—',
+            sub: latestImageInterpretation?.resource_name || 'Image Interp.',
+            color: '#a78bfa',
+            ring: latestImageInterpretation
+              ? (latestImageInterpretation.is_completed ? 100 : 0)
+              : 0,
+          },
+          {
+            label: 'T',
+            value: activeTestScore ? `${calcAvgScore(activeTestScore) ?? '—'}%` : '—',
+            sub: activeTestScore ? (activeTestScore.resource_name || 'Last Test') : 'Last Test',
+            color: '#3b82f6',
+            ring: activeTestScore ? calcAvgScore(activeTestScore) ?? 0 : 0,
+          },
+        ]
         : []),
       ...(isUFCCertificate
         ? [
-            {
-              label: 'ED',
-              value: latestEchoDoseSummary ? `${latestEchoDoseSummary.correct}/${latestEchoDoseSummary.totalQ}` : '—',
-              sub: latestEchoDoseScore?.resource_name || 'EchoDose',
-              color: '#ec4899',
-              ring: latestEchoDoseSummary
-                ? Math.round((latestEchoDoseSummary.correct / Math.max(latestEchoDoseSummary.totalQ, 1)) * 100)
-                : 0,
-            },
-          ]
+          {
+            label: 'ED',
+            value: latestEchoDoseSummary ? `${latestEchoDoseSummary.correct}/${latestEchoDoseSummary.totalQ}` : '—',
+            sub: latestEchoDoseScore?.resource_name || 'EchoDose',
+            color: '#ec4899',
+            ring: latestEchoDoseSummary
+              ? Math.round((latestEchoDoseSummary.correct / Math.max(latestEchoDoseSummary.totalQ, 1)) * 100)
+              : 0,
+          },
+        ]
         : []),
     ].filter(Boolean);
     const subScores = [
-      { key: 'plane_identification',      label: 'Plane ID',    color: '#3b82f6' },
-      { key: 'image_optimization',        label: 'Image Opt.',  color: '#8b5cf6' },
-      { key: 'measurement',               label: 'Measurement', color: '#10b981' },
-      { key: 'diagnostic_interpretation', label: 'Diagnostic',  color: '#f59e0b' },
+      { key: 'plane_identification', label: 'Plane ID', color: '#3b82f6' },
+      { key: 'image_optimization', label: 'Image Opt.', color: '#8b5cf6' },
+      { key: 'measurement', label: 'Measurement', color: '#10b981' },
+      { key: 'diagnostic_interpretation', label: 'Diagnostic', color: '#f59e0b' },
     ];
     return (
       <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 pt-5 pb-4">
@@ -6351,11 +6352,11 @@ function TraineeDashboard() {
   // ═══════════════════════════════════════════════════════════
   const SkillCompetencyCard = () => {
     const lvlCfg = {
-      Beginner:     { color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
-      Basic:        { color: '#f97316', bg: '#fff7ed', border: '#fdba74' },
+      Beginner: { color: '#ef4444', bg: '#fef2f2', border: '#fecaca' },
+      Basic: { color: '#f97316', bg: '#fff7ed', border: '#fdba74' },
       Intermediate: { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' },
-      Advanced:     { color: '#22c55e', bg: '#f0fdf4', border: '#bbf7d0' },
-      Expert:       { color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
+      Advanced: { color: '#22c55e', bg: '#f0fdf4', border: '#bbf7d0' },
+      Expert: { color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' },
     };
     const confidenceCfg = {
       Low: { color: '#ef4444', bg: '#fef2f2' },
@@ -6561,10 +6562,10 @@ function TraineeDashboard() {
   const ResourceSummaryCard = () => {
     const showOnlyAvailableTypes = selectedResourceCertificateLabel !== 'BTC';
     const items = [
-      { icon: BookOpen,      label: 'Learning Resources', done: resourceProgressCompletedLR,       total: resourceProgressTotalLR,       color: '#3b82f6', bg: '#eff6ff' },
-      { icon: Dumbbell,      label: 'Practices',          done: resourceProgressCompletedPractice, total: resourceProgressTotalPractice, color: '#8DC63F', bg: '#f0fde4' },
-      { icon: Eye,           label: 'Image Interp.',      done: resourceProgressCompletedIR,       total: resourceProgressTotalIR,       color: '#a78bfa', bg: '#f5f3ff' },
-      { icon: ClipboardCheck,label: 'Tests',              done: resourceProgressCompletedTests,    total: resourceProgressTotalTests,    color: '#f97316', bg: '#fff7ed' },
+      { icon: BookOpen, label: 'Learning Resources', done: resourceProgressCompletedLR, total: resourceProgressTotalLR, color: '#3b82f6', bg: '#eff6ff' },
+      { icon: Dumbbell, label: 'Practices', done: resourceProgressCompletedPractice, total: resourceProgressTotalPractice, color: '#8DC63F', bg: '#f0fde4' },
+      { icon: Eye, label: 'Image Interp.', done: resourceProgressCompletedIR, total: resourceProgressTotalIR, color: '#a78bfa', bg: '#f5f3ff' },
+      { icon: ClipboardCheck, label: 'Tests', done: resourceProgressCompletedTests, total: resourceProgressTotalTests, color: '#f97316', bg: '#fff7ed' },
     ].filter(item => !showOnlyAvailableTypes || item.total > 0);
 
     const visibleItems = items.length
@@ -6632,12 +6633,12 @@ function TraineeDashboard() {
   // 7. QUERIES
   // ═══════════════════════════════════════════════════════════
   const QueriesCard = () => (
-    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4">
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-5 py-4 cursor-pointer hover:border-indigo-200 transition-colors" onClick={() => navigate('/queries')}>
       <SectionLabel icon={MessageSquare} color="#6366f1" label="Queries Raised" />
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total',    value: queries.total,    color: '#8DC63F', bg: '#f0fde4', Icon: null },
-          { label: 'Pending',  value: queries.pending,  color: '#f97316', bg: '#fff7ed', Icon: AlertCircle },
+          { label: 'Total', value: queries.total, color: '#8DC63F', bg: '#f0fde4', Icon: null },
+          { label: 'Pending', value: queries.pending, color: '#f97316', bg: '#fff7ed', Icon: AlertCircle },
           { label: 'Resolved', value: queries.resolved, color: '#22c55e', bg: '#f0fdf4', Icon: CheckCircle },
         ].map(({ label, value, color, bg, Icon }) => (
           <div key={label} className="rounded-xl px-3 py-3 border border-gray-100 flex flex-col gap-1.5" style={{ background: bg }}>
@@ -6740,27 +6741,27 @@ function TraineeDashboard() {
                   <span className="text-xs font-black" style={{ color: meta.accentColor }}>{modulePct}%</span>
                 </div>
               </div>
-            {[
-              { label: 'Topic',  val: nextLearningItem.topic || nextLearningItem.resource_topic },
-              { label: 'Module', val: nextLearningItem.moduleLabel || nextLearningItem.module_name || nextLearningItem.unit_name },
-              { label: 'Course', val: nextLearningItem.course_name },
-            ].map(({ label, val }) => (
-              <div key={label} className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2">
-                <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">{label}</div>
-                <div className="text-xs font-semibold text-gray-700">{val || 'N/A'}</div>
-              </div>
-            ))}
-            <div className="flex flex-col gap-1.5 pt-1">
-              <div>
-                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Learning Resources</span><span>{nextLearningModuleData?.lrDone ?? 0}/{nextLearningModuleData?.lrTotal ?? 0}</span></div>
-                <MiniBar value={nextLearningModuleData?.lrDone ?? 0} max={Math.max(nextLearningModuleData?.lrTotal ?? 0, 1)} color="#8DC63F" />
-              </div>
-              <div>
-                <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Image Interpretations</span><span>{nextLearningModuleData?.irDone ?? 0}/{nextLearningModuleData?.irTotal ?? 0}</span></div>
-                <MiniBar value={nextLearningModuleData?.irDone ?? 0} max={Math.max(nextLearningModuleData?.irTotal ?? 0, 1)} color="#a78bfa" />
+              {[
+                { label: 'Topic', val: nextLearningItem.topic || nextLearningItem.resource_topic },
+                { label: 'Module', val: nextLearningItem.moduleLabel || nextLearningItem.module_name || nextLearningItem.unit_name },
+                { label: 'Course', val: nextLearningItem.course_name },
+              ].map(({ label, val }) => (
+                <div key={label} className="rounded-xl bg-gray-50 border border-gray-100 px-3 py-2">
+                  <div className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">{label}</div>
+                  <div className="text-xs font-semibold text-gray-700">{val || 'N/A'}</div>
+                </div>
+              ))}
+              <div className="flex flex-col gap-1.5 pt-1">
+                <div>
+                  <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Learning Resources</span><span>{nextLearningModuleData?.lrDone ?? 0}/{nextLearningModuleData?.lrTotal ?? 0}</span></div>
+                  <MiniBar value={nextLearningModuleData?.lrDone ?? 0} max={Math.max(nextLearningModuleData?.lrTotal ?? 0, 1)} color="#8DC63F" />
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] text-gray-400 mb-1"><span>Image Interpretations</span><span>{nextLearningModuleData?.irDone ?? 0}/{nextLearningModuleData?.irTotal ?? 0}</span></div>
+                  <MiniBar value={nextLearningModuleData?.irDone ?? 0} max={Math.max(nextLearningModuleData?.irTotal ?? 0, 1)} color="#a78bfa" />
+                </div>
               </div>
             </div>
-          </div>
           );
         })() : <div className="text-sm text-gray-400 text-center py-4">All learning items completed.</div>
       }
@@ -6837,17 +6838,17 @@ function TraineeDashboard() {
             <div className="rounded-2xl px-5 py-4 mb-4 bg-white border border-gray-200 shadow-sm flex items-center justify-between flex-wrap gap-2">
               <div>
                 <div className="text-xl font-bold text-gray-800">
-                  Welcome Back, <span style={{ color: '#8DC63F' }}>{individualTraineeProfile.data[0]?.user_name || '—'}</span>
+                  Welcome Back, <span style={{ color: '#8DC63F' }}>{individualTraineeProfile?.data?.[0]?.user_name || '—'}</span>
                 </div>
-                {individualTraineeProfile.currentBatches[0] && (
+                {individualTraineeProfile?.currentBatches?.[0] && (
                   <div className="flex items-center gap-4 mt-1 text-xs text-gray-500 flex-wrap">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                      <strong className="text-gray-700">{individualTraineeProfile.currentBatches[0].batch_name}</strong>
+                      <strong className="text-gray-700">{individualTraineeProfile?.currentBatches?.[0]?.batch_name}</strong>
                     </span>
-                    <span>Valid till: <strong className="text-gray-700">{fmtD(individualTraineeProfile.currentBatches[0].batch_end_date)}</strong></span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${individualTraineeProfile.currentBatches[0].batch_status === 'current' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                      {individualTraineeProfile.currentBatches[0].batch_status}
+                    <span>Valid till: <strong className="text-gray-700">{fmtD(individualTraineeProfile?.currentBatches?.[0]?.batch_end_date)}</strong></span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${individualTraineeProfile?.currentBatches?.[0]?.batch_status === 'current' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                      {individualTraineeProfile?.currentBatches?.[0]?.batch_status}
                     </span>
                   </div>
                 )}

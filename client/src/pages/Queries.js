@@ -173,13 +173,35 @@ function Queries() {
     }, [page, rowsPerPage]);
 
     const formatDateTime = (dateString) => {
-        const date = new Date(dateString);
+        if (!dateString) {
+            return new Date().toLocaleString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'Asia/Kolkata'
+            });
+        }
+        let str = String(dateString).trim();
+        if (str.includes(' ') && !str.includes('T')) {
+            str = str.replace(' ', 'T');
+        }
+        let date = new Date(str);
+        if (isNaN(date.getTime())) {
+            date = new Date(dateString);
+        }
+        if (isNaN(date.getTime())) {
+            date = new Date();
+        }
         return date.toLocaleString('en-IN', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
+            hour12: true,
             timeZone: 'Asia/Kolkata'
         });
     };
@@ -286,7 +308,7 @@ function Queries() {
                                                     {query.message}
                                                 </td>
                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                    {formatDateTime(query.created_at)}
+                                                    {formatDateTime(query.created_at || query.createdAt || query.timestamp || query.created_date || query.date)}
                                                 </td>
                                                 <td className="py-2 px-4">
                                                     <span className={`px-2 py-1 rounded text-xs font-semibold ${query.status === 'resolved'

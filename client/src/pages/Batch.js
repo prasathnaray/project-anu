@@ -199,9 +199,11 @@ function Batch() {
                                 batch_name: filterData.batch_name_filter,
                                 instructor_name: filterData.instructor_name_filter
                         });
-                        setListBatch(response.data.rows);
+                        const rows = Array.isArray(response?.data?.rows) ? response.data.rows : (Array.isArray(response?.data) ? response.data : []);
+                        const count = response?.data?.rowCount ?? (Array.isArray(response?.data?.rows) ? response.data.rows.length : (Array.isArray(response?.data) ? response.data.length : 0));
+                        setListBatch(rows);
                         setFilteredUsers(response?.data);
-                        setRowCount(response.data.rowCount);
+                        setRowCount(count);
                         handleCloseFilter();
                 }
                 catch (err) {
@@ -447,11 +449,11 @@ function Batch() {
                 try {
                         const token = localStorage.getItem("user_token");
                         const response = await GetLearningModuleByIdAPI(token, course_id);
-                        setChapterData(response.data);
+                        const modules = Array.isArray(response.data) ? response.data : (response.data?.data || response.data?.modules || []);
+                        setChapterData(modules);
                 }
                 catch (err) {
                         console.log(err)
-
                 }
         }
         const [moduleList, setModuleList] = React.useState('')
@@ -509,6 +511,14 @@ function Batch() {
                 end_date: ""
         })
         console.log(targetedLearning);
+
+        React.useEffect(() => {
+                if (openTargetedLearning) {
+                        const idToFetch = targetedLearning?.certificate_id || targetedLearning?.curiculum_id || "all";
+                        getLMByCerData(idToFetch);
+                }
+        }, [openTargetedLearning, targetedLearning?.certificate_id, targetedLearning?.curiculum_id]);
+
         const handleTChange = (e) => {
                 const { name, value } = e.target;
                 if (name === "course_data") {
@@ -524,6 +534,7 @@ function Batch() {
                         });
                         if (name === "curiculum_id" && value) {
                                 getCourseByCurData(value);
+                                getLMByCerData(value);
                         }
                         if (name === "certificate_id" && value) {
                                 getLMByCerData(value);
@@ -705,7 +716,7 @@ function Batch() {
                                                         <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
                                                                 <div className="mt-5 font-semibold text-xl text-gray-600">Batches</div>
                                                                 <div className="mt-5 bg-white rounded px-8 py-10 ">
-                                                                        <div className="font-semibold text-xl text-gray-500 flex justify-between items-center">
+                                                                        <div className="font-semibold text-xl text-gray-500 flex items-center gap-2">
                                                                                 <div>All Batches</div>
                                                                                 <div><button className="p-2 rounded-lg active:scale-95  transition-transform duration-100" onClick={() => setOpenFilter(true)}><ListFilter size={20} /></button></div>
                                                                         </div>
@@ -723,59 +734,15 @@ function Batch() {
                                                                         </div>
                                                                         <table className="w-full text-left border-collapse">
                                                                                 <thead>
-                                                                                        <tr className="border-b border-gray-300 shadow-sm text-sm">
-                                                                                                <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Batch Name </div><button className=""><ArrowUpWideNarrow size={20} /></button></th>
-                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Start date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Instructor associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>)}
-                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                                                {decoded.role == 99 || decoded.role == 101  && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>)}
+                                                                                        <tr className="border-b border-gray-300 shadow-sm text-sm whitespace-nowrap">
+                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="inline-flex items-center gap-1"><span>Batch Name</span><button className="flex-shrink-0"><ArrowUpWideNarrow size={16} /></button></div></th>
+                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="inline-flex items-center gap-1"><span>Start date</span><button className="flex-shrink-0"><ArrowUpWideNarrow size={16} /></button></div></th>
+                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="inline-flex items-center gap-1"><span>End date</span><button className="flex-shrink-0"><ArrowUpWideNarrow size={16} /></button></div></th>
+                                                                                                {(decoded.role == 99 || decoded.role == 101) && (<th className="py-2 px-4 text-[#8DC63F]"><div className="inline-flex items-center gap-1"><span>No.of Instructor associated</span><button className="flex-shrink-0"><ArrowUpWideNarrow size={16} /></button></div></th>)}
+                                                                                                <th className="py-2 px-4 text-[#8DC63F]"><div className="inline-flex items-center gap-1"><span>No.of Trainees associated</span><button className="flex-shrink-0"><ArrowUpWideNarrow size={16} /></button></div></th>
+                                                                                                {(decoded.role == 99 || decoded.role == 101) && (<th className="py-2 px-4 text-[#8DC63F]"><div className="inline-flex items-center gap-1"><span>Actions</span></div></th>)}
                                                                                         </tr>
                                                                                 </thead>
-                                                                                {/* <tbody>
-                                                                                {filteredUsers.length > 0 ? (
-                                                                                filteredUsers.map((listBatch, index) => (
-                                                                                <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
-                                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                        <a href={`/batch/${listBatch.batch_id}`}>{listBatch.batch_name}</a>
-                                                                                        </td>
-                                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                        {getMonthYear(listBatch.batch_start_date)}
-                                                                                        </td>
-                                                                                        <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                                        {getMonthYear(listBatch.batch_end_date)}
-                                                                                        </td>
-                                                                                        <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count}
-                                                                                        </th>
-                                                                                        <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count ?? 0}
-                                                                                        </th>
-                                                                                        <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                                        <button onClick={() => toggleDropdown(index)}><EllipsisVertical size={24} /></button>
-                                                                                                        {openDropdownIndex === index && (
-                                                                                                                <div
-                                                                                                                ref={(el) => (dropdownRefs.current[index] = el)}
-                                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
-                                                                                                                        transition-all ease-in-out duration-500 origin-top-right
-                                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
-                                                                                                                `} 
-                                                                                                                >
-                                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteSubmit(listBatch.batch_id)}>Delete</button>
-                                                                                                                </div>
-                                                                                                        )}
-                                                                                         </th>
-                                                                                </tr>
-                                                                                ))
-                                                                                ) : (
-                                                                                <tr>
-                                                                                        <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
-                                                                                                No data found
-                                                                                        </td>
-                                                                                </tr>
-                                                                                )}
-                                                                  </tbody> */}
-
                                                                                 <tbody>
                                                                                         {loading ? (
                                                                                                 // 🔄 LOADING STATE
@@ -803,7 +770,7 @@ function Batch() {
                                                                                                                 <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                                                                                                         {getMonthYear(listBatch.batch_end_date)}
                                                                                                                 </td>
-                                                                                                                {decoded.role == 99 || decoded.role == 101 && (
+                                                                                                                {(decoded.role == 99 || decoded.role == 101) && (
                                                                                                                         <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                                                                 {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count}
                                                                                                                         </th>
@@ -811,7 +778,7 @@ function Batch() {
                                                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
                                                                                                                         {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count ?? 0}
                                                                                                                 </th>
-                                                                                                                {decoded.role == 99 || decoded.role == 101 && (
+                                                                                                                {(decoded.role == 99 || decoded.role == 101) && (
                                                                                                                          <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
                                                                                                                         <button onClick={() => toggleDropdown(index)}>
                                                                                                                                 <EllipsisVertical size={24} />

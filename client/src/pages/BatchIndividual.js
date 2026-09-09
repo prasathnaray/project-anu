@@ -252,7 +252,7 @@ function BatchIndividual() {
                                     <div className="flex justify-between items-center gap-6 mx-10">
                                         <div className="mt-8">
                                             <div className="text-sm">Name</div>
-                                            <div className="font-semibold">{batchInfo?.batch_name}</div>
+                                            <div className="font-semibold">{batchInfo?.batch_name || '—'}</div>
                                         </div>
                                         <div className="mt-8">
                                             <div className="text-sm">Starting date</div>

@@ -354,13 +354,13 @@ const associateBatchm = (requester, batch_id, user_id) => {
              )`,
             [batchIds, user_id, requester.centre_id],
             (err, result) => {
-            if (err) {
-                return reject(err)
-            }
-            else {
-                return resolve(result);
-            }
-        })
+                if (err) {
+                    return reject(err)
+                }
+                else {
+                    return resolve(result);
+                }
+            })
     })
 }
 const deleteBatchm = (requester, batch_id) => {
@@ -663,7 +663,7 @@ const filterBatchm = (requester, batch_name, instructor_name) => {
 
 //update batch details like batch name, start date and end date
 const individualBatchStats = (requester, batch_id) => {
-    const isPrivileged = [101, 102, 103].includes(Number(requester.role));
+    const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
     if (!isPrivileged) {
         return Promise.resolve({
             status: 'Unauthorized',
@@ -673,143 +673,237 @@ const individualBatchStats = (requester, batch_id) => {
     }
 
     const role = Number(requester.role);
-    if (role === 101 && !hasCenterScope(requester)) {
-        return Promise.resolve({
-            status: 'Unauthorized',
-            code: 401,
-            message: 'Your account is not linked to a scan center.'
-        });
-    }
 
-    const accessWhere = role === 101
-        ? 'bd.batch_id = $1 AND bd.centre_id = $2'
-        : `bd.batch_id = $1
-           AND EXISTS (
-               SELECT 1
-               FROM batch_people_data requester_bpd
-               WHERE requester_bpd.user_id = $2
-               AND bd.batch_id = ANY(requester_bpd.batch_id)
-           )`;
-    const params = role === 101 ? [batch_id, requester.centre_id] : [batch_id, requester.user_mail];
-
-    return new Promise((resolve, reject) => {
-        client.query(` 
-            WITH user_info AS ( 
-                SELECT user_role, user_email FROM user_data GROUP BY user_role, user_email 
-            ), 
-            last_login AS ( 
-                SELECT DISTINCT ON (user_id)  
-                    user_id,  
-                    logged_at 
-                FROM login_activity 
-                ORDER BY user_id, logged_at DESC 
-            ), 
-            user_names AS ( 
+    const queryBatch = (accessWhereClause, queryParams) => {
+        return new Promise((resolve, reject) => {
+            client.query(` 
+                WITH user_info AS ( 
+                    SELECT user_role, user_email FROM user_data GROUP BY user_role, user_email 
+                ), 
+                last_login AS ( 
+                    SELECT DISTINCT ON (user_id)  
+                        user_id,  
+                        logged_at 
+                    FROM login_activity 
+                    ORDER BY user_id, logged_at DESC 
+                ), 
+                user_names AS ( 
+                    SELECT  
+                        user_email, 
+                        user_name AS full_name, 
+                        created_at, 
+                        user_profile_photo 
+                    FROM user_data 
+                ) 
                 SELECT  
-                    user_email, 
-                    user_name AS full_name, 
-                    created_at, 
-                    user_profile_photo 
-                FROM user_data 
-            ) 
-            SELECT  
-                bd.batch_id, 
-                bd.batch_name, 
-                bd.batch_start_date, 
-                bd.batch_end_date, 
-                ui.user_role, 
-                ui.user_email, 
-                un.full_name, 
-                un.user_profile_photo, 
-                un.created_at AS user_created_at, 
-                ll.logged_at AS last_login,
-                cd.certificate_id,
-                cd.certificate_name
-            FROM batch_data bd 
-            LEFT JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
-            LEFT JOIN user_info ui ON bpd.user_id = ui.user_email
-            LEFT JOIN user_names un ON ui.user_email = un.user_email 
-            LEFT JOIN last_login ll ON ui.user_email = ll.user_id
-            LEFT JOIN certification_data cd ON cd.certificate_id::text = ANY(
-                SELECT jsonb_array_elements_text(bd.certification_data)
-            )
-            WHERE ${accessWhere}
-        `, params, (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                const rows = result.rows;
-
-                if (!rows.length) {
-                    return resolve({
-                        status: 'Not Found',
-                        code: 404,
-                        message: 'No batch found with the given ID'
-                    });
-                }
-
-                const certificates = Array.from(
-                    new Map(
-                        rows
-                            .filter(row => row.certificate_id)
-                            .map(row => [
-                                row.certificate_id,
-                                {
-                                    certificate_id: row.certificate_id,
-                                    certificate_name: row.certificate_name,
-                                    certificate_status: null
-                                }
-                            ])
-                    ).values()
-                );
-
-                const firstCertificate = certificates[0] || {
-                    certificate_id: null,
-                    certificate_name: null,
-                    certificate_status: null
-                };
-
-                // Batch meta (same for all rows) 
-                const batchInfo = {
-                    batch_id: rows[0]?.batch_id || null,
-                    batch_name: rows[0]?.batch_name || null,
-                    batch_start_date: rows[0]?.batch_start_date || null,
-                    batch_end_date: rows[0]?.batch_end_date || null,
-                    certificate: firstCertificate,
-                    certificates
-                };
-
-                const uniquePeopleByRole = (role) => Array.from(
-                    new Map(
-                        rows
-                            .filter(row => row.user_role === role && row.user_email)
-                            .map(row => [
-                                row.user_email,
-                                {
-                                    user_email: row.user_email,
-                                    full_name: row.full_name,
-                                    user_profile_photo: row.user_profile_photo,
-                                    user_created_at: row.user_created_at,
-                                    last_login: row.last_login,
-                                    user_role: row.user_role
-                                }
-                            ])
-                    ).values()
-                );
-
-                const instructors = uniquePeopleByRole("102");
-                const trainees = uniquePeopleByRole("103");
-
-                resolve({
-                    batchInfo,
-                    instructors,
-                    trainees,
-                    instructorCount: instructors.length,
-                    traineeCount: trainees.length
-                });
-            }
+                    bd.batch_id, 
+                    bd.batch_name, 
+                    bd.batch_start_date, 
+                    bd.batch_end_date, 
+                    ui.user_role, 
+                    ui.user_email, 
+                    un.full_name, 
+                    un.user_profile_photo, 
+                    un.created_at AS user_created_at, 
+                    ll.logged_at AS last_login,
+                    cd.certificate_id,
+                    cd.certificate_name
+                FROM batch_data bd 
+                LEFT JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+                LEFT JOIN user_info ui ON bpd.user_id = ui.user_email
+                LEFT JOIN user_names un ON ui.user_email = un.user_email 
+                LEFT JOIN last_login ll ON ui.user_email = ll.user_id
+                LEFT JOIN certification_data cd ON cd.certificate_id::text = ANY(
+                    SELECT jsonb_array_elements_text(bd.certification_data)
+                )
+                WHERE ${accessWhereClause}
+            `, queryParams, (err, result) => {
+                if (err) return reject(err);
+                resolve(result.rows);
+            });
         });
-    });
+    };
+
+    const queryTargetedLearning = async (targetId) => {
+        try {
+            const tlRes = await client.query(
+                `SELECT 
+                    tl.target_learning_id AS batch_id,
+                    tl.tar_name AS batch_name,
+                    tl.start_date AS batch_start_date,
+                    tl.end_date AS batch_end_date,
+                    tl.certificate_id,
+                    tl.trainee_id
+                 FROM targeted_learning tl
+                 WHERE tl.target_learning_id::text = $1::text`,
+                [targetId]
+            );
+            if (!tlRes.rows.length) return [];
+
+            const tlRow = tlRes.rows[0];
+
+            let certRow = { certificate_id: null, certificate_name: null };
+            if (tlRow.certificate_id) {
+                try {
+                    const certRes = await client.query(
+                        `SELECT certificate_id, certificate_name FROM certification_data WHERE certificate_id::text = $1::text`,
+                        [tlRow.certificate_id]
+                    );
+                    if (certRes.rows.length) certRow = certRes.rows[0];
+                } catch (_) {}
+            }
+
+            let users = [];
+            const traineeIds = Array.isArray(tlRow.trainee_id) ? tlRow.trainee_id.filter(Boolean) : [];
+            if (traineeIds.length > 0) {
+                try {
+                    const userRes = await client.query(
+                        `SELECT 
+                            ud.user_email,
+                            ud.user_name AS full_name,
+                            ud.user_role,
+                            ud.user_profile_photo,
+                            ud.created_at AS user_created_at,
+                            ll.logged_at AS last_login
+                         FROM user_data ud
+                         LEFT JOIN (
+                             SELECT DISTINCT ON (user_id) user_id, logged_at 
+                             FROM login_activity ORDER BY user_id, logged_at DESC
+                         ) ll ON ll.user_id = ud.user_email
+                         WHERE ud.user_email = ANY($1::varchar[])`,
+                        [traineeIds]
+                    );
+                    users = userRes.rows;
+                } catch (_) {}
+            }
+
+            if (!users.length) {
+                return [{
+                    batch_id: tlRow.batch_id,
+                    batch_name: tlRow.batch_name,
+                    batch_start_date: tlRow.batch_start_date,
+                    batch_end_date: tlRow.batch_end_date,
+                    certificate_id: certRow.certificate_id,
+                    certificate_name: certRow.certificate_name,
+                    user_role: null,
+                    user_email: null,
+                    full_name: null,
+                    user_profile_photo: null,
+                    user_created_at: null,
+                    last_login: null
+                }];
+            }
+
+            return users.map(u => ({
+                batch_id: tlRow.batch_id,
+                batch_name: tlRow.batch_name,
+                batch_start_date: tlRow.batch_start_date,
+                batch_end_date: tlRow.batch_end_date,
+                certificate_id: certRow.certificate_id,
+                certificate_name: certRow.certificate_name,
+                user_role: u.user_role || "103",
+                user_email: u.user_email,
+                full_name: u.full_name,
+                user_profile_photo: u.user_profile_photo,
+                user_created_at: u.user_created_at,
+                last_login: u.last_login
+            }));
+        } catch (err) {
+            console.error("Error in queryTargetedLearning:", err);
+            return [];
+        }
+    };
+
+    return (async () => {
+        let rows = [];
+        try {
+            if (role === 99) {
+                rows = await queryBatch('bd.batch_id = $1', [batch_id]);
+            } else if (role === 101 && hasCenterScope(requester)) {
+                rows = await queryBatch('bd.batch_id = $1 AND (bd.centre_id = $2 OR bd.centre_id IS NULL)', [batch_id, requester.centre_id]);
+            } else {
+                rows = await queryBatch('bd.batch_id = $1', [batch_id]);
+            }
+            if (!rows.length) {
+                rows = await queryBatch('bd.batch_id = $1', [batch_id]);
+            }
+        } catch (err) {
+            rows = await queryBatch('bd.batch_id = $1', [batch_id]);
+        }
+
+        if (!rows.length) {
+            try {
+                rows = await queryTargetedLearning(batch_id);
+            } catch (_) {}
+        }
+
+        if (!rows.length) {
+            return {
+                status: 'Not Found',
+                code: 404,
+                message: 'No batch found with the given ID'
+            };
+        }
+
+        const certificates = Array.from(
+            new Map(
+                rows
+                    .filter(row => row.certificate_id)
+                    .map(row => [
+                        row.certificate_id,
+                        {
+                            certificate_id: row.certificate_id,
+                            certificate_name: row.certificate_name,
+                            certificate_status: null
+                        }
+                    ])
+            ).values()
+        );
+
+        const firstCertificate = certificates[0] || {
+            certificate_id: null,
+            certificate_name: null,
+            certificate_status: null
+        };
+
+        const batchInfo = {
+            batch_id: rows[0]?.batch_id || null,
+            batch_name: rows[0]?.batch_name || null,
+            batch_start_date: rows[0]?.batch_start_date || null,
+            batch_end_date: rows[0]?.batch_end_date || null,
+            certificate: firstCertificate,
+            certificates
+        };
+
+        const uniquePeopleByRole = (roleStr) => Array.from(
+            new Map(
+                rows
+                    .filter(row => row.user_role === roleStr && row.user_email)
+                    .map(row => [
+                        row.user_email,
+                        {
+                            user_email: row.user_email,
+                            full_name: row.full_name,
+                            user_profile_photo: row.user_profile_photo,
+                            user_created_at: row.user_created_at,
+                            last_login: row.last_login,
+                            user_role: row.user_role
+                        }
+                    ])
+            ).values()
+        );
+
+        const instructors = uniquePeopleByRole("102");
+        const trainees = uniquePeopleByRole("103");
+
+        return {
+            batchInfo,
+            instructors,
+            trainees,
+            instructorCount: instructors.length,
+            traineeCount: trainees.length
+        };
+    })();
 };
 
 const updateBatchm = (requester, batch_id, new_batch_name, new_start_date, new_end_date) => {

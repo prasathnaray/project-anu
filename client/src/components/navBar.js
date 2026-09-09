@@ -959,26 +959,31 @@ function NavBar() {
   // ── Fetch notifications ───────────────────────────────────────────────────
   const fetchCount = async () => {
     try {
+      const mail = tokenRes?.user_mail || "";
       const [courseRes, traineeRes, volumeRes, queryRes] = await Promise.all([
-        // Unread course assignments
-        supabase
-          .from("course_availability")
-          .select("course_id, access_status, is_read", { count: "exact" })
-          .eq("user_id", tokenRes.user_mail)
-          .is("is_read", false),
+        // Unread course assignments (handled via API)
+        Promise.resolve({ data: [], count: 0 }),
 
         // Targeted learning assignments
-        supabase
-          .from("targeted_learning")
-          .select("tar_name, target_learning_id", { count: "exact" })
-          .contains("trainee_id", [tokenRes.user_mail]),
+        mail
+          ? supabase
+              .from("targeted_learning")
+              .select("tar_name, target_learning_id", { count: "exact" })
+              .contains("trainee_id", [mail])
+              .then((r) => (r.error ? { data: [], count: 0 } : r))
+              .catch(() => ({ data: [], count: 0 }))
+          : Promise.resolve({ data: [], count: 0 }),
 
         // Pending volume approvals (admin only)
-        supabase
-          .from("volumes")
-          .select("added_by, status", { count: "exact" })
-          .eq("approver_id", tokenRes.user_mail)
-          .is("status", false),
+        mail
+          ? supabase
+              .from("volumes")
+              .select("added_by, status", { count: "exact" })
+              .eq("approver_id", mail)
+              .eq("status", false)
+              .then((r) => (r.error ? { data: [], count: 0 } : r))
+              .catch(() => ({ data: [], count: 0 }))
+          : Promise.resolve({ data: [], count: 0 }),
 
         // Query notifications require tenant-aware API data; direct table reads are intentionally disabled.
         Promise.resolve({ data: [], count: 0 }),
@@ -1023,22 +1028,11 @@ function NavBar() {
   };
 
   // ── Mark course notification as read ─────────────────────────────────────
-  const readCourseNotification = async (id) => {
-    const { error } = await supabase
-      .from("course_availability")
-      .update({ is_read: true })
-      .eq("course_id", id)
-      .eq("user_id", tokenRes.user_mail);
-
-    if (error) {
-      console.error("Error marking as read:", error);
-      return;
-    }
+  const readCourseNotification = (id) => {
     setNotify((prev) =>
       prev.map((n) => (n.course_id === id ? { ...n, is_read: true } : n))
     );
     setCount((prev) => Math.max(prev - 1, 0));
-    fetchCount();
   };
 
   // ── Mark query notification as read (local only) ──────────────────────────

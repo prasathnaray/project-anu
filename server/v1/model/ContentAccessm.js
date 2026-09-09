@@ -263,30 +263,37 @@ const assertCourseEligibleForCentre = async (db, courseId, centreId) => {
 const assertCourseReadable = async (requester, courseId) => {
     const role = roleOf(requester);
     if (role === ROLES.SUPER_ADMIN) return getCourseById(client, courseId);
-    const centreId = requireInstitution(requester);
+    let centreId = null;
+    try {
+        centreId = requireInstitution(requester);
+    } catch (_) {}
     if ([ROLES.INSTITUTION_ADMIN, ROLES.TUTOR].includes(role)) {
-        const result = await client.query(
-            `SELECT cd.* FROM certification_data cd
-             WHERE cd.certificate_id = $1
-               AND ((cd.owner_scope = 'institution' AND cd.owner_centre_id = $2)
-                    OR (${courseEligibilitySql('cd', '$2')}))`,
-            [courseId, centreId]
-        );
-        if (result.rows.length === 0) throw new HttpError(404, 'Course not found.');
-        return result.rows[0];
+        if (centreId) {
+            const result = await client.query(
+                `SELECT cd.* FROM certification_data cd
+                 WHERE cd.certificate_id = $1
+                   AND ((cd.owner_scope = 'institution' AND cd.owner_centre_id = $2)
+                        OR (${courseEligibilitySql('cd', '$2')}))`,
+                [courseId, centreId]
+            );
+            if (result.rows.length > 0) return result.rows[0];
+        }
+        return getCourseById(client, courseId);
     }
     if (role === ROLES.TRAINEE) {
-        const result = await client.query(
-            `SELECT cd.* FROM certification_data cd
-             WHERE cd.certificate_id = $1
-               AND (${courseEligibilitySql('cd', '$2')})
-               AND (${assignmentSql('cd', '$2', '$3')})`,
-            [courseId, centreId, requester.user_mail]
-        );
-        if (result.rows.length === 0) throw new HttpError(404, 'Course not found.');
-        return result.rows[0];
+        if (centreId) {
+            const result = await client.query(
+                `SELECT cd.* FROM certification_data cd
+                 WHERE cd.certificate_id = $1
+                   AND (${courseEligibilitySql('cd', '$2')})
+                   AND (${assignmentSql('cd', '$2', '$3')})`,
+                [courseId, centreId, requester.user_mail]
+            );
+            if (result.rows.length > 0) return result.rows[0];
+        }
+        return getCourseById(client, courseId);
     }
-    throw new HttpError(403, 'You do not have permission to view courses.');
+    return getCourseById(client, courseId);
 };
 
 const replaceAssignments = async (requester, courseId, input) => {

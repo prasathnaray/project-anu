@@ -1,6 +1,6 @@
 import React from 'react'
 import { jwtDecode } from 'jwt-decode';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { ArrowUpWideNarrow, EllipsisVertical, X } from 'lucide-react';
@@ -13,8 +13,9 @@ import GetCuriculumAPI from '../API/getCuriculumAPI';
 import DeleteCuriculumToast from '../utils/deleteCuriculumtoast';
 import { ClipLoader } from 'react-spinners';
 function Curiculam() {
+  const navigate = useNavigate();
   const token = jwtDecode(localStorage.getItem('user_token'));
-  const [buttonOpen, setButtonOpen] = React.useState(false);
+  const [buttonOpen, setButtonOpen] = React.useState(true);
   const [curiculumList, setCuriculumList] = React.useState({})
   const [curriculumData, setCurriculumData] = React.useState({
       curiculum_name: ''
@@ -53,7 +54,6 @@ function Curiculam() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   });
-  console.log(curriculumData);
   const createCuriculum = async(e) => {
     e.preventDefault();
     try
@@ -112,7 +112,6 @@ function Curiculam() {
   React.useEffect(() => {
       GetCuriculumList();
   }, [])
-  console.log(curiculumList)
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
@@ -163,26 +162,21 @@ function Curiculam() {
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                                                       {data?.code || 'N/A'}
                                                                     </td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                      <button onClick={() => toggleDropdown(index)}>
-                                                                        <EllipsisVertical size={24} />
-                                                                      </button>
-                                                                      {openDropdownIndex === index && (
-                                                                                                <div
-                                                                                                 ref={(el) => (dropdownRefs.current[index] = el)}
-                                                                                                className={`absolute right-18 mt-1 w-22 bg-white border border-gray-200 rounded shadow-md z-10
-                                                                                                        transition-all ease-in-out duration-500 origin-top-right
-                                                                                                        ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
-                                                                                                `} 
-                                                                                                >
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => DeleteCuriculum(data?.curiculum_id)}>Delete</button>
-                                                                                                                {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => showDisableConfirmToast(trainee.user_email, handleTraineeList, token, statusUpdate)}>{trainee.status === "inactive"? "Enable": "Disable"}</button> */}
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Add Course</button>
-                                                                                                                <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Instructors</button>
-
-                                                                                                </div>
+                                                                    <td className="relative py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                        <button onClick={() => toggleDropdown(index)}>
+                                                                          <EllipsisVertical size={24} />
+                                                                        </button>
+                                                                        {openDropdownIndex === index && (
+                                                                          <div
+                                                                            ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                            className="absolute right-4 top-10 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1"
+                                                                          >
+                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/certificate'); }}>View</button>
+                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-red-600" onClick={() => { setOpenDropdownIndex(null); DeleteCuriculum(data?.curiculum_id); }}>Delete</button>
+                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/trainees'); }}>Tag Trainees</button>
+                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/certificate'); }}>Add Course</button>
+                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/instructors'); }}>Tag Instructors</button>
+                                                                          </div>
                                                                         )}
                                                                     </td>
                                                                   </tr>

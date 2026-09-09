@@ -1505,7 +1505,13 @@ function Course() {
                                       : "opacity-0 scale-95 invisible"
                                       }`}
                                   >
-                                    <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded">
+                                    <button 
+                                      className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-semibold hover:rounded"
+                                      onClick={() => {
+                                        setOpenDropdownIndex(null);
+                                        navigate(`/cert-course/${data?.certificate_id}`);
+                                      }}
+                                    >
                                       View
                                     </button>
                                     {jwtDecode(

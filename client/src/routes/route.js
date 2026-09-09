@@ -70,6 +70,7 @@ function RoutesPath() {
                             <Route path="/request-raised" element={<RequestRaised />} />
                             <Route path="/demo-video" element={<VideoMedica />} />
                             <Route path="/cert-course/:certificate_id" element={<InsideCertifications />} />
+                            <Route path="/cert_course/:certificate_id" element={<InsideCertifications />} />
                             <Route path="/reports" element={<Reports />} />
                             <Route path="/academics" element={<Academics />} />
                             <Route path="/course-mapping" element={<CourseMapping />} />

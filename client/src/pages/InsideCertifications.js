@@ -241,9 +241,17 @@ function InsideCertifications() {
   const fetchLearningModules = useCallback(async () => {
     try {
       const res = await GetLearningModuleByIdAPI(token, certificate_id);
-      setLearningModules(Array.isArray(res.data) ? res.data : []);
+      const modules = Array.isArray(res.data)
+        ? res.data
+        : (Array.isArray(res.data?.rows)
+            ? res.data.rows
+            : (Array.isArray(res.data?.result)
+                ? res.data.result
+                : []));
+      setLearningModules(modules);
     } catch (err) {
       console.error("Error loading modules:", err);
+      setLearningModules([]);
     }
   }, [token, certificate_id]);
 
@@ -282,14 +290,16 @@ function InsideCertifications() {
     fetchLearningModules();
   }, [fetchCertificates, fetchLearningModules]);
   
-  const courseList = [...new Set(learningModules.map((m) => m.course_name))];
+  const courseList = [...new Set(learningModules.map((m) => m.course_name).filter(Boolean))];
   const moduleList = learningModules
-    .filter((m) => m.course_name === courseName)
+    .filter((m) => !courseName || m.course_name === courseName)
     .map((m) => m.module_name)
+    .filter(Boolean)
     .filter((v, i, arr) => arr.indexOf(v) === i);
   const unitList = learningModules
-    .filter((m) => m.course_name === courseName && m.module_name === moduleName)
+    .filter((m) => (!courseName || m.course_name === courseName) && (!moduleName || m.module_name === moduleName))
     .map((m) => m.unit_name)
+    .filter(Boolean)
     .filter((v, i, arr) => arr.indexOf(v) === i);
 
   useEffect(() => {
@@ -496,7 +506,7 @@ function InsideCertifications() {
                           return (
                             <React.Fragment key={moduleId}>
                               <tr className="text-sm text-gray-700">
-                                <td className="py-2 px-4 text-gray-600">{row.unit_name || row.course_name}</td>
+                                <td className="py-2 px-4 text-gray-600">{row.unit_name || row.module_name || row.course_name}</td>
                                 <td className="py-2 px-4">
                                   <button onClick={() => toggleExpand(index, moduleId)} className="text-[#8DC63F]">
                                     <ChevronDown size={22} className={`transition-transform ${expandedRow === index ? "rotate-180" : ""}`} />

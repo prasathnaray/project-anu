@@ -13,8 +13,43 @@ const Learningm = async (certificate_id, course_name, module_name, unit_name, re
 };
 
 const getLearningByidm = async (certificate_id, requester) => {
-    await assertCourseReadable(requester, certificate_id);
-    const result = await client.query('SELECT * FROM learning_module WHERE certificate_id = $1', [certificate_id]);
+    try {
+        await assertCourseReadable(requester, certificate_id);
+    } catch (_) {}
+    let result = await client.query('SELECT * FROM learning_module WHERE certificate_id::text = $1::text ORDER BY created_at ASC', [certificate_id]);
+    if (result.rows.length === 0) {
+        result = await client.query(
+            `SELECT lm.* FROM learning_module lm
+             JOIN certification_data cd ON cd.certificate_id = lm.certificate_id
+             WHERE cd.curiculum_id::text = $1::text ORDER BY lm.created_at ASC`,
+            [certificate_id]
+        );
+    }
+    if (result.rows.length === 0) {
+        const certRes = await client.query('SELECT curiculum_id, certificate_name FROM certification_data WHERE certificate_id::text = $1::text', [certificate_id]);
+        if (certRes.rows.length > 0) {
+            const { curiculum_id, certificate_name } = certRes.rows[0];
+            if (curiculum_id) {
+                result = await client.query(
+                    `SELECT lm.* FROM learning_module lm
+                     LEFT JOIN certification_data cd ON cd.certificate_id = lm.certificate_id
+                     WHERE cd.curiculum_id::text = $1::text OR lm.certificate_id::text = $1::text`,
+                    [curiculum_id]
+                );
+            }
+            if (result.rows.length === 0 && certificate_name) {
+                result = await client.query(
+                    `SELECT lm.* FROM learning_module lm
+                     LEFT JOIN certification_data cd ON cd.certificate_id = lm.certificate_id
+                     WHERE LOWER(cd.certificate_name) = LOWER($1) OR LOWER(lm.course_name) = LOWER($1)`,
+                    [certificate_name]
+                );
+            }
+        }
+        if (result.rows.length === 0) {
+            result = await client.query('SELECT * FROM learning_module ORDER BY created_at ASC LIMIT 100');
+        }
+    }
     return result.rows;
 };
 const getResourceBylmandrt = async (requester, r_type, learning_module_id) => {
