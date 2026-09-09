@@ -55,7 +55,6 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
             {buttonOpen === false ? <ChevronRight size={18} /> : <ChevronLeft size={20} />}
           </button>
         </div>
-<<<<<<< HEAD
       </div>
       <div className={`${buttonOpen === false ? "md:px-[4px] pt-4" : "md:px-[50px] pt-4"}`}><button className="w-full flex justify-center"><img src={logo} alt="logo" className="w-full h-auto max-h-12 object-contain" /></button></div>
       <div className="">
@@ -164,81 +163,6 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
             </>
           }
           {/* {tokdata.role == 103 && 
-=======
-        <div className={`${buttonOpen===false ? "md:px-[4px] pt-4": "md:px-[50px] pt-4"}`}><button><img src={logo} /></button></div>
-        <div className="">
-            <ul className={`${buttonOpen === false ? "py-3 px-[7px]" : "py-5 px-8"}`}>
-              
-              {tokdata.role == 99 && 
-              <>
-                  <li className={` ${data === "/dashboard" ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2' : 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/dashboard" className={`${data==="/dashboard" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><BookCheck size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Dashboard</div></a></li>
-                  {/* <li className={`${data==="/curriculum"? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/curriculum" className={`${data==="/curriculum" ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><BookCheck size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Curriculum</div></a></li> */}
-
-                  <li className={`${isCoursePath ? 'bg-[#8DC63F] rounded-xl p-[10px] text-white mb-1 mt-2': 'flex gap-5 hover:bg-[#8DC63F] hover:rounded-xl p-[10px] hover:text-white mb-1 mt-2'}`} onMouseDown={(e) => ripple.create(e, "dark", "circle")}><a href="/certificate" className={`${isCoursePath ? 'text-white flex gap-5': 'flex gap-5 text-gray-500'}`}><Notebook size={20}/><div className={`${buttonOpen === false ? 'hidden': 'text-md'}`}>Courses</div></a></li>
-                  <li className="mb-1 mt-2">
-                    <button
-                      onMouseDown={(e) => ripple.create(e, "dark", "circle")}
-                      onClick={() => navigate("/volume-management")}
-                      className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl tranWsition-all duration-200 
-                        ${
-                          data === "/volume-management"
-                            ? "bg-[#8DC63F] text-white"
-                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
-                        }`}
-                    >
-                      <MessageSquareText size={20} />
-                      <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Volumes</div>
-                    </button>
-                  </li>
-                  <li className="mb-1 mt-2">
-                    <button
-                      onMouseDown={(e) => ripple.create(e, "dark", "circle")}
-                      onClick={() => navigate("/course-mapping")}
-                      className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200
-                        ${
-                          data === "/course-mapping"
-                            ? "bg-[#8DC63F] text-white"
-                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
-                        }`}
-                    >
-                      <Network size={20} />
-                      <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Course Mapping</div>
-                    </button>
-                  </li>
-                  <li className="mb-1 mt-2">
-                    <button
-                      onMouseDown={(e) => ripple.create(e, "dark", "circle")}
-                      onClick={() => navigate("/reatt-data")}
-                      className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200
-                        ${
-                          data === "/reatt-data"
-                            ? "bg-[#8DC63F] text-white"
-                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
-                        }`}
-                    >
-                      <RotateCcw size={20} />
-                      <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Reattempts</div>
-                    </button>
-                  </li>
-                  <li className="mb-1 mt-2">
-                    <button
-                      onMouseDown={(e) => ripple.create(e, "dark", "circle")}
-                      onClick={() => navigate("/academics")}
-                      className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 
-                        ${
-                          data === "/academics"
-                            ? "bg-[#8DC63F] text-white"
-                            : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
-                        }`}
-                    >
-                      <School size={20} />
-                      <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Academics</div>
-                    </button>
-                  </li>
-              </>
-              }
-              {/* {tokdata.role == 103 && 
->>>>>>> 801db03bb2d87b95a8a1885803b8a9badd6a46c4
                   ["dashboard", "schedules", "Queries", "Batch"].map((route,i) => {
                     const items = [
                       {icon: <LayoutDashboard size={20}/>, label: "Dashboard" },
