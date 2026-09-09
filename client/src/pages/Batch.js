@@ -111,7 +111,7 @@ function Batch() {
         const [page, setPage] = React.useState(0);
         const [rowsPerPage, setRowsPerPage] = React.useState(5);
         const [rowCount, setRowCount] = useState(0);
-        const [corList, setCorList] = useState({});
+        const [corList, setCorList] = useState([]);
         const [openTargetedLearning, setTargetedLearning] = React.useState(false);
 
         /// batch search options
@@ -127,23 +127,6 @@ function Batch() {
 
         const [batchCus, setBatchCus] = useState(true);
         console.log(batchCus);
-        const [traineeState, setTraineeState] = React.useState([])
-        const TraineesListAPICall = async () => {
-                // if(jwtDecode(localStorage.getItem("user_token")).role!=101)
-                // {
-                //         return;
-                // }
-                try {
-                        let token = localStorage.getItem("user_token")
-                        const response = await TraineeListAPI(token);
-                        setTraineeState([...response.data.rows]);
-                        // console.log(response);
-                }
-                catch (err) {
-                        console.log(err);
-                }
-        }
-        //console.log(traineeState)
         const handleClose = () => {
                 setTargetedLearning(false)
                 setOpenBatch(false);
@@ -156,7 +139,7 @@ function Batch() {
                         batch_start_date: null,
                         batch_end_date: null
                 });
-                setCorList({})
+                setCorList([])
                 setTargetedLearningState({
                         tar_name: "",
                         curiculum_id: "",
@@ -419,28 +402,56 @@ function Batch() {
                         }
                 }
         }
-        const [curList, setCurList] = useState({});
+        const [curList, setCurList] = useState([]);
         const getCuriculumList = async () => {
                 try {
-                        const TOKEN = localStorage.getItem('user_token')
+                        const TOKEN = localStorage.getItem('user_token');
                         const result = await GetCuriculumAPI(TOKEN);
-                        setCurList(result.data.result);
+                        const list = Array.isArray(result?.data?.result)
+                                ? result.data.result
+                                : Array.isArray(result?.data?.rows)
+                                ? result.data.rows
+                                : Array.isArray(result?.data)
+                                ? result.data
+                                : [];
+                        setCurList(list);
                 }
                 catch (err) {
-                        console.log(err)
+                        console.log(err);
+                        setCurList([]);
                 }
         }
         const getCourseByCurData = async (curiculum_id) => {
-                if (!curiculum_id) return;
                 try {
                         const token = localStorage.getItem('user_token');
-                        const result = await GetCertificateByCurAPI(token, curiculum_id);
-                        //console.log(result.data);
-                        setCorList(result.data.result)
+                        let courses = [];
+                        if (curiculum_id && curiculum_id !== "all") {
+                                try {
+                                        const result = await GetCertificateByCurAPI(token, curiculum_id);
+                                        courses = Array.isArray(result?.data?.result)
+                                                ? result.data.result
+                                                : Array.isArray(result?.data?.rows)
+                                                ? result.data.rows
+                                                : Array.isArray(result?.data)
+                                                ? result.data
+                                                : [];
+                                } catch (e) {}
+                        }
+                        if (!courses || courses.length === 0) {
+                                const allRes = await GetCoursesAPI(token);
+                                courses = Array.isArray(allRes?.data?.result)
+                                        ? allRes.data.result
+                                        : Array.isArray(allRes?.data?.rows)
+                                        ? allRes.data.rows
+                                        : Array.isArray(allRes?.data)
+                                        ? allRes.data
+                                        : [];
+                        }
+                        setCorList(courses);
                 }
                 catch (err) {
-                        console.log(err)
-                        setCorList({});
+                        console.log(err);
+                        setCorList([]);
                 }
         }
         const [chapterData, setChapterData] = React.useState([]);
@@ -582,23 +593,25 @@ function Batch() {
                         console.log(err);
                 }
         }
-        // const TraineesListAPICall = async() => {
-        //         if(jwtDecode(localStorage.getItem("user_token")).role!=101)
-        //         {
-        //                 return;
-        //         }
-        //         try
-        //         {
-        //                 let token = localStorage.getItem("user_token")
-        //                 const response = await TraineeListAPI(token);
-        //                 setTraineeState(response.data.rows);
-        //                 //console.log(response);
-        //         }
-        //         catch(err)
-        //         {
-        //                 console.log(err);
-        //         }
-        // }
+        const [traineeState, setTraineeState] = React.useState([]);
+        const TraineesListAPICall = async () => {
+                try {
+                        const role = Number(jwtDecode(localStorage.getItem("user_token"))?.role);
+                        if (![99, 101, 102].includes(role)) return;
+                        const response = await TraineeListAPI(1, 100);
+                        const list = Array.isArray(response?.data?.rows)
+                                ? response.data.rows
+                                : Array.isArray(response?.data?.result)
+                                ? response.data.result
+                                : Array.isArray(response?.data)
+                                ? response.data
+                                : [];
+                        setTraineeState(list);
+                } catch (err) {
+                        console.log("Error in TraineesListAPICall:", err);
+                        setTraineeState([]);
+                }
+        };
         const deleteTargetedLearningCall = async (targeted_learning_id) => {
                 try {
                         let token = localStorage.getItem('user_token')
@@ -619,7 +632,15 @@ function Batch() {
         }
         React.useEffect(() => {
                 TraineesListAPICall();
-        }, [])
+                getCuriculumList();
+                getCourseByCurData("all");
+        }, []);
+        React.useEffect(() => {
+                if (openBatch || openTargetedLearning) {
+                        getCuriculumList();
+                        getCourseByCurData(batchData?.curiculum_name || "all");
+                }
+        }, [openBatch, openTargetedLearning]);
         // React.useEffect(() => {
         //         console.log(traineeState);
         // }, [])

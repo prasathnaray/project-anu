@@ -193,7 +193,7 @@ function BatchIndividual() {
     };
     React.useEffect(() => {
         handleIndBatchAPICall(batch_id);
-    }, []);
+    }, [batch_id]);
 
     let token = localStorage.getItem('user_token');
     const decoded = jwtDecode(token);
@@ -243,11 +243,6 @@ function BatchIndividual() {
                                 <div className={`${decoded.role == 99 || decoded.role == 101 ? 'col-span-2' : 'col-span-3'} bg-white`}>
                                     <div className="p-2 flex justify-between items-center">
                                         <div className="text-xl">Batch Info</div>
-                                        {decoded.role == 99 || decoded.role == 101 ? (
-                                            <div>
-                                                <button className="bg-[#8DC63F] p-1 text-white rounded px-2">Edit</button>
-                                            </div>
-                                        ) : null}
                                     </div>
                                     <div className="flex justify-between items-center gap-6 mx-10">
                                         <div className="mt-8">
@@ -333,7 +328,63 @@ function BatchIndividual() {
                                     </table>
                                 </div>
                             </div>
-                            {(decoded.role == 103 || decoded.role == 101) && (
+                            {/* Trainee Profile Table */}
+                            <div className="m-3 bg-white p-2">
+                                <div className="text-lg m-3">
+                                    <div>Trainee Profile</div>
+                                </div>
+                                <div>
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                                <th className="py-2 px-4 text-[#8DC63F]">
+                                                    <div className="flex items-center gap-2">
+                                                        <div>Name</div>
+                                                        <button><ArrowUpWideNarrow size={20} /></button>
+                                                    </div>
+                                                </th>
+                                                <th className="py-2 px-4 text-[#8DC63F]">
+                                                    <div className="flex items-center gap-2">
+                                                        <div>Registered at</div>
+                                                        <button><ArrowUpWideNarrow size={20} /></button>
+                                                    </div>
+                                                </th>
+                                                <th className="py-2 px-4 text-[#8DC63F]">
+                                                    <div className="flex items-center gap-2">
+                                                        <span>Last Logged In</span>
+                                                        <button><ArrowUpWideNarrow size={20} /></button>
+                                                    </div>
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm">
+                                            {trainees.length > 0 ? (
+                                                trainees.map((trainee, index) => (
+                                                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                                                        <td className="py-2 px-4">
+                                                            <div className="font-medium">{trainee.full_name || '—'}</div>
+                                                            <div className="text-xs text-gray-400">{trainee.user_email}</div>
+                                                        </td>
+                                                        <td className="py-2 px-4 text-gray-600">
+                                                            {formatDateTime(trainee.user_created_at)}
+                                                        </td>
+                                                        <td className="py-2 px-4 text-gray-600">
+                                                            {formatDateTime(trainee.last_login)}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="5" className="py-6 text-center text-gray-400">
+                                                        No trainees found for this batch.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {(decoded.role == 103 || decoded.role == 101 || decoded.role == 99 || decoded.role == 102) && (
                                 <div className="m-3 bg-white p-2">
                                     <div className="text-lg m-3">
                                         <div>Associated Certificates</div>

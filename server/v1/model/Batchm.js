@@ -454,26 +454,26 @@ const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
         })
     })
 }
-const IndividualtllList = (requester) => {
+const IndividualtllList = (requester, target_user_mail) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [103].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
-                message: 'You do not have permission to view trainee profiles'
-            })
+                message: 'You do not have permission to view targeted learning'
+            });
         }
-        client.query('SELECT * FROM targeted_learning where trainee_id@>$1', [`{${requester.user_mail}}`], (err, result) => {
+        const searchMail = target_user_mail || requester.user_mail;
+        client.query('SELECT * FROM targeted_learning WHERE $1::varchar = ANY(trainee_id) OR trainee_id @> $2', [searchMail, `{${searchMail}}`], (err, result) => {
             if (err) {
-                return reject(err)
+                return reject(err);
+            } else {
+                return resolve(result);
             }
-            else {
-                return resolve(result)
-            }
-        })
-    })
-}
+        });
+    });
+};
 
 const filterBatchm = (requester, batch_name, instructor_name) => {
     const isPrivileged = [101].includes(Number(requester.role));
@@ -677,42 +677,30 @@ const individualBatchStats = (requester, batch_id) => {
     const queryBatch = (accessWhereClause, queryParams) => {
         return new Promise((resolve, reject) => {
             client.query(` 
-                WITH user_info AS ( 
-                    SELECT user_role, user_email FROM user_data GROUP BY user_role, user_email 
-                ), 
-                last_login AS ( 
+                WITH last_login AS ( 
                     SELECT DISTINCT ON (user_id)  
                         user_id,  
                         logged_at 
                     FROM login_activity 
                     ORDER BY user_id, logged_at DESC 
-                ), 
-                user_names AS ( 
-                    SELECT  
-                        user_email, 
-                        user_name AS full_name, 
-                        created_at, 
-                        user_profile_photo 
-                    FROM user_data 
                 ) 
-                SELECT  
+                SELECT DISTINCT 
                     bd.batch_id, 
                     bd.batch_name, 
                     bd.batch_start_date, 
                     bd.batch_end_date, 
-                    ui.user_role, 
-                    ui.user_email, 
-                    un.full_name, 
-                    un.user_profile_photo, 
-                    un.created_at AS user_created_at, 
+                    ud.user_role, 
+                    ud.user_email, 
+                    ud.user_name AS full_name, 
+                    ud.user_profile_photo, 
+                    ud.created_at AS user_created_at, 
                     ll.logged_at AS last_login,
                     cd.certificate_id,
                     cd.certificate_name
                 FROM batch_data bd 
                 LEFT JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
-                LEFT JOIN user_info ui ON bpd.user_id = ui.user_email
-                LEFT JOIN user_names un ON ui.user_email = un.user_email 
-                LEFT JOIN last_login ll ON ui.user_email = ll.user_id
+                LEFT JOIN user_data ud ON (ud.user_email = bpd.user_id OR (ud.centre_id = bd.centre_id AND ud.user_role = '102'))
+                LEFT JOIN last_login ll ON ud.user_email = ll.user_id
                 LEFT JOIN certification_data cd ON cd.certificate_id::text = ANY(
                     SELECT jsonb_array_elements_text(bd.certification_data)
                 )
@@ -727,34 +715,49 @@ const individualBatchStats = (requester, batch_id) => {
     const queryTargetedLearning = async (targetId) => {
         try {
             const tlRes = await client.query(
-                `SELECT 
-                    tl.target_learning_id AS batch_id,
-                    tl.tar_name AS batch_name,
-                    tl.start_date AS batch_start_date,
-                    tl.end_date AS batch_end_date,
-                    tl.certificate_id,
-                    tl.trainee_id
-                 FROM targeted_learning tl
-                 WHERE tl.target_learning_id::text = $1::text`,
-                [targetId]
+                `SELECT * FROM targeted_learning`
             );
             if (!tlRes.rows.length) return [];
 
-            const tlRow = tlRes.rows[0];
+            const tlRow = tlRes.rows.find(row => 
+                String(row.target_learning_id || row.targeted_learning_id || row.id || '') === String(targetId)
+            ) || tlRes.rows[0];
+
+            if (!tlRow) return [];
 
             let certRow = { certificate_id: null, certificate_name: null };
             if (tlRow.certificate_id) {
                 try {
                     const certRes = await client.query(
                         `SELECT certificate_id, certificate_name FROM certification_data WHERE certificate_id::text = $1::text`,
-                        [tlRow.certificate_id]
+                        [String(tlRow.certificate_id)]
                     );
                     if (certRes.rows.length) certRow = certRes.rows[0];
                 } catch (_) {}
             }
 
             let users = [];
-            const traineeIds = Array.isArray(tlRow.trainee_id) ? tlRow.trainee_id.filter(Boolean) : [];
+            let traineeIds = [];
+            if (Array.isArray(tlRow.trainee_id)) {
+                traineeIds = tlRow.trainee_id.filter(Boolean);
+            } else if (typeof tlRow.trainee_id === 'string') {
+                try {
+                    const parsed = JSON.parse(tlRow.trainee_id);
+                    if (Array.isArray(parsed)) traineeIds = parsed.filter(Boolean);
+                    else if (tlRow.trainee_id.startsWith('{') && tlRow.trainee_id.endsWith('}')) {
+                        traineeIds = tlRow.trainee_id.slice(1, -1).split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+                    } else {
+                        traineeIds = [tlRow.trainee_id];
+                    }
+                } catch (_) {
+                    if (tlRow.trainee_id.startsWith('{') && tlRow.trainee_id.endsWith('}')) {
+                        traineeIds = tlRow.trainee_id.slice(1, -1).split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+                    } else {
+                        traineeIds = [tlRow.trainee_id];
+                    }
+                }
+            }
+
             if (traineeIds.length > 0) {
                 try {
                     const userRes = await client.query(
@@ -773,16 +776,45 @@ const individualBatchStats = (requester, batch_id) => {
                          WHERE ud.user_email = ANY($1::varchar[])`,
                         [traineeIds]
                     );
-                    users = userRes.rows;
+                    users = userRes.rows.map(r => ({ ...r, forced_role: "103" }));
                 } catch (_) {}
             }
 
+            if (tlRow.created_by) {
+                try {
+                    const insRes = await client.query(
+                        `SELECT 
+                            ud.user_email,
+                            ud.user_name AS full_name,
+                            ud.user_role,
+                            ud.user_profile_photo,
+                            ud.created_at AS user_created_at,
+                            ll.logged_at AS last_login
+                         FROM user_data ud
+                         LEFT JOIN (
+                             SELECT DISTINCT ON (user_id) user_id, logged_at 
+                             FROM login_activity ORDER BY user_id, logged_at DESC
+                         ) ll ON ll.user_id = ud.user_email
+                         WHERE ud.user_email = $1::varchar`,
+                        [tlRow.created_by]
+                    );
+                    if (insRes.rows.length) {
+                        users.push({ ...insRes.rows[0], forced_role: "102" });
+                    }
+                } catch (_) {}
+            }
+
+            const bId = tlRow.target_learning_id || tlRow.targeted_learning_id || tlRow.id || targetId;
+            const bName = tlRow.tar_name || tlRow.targeted_learning_name || 'Targeted Learning Batch';
+            const sDate = tlRow.start_date || tlRow.created_at;
+            const eDate = tlRow.end_date || tlRow.created_at;
+
             if (!users.length) {
                 return [{
-                    batch_id: tlRow.batch_id,
-                    batch_name: tlRow.batch_name,
-                    batch_start_date: tlRow.batch_start_date,
-                    batch_end_date: tlRow.batch_end_date,
+                    batch_id: bId,
+                    batch_name: bName,
+                    batch_start_date: sDate,
+                    batch_end_date: eDate,
                     certificate_id: certRow.certificate_id,
                     certificate_name: certRow.certificate_name,
                     user_role: null,
@@ -795,13 +827,13 @@ const individualBatchStats = (requester, batch_id) => {
             }
 
             return users.map(u => ({
-                batch_id: tlRow.batch_id,
-                batch_name: tlRow.batch_name,
-                batch_start_date: tlRow.batch_start_date,
-                batch_end_date: tlRow.batch_end_date,
+                batch_id: bId,
+                batch_name: bName,
+                batch_start_date: sDate,
+                batch_end_date: eDate,
                 certificate_id: certRow.certificate_id,
                 certificate_name: certRow.certificate_name,
-                user_role: u.user_role || "103",
+                user_role: u.forced_role || u.user_role || "103",
                 user_email: u.user_email,
                 full_name: u.full_name,
                 user_profile_photo: u.user_profile_photo,

@@ -124,14 +124,18 @@ const deleteTargetedLearningC = async(req, res) => {
 }
 const InTLListC = async(req, res) => {
         const requester = req.user;
+        const target_user_mail = req.query.user_mail || req.query.email;
         try
         {
-                const result = await IndividualtllList(requester)
+                const result = await IndividualtllList(requester, target_user_mail);
+                if (result.code) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).json({
                         code: '200',
                         status: 'data retrieved',
                         result: result.rows
-                })
+                });
         }
         catch(err)
         {

@@ -231,10 +231,10 @@ function Schedules() {
 
   // 🔹 Event click handler
   const handleEventClick = (info) => {
-    const { title, start, end } = info.event;
-    alert(
-      `📚 ${title}\n\n🕒 Start: ${new Date(start.d.d).toLocaleString()}\n🕒 End: ${new Date(end.d.d).toLocaleString()}`
-    );
+    const eventId = info?.event?.id || info?.schedule?.id || info?.id;
+    if (eventId) {
+      navigate(`/batch/${eventId}`);
+    }
   };
 
   return (
@@ -250,7 +250,7 @@ function Schedules() {
           <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
             <LayoutDashboard size={15} /> Dashboard / <Notebook size={15} />{' '}
             <span className="text-[15px] hover:underline hover:underline-offset-4">
-              <button onClick={() => navigate('/batch')}>batch</button>
+              <button onClick={() => navigate('/schedules')}>schedule</button>
             </span>
           </div>
 
@@ -319,6 +319,7 @@ function Schedules() {
                 { id: '1', name: 'Targeted Learning', color: '#fff', bgColor: '#8DC63F' },
               ]}
               events={events}
+              onClickEvent={handleEventClick}
               onClickSchedule={handleEventClick}
             />
           </div>
