@@ -1106,6 +1106,7 @@ function NavBar() {
   const getNotificationRoute = (n) => {
     if (n.type === "volumes") return "/request-raised";
     if (n.type === "query") return "/queries";
+    if (n.type === "trainee") return "/batch?tab=targeted";
     return "/dashboard";
   };
 

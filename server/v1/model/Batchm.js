@@ -416,44 +416,53 @@ const createTargetedLearning = (requester, tar_name, curiculum_id, certificate_i
 
 const getTargetedLearningListModel = (requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [101, 102].includes(Number(requester.role));
+        const role = Number(requester.role);
+        const isPrivileged = [99, 101, 102, 103].includes(role);
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
-                message: 'You do not have permission to view trainee profiles'
-            })
+                message: 'You do not have permission to view targeted learning'
+            });
         }
-        client.query('SELECT * FROM targeted_learning', (err, result) => {
-            if (err) {
-                return reject(err)
-            }
-            else {
-                return resolve(result)
-            }
-        })
-    })
-}
+        if (role === 103) {
+            const searchMail = requester.user_mail;
+            client.query(
+                'SELECT * FROM targeted_learning WHERE $1::varchar = ANY(trainee_id) OR trainee_id @> $2 ORDER BY created_at DESC',
+                [searchMail, `{${searchMail}}`],
+                (err, result) => {
+                    if (err) return reject(err);
+                    return resolve(result);
+                }
+            );
+        } else {
+            client.query('SELECT * FROM targeted_learning ORDER BY created_at DESC', (err, result) => {
+                if (err) return reject(err);
+                return resolve(result);
+            });
+        }
+    });
+};
 const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [101, 102].includes(Number(requester.role))
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
                 message: "You do not have permission to view"
-            })
+            });
         }
         client.query('DELETE FROM targeted_learning WHERE target_learning_id=$1', [targeted_learning_id], (err, result) => {
             if (err) {
-                return reject(err)
+                return reject(err);
             }
             else {
                 return resolve(result);
             }
-        })
-    })
-}
+        });
+    });
+};
 const IndividualtllList = (requester, target_user_mail) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [99, 101, 102, 103].includes(Number(requester.role));
@@ -736,6 +745,28 @@ const individualBatchStats = (requester, batch_id) => {
                 } catch (_) {}
             }
 
+            let learningModule = null;
+            if (tlRow.learning_module_id) {
+                try {
+                    const lmRes = await client.query(
+                        `SELECT learning_module_id, course_name, module_name, unit_name FROM learning_module WHERE learning_module_id::text = $1::text`,
+                        [String(tlRow.learning_module_id)]
+                    );
+                    if (lmRes.rows.length) learningModule = lmRes.rows[0];
+                } catch (_) {}
+            }
+
+            let resources = [];
+            if (Array.isArray(tlRow.resources_id) && tlRow.resources_id.length > 0) {
+                try {
+                    const resRes = await client.query(
+                        `SELECT resource_id, resource_name, resource_type, resource_topic, display_order FROM resource_data WHERE resource_id::text = ANY($1::varchar[])`,
+                        [tlRow.resources_id]
+                    );
+                    resources = resRes.rows;
+                } catch (_) {}
+            }
+
             let users = [];
             let traineeIds = [];
             if (Array.isArray(tlRow.trainee_id)) {
@@ -817,6 +848,8 @@ const individualBatchStats = (requester, batch_id) => {
                     batch_end_date: eDate,
                     certificate_id: certRow.certificate_id,
                     certificate_name: certRow.certificate_name,
+                    learning_module: learningModule,
+                    resources: resources,
                     user_role: null,
                     user_email: null,
                     full_name: null,
@@ -833,6 +866,8 @@ const individualBatchStats = (requester, batch_id) => {
                 batch_end_date: eDate,
                 certificate_id: certRow.certificate_id,
                 certificate_name: certRow.certificate_name,
+                learning_module: learningModule,
+                resources: resources,
                 user_role: u.forced_role || u.user_role || "103",
                 user_email: u.user_email,
                 full_name: u.full_name,
@@ -904,7 +939,9 @@ const individualBatchStats = (requester, batch_id) => {
             batch_start_date: rows[0]?.batch_start_date || null,
             batch_end_date: rows[0]?.batch_end_date || null,
             certificate: firstCertificate,
-            certificates
+            certificates,
+            learning_module: rows[0]?.learning_module || null,
+            resources: rows[0]?.resources || []
         };
 
         const uniquePeopleByRole = (roleStr) => Array.from(
@@ -932,6 +969,8 @@ const individualBatchStats = (requester, batch_id) => {
             batchInfo,
             instructors,
             trainees,
+            resources: rows[0]?.resources || [],
+            learningModule: rows[0]?.learning_module || null,
             instructorCount: instructors.length,
             traineeCount: trainees.length
         };

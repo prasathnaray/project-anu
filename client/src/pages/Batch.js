@@ -4,7 +4,7 @@ import NavBar from "../components/navBar";
 import { ArrowUpWideNarrow, ChevronLeft, ChevronRight, EllipsisVertical, LayoutDashboard, ListFilter, Notebook, Pen, Pencil, SlidersHorizontal } from "lucide-react";
 import CreateBatch from "../components/admin/CreateBatch";
 import { jwtDecode } from "jwt-decode";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { X } from 'lucide-react';
 // import DatePicker from "react-datepicker";
 // import "react-datepicker/dist/react-datepicker.css";
@@ -92,6 +92,7 @@ const CustomDateInput2 = React.forwardRef(({ value, onClick, onChange }, ref) =>
         </div>
 ));
 function Batch() {
+        const navigate = useNavigate();
         const [filterData, setFilterData] = useState({
                 batch_name_filter: "",
                 instructor_name_filter: "",
@@ -125,7 +126,15 @@ function Batch() {
                 setPage(0);
         };
 
-        const [batchCus, setBatchCus] = useState(true);
+        const location = useLocation();
+        const [batchCus, setBatchCus] = useState(
+                location?.state?.tab === 'targeted' || location?.search?.includes('tab=targeted') ? false : true
+        );
+        useEffect(() => {
+                if (location?.state?.tab === 'targeted' || location?.search?.includes('tab=targeted')) {
+                        setBatchCus(false);
+                }
+        }, [location]);
         console.log(batchCus);
         const handleClose = () => {
                 setTargetedLearning(false)
@@ -903,7 +912,9 @@ function Batch() {
                                                         <div className="mt-5 bg-white rounded px-8 py-10 ">
                                                                 <div className="flex justify-end items-center">
                                                                         {/* <div className="text-bold">Custom Batches</div> */}
-                                                                        <div><button className="p-2 bg-[#8DC63F] rounded-full text-white hover:rounded delay-150 transition ease-in-out duration-150" onClick={() => setTargetedLearning(true)}><Pencil size={15} /></button></div>
+                                                                        {(decoded.role == 99 || decoded.role == 101 || decoded.role == 102) && (
+                                                                                <div><button className="p-2 bg-[#8DC63F] rounded-full text-white hover:rounded delay-150 transition ease-in-out duration-150" onClick={() => setTargetedLearning(true)}><Pencil size={15} /></button></div>
+                                                                        )}
                                                                 </div>
                                                                 <div className="mt-5">
                                                                         <table className="w-full text-left border-collapse">
@@ -914,7 +925,7 @@ function Batch() {
                                                                                                 <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>End date</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                                                 <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
                                                                                                 {/* <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>No.of Trainees associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th> */}
-                                                                                                {decoded.role == 99 || decoded.role == 101 && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>)}
+                                                                                                {(decoded.role == 99 || decoded.role == 101 || decoded.role == 102) && (<th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>)}
                                                                                         </tr>
                                                                                 </thead>
                                                                                 <tbody>
@@ -962,8 +973,8 @@ function Batch() {
                                                                                                                                                 ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                                                                                         `}
                                                                                                                                 >
-                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">View</button>
-                                                                                                                                        {decoded.role == 101 && (
+                                                                                                                                        <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => navigate(`/batch/${tarList.target_learning_id}`)}>View</button>
+                                                                                                                                        {(decoded.role == 99 || decoded.role == 101) && (
                                                                                                                                                 <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded" onClick={() => deleteTargetedLearningCall(tarList.target_learning_id)}>Delete</button>
                                                                                                                                         )}
                                                                                                                                         {/* <button className="block w-full text-left px-4 py-3 hover:bg-gray-50 font-normal hover:rounded">Tag Trainees</button>

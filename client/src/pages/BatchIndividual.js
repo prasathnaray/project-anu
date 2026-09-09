@@ -157,25 +157,13 @@ function BatchIndividual() {
     const [instructors, setInstructors] = React.useState([]);
     const [trainees, setTrainees] = React.useState([]);
     const [counts, setCounts] = React.useState({ instructorCount: 0, traineeCount: 0 });
+    const [resources, setResources] = React.useState([]);
+    const [learningModule, setLearningModule] = React.useState(null);
 
-    //     const handleIndBatchAPICall = async (batch_id) => {
-    //         try {
-    //             let token = localStorage.getItem('user_token');
-    //             const result = await BatchProfileAPI(token, batch_id);
-    //             const { batchInfo, instructors, trainees, instructorCount, traineeCount } = result.data;
-    //             setBatchInfo(batchInfo);
-    //             setInstructors(instructors);
-    //             setTrainees(trainees);
-    //             setCounts({ instructorCount, traineeCount });
-    //         } catch (err) {
-    //             console.log(err.message);
-    //         }
-    //     };
     const handleIndBatchAPICall = async (batch_id) => {
         try {
             let token = localStorage.getItem('user_token');
             const result = await BatchProfileAPI(token, batch_id);
-            //console.log('API result:', result); // check what's coming back
 
             const data = result?.data;
             if (!data) return; // guard against empty response
@@ -183,6 +171,8 @@ function BatchIndividual() {
             setBatchInfo(data.batchInfo || null);
             setInstructors(data.instructors || []);
             setTrainees(data.trainees || []);
+            setResources(data.resources || data.batchInfo?.resources || []);
+            setLearningModule(data.learningModule || data.batchInfo?.learning_module || null);
             setCounts({
                 instructorCount: data.instructorCount || 0,
                 traineeCount: data.traineeCount || 0
@@ -439,7 +429,67 @@ function BatchIndividual() {
                                         </table>
                                     </div>
                                 </div>
-                        )}                
+                        )}
+                        {/* Assigned Learning Resources Section */}
+                        <div className="m-3 bg-white p-2">
+                            <div className="text-lg m-3 flex justify-between items-center">
+                                <div>Assigned Learning Resources</div>
+                                {learningModule && (
+                                    <div className="text-xs text-gray-500 font-normal">
+                                        {[learningModule.course_name, learningModule.module_name, learningModule.unit_name].filter(Boolean).join(' > ')}
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-gray-300 shadow-sm text-sm">
+                                            <th className="py-2 px-4 text-[#8DC63F]">
+                                                <div className="flex items-center gap-2">
+                                                    <div>Resource Name</div>
+                                                    <button><ArrowUpWideNarrow size={20} /></button>
+                                                </div>
+                                            </th>
+                                            <th className="py-2 px-4 text-[#8DC63F]">
+                                                <div className="flex items-center gap-2">
+                                                    <div>Topic</div>
+                                                    <button><ArrowUpWideNarrow size={20} /></button>
+                                                </div>
+                                            </th>
+                                            <th className="py-2 px-4 text-[#8DC63F]">
+                                                <div className="flex items-center gap-2">
+                                                    <div>Resource Type</div>
+                                                    <button><ArrowUpWideNarrow size={20} /></button>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm">
+                                        {resources && resources.length > 0 ? (
+                                            resources.map((res, index) => (
+                                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                                                    <td className="py-2 px-4 font-medium text-gray-800">
+                                                        {res.resource_name || '—'}
+                                                    </td>
+                                                    <td className="py-2 px-4 text-gray-600">
+                                                        {res.resource_topic || '—'}
+                                                    </td>
+                                                    <td className="py-2 px-4 text-gray-600">
+                                                        {res.resource_type || 'Learning Resource'}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="3" className="py-6 text-center text-gray-400">
+                                                    No learning resources assigned to this targeted learning.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>                
                         </div>
                     </div>
                 </div>
