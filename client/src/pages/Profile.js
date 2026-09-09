@@ -350,18 +350,43 @@ function Profile({ isOpen, onClose }) {
     };
 
     // Format date
-    const formatDate = (dateString) => {
-        if (!dateString) return '';
+    const formatDate = (dateInput) => {
+        if (!dateInput || dateInput === 'Invalid Date' || dateInput === 'null') return '';
+        if (typeof dateInput === 'object' && !(dateInput instanceof Date) && Object.keys(dateInput).length === 0) return '';
         try {
-            const date = new Date(dateString);
+            let date;
+            if (dateInput instanceof Date) {
+                date = dateInput;
+            } else if (typeof dateInput === 'string') {
+                const trimmed = dateInput.trim();
+                if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+                    const parts = trimmed.split('/');
+                    date = new Date(parts[2] + '-' + parts[1] + '-' + parts[0]);
+                } else {
+                    date = new Date(trimmed);
+                    if (isNaN(date.getTime())) {
+                        date = new Date(trimmed.replace(' ', 'T'));
+                    }
+                }
+            } else {
+                date = new Date(dateInput);
+            }
+            if (!date || isNaN(date.getTime())) return '';
             return date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+                day: '2-digit',
+                month: 'short', 
+                year: 'numeric' 
             });
         } catch {
-            return dateString;
+            return '';
         }
+    };
+
+    const formatPhoneWithCountryCode = (phone) => {
+        if (!phone) return '';
+        const str = String(phone).trim();
+        if (str.startsWith('+')) return str;
+        return `+91 ${str}`;
     };
 
     if (!isOpen) return null;
@@ -471,14 +496,14 @@ function Profile({ isOpen, onClose }) {
                                     </div>
                                 </div>
 
-                                {/* Sector/Institution Type */}
+                                {/* Sector/Institution Name */}
                                 <div className="col-span-2 md:col-span-1">
                                     <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                                        Institution Type
+                                        Institution Name
                                     </label>
                                     <input
                                         type="text"
-                                        value={profileData?.data?.institution_type || 'Educational Institute'}
+                                        value={profileData?.data?.institution_name || profileData?.data?.center_name || ''}
                                         readOnly
                                         className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none"
                                     />
@@ -499,7 +524,7 @@ function Profile({ isOpen, onClose }) {
                                         </div>
                                         <input
                                             type="text"
-                                            value={profileData?.data?.user_contact_num || ''}
+                                            value={formatPhoneWithCountryCode(profileData?.data?.user_contact_num)}
                                             readOnly
                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#8DC63F] focus:border-transparent"
                                         />
@@ -521,7 +546,7 @@ function Profile({ isOpen, onClose }) {
                                         </div>
                                         <input
                                             type="text"
-                                            value={formatDate(profileData?.data?.user_dob) || ''}
+                                            value={formatDate(profileData?.data?.user_dob || profileData?.data?.dob || profileData?.user_dob) || ''}
                                             readOnly
                                             className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-[#8DC63F] focus:border-transparent"
                                         />

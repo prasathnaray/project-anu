@@ -14,14 +14,16 @@ const profilem = async (requester) => {
         }
         const query = `
             SELECT
-                user_profile_photo, 
-                user_name, 
-                user_email, 
-                user_contact_num, 
-                user_dob, 
-                user_gender
-            FROM user_data 
-            WHERE user_email = $1
+                ud.user_profile_photo, 
+                ud.user_name, 
+                ud.user_email, 
+                ud.user_contact_num, 
+                ud.user_dob, 
+                ud.user_gender,
+                sc.center_name AS institution_name
+            FROM user_data ud
+            LEFT JOIN scan_centers sc ON ud.centre_id = sc.center_id
+            WHERE ud.user_email = $1
         `;
 
         const { rows } = await client.query(query, [requester.user_mail]);

@@ -16,7 +16,7 @@ const DEFAULT_FIELDS = new Set([
 
 const hydrateStorageFields = async (value, fields = DEFAULT_FIELDS) => {
     if (Array.isArray(value)) return Promise.all(value.map((item) => hydrateStorageFields(item, fields)));
-    if (!value || typeof value !== 'object') return value;
+    if (!value || typeof value !== 'object' || value instanceof Date) return value;
     const entries = await Promise.all(Object.entries(value).map(async ([key, item]) => {
         if (fields.has(key) && Array.isArray(item)) return [key, await signAssets(item)];
         if (fields.has(key) && typeof item === 'string' && item && item !== '-') {

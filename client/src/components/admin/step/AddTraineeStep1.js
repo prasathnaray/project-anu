@@ -9,6 +9,7 @@ import {
   Box,
   OutlinedInput,
   Chip,
+  InputAdornment,
 } from "@mui/material";
 import { ValidatorForm, TextValidator } from "react-material-ui-form-validator";
 import EmailValidation from "../../../utils/EmailValidation";
@@ -143,6 +144,9 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
           sx={{ minHeight: "35px" }}
           id="outlined-basic"
           label="Contact Number"
+          InputProps={{
+            startAdornment: <InputAdornment position="start">+91</InputAdornment>,
+          }}
           onChange={(e) => {
             handleChange(e);
             phoneValidationChange(e);
@@ -166,11 +170,24 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
         />
       </div>
       <div>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          sx={{ minHeight: "35px" }}
+          id="outlined-institution-name"
+          label="Institution Name"
+          name="institution_name"
+          onChange={handleChange}
+          value={handleInputData.institution_name || ''}
+        />
+      </div>
+      <div>
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             label="Date of Birth"
             value={
-              handleInputData.trainee_dob
+              handleInputData.trainee_dob && dayjs(handleInputData.trainee_dob).isValid()
                 ? dayjs(handleInputData.trainee_dob)
                 : null
             }
@@ -178,7 +195,7 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
               handleChange({
                 target: {
                   name: "trainee_dob",
-                  value: newValue ? newValue.format("YYYY-MM-DD") : "",
+                  value: newValue && newValue.isValid() ? newValue.format("YYYY-MM-DD") : "",
                 },
               });
             }}

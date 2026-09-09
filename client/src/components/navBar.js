@@ -875,16 +875,17 @@ import { Bell, CircleUser, Scan, Minimize, Search } from "lucide-react";
 import { Badge } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { supabase } from "../supabaseClient";
 import Profile from "../pages/Profile";
 
 function NavBar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const ripple = new MaterialRipple();
   const dropdownRefs = useRef({});
-  const currentPath = window.location.pathname;
+  const currentPath = location.pathname;
 
   // ── Auth ──────────────────────────────────────────────────────────────────
   const tokenRes = jwtDecode(localStorage.getItem("user_token"));
@@ -901,20 +902,47 @@ function NavBar() {
   // Track locally-dismissed query notifications (no DB column needed)
   const [readQueryIds, setReadQueryIds] = useState(new Set());
 
-  // ── Page title map ────────────────────────────────────────────────────────
-  const pageTitles = {
-    "/reports": "Reports",
-    "/dashboard": "Dashboard",
-    "/profile": "Profile",
-    "/settings": "Settings",
-    "/course": "Courses",
-    "/instructors": "Instructors",
-    "/batch": "Batch",
-    "/vrspace": "Realtime",
+  // ── Page title helper ─────────────────────────────────────────────────────
+  const getPageTitle = (loc) => {
+    const path = (loc?.pathname || window.location.pathname).toLowerCase();
+    const search = new URLSearchParams(loc?.search || window.location.search);
+    
+    if (path === "/batch" && search.get("tab") === "targeted") {
+      return "Targeted Learning";
+    }
+
+    if (path === "/dashboard") return "Dashboard";
+    if (path === "/my-learning") return "My Learning";
+    if (path === "/my-progress") return "My Progress";
+    if (path === "/schedules") return "Schedules";
+    if (path === "/queries") return "Queries";
+    if (path === "/batch" || path.startsWith("/batch/")) return "Batch";
+    if (path === "/trainees") return "Trainees";
+    if (path.startsWith("/trainee/")) return "Trainee Details";
+    if (path === "/instructors") return "Instructors";
+    if (path.startsWith("/instructor/")) return "Instructor Details";
+    if (path === "/certificate" || path === "/course" || path.startsWith("/course/") || path.startsWith("/chapters/") || path.startsWith("/module/") || path.startsWith("/resource/") || path.startsWith("/cert-course/") || path.startsWith("/cert_course/")) return "Certification";
+    if (path === "/curriculum") return "Curriculum";
+    if (path === "/volume-management") return "Volume Management";
+    if (path === "/request-raised" || path === "/all-requests") return "Requests";
+    if (path === "/course-mapping") return "Course Mapping";
+    if (path === "/reatt-data") return "Reattempts";
+    if (path === "/academics") return "Academics";
+    if (path === "/vrspace" || path === "/video" || path === "/publish") return "Streams";
+    if (path === "/reports") return "Reports";
+    if (path === "/settings") return "Settings";
+    if (path === "/profile") return "Profile";
+    if (path === "/custom-course") return "SVT Course";
+    if (path === "/course-access") return "Assigned Courses";
+
+    const cleanPath = path.replace(/^\//, '').split('/')[0];
+    if (cleanPath) {
+      return cleanPath.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+    return "Dashboard";
   };
-  const pageTitle =
-    pageTitles[currentPath] ||
-    (currentPath.startsWith("/trainee") ? "Trainee Details" : "");
+
+  const pageTitle = getPageTitle(location);
 
   const roleLabel = {
     99: "Welcome Super Admin",

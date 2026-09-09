@@ -27,6 +27,7 @@ function AddTrainee() {
           trainee_name: '',
           trainee_email_address: '',
           trainee_contact_address: '',
+          institution_name: '',
           trainee_dob: '',
           trainee_gender: '',
           trainee_batch: [],
@@ -93,10 +94,14 @@ function AddTrainee() {
         return;
       }
 
+      const rawContact = handleInputData.trainee_contact_address || '';
+      const formattedContact = rawContact.startsWith('+') ? rawContact : `+91 ${rawContact}`;
+
       const formData = new FormData();
       formData.append('user_name', handleInputData.trainee_name);
       formData.append('user_email', handleInputData.trainee_email_address)
-      formData.append('user_contact_num', handleInputData.trainee_contact_address)
+      formData.append('user_contact_num', formattedContact)
+      formData.append('institution_name', handleInputData.institution_name || '')
       formData.append('user_dob', handleInputData.trainee_dob);
       formData.append('user_gender', handleInputData.trainee_gender)
       handleInputData.trainee_batch.forEach((batch) => {
