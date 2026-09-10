@@ -101,7 +101,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                   }`}
                 >
                   <Notebook size={20} />
-                  <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Courses</div>
+                  <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Certifications</div>
                 </button>
               </li>
               <li className="mb-1 mt-2">
@@ -311,7 +311,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     }`}
                 >
                   <Notebook size={20} />
-                  <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certification</div>
+                  <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certifications</div>
                 </button>
               </li>
               <li className="mb-1 mt-2">
