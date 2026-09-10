@@ -13,7 +13,8 @@ import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
 import volumeConvAPI from '../API/volumeConvAPI';
 import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
-import CustomCloseButton from '../utils/CustomCloseButton'
+import CustomCloseButton from '../utils/CustomCloseButton';
+import UpdateVolumeAPI from '../API/UpdateVolumeAPI';
 
 const MAX_VOLUME_UPLOAD_SIZE_MB = 100;
 const MAX_VOLUME_UPLOAD_SIZE_BYTES = MAX_VOLUME_UPLOAD_SIZE_MB * 1024 * 1024;
@@ -63,6 +64,70 @@ function VolumeList() {
   });
   const [volumesDatumm, setVolumesDatumm] = useState([]);
   const [volumeRecordingCounts, setVolumeRecordingCounts] = useState({});
+
+  const [openEditVol, setOpenEditVol] = useState(false);
+  const [editingVolume, setEditingVolume] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    volume_id: '',
+    volume_name: '',
+    volume_type: '',
+    volume_fetal_presentation: '',
+    trimester: '',
+    volume_ga: '',
+    description: '',
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
+  const handleOpenEdit = (volume) => {
+    if (!volume) return;
+    setEditingVolume(volume);
+    setEditFormData({
+      volume_id: volume.volume_id,
+      volume_name: volume.volume_name || '',
+      volume_type: volume.volume_type || '',
+      volume_fetal_presentation: volume.volume_fetal_presentation || '',
+      trimester: volume.trimester || '',
+      volume_ga: volume.volume_ga || '',
+      description: volume.description || '',
+    });
+    setOpenEditVol(true);
+    setAnchorEl(null);
+  };
+
+  const handleCloseEdit = () => {
+    setOpenEditVol(false);
+    setEditingVolume(null);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const { volume_id, volume_name, volume_type, volume_fetal_presentation, trimester, volume_ga, description } = editFormData;
+    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description) {
+      toast.error('Please fill all fields.');
+      return;
+    }
+    try {
+      setEditLoading(true);
+      const response = await UpdateVolumeAPI(token, editFormData);
+      if (response.code === 200 || response.status === 200 || response.message) {
+        toast.success('Volume updated successfully!');
+        setOpenEditVol(false);
+        handleAPICall({ showLoading: false });
+      } else {
+        toast.error(response.error || response.message || 'Failed to update volume.');
+      }
+    } catch (err) {
+      console.error('Update Error:', err);
+      toast.error(err.response?.data?.error || err.message || 'Something went wrong while updating.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const handleAPICall = React.useCallback(async ({ showLoading = true } = {}) => {
     if (showLoading) {
@@ -551,7 +616,7 @@ function VolumeList() {
           {/* {converting ? 'Converting...' : 'Convert'} */}
               {converting || getConversionStatus(selectedVolume) === 'converting' ? 'Converting...' : getConversionStatus(selectedVolume) === 'completed' ? 'Already Converted' : 'Convert'}
         </MenuItem>
-        <MenuItem>
+        <MenuItem onClick={() => handleOpenEdit(selectedVolume)}>
             Edit
         </MenuItem>
       </Menu>
@@ -672,6 +737,114 @@ function VolumeList() {
                 disabled={loading}
               >
                 {loading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </form>
+        </>
+      </UploadVol>
+
+      {/* Edit Volume Modal */}
+      <UploadVol isVisible={openEditVol} onClose={handleCloseEdit}>
+        <>
+          <div className="flex justify-between items-center">
+            <div className="font-medium">Edit Volume</div>
+            <button
+              className="text-red-400 hover:bg-red-100 hover:rounded p-1 transition-all"
+              onClick={handleCloseEdit}
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <form onSubmit={handleEditSubmit}>
+            <div className="grid grid-cols-2 gap-5 mt-3">
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Volume Name"
+                name="volume_name"
+                value={editFormData.volume_name}
+                onChange={handleEditChange}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Anatomy Type"
+                name="volume_type"
+                value={editFormData.volume_type}
+                onChange={handleEditChange}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Fetal Presentation"
+                name="volume_fetal_presentation"
+                value={editFormData.volume_fetal_presentation}
+                onChange={handleEditChange}
+              />
+              <TextField
+                select
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Trimester"
+                name="trimester"
+                value={editFormData.trimester}
+                onChange={handleEditChange}
+              >
+                <MenuItem value="">Select Trimester</MenuItem>
+                <MenuItem value="First Trimester">First Trimester</MenuItem>
+                <MenuItem value="Second Trimester">Second Trimester</MenuItem>
+                <MenuItem value="Third Trimester">Third Trimester</MenuItem>
+              </TextField>
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Gestational Age"
+                name="volume_ga"
+                type="number"
+                value={editFormData.volume_ga}
+                onChange={handleEditChange}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Uploader Name"
+                value={uploaderName}
+                InputProps={{ readOnly: true }}
+              />
+              <TextField
+                fullWidth
+                multiline
+                minRows={3}
+                variant="outlined"
+                size="small"
+                label="Case Details"
+                name="description"
+                value={editFormData.description}
+                onChange={handleEditChange}
+                className="col-span-2"
+              />
+            </div>
+
+            <div className="mt-4 flex justify-end items-center gap-2">
+              <button
+                type="button"
+                className="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50"
+                onClick={handleCloseEdit}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-[#8DC63F] p-1 px-3 text-white rounded text-sm disabled:opacity-50"
+                disabled={editLoading}
+              >
+                {editLoading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </form>

@@ -825,4 +825,21 @@ const getAssociatedVolumeModel = (requester, r_id) => {
         })
     })
 }
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel};
+const updateVolumeModel = (requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description) => {
+    return new Promise((resolve, reject) => {
+        const scope = volumeAccessScope(requester, 'volumes', 8);
+        if (!scope) return resolve(denied('You do not have permission to update volumes.'));
+        client.query(
+            `UPDATE volumes
+             SET volume_type = $1, volume_name = $2, volume_ga = $3, volume_fetal_presentation = $4, trimester = $5, description = $6
+             WHERE volume_id = $7 AND ${scope.clause} AND ownership_review_required = false`,
+            [volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description, volume_id, ...scope.params],
+            (err, result) => {
+                if (err) return reject(err);
+                return resolve({ status: 'Success', code: 200, rowCount: result.rowCount, message: 'Volume updated successfully' });
+            }
+        );
+    });
+};
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel};
+

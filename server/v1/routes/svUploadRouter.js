@@ -1,5 +1,5 @@
 const express = require('express');
-const {VolumeController} = require('../controller/VolumeController')
+const {VolumeController, updateVolumeC} = require('../controller/VolumeController')
 const multer = require('multer');
 
 const MAX_VOLUME_UPLOAD_SIZE_MB = Number(process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100);
@@ -13,6 +13,7 @@ const upload = multer({
 
 const svUploadRouter = express.Router();
 svUploadRouter.post('/sv-upload', upload.single('file'), VolumeController);
+svUploadRouter.put('/update-volume', updateVolumeC);
 
 svUploadRouter.use((err, req, res, next) => {
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {

@@ -5719,7 +5719,9 @@ function buildImageInterpretationSessions(submissions, questions) {
       sessionRows.forEach((row) => {
         const questionNo = String(row.question_no ?? '');
         const previous = latestByQuestion[questionNo];
-        if (!previous || new Date(row.created_at || 0) > new Date(previous.created_at || 0)) {
+        const rowTime = new Date(row.created_at || row.submitted_at || row.timestamp || row.updated_at || 0).getTime();
+        const prevTime = previous ? new Date(previous.created_at || previous.submitted_at || previous.timestamp || previous.updated_at || 0).getTime() : 0;
+        if (!previous || rowTime >= prevTime) {
           latestByQuestion[questionNo] = row;
         }
       });
@@ -5742,7 +5744,8 @@ function buildImageInterpretationSessions(submissions, questions) {
       const byType = groupQuestionsByType(mergedRows);
 
       const latestCreatedAt = sessionRows.reduce((latest, row) => {
-        const rowDate = new Date(row.created_at || 0);
+        const rawDate = row.created_at || row.submitted_at || row.timestamp || row.updated_at;
+        const rowDate = rawDate ? new Date(rawDate) : new Date(0);
         return rowDate > latest ? rowDate : latest;
       }, new Date(0));
 
@@ -5758,8 +5761,10 @@ function buildImageInterpretationSessions(submissions, questions) {
 function sessionSummary(session) {
   const all = Object.values(session.byType).flat();
   const total = all.length;
-  const correct = all.filter(q => q.is_correct === true).length;
-  const wrong = all.filter(q => q.is_correct === false).length;
+  const isCorrect = q => q.is_correct === true || String(q.is_correct).toLowerCase() === 'true' || q.is_correct === 1;
+  const isWrong = q => q.is_correct === false || String(q.is_correct).toLowerCase() === 'false' || q.is_correct === 0;
+  const correct = all.filter(isCorrect).length;
+  const wrong = all.filter(isWrong).length;
   const answered = correct + wrong;
   const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   return { total, correct, wrong, answered, pct };

@@ -1,4 +1,4 @@
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel} = require("../model/Volumem");
 const path = require('path');
 const { randomUUID } = require('crypto');
 const { uploadAsset, signAsset, signAssets } = require('../utils/storageAdapter');
@@ -961,4 +961,19 @@ const getAssociatedVolumeController = async(req, res) => {
         res.status(500).send(err)
     }
 }
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, getRecordingsController, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController}
+const updateVolumeC = async(req, res) => {
+    const requester = req.user;
+    const { volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description } = req.body;
+    try {
+        if (!volume_id || !volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester || !description) {
+            return res.status(406).json({ message: "Fields should not be empty" });
+        }
+        const result = await updateVolumeModel(requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description);
+        if (result.code && result.code !== 200) return res.status(result.code).json(result);
+        res.status(200).json({ message: 'Volume Updated Successfully' });
+    } catch(err) {
+        console.error('Update Volume Error:', err);
+        res.status(500).send(err);
+    }
+};
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, getRecordingsController, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController, updateVolumeC}

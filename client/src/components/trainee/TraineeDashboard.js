@@ -5608,6 +5608,12 @@ function TraineeDashboard() {
     [scoreScopedResources]
   );
 
+  const isImageInterpretationRecord = row =>
+    ['resource_topic', 'resource_name', 'resource_type', 'unit_name', 'module_name'].some(key => {
+      const value = normalizeResourceText(row?.[key]);
+      return value.includes('image interpretation') || value.includes('image interp') || value === 'interpret';
+    });
+
   const latestMindSparkScore = useMemo(
     () => getLatestItem(scoreScopedActivityLastScores.filter(row => isMindSparkRecord(row)), 'session_date'),
     [scoreScopedActivityLastScores]
@@ -5618,6 +5624,10 @@ function TraineeDashboard() {
   );
   const latestEchoDoseScore = useMemo(
     () => getLatestItem(scoreScopedActivityLastScores.filter(row => isEchoDoseRecord(row)), 'session_date'),
+    [scoreScopedActivityLastScores]
+  );
+  const latestImageInterpretationScore = useMemo(
+    () => getLatestItem(scoreScopedActivityLastScores.filter(row => isImageInterpretationRecord(row)), 'session_date'),
     [scoreScopedActivityLastScores]
   );
 
@@ -6104,6 +6114,7 @@ function TraineeDashboard() {
     const latestMindSparkSummary = latestMindSparkScore ? summarizeActivityScores([latestMindSparkScore]) : null;
     const latestOBSummary = latestOBScore ? summarizeActivityScores([latestOBScore]) : null;
     const latestEchoDoseSummary = latestEchoDoseScore ? summarizeActivityScores([latestEchoDoseScore]) : null;
+    const latestImageInterpretationSummary = latestImageInterpretationScore ? summarizeActivityScores([latestImageInterpretationScore]) : null;
     const scoreItems = [
       {
         label: 'MS',
@@ -6127,14 +6138,18 @@ function TraineeDashboard() {
           },
           {
             label: 'II',
-            value: latestImageInterpretation
-              ? `${latestImageInterpretation.is_completed ? 1 : 0}/1`
-              : '—',
-            sub: latestImageInterpretation?.resource_name || 'Image Interp.',
+            value: latestImageInterpretationSummary
+              ? `${latestImageInterpretationSummary.correct}/${latestImageInterpretationSummary.totalQ}`
+              : latestImageInterpretation
+                ? `${latestImageInterpretation.is_completed ? 1 : 0}/1`
+                : '—',
+            sub: latestImageInterpretationScore?.resource_name || latestImageInterpretation?.resource_name || 'Image Interp.',
             color: '#a78bfa',
-            ring: latestImageInterpretation
-              ? (latestImageInterpretation.is_completed ? 100 : 0)
-              : 0,
+            ring: latestImageInterpretationSummary
+              ? Math.round((latestImageInterpretationSummary.correct / Math.max(latestImageInterpretationSummary.totalQ, 1)) * 100)
+              : latestImageInterpretation
+                ? (latestImageInterpretation.is_completed ? 100 : 0)
+                : 0,
           },
           {
             label: 'T',
@@ -6863,7 +6878,7 @@ function TraineeDashboard() {
                 {/* Row A: Last Session full width */}
                 <div className="grid grid-cols-1 gap-3">
                   <LastSessionCard />   {/* 1 */}
-                  {/* <LastScoreCard /> */}
+                  <LastScoreCard />
                 </div>
 
                 {/* Row B: Performance Metrics + Skill Competency side by side */}
