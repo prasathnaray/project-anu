@@ -1115,6 +1115,7 @@ function Course() {
   });
 
   const [courseList, setCourseList] = useState([]);
+  const [isCourseLoading, setIsCourseLoading] = useState(true);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [groupedCourses, setGroupedCourses] = useState([]); // grouped by certificate_id
   const [searchItem, setSearchItem] = useState("");
@@ -1168,6 +1169,7 @@ function Course() {
   };
 
   const GetCoursesList = async () => {
+    setIsCourseLoading(true);
     try {
       const token = localStorage.getItem("user_token");
       const result = await GetCoursesAPI(token);
@@ -1177,6 +1179,11 @@ function Course() {
       setGroupedCourses(groupCoursesByCertificate(raw));
     } catch (err) {
       console.log(err);
+      setCourseList([]);
+      setFilteredCourses([]);
+      setGroupedCourses([]);
+    } finally {
+      setIsCourseLoading(false);
     }
   };
 
@@ -1433,7 +1440,21 @@ function Course() {
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.isArray(groupedCourses) &&
+                    {isCourseLoading ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="py-4 text-center text-gray-500"
+                        >
+                          <ClipLoader
+                            color="#8DC63F"
+                            size={24}
+                            className="ms-2"
+                            cssOverride={{ borderWidth: "4px" }}
+                          />
+                        </td>
+                      </tr>
+                    ) : Array.isArray(groupedCourses) &&
                       groupedCourses.length > 0 ? (
                       groupedCourses.map((data, index) => {
                         const hasBatches = data.batches && data.batches.length > 0;
@@ -1577,12 +1598,7 @@ function Course() {
                           colSpan={5}
                           className="py-4 text-center text-gray-500"
                         >
-                          <ClipLoader
-                            color="#8DC63F"
-                            size={24}
-                            className="ms-2"
-                            cssOverride={{ borderWidth: "4px" }}
-                          />
+                          No certifications available.
                         </td>
                       </tr>
                     )}
