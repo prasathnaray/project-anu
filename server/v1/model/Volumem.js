@@ -490,6 +490,10 @@ const placedVolumeConversionModel = (requester, volume_id, placed_url) => {
                  )
                  INSERT INTO volume_placements (volume_id, placed_url, placed_by, created_at)
                  SELECT volume_id, $2, $3, NOW() FROM authorized_volume
+                 ON CONFLICT (volume_id) DO UPDATE SET
+                    placed_url = EXCLUDED.placed_url,
+                    placed_by = EXCLUDED.placed_by,
+                    created_at = EXCLUDED.created_at
                  RETURNING *`,
                 [volume_id, placed_url, requester.user_mail, ...scope.params],
                 (err, result) => {

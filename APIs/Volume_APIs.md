@@ -42,7 +42,7 @@ List endpoints return only accessible records. An inaccessible volume identifier
 | Source | `GET` | `/get-volumes-by-instructor` | List volumes with conversion status |
 | Conversion | `PUT` | `/convert-vol/:volume_id` | Start an asynchronous conversion |
 | Conversion | `GET` | `/converted-volumes` | List completed conversions |
-| Placement | `POST` | `/volume-placement` | Upload placement JSON |
+| Placement | `POST` | `/volume-placement` | Create or replace placement JSON |
 | Placement | `GET` | `/volume-placements` | List placements, optionally filtered by `volume_id` |
 | Placement | `GET` | `/volume-placements/:volume_id` | List placements for one volume |
 | Recording | `POST` | `/uploadvolumerecording` | Upload recording JSON, WAV, images, and one manifest |
@@ -301,7 +301,9 @@ Content-Type: multipart/form-data
 | `volume_id` | text UUID | Yes | Converted volume ID |
 | `placed_file` | file | Yes | Valid `.json` with MIME type `application/json` |
 
-The file is stored at `volume_placements/<volume_id>_<timestamp>.json`.
+Each volume has one placement. The file is stored at the volume's stable
+`placements/placement.json` path; posting again for the same `volume_id` replaces
+the existing JSON and placement metadata.
 
 ```bash
 curl -X POST "http://localhost:4004/api/v1/volume-placement" \

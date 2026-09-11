@@ -95,6 +95,8 @@ Content-Type: multipart/form-data
 ```
 
 Uploads a valid JSON placement file and associates it with an accessible volume.
+Each volume has one placement; posting again with the same `volume_id` replaces
+the existing JSON and placement metadata.
 
 ### Form fields
 

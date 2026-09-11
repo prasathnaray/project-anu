@@ -26,7 +26,13 @@ require.cache[conversionPath] = {
     exports: { startVolumeConversion: () => {} }
 };
 
-const { svUploadModel, getUploadedVolume, getVolumeInstructorViewModel, getRecordingsModel } = require('../model/Volumem');
+const {
+    svUploadModel,
+    getUploadedVolume,
+    getVolumeInstructorViewModel,
+    placedVolumeConversionModel,
+    getRecordingsModel
+} = require('../model/Volumem');
 
 const upload = (requester) => svUploadModel(
     requester,
@@ -88,4 +94,18 @@ test('recordings are fetched by volume only for the authenticated creator', asyn
     assert.match(capturedQuery.sql, /AND vr\.volume_id = \$2/);
     assert.deepEqual(capturedQuery.params, [requester.user_mail, volumeId]);
     assert.deepEqual(result.data, queryRows);
+});
+
+test('placing a volume upserts its single placement row', async () => {
+    const requester = { user_mail: 'creator@example.test', role: 102, centre_id: 'centre-a' };
+    const volumeId = 'volume-a';
+    const placedUrl = 'projectanu/institutions/centre-a/volume-a/placements/placement.json';
+
+    await placedVolumeConversionModel(requester, volumeId, placedUrl);
+
+    assert.match(capturedQuery.sql, /ON CONFLICT \(volume_id\) DO UPDATE SET/);
+    assert.match(capturedQuery.sql, /placed_url = EXCLUDED\.placed_url/);
+    assert.match(capturedQuery.sql, /placed_by = EXCLUDED\.placed_by/);
+    assert.match(capturedQuery.sql, /created_at = EXCLUDED\.created_at/);
+    assert.deepEqual(capturedQuery.params, [volumeId, placedUrl, requester.user_mail, requester.user_mail]);
 });

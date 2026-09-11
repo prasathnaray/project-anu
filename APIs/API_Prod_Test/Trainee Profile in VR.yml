@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/trainee/4ef474a4-3dd3-4d35-bfdf-40039b8a5be9?isVr=true
+  url: http://{{local_base_url}}/api/v1/trainee/49982e50-c723-472a-9dd0-524eb7f5dc15?isVr=true
   params:
     - name: isVr
       value: "true"
@@ -15,10 +15,11 @@ http:
     data: ""
   auth:
     type: bearer
-    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJhYml5YUBnbWFpbC5jb20iLCJyb2xlIjoiMTAzIiwiY2VudHJlX2lkIjoiMDhiNjViMjctMDNkZC00MjVlLTgyZDAtY2Y3YWYxMmM3ZWU3IiwiY2VudGVyX25hbWUiOm51bGwsImlhdCI6MTc4NDUzOTQyNH0.-7Hx-x8TymSNGwwlNTxG6aBzi1G-Oc9FC2ThyiOOIx0
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGh0aWMuaWl0bS5hYy5pbiIsInJvbGUiOiIxMDMiLCJjZW50cmVfaWQiOiIwMWM2OWJkMS1kNjJlLTQ4M2UtYjA5Zi1mMTRhMmYwZjQzZWQiLCJjZW50ZXJfbmFtZSI6IkhUSUMgSW50ZXJuYWwgVGVhbSIsImlhdCI6MTc4OTAzOTQ3NH0.PdTXhpUMBxY4pF4u8aJwK5K477Wg3CC4-lWPskWrqcs
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true

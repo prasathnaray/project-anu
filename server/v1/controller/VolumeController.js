@@ -266,13 +266,13 @@ const volumePlacementController = async(req, res) => {
             return res.status(400).send("Invalid JSON content. File contains malformed JSON.");
         }
         
-        const fileName = `${ownerPrefix(requester, ownedVolume)}/${volume_id}/placements/${Date.now()}.json`;
+        const fileName = `${ownerPrefix(requester, ownedVolume)}/${volume_id}/placements/placement.json`;
         const uploaded = await uploadAsset({
             sourceBucket: contentBucket(),
             objectKey: fileName,
             body: placed_file.buffer,
             contentType: 'application/json',
-            upsert: false
+            upsert: true
         });
         
         const placement = await placedVolumeConversionModel(requester, volume_id, uploaded.reference);

@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "user_mail": "admin@anu.in",
+        "user_mail": "rohinth@htic.iitm.ac.in",
         "user_password": "test1"
       }
   auth:
@@ -22,3 +22,4 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
