@@ -1,7 +1,7 @@
-const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel} = require("../model/Volumem");
+const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, getVolumeDownloadModel, getVolumeRecordingDownloadListModel, getVolumeRecordingDownloadModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel} = require("../model/Volumem");
 const path = require('path');
 const { randomUUID } = require('crypto');
-const { uploadAsset, signAsset, signAssets } = require('../utils/storageAdapter');
+const { uploadAsset, signAsset, signAssets, parseReference } = require('../utils/storageAdapter');
 const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const contentBucket = () => process.env.PRIVATE_CONTENT_BUCKET || process.env.BUCKET_NAME;
@@ -11,6 +11,27 @@ const ownerPrefix = (requester, volume = null) => {
     return scope === 'super_admin' ? 'global' : `institutions/${centreId}`;
 };
 const safeName = (name) => path.basename(name).replace(/[^a-zA-Z0-9._-]/g, '_');
+const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+const sendDownloadLink = async (res, reference, fileType, fallbackName) => {
+    if (!reference) return res.status(404).json({ message: 'File is not available for download.' });
+    const parsed = parseReference(reference, contentBucket());
+    if (!parsed) return res.status(404).json({ message: 'File is not available for download.' });
+    const filename = path.posix.basename(parsed.objectKey)
+        .replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 140) || fallbackName;
+    const url = await signAsset(reference, {
+        defaultSourceBucket: contentBucket(), downloadName: filename
+    });
+    if (!url) return res.status(404).json({ message: 'File is not available for download.' });
+    res.set('Cache-Control', 'no-store');
+    return res.status(200).json({ url, filename, fileType });
+};
+const sendDownloadError = (res, error) => {
+    if (error?.name === 'NotFound' || error?.name === 'NoSuchKey' || error?.$metadata?.httpStatusCode === 404) {
+        return res.status(404).json({ message: 'Stored file not found.' });
+    }
+    console.error('Volume download failed:', error);
+    return res.status(502).json({ message: 'Unable to prepare download.' });
+};
 const VolumeController = async(req, res) => {
     const requester = req.user;
     try
@@ -118,6 +139,70 @@ const getVolumeInstructorViewController = async(req, res) => {
         res.status(500).send(err)
     }
 }
+const getVolumeDownloadController = async (req, res) => {
+    const volumeId = req.params.volume_id;
+    const fileType = req.query.file;
+    if (!isUuid(volumeId)) {
+        return res.status(400).json({ message: 'Invalid volume ID.' });
+    }
+    if (!['source', 'converted'].includes(fileType)) {
+        return res.status(400).json({ message: 'Choose a source or converted file.' });
+    }
+    try {
+        const volume = await getVolumeDownloadModel(req.user, volumeId);
+        if (!volume) return res.status(404).json({ message: 'Volume not found.' });
+        const reference = fileType === 'source'
+            ? volume.volume_file
+            : (volume.conversion_completion ? volume.output_file : null);
+        return sendDownloadLink(res, reference, fileType, `${volumeId}.bin`);
+    } catch (error) {
+        return sendDownloadError(res, error);
+    }
+};
+const getVolumeRecordingDownloadListController = async (req, res) => {
+    const volumeId = req.params.volume_id;
+    if (!isUuid(volumeId)) return res.status(400).json({ message: 'Invalid volume ID.' });
+    try {
+        const volume = await getVolumeDownloadModel(req.user, volumeId);
+        if (!volume) return res.status(404).json({ message: 'Volume not found.' });
+        const recordings = await getVolumeRecordingDownloadListModel(req.user, volumeId);
+        if (!recordings) return res.status(403).json({ message: 'Volume access denied.' });
+        res.set('Cache-Control', 'no-store');
+        return res.status(200).json({ recordings });
+    } catch (error) {
+        console.error('Recording download list failed:', error);
+        return res.status(500).json({ message: 'Unable to load recording files.' });
+    }
+};
+const getVolumeRecordingDownloadController = async (req, res) => {
+    const { volume_id: volumeId, recording_id: recordingId } = req.params;
+    const fileType = req.query.file;
+    if (!isUuid(volumeId) || !isUuid(recordingId)) {
+        return res.status(400).json({ message: 'Invalid volume or recording ID.' });
+    }
+    if (!['recording', 'audio', 'image', 'manifest'].includes(fileType)) {
+        return res.status(400).json({ message: 'Choose a recording, audio, image, or manifest file.' });
+    }
+    let index = null;
+    if (fileType !== 'manifest') {
+        index = Number(req.query.index);
+        if (!Number.isInteger(index) || index < 0) {
+            return res.status(400).json({ message: 'Invalid file index.' });
+        }
+    }
+    try {
+        const recording = await getVolumeRecordingDownloadModel(req.user, volumeId, recordingId);
+        if (!recording) return res.status(404).json({ message: 'Recording not found.' });
+        const fields = { recording: 'rec_files', audio: 'audio_files', image: 'image_files' };
+        const files = fileType === 'manifest' ? null : recording[fields[fileType]];
+        const reference = fileType === 'manifest'
+            ? recording.manifest_file
+            : (Array.isArray(files) ? files[index] : null);
+        return sendDownloadLink(res, reference, fileType, `${recordingId}_${fileType}.bin`);
+    } catch (error) {
+        return sendDownloadError(res, error);
+    }
+};
 
 // const updateVolumeConController = async(req, res) => {
 //         const requester = req.user;
@@ -976,4 +1061,4 @@ const updateVolumeC = async(req, res) => {
         res.status(500).send(err);
     }
 };
-module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, getRecordingsController, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController, updateVolumeC}
+module.exports = {VolumeController, getVolumeDataC, volumeApprovalC, getVolumeInstructorViewController, getVolumeDownloadController, getVolumeRecordingDownloadListController, getVolumeRecordingDownloadController, updateVolumeConController, getConvVolumeListController, volumePlacementController, getVolumePlacementsController, getVolumePlacementsByVolumeIdController, volRecordingC, getRecordingsController, assocVolumeController, shadowRecordingDataController, volumeRecordingCountsController, getAssociatedVolumeController, updateVolumeC}

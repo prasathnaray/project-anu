@@ -306,6 +306,52 @@ const getVolumeInstructorViewModel = (requester) => {
         });
     });
 };
+const getVolumeDownloadModel = async (requester, volumeId) => {
+    const scope = volumeAccessScope(requester, 'v', 2);
+    if (!scope) return null;
+    const result = await client.query(
+        `SELECT v.volume_id, v.volume_file, vcl.output_file, vcl.conversion_completion
+         FROM public.volumes v
+         LEFT JOIN public.volume_conv_logs vcl ON v.volume_id = vcl.volume_id
+         WHERE v.volume_id = $1 AND ${scope.clause}
+           AND v.ownership_review_required = false
+         ORDER BY vcl.completed_at DESC NULLS LAST LIMIT 1`,
+        [volumeId, ...scope.params]
+    );
+    return result.rows[0] || null;
+};
+const getVolumeRecordingDownloadListModel = async (requester, volumeId) => {
+    const scope = volumeAccessScope(requester, 'v', 2);
+    if (!scope) return null;
+    const result = await client.query(
+        `SELECT vr.recording_id, vr.recording_name, vr.recording_type,
+                jsonb_array_length(COALESCE(vr.rec_files, '[]'::jsonb)) AS recording_count,
+                jsonb_array_length(COALESCE(vr.audio_files, '[]'::jsonb)) AS audio_count,
+                jsonb_array_length(COALESCE(vr.image_files, '[]'::jsonb)) AS image_count,
+                (vr.manifest_file IS NOT NULL AND vr.manifest_file <> '') AS has_manifest
+         FROM public.vol_recordings vr
+         JOIN public.volumes v ON v.volume_id = vr.volume_id
+         WHERE vr.volume_id = $1 AND ${scope.clause}
+           AND v.ownership_review_required = false
+         ORDER BY vr.created_at DESC NULLS LAST, vr.recording_id LIMIT 100`,
+        [volumeId, ...scope.params]
+    );
+    return result.rows;
+};
+const getVolumeRecordingDownloadModel = async (requester, volumeId, recordingId) => {
+    const scope = volumeAccessScope(requester, 'v', 3);
+    if (!scope) return null;
+    const result = await client.query(
+        `SELECT vr.recording_id, vr.rec_files, vr.audio_files,
+                vr.image_files, vr.manifest_file
+         FROM public.vol_recordings vr
+         JOIN public.volumes v ON v.volume_id = vr.volume_id
+         WHERE vr.volume_id = $1 AND vr.recording_id = $2 AND ${scope.clause}
+           AND v.ownership_review_required = false`,
+        [volumeId, recordingId, ...scope.params]
+    );
+    return result.rows[0] || null;
+};
 // const volumeConversionModel = (requester, volume_id) => {
 //     return new Promise((resolve, reject) => {
 //         client.query('update volumes SET conversion_process_status=$1 WHERE volume_id=$2', [true, volume_id], (err, result) => {
@@ -845,5 +891,5 @@ const updateVolumeModel = (requester, volume_id, volume_type, volume_name, volum
         );
     });
 };
-module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel};
+module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, getVolumeDownloadModel, getVolumeRecordingDownloadListModel, getVolumeRecordingDownloadModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel};
 

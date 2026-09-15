@@ -15,6 +15,8 @@ import volumeConvAPI from '../API/volumeConvAPI';
 import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import UpdateVolumeAPI from '../API/UpdateVolumeAPI';
+import volumeDownloadAPI from '../API/volumeDownloadAPI';
+import VolumeRecordingDownloads from '../components/Instructors/VolumeRecordingDownloads';
 
 const MAX_VOLUME_UPLOAD_SIZE_MB = 100;
 const MAX_VOLUME_UPLOAD_SIZE_BYTES = MAX_VOLUME_UPLOAD_SIZE_MB * 1024 * 1024;
@@ -29,6 +31,8 @@ function VolumeList() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedVolume, setSelectedVolume] = useState(null);
   const [converting, setConverting] = useState(false);
+  const [downloadingKey, setDownloadingKey] = useState(null);
+  const [recordingsVolume, setRecordingsVolume] = useState(null);
 
   const handleClick = () => fileInputRef.current.click();
 
@@ -336,6 +340,25 @@ function VolumeList() {
     setSelectedVolume(null);
   };
 
+  const handleDownload = async (volume, fileType) => {
+    const key = `${volume.volume_id}:${fileType}`;
+    setDownloadingKey(key);
+    try {
+      const response = await volumeDownloadAPI(volume.volume_id, fileType);
+      const { url, filename } = response.data;
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Unable to download volume file.');
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
+
   const handleRequestConversion = async () => {
     if (!selectedVolume) return;
 
@@ -470,13 +493,14 @@ function VolumeList() {
                     <th className="py-2 px-4 font-semibold">Conversion Status</th>
                     <th className="py-2 px-4 font-semibold">Shadow Recordings</th>
                     <th className="py-2 px-4 font-semibold">Step Recording Image</th>
+                    <th className="py-2 px-4 font-semibold">Download</th>
                     <th className="py-2 px-4 font-semibold"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {listLoading ? (
                     <tr>
-                      <td colSpan={7} className="py-4 text-center text-gray-500">
+                      <td colSpan={userRole === 99 ? 7 : 8} className="py-4 text-center text-gray-500">
                         <ClipLoader
                           color="#8DC63F"
                           size={24}
@@ -486,7 +510,7 @@ function VolumeList() {
                     </tr>
                   ) : filteredVolumes.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-4 text-center text-gray-500">
+                      <td colSpan={userRole === 99 ? 7 : 8} className="py-4 text-center text-gray-500">
                         No volumes found
                       </td>
                     </tr>
@@ -576,6 +600,28 @@ function VolumeList() {
                             </span>
                           )}
                         </td>
+                        <td className="py-2 px-4">
+                          <div className="flex flex-wrap gap-2">
+                            {volume.volume_file && (
+                              <button type="button" onClick={() => handleDownload(volume, 'source')}
+                                disabled={Boolean(downloadingKey)}
+                                className="px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50">
+                                {downloadingKey === `${volume.volume_id}:source` ? 'Preparing…' : 'Source file'}
+                              </button>
+                            )}
+                            {volume.conversion_completion && volume.output_file && (
+                              <button type="button" onClick={() => handleDownload(volume, 'converted')}
+                                disabled={Boolean(downloadingKey)}
+                                className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50">
+                                {downloadingKey === `${volume.volume_id}:converted` ? 'Preparing…' : 'Converted file'}
+                              </button>
+                            )}
+                            <button type="button" onClick={() => setRecordingsVolume(volume)}
+                              className="px-2 py-1 rounded text-xs bg-purple-50 text-purple-700 hover:bg-purple-100">
+                              Recording files
+                            </button>
+                          </div>
+                        </td>
                         <td className="py-2 px-4 font-medium">
                           <button 
                             className="text-[#8DC63F] hover:bg-gray-100 rounded p-1 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -620,6 +666,7 @@ function VolumeList() {
             Edit
         </MenuItem>
       </Menu>
+      <VolumeRecordingDownloads volume={recordingsVolume} onClose={() => setRecordingsVolume(null)} />
       <UploadVol isVisible={openUploadVol} onClose={handleClose}>
         <>
           <div className="flex justify-between items-center">

@@ -127,28 +127,33 @@ const uploadAsset = async ({ sourceBucket = DEFAULT_SOURCE_BUCKET, objectKey, bo
     return { reference: parsed.s3Key, sourceBucket: parsed.sourceBucket, objectKey: parsed.objectKey };
 };
 
-const signSupabaseFallback = async (parsed, expiresIn) => {
-    const { data, error } = await supabase.storage.from(parsed.sourceBucket).createSignedUrl(parsed.objectKey, expiresIn);
+const signSupabaseFallback = async (parsed, expiresIn, downloadName) => {
+    const { data, error } = await supabase.storage.from(parsed.sourceBucket).createSignedUrl(
+        parsed.objectKey, expiresIn, downloadName ? { download: downloadName } : undefined
+    );
     if (error) throw error;
     return data.signedUrl;
 };
 
-const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, expiresIn = SIGNED_URL_TTL_SECONDS } = {}) => {
+const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, expiresIn = SIGNED_URL_TTL_SECONDS, downloadName = null } = {}) => {
     const parsed = parseReference(value, defaultSourceBucket);
     if (!parsed) return null;
-    if (provider() !== 's3') return signSupabaseFallback(parsed, expiresIn);
+    if (provider() !== 's3') return signSupabaseFallback(parsed, expiresIn, downloadName);
 
     try {
         await getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key }));
         return getSignedUrl(
             getS3Client(),
-            new GetObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key }),
+            new GetObjectCommand({
+                Bucket: targetBucket(), Key: parsed.s3Key,
+                ...(downloadName ? { ResponseContentDisposition: `attachment; filename="${downloadName}"` } : {})
+            }),
             { expiresIn }
         );
     } catch (error) {
         if (!isNotFound(error) || !fallbackEnabled()) throw error;
         console.warn(`S3 storage fallback used for ${parsed.s3Key}`);
-        return signSupabaseFallback(parsed, expiresIn);
+        return signSupabaseFallback(parsed, expiresIn, downloadName);
     }
 };
 
