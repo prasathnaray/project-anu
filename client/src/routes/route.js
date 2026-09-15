@@ -38,6 +38,7 @@ import CourseMapping from '../pages/CourseMapping';
 import CustomCourse from '../pages/CustomCourse';
 import ReattData from '../pages/ReattData';
 import ContentAccess from '../pages/ContentAccess';
+import Sessions from '../pages/Sessions';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -79,6 +80,7 @@ function RoutesPath() {
                             <Route path="/my-learning" element={<MyLearning />} />
                             <Route path="/my-Learning" element={<MyLearning />} />
                             <Route path="/my-progress" element={<MyProgress />} />
+                            <Route path="/sessions" element={<Sessions />} />
                             <Route element={<PrivateRoute allowedRoles={[99, 101, 102, 103]} />}>
                               <Route path="/course-access" element={<ContentAccess />} />
                             </Route>

@@ -8,7 +8,8 @@
     "dev": "nodemon app.js",
     "test": "node --test test/*.test.js",
     "migrate:private-volumes": "node scripts/applyPrivateVolumeMigration.js",
-    "migrate:course-mapping-ownership": "node scripts/applyCourseMappingOwnershipMigration.js"
+    "migrate:course-mapping-ownership": "node scripts/applyCourseMappingOwnershipMigration.js",
+    "migrate:user-sessions": "node scripts/applyUserSessionsMigration.js --apply"
   },
   "keywords": [],
   "author": "",

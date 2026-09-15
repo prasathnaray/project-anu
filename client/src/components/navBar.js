@@ -879,6 +879,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
 import { supabase } from "../supabaseClient";
 import Profile from "../pages/Profile";
+import { logoutCurrentSession } from '../API/sessionAPI';
+import clearLocalSession from '../Auth/clearLocalSession';
 
 function NavBar() {
   const navigate = useNavigate();
@@ -931,6 +933,7 @@ function NavBar() {
     if (path === "/vrspace" || path === "/video" || path === "/publish") return "Streams";
     if (path === "/reports") return "Reports";
     if (path === "/settings") return "Settings";
+    if (path === "/sessions") return "Sessions";
     if (path === "/profile") return "Profile";
     if (path === "/custom-course") return "SVT Course";
     if (path === "/course-access") return "Assigned Courses";
@@ -1113,11 +1116,13 @@ function NavBar() {
   }, []);
 
   // ── Logout ────────────────────────────────────────────────────────────────
-  const handleLogout = () => {
-    ["user_token", "isVr", "loginSource", "device", "os"].forEach((k) =>
-      localStorage.removeItem(k)
-    );
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await logoutCurrentSession();
+    } finally {
+      clearLocalSession();
+      navigate("/");
+    }
   };
 
   // ── Notification message helper ───────────────────────────────────────────
@@ -1288,6 +1293,15 @@ function NavBar() {
                       }}
                     >
                       Profile
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      onClick={() => {
+                        setOpenDropdownIndex(null);
+                        navigate('/sessions');
+                      }}
+                    >
+                      Sessions
                     </button>
                     {/* <button
                       className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"

@@ -10,6 +10,7 @@ const ProfileRouter = require('./routes/profileRoute');
 const ForgotPRouter = require('./routes/forgotpRoute');
 const getTraineeRouter = require('./routes/getTraineesRoute')
 const refreshTokenRouter = require('./routes/refreshTokenRouter');
+const sessionRouter = require('./routes/sessionRoute');
 const disableTraineeRoute = require('./routes/disableTraineeRoute');
 const batchCreationRouter = require('./routes/createBatchRoute.js');
 const getBatchesRouter = require('./routes/getBatchesRoute.js');
@@ -118,7 +119,7 @@ const GetLearningModuleByIdRouter = require('./routes/GetLearningModuleByIdRoute
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(cors({
-    origin: ["http://10.42.249.230:3000",
+    origin: ["http://10.42.249.230:3000", "http://10.42.248.23:3000",
         "http://localhost:3001", "https://project-anu.hticlab.org", "http://project-anu.hticlab.org",  "http://13.204.201.73", "http://13.205.207.179", "http://10.42.249.88:3000", "https://project-anu.vercel.app", "http://13.201.19.169:3000", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001", "http://10.42.9.129:4004", "http://localhost:8083", "http://10.42.248.106:3000", "http://35.154.36.145"],
     credentials: true
 }));
@@ -152,6 +153,7 @@ app.use(deviceMiddleware);
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter);
 app.use('/api/v1', refreshTokenRouter);
+app.use('/api/v1/sessions', Authenticate, sessionRouter);
 app.use('/api/v1', getIndividualIvsRouter);
 app.use('/api/v1', notifyRouter);
 app.use('/api/v1', tokenIvsRouter);

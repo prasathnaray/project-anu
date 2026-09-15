@@ -42,6 +42,7 @@
 // module.exports = LoginRequest;
 const jwt = require("jsonwebtoken");
 const LoginModel = require("./authModel");
+const { revokeSession } = require('./sessionStore');
 
 const LoginRequest = async (req, res) => {
   const { user_mail, user_password } = req.body;
@@ -55,9 +56,20 @@ const LoginRequest = async (req, res) => {
     }
 
     // Call your model
-    const result = await LoginModel(user_mail, user_password);
+    const result = await LoginModel(user_mail, user_password, req.deviceInfo, req.ip);
 
     if (result.code === 200) {
+      const previousToken = req.cookies?.refreshToken;
+      if (previousToken) {
+        try {
+          const previous = jwt.verify(previousToken, process.env.REFRESH_TOKEN_SECRET);
+          if (previous.sid && previous.user_mail) {
+            await revokeSession(previous.sid, previous.user_mail);
+          }
+        } catch (_) {
+          // An expired or legacy cookie does not identify an active session.
+        }
+      }
       // ✅ Device Info from Middleware
       const deviceInfo = req.deviceInfo;
 
@@ -92,7 +104,8 @@ const LoginRequest = async (req, res) => {
       message: "Unexpected error",
     });
   } catch (err) {
-    return res.status(500).json(err);
+    console.error('Login failed:', err);
+    return res.status(500).json({ code: 500, message: 'Unable to complete login' });
   }
 };
 

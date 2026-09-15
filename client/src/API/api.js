@@ -1,5 +1,6 @@
 import axios from "axios";
 import APP_URL from "./config";
+import clearLocalSession from '../Auth/clearLocalSession';
 const api = axios.create({
   baseURL: APP_URL,
   withCredentials: true,
@@ -27,7 +28,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshErr) {
         console.error("Token refresh failed:", refreshErr);
-        localStorage.removeItem("user_token");
+        clearLocalSession();
         window.location.href = "/";
       }
     }
