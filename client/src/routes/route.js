@@ -1,6 +1,9 @@
 import React from 'react'
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import SideBar from '../components/sideBar';
+
+import GoogleAnalytics from '../components/GoogleAnalytics';
+
 import Login from '../Auth/login';
 import PrivateRoute from './ProtectedRoutes';
 import Dashboard from '../pages/dashboard';
@@ -42,6 +45,8 @@ import Sessions from '../pages/Sessions';
 function RoutesPath() {
   return (
     <BrowserRouter>
+                                <GoogleAnalytics />
+
             <Routes>
                     <Route path="/" element={<Login />}/>
                     <Route element={<PrivateRoute />}>
