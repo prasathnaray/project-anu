@@ -8,4 +8,3 @@ router.get('/superadmin/stats', controller.getStats);
 router.get('/superadmin-stats', controller.getStats);
 
 module.exports = router;
-

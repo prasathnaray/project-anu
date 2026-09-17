@@ -33,8 +33,8 @@ const getQueriesC = async (req, res) => {
         } else {
             result = await getQueriesByUserm(requester, page, limit);
         }
-        if (result.code === 401) {
-            return res.status(401).json(result);
+        if (result.code) {
+            return res.status(result.code).json(result);
         }
         res.status(200).json({
             code: 200,
@@ -60,8 +60,8 @@ const updateQueryStatusC = async (req, res) => {
             });
         }
         const result = await updateQueryStatusm(requester, query_id, status);
-        if (result.code === 401) {
-            return res.status(401).json(result);
+        if (result.code) {
+            return res.status(result.code).json(result);
         }
         res.status(200).json({
             code: 200,
@@ -78,8 +78,8 @@ const deleteQueryC = async (req, res) => {
     const { query_id } = req.params;
     try {
         const result = await deleteQuerym(requester, query_id);
-        if (result.code === 401) {
-            return res.status(401).json(result);
+        if (result.code) {
+            return res.status(result.code).json(result);
         }
         res.status(200).json({
             code: 200,

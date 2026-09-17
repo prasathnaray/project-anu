@@ -1,5 +1,22 @@
 const client = require('../utils/conn.js');
 
+const denied = (message) => ({
+    status: 'Forbidden',
+    code: 403,
+    message
+});
+
+const getAdminQueryScope = (requester, userAlias = 'ud', parameterNumber = 1) => {
+    const role = Number(requester?.role);
+    if (role === 99) return { clause: 'TRUE', params: [] };
+    if (role !== 101 || !requester?.centre_id) return null;
+
+    return {
+        clause: `${userAlias}.centre_id = $${parameterNumber} AND ${userAlias}.user_role IN ('102', '103')`,
+        params: [requester.centre_id]
+    };
+};
+
 const createQuerym = (requester, subject, instructor_id, message) => {
     const isPrivileged = [103].includes(Number(requester.role));
     if (!isPrivileged) {
@@ -33,21 +50,34 @@ const getQueriesm = (requester, page, limit) => {
             message: 'You do not have permission to access queries.'
         });
     }
+    const scope = getAdminQueryScope(requester);
+    if (!scope) {
+        return Promise.resolve(denied('Your account is not linked to an institution.'));
+    }
+
     const offset = (page - 1) * limit;
+    const limitParameter = scope.params.length + 1;
+    const offsetParameter = limitParameter + 1;
     return new Promise((resolve, reject) => {
         client.query(
             `SELECT qd.*, ud.user_name 
              FROM queries_data qd 
-             LEFT JOIN user_data ud ON qd.created_by = ud.user_email 
+             JOIN user_data ud ON qd.created_by = ud.user_email
+             WHERE ${scope.clause}
              ORDER BY qd.created_at DESC 
-             LIMIT $1 OFFSET $2`,
-            [limit, offset],
+             LIMIT $${limitParameter} OFFSET $${offsetParameter}`,
+            [...scope.params, limit, offset],
             (err, result) => {
                 if (err) {
                     reject(err);
                 } else {
-                    // Get total count
-                    client.query('SELECT COUNT(*) FROM queries_data', (countErr, countResult) => {
+                    client.query(
+                        `SELECT COUNT(*)
+                         FROM queries_data qd
+                         JOIN user_data ud ON qd.created_by = ud.user_email
+                         WHERE ${scope.clause}`,
+                        scope.params,
+                        (countErr, countResult) => {
                         if (countErr) {
                             reject(countErr);
                         } else {
@@ -56,7 +86,8 @@ const getQueriesm = (requester, page, limit) => {
                                 total: parseInt(countResult.rows[0].count)
                             });
                         }
-                    });
+                        }
+                    );
                 }
             }
         );
@@ -103,10 +134,25 @@ const updateQueryStatusm = (requester, query_id, status) => {
             message: 'You do not have permission to update queries.'
         });
     }
+    const scope = getAdminQueryScope(requester, 'ud', 3);
+    if (!scope) {
+        return Promise.resolve(denied('Your account is not linked to an institution.'));
+    }
+
+    const isSuperAdmin = Number(requester.role) === 99;
+    const query = isSuperAdmin
+        ? 'UPDATE queries_data SET status = $1 WHERE query_id = $2'
+        : `UPDATE queries_data qd
+           SET status = $1
+           FROM user_data ud
+           WHERE qd.query_id = $2
+             AND qd.created_by = ud.user_email
+             AND ${scope.clause}`;
+
     return new Promise((resolve, reject) => {
         client.query(
-            'UPDATE queries_data SET status = $1 WHERE query_id = $2',
-            [status, query_id],
+            query,
+            [status, query_id, ...scope.params],
             (err, result) => {
                 if (err) {
                     reject(err);
@@ -127,10 +173,24 @@ const deleteQuerym = (requester, query_id) => {
             message: 'You do not have permission to delete queries.'
         });
     }
+    const scope = getAdminQueryScope(requester, 'ud', 2);
+    if (!scope) {
+        return Promise.resolve(denied('Your account is not linked to an institution.'));
+    }
+
+    const isSuperAdmin = Number(requester.role) === 99;
+    const query = isSuperAdmin
+        ? 'DELETE FROM queries_data WHERE query_id = $1'
+        : `DELETE FROM queries_data qd
+           USING user_data ud
+           WHERE qd.query_id = $1
+             AND qd.created_by = ud.user_email
+             AND ${scope.clause}`;
+
     return new Promise((resolve, reject) => {
         client.query(
-            'DELETE FROM queries_data WHERE query_id = $1',
-            [query_id],
+            query,
+            [query_id, ...scope.params],
             (err, result) => {
                 if (err) {
                     reject(err);

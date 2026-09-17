@@ -890,6 +890,8 @@ import MaterialRipple from "material-ripple-effects";
 import { supabase } from "../supabaseClient";
 import Profile from "../pages/Profile";
 import { logoutCurrentSession } from '../API/sessionAPI';
+import GetVolumeData from '../API/getVolumeData';
+import { GetQueriesAPI } from '../API/GetQueriesAPI';
 import clearLocalSession from '../Auth/clearLocalSession';
 
 function NavBar() {
@@ -1022,60 +1024,64 @@ function NavBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleDropdown = (index) =>
-    setOpenDropdownIndex((prev) => (prev === index ? null : index));
+  const toggleDropdown = (index) => {
+    const isOpening = openDropdownIndex !== index;
+    setOpenDropdownIndex(isOpening ? index : null);
+    if (index === "notifications" && isOpening) fetchCount();
+  };
 
   // ── Fetch notifications ───────────────────────────────────────────────────
   const fetchCount = async () => {
     try {
       const mail = tokenRes?.user_mail || "";
+      const role = Number(tokenRes?.role);
+      const token = localStorage.getItem("user_token");
+      const emptyResult = { data: [], count: 0 };
       const [courseRes, traineeRes, volumeRes, queryRes] = await Promise.all([
         // Unread course assignments (handled via API)
-        Promise.resolve({ data: [], count: 0 }),
+        Promise.resolve(emptyResult),
 
-        // Targeted learning assignments
-        mail
+        // Targeted learning belongs only to the signed-in trainee.
+        role === 103 && mail
           ? supabase
               .from("targeted_learning")
               .select("tar_name, target_learning_id, created_at", { count: "exact" })
               .contains("trainee_id", [mail])
-              .then((r) => (r.error ? { data: [], count: 0 } : r))
-              .catch(() => ({ data: [], count: 0 }))
-          : Promise.resolve({ data: [], count: 0 }),
+              .then((r) => (r.error ? emptyResult : r))
+              .catch(() => emptyResult)
+          : Promise.resolve(emptyResult),
 
-        // Pending volume approvals (admin only)
-        mail
-          ? supabase
-              .from("volumes")
-              .select("volume_id, volume_name, added_by, status, created_at", { count: "exact" })
-              .eq("approver_id", mail)
-              .eq("status", false)
-              .then((r) => (r.error ? { data: [], count: 0 } : r))
-              .catch(() => ({ data: [], count: 0 }))
-          : Promise.resolve({ data: [], count: 0 }),
+        // Institution Admins see pending uploads from instructors in their center.
+        role === 101 && tokenRes?.centre_id
+          ? GetVolumeData(token)
+              .then((response) => {
+                const data = (Array.isArray(response?.data) ? response.data : [])
+                  .filter((volume) =>
+                    volume.status === false &&
+                    Number(volume.uploader_role) === 102 &&
+                    volume.added_by !== mail
+                  );
+                return { data, count: data.length };
+              })
+              .catch(() => emptyResult)
+          : Promise.resolve(emptyResult),
 
-        // Query notifications require tenant-aware API data; direct table reads are intentionally disabled.
-        Promise.resolve({ data: [], count: 0 }),
+        // This API applies the authenticated admin's center scope server-side.
+        [99, 101].includes(role)
+          ? GetQueriesAPI(token, 1, 20)
+              .then((response) => {
+                const data = (Array.isArray(response?.result) ? response.result : [])
+                  .filter((query) => query.status !== "resolved");
+                return { data, count: data.length };
+              })
+              .catch(() => emptyResult)
+          : Promise.resolve(emptyResult),
       ]);
-
-      // Enrich volume entries with uploader names
-      let volumeWithNames = [];
-      if (volumeRes.data?.length) {
-        const emails = volumeRes.data.map((v) => v.added_by);
-        const { data: users } = await supabase
-          .from("user_data")
-          .select("user_email, user_name")
-          .in("user_email", emails);
-        volumeWithNames = volumeRes.data.map((v) => ({
-          ...v,
-          user_data: users?.find((u) => u.user_email === v.added_by),
-        }));
-      }
 
       const allData = [
         ...(courseRes.data?.map((d) => ({ ...d, type: "course" })) || []),
         ...(traineeRes.data?.map((d) => ({ ...d, type: "trainee" })) || []),
-        ...(volumeWithNames.map((d) => ({ ...d, type: "volumes" })) || []),
+        ...(volumeRes.data?.map((d) => ({ ...d, type: "volumes" })) || []),
         ...(queryRes?.data?.map((d) => ({ ...d, type: "query" })) || []),
       ];
 
@@ -1111,17 +1117,24 @@ function NavBar() {
     // Array-based targeted-learning subscriptions cannot be safely tenant-filtered here.
     const traineeChannel = null;
 
-    const volumeChannel = Number(tokenRes.role) === 99 ? supabase
-      .channel("volumes")
+    const volumeChannel = Number(tokenRes.role) === 101 && tokenRes.centre_id ? supabase
+      .channel(`volumes:${tokenRes.centre_id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "volumes" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "volumes",
+          filter: `owner_centre_id=eq.${tokenRes.centre_id}`,
+        },
         async (payload) => {
-          setNotify((prev) => [
-            { ...payload.new, type: "volumes" },
-            ...prev,
-          ]);
-          setCount((prev) => prev + 1);
+          if (
+            Number(payload.new.uploader_role) === 102 &&
+            payload.new.added_by !== tokenRes.user_mail &&
+            payload.new.status === false
+          ) {
+            await fetchCount();
+          }
         }
       )
       .subscribe() : null;
@@ -1148,9 +1161,9 @@ function NavBar() {
     if (n.type === "course") return "A course has been assigned to you";
     if (n.type === "trainee") return "Targeted learning has been initiated";
     if (n.type === "volumes")
-      return `${n.user_data?.user_name ?? n.added_by} uploaded a volume`;
+      return `${n.user_name ?? n.added_by} uploaded a volume`;
     if (n.type === "query")
-      return `New query raised: "${n.subject}" by ${n.created_by}`;
+      return `New query raised: "${n.subject}" by ${n.user_name ?? n.created_by}`;
     return "New notification";
   };
 
