@@ -1,7 +1,7 @@
 // controllers/scanCenterController.js
 const { createScancentrem, getscancenterm, addInstitutionAdmin } = require("../model/scancentrem");
-const {mindsparkm} = require('../model/resourcem');
-const createScanCenterC = async(req, res) => {
+const { mindsparkm } = require('../model/resourcem');
+const createScanCenterC = async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -29,7 +29,7 @@ const createScanCenterC = async(req, res) => {
             message: 'Scan center created successfully',
             data: result.data
         });
-    } catch(err) {
+    } catch (err) {
         console.error('Error creating scan center:', err);
         res.status(500).json({
             status: 'error',
@@ -39,14 +39,14 @@ const createScanCenterC = async(req, res) => {
     }
 };
 
-const getScanCentersC = async(req, res) => {
+const getScanCentersC = async (req, res) => {
     try {
         const result = await getscancenterm(req.user);
         if (result.code === 401) {
             return res.status(401).json(result);
         }
         res.status(200).json(result);
-    } catch(err) {
+    } catch (err) {
         console.error('Error fetching scan centers:', err);
         res.status(500).json({
             status: 'error',
@@ -62,7 +62,7 @@ const mindsparkController = async (request, res) => {
     try {
         // Insert into database
         const result = await mindsparkm(requester, r_id, user_opt, correct_opt, status, requester.user_mail);
-        
+
         res.status(200).json({
             message: 'Response recorded successfully',
             data: {
@@ -74,9 +74,9 @@ const mindsparkController = async (request, res) => {
         });
     } catch (err) {
         console.error('Error in mindsparkController:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to record response',
-            details: err.message 
+            details: err.message
         });
     }
 };

@@ -144,7 +144,17 @@ const GenderRatio = (requester) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        client.query('SELECT user_gender, COUNT(user_role) FROM user_data WHERE user_role NOT IN ($1, $2) GROUP BY user_gender', ['99', '101'], (err, result) => {
+        let query = 'SELECT user_gender, COUNT(user_role) AS count FROM user_data WHERE user_role NOT IN ($1, $2) AND user_gender IS NOT NULL';
+        const params = ['99', '101'];
+
+        if (requester.centre_id) {
+            query += ' AND centre_id = $3';
+            params.push(requester.centre_id);
+        }
+
+        query += ' GROUP BY user_gender';
+
+        client.query(query, params, (err, result) => {
             if (err) {
                 return reject(err)
             }

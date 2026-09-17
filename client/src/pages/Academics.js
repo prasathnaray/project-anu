@@ -32,35 +32,35 @@
 // function Academics() {
 //     // Sidebar state
 //     const [buttonOpen, setButtonOpen] = useState(true);
-    
+
 //     // Pagination states
 //     const [page, setPage] = useState(0);
 //     const [rowsPerPage, setRowsPerPage] = useState(5);
 //     const [rowCount, setRowCount] = useState(0);
-    
+
 //     // Modal states
 //     const [openCenterModal, setOpenCenterModal] = useState(false);
 //     const [openEditModal, setOpenEditModal] = useState(false);
 //     const [openFilterModal, setOpenFilterModal] = useState(false);
-    
+
 //     // Loading state
 //     const [loading, setLoading] = useState(false);
-    
+
 //     // Dropdown state
 //     const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
 //     const dropdownRefs = useRef({});
-    
+
 //     // Search state
 //     const [searchItem, setSearchItem] = useState('');
 //     const [filteredCenters, setFilteredCenters] = useState([]);
-    
+
 //     // Filter state
 //     const [filterData, setFilterData] = useState({
 //         center_name_filter: '',
 //         admin_name_filter: '',
 //         center_type_filter: ''
 //     });
-    
+
 //     // Scan center form data - Updated to match API requirements
 //     const [scanCenterData, setScanCenterData] = useState({
 //         center_name: '',
@@ -69,7 +69,7 @@
 //         center_address: '',
 //         status: 'Active'
 //     });
-    
+
 //     // Edit scan center data
 //     const [editCenterData, setEditCenterData] = useState({
 //         center_id: '',
@@ -81,7 +81,7 @@
 //         admin_email: '',
 //         admin_phone: ''
 //     });
-    
+
 //     // Scan centers list
 //     const [scanCentersList, setScanCentersList] = useState([]);
 
@@ -204,7 +204,7 @@
 //             setLoading(true);
 //             // Replace with your actual API call
 //             // const result = await GetScanCentersAPI(token, page + 1, limit);
-            
+
 //             // Simulated data for demonstration
 //             const mockData = [
 //                 {
@@ -260,7 +260,7 @@
 
 //     const handleSubmit = async (e) => {
 //         e.preventDefault();
-        
+
 //         // Validation - Updated to match new fields
 //         if (!scanCenterData.center_name || !scanCenterData.center_email || 
 //             !scanCenterData.center_phone || !scanCenterData.center_address) {
@@ -275,10 +275,10 @@
 
 //         try {
 //             setLoading(true);
-            
+
 //             const token = localStorage.getItem('user_token');
 //             const response = await AddScanCenterAPI(token, scanCenterData);
-            
+
 //             // Axios returns data in response.data
 //             if (response.status === 200 || response.status === 201) {
 //                 toast.success("Scan Center Onboarded Successfully!", {
@@ -287,7 +287,7 @@
 //                     icon: false,
 //                     closeButton: CustomCloseButton,
 //                 });
-                
+
 //                 handleCloseCenterModal();
 //                 fetchScanCenters(token, page, rowsPerPage);
 //             }
@@ -308,7 +308,7 @@
 
 //     const handleUpdateSubmit = async (e) => {
 //         e.preventDefault();
-        
+
 //         if (!editCenterData.center_name || !editCenterData.center_email || 
 //             !editCenterData.center_phone || !editCenterData.center_address || 
 //             !editCenterData.admin_name || !editCenterData.admin_email) {
@@ -325,14 +325,14 @@
 //             setLoading(true);
 //             // Replace with your actual API call
 //             // const response = await UpdateScanCenterAPI(token, editCenterData);
-            
+
 //             toast.success("Scan Center Updated Successfully", {
 //                 autoClose: 3000,
 //                 toastId: 'success-center-updated',
 //                 icon: false,
 //                 closeButton: CustomCloseButton,
 //             });
-            
+
 //             handleCloseEditModal();
 //             const token = localStorage.getItem('user_token');
 //             fetchScanCenters(token, page, rowsPerPage);
@@ -355,14 +355,14 @@
 //                 setLoading(true);
 //                 // Replace with your actual API call
 //                 // await DeleteScanCenterAPI(token, center_id);
-                
+
 //                 toast.success("Scan Center Deleted Successfully", {
 //                     autoClose: 3000,
 //                     toastId: 'success-center-deleted',
 //                     icon: false,
 //                     closeButton: CustomCloseButton,
 //                 });
-                
+
 //                 const token = localStorage.getItem('user_token');
 //                 fetchScanCenters(token, page, rowsPerPage);
 //             } catch (err) {
@@ -381,7 +381,7 @@
 
 //     const handleFilterSubmit = async (e) => {
 //         e.preventDefault();
-        
+
 //         if (!filterData.center_name_filter && !filterData.admin_name_filter && !filterData.center_type_filter) {
 //             toast.error("At least one filter must be filled", {
 //                 autoClose: 3000,
@@ -396,17 +396,17 @@
 //             setLoading(true);
 //             // Replace with your actual API call
 //             // const result = await FilterScanCentersAPI(token, filterData);
-            
+
 //             // For demonstration, filter locally
 //             const filtered = scanCentersList.filter((center) => {
 //                 const matchesName = !filterData.center_name_filter || 
 //                     center.center_name.toLowerCase().includes(filterData.center_name_filter.toLowerCase());
 //                 const matchesAdmin = !filterData.admin_name_filter || 
 //                     center.admin_name.toLowerCase().includes(filterData.admin_name_filter.toLowerCase());
-                
+
 //                 return matchesName && matchesAdmin;
 //             });
-            
+
 //             setFilteredCenters(filtered);
 //             setRowCount(filtered.length);
 //             handleCloseFilterModal();
@@ -581,7 +581,7 @@
 //                                     </button>
 //                                 </div>
 //                             </div>
-                            
+
 //                             {/* Scan Centers Table */}
 //                             <div className="overflow-x-auto">
 //                                 <table className="w-full text-left border-collapse">
@@ -725,7 +725,7 @@
 //                                             <X size={24} />
 //                                         </button>
 //                                     </div>
-                                    
+
 //                                     <form onSubmit={handleSubmit} className="p-6">
 //                                         {/* Scan Center Information */}
 //                                         <div className="mb-6">
@@ -839,7 +839,7 @@
 //                                             <X size={24} />
 //                                         </button>
 //                                     </div>
-                                    
+
 //                                     <form onSubmit={handleUpdateSubmit} className="p-6">
 //                                         {/* Scan Center Information */}
 //                                         <div className="mb-6">
@@ -988,7 +988,7 @@
 //                                             <X size={24} />
 //                                         </button>
 //                                     </div>
-                                    
+
 //                                     <form onSubmit={handleFilterSubmit} className="p-6">
 //                                         <div className="grid grid-cols-1 gap-5">
 //                                             <TextField
@@ -1010,7 +1010,7 @@
 //                                                 fullWidth
 //                                             />
 //                                         </div>
-                                        
+
 //                                         <div className="mt-5 flex justify-end items-center gap-4">
 //                                             <button 
 //                                                 type="button"
@@ -1043,22 +1043,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import NavBar from "../components/navBar";
 import SideBar from "../components/sideBar";
-import { 
-    LayoutDashboard, 
-    BookOpen, 
-    GraduationCap, 
-    Library, 
-    Users, 
-    X, 
-    Eye, 
-    EyeOff, 
-    Mail, 
-    Lock, 
-    Building2, 
-    Phone, 
-    MapPin, 
-    Edit, 
-    Trash2, 
+import {
+    LayoutDashboard,
+    BookOpen,
+    GraduationCap,
+    Library,
+    Users,
+    X,
+    Eye,
+    EyeOff,
+    Mail,
+    Lock,
+    Building2,
+    Phone,
+    MapPin,
+    Edit,
+    Trash2,
     MoreVertical,
     ListFilter,
     ArrowUpWideNarrow
@@ -1075,35 +1075,35 @@ import GetScanCentersAPI from "../API/GetScanCentersAPI";
 function Academics() {
     // Sidebar state
     const [buttonOpen, setButtonOpen] = useState(true);
-    
+
     // Pagination states
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [rowCount, setRowCount] = useState(0);
-    
+
     // Modal states
     const [openCenterModal, setOpenCenterModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
     const [openFilterModal, setOpenFilterModal] = useState(false);
-    
+
     // Loading state
     const [loading, setLoading] = useState(false);
-    
+
     // Dropdown state
     const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
     const dropdownRefs = useRef({});
-    
+
     // Search state
     const [searchItem, setSearchItem] = useState('');
     const [filteredCenters, setFilteredCenters] = useState([]);
-    
+
     // Filter state
     const [filterData, setFilterData] = useState({
         center_name_filter: '',
         admin_email_filter: '',
         status_filter: ''
     });
-    
+
     // Scan center form data
     const [scanCenterData, setScanCenterData] = useState({
         center_name: '',
@@ -1112,7 +1112,7 @@ function Academics() {
         center_address: '',
         status: 'Active'
     });
-    
+
     // Edit scan center data
     const [editCenterData, setEditCenterData] = useState({
         center_id: '',
@@ -1123,7 +1123,7 @@ function Academics() {
         admin_user_email: '',
         status: ''
     });
-    
+
     // Scan centers list
     const [scanCentersList, setScanCentersList] = useState([]);
 
@@ -1244,7 +1244,7 @@ function Academics() {
         try {
             setLoading(true);
             const result = await GetScanCentersAPI(token, page + 1, rowsPerPage);
-            
+
             if (result.status === "success" && result.data) {
                 setScanCentersList(result.data);
                 setFilteredCenters(result.data);
@@ -1265,9 +1265,9 @@ function Academics() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         // Validation
-        if (!scanCenterData.center_name || !scanCenterData.center_email || 
+        if (!scanCenterData.center_name || !scanCenterData.center_email ||
             !scanCenterData.center_phone || !scanCenterData.center_address) {
             toast.error("Please fill all the fields", {
                 autoClose: 3000,
@@ -1280,10 +1280,10 @@ function Academics() {
 
         try {
             setLoading(true);
-            
+
             const token = localStorage.getItem('user_token');
             const response = await AddScanCenterAPI(token, scanCenterData);
-            
+
             if (response.status === 200 || response.status === 201) {
                 toast.success("Scan Center Onboarded Successfully!", {
                     autoClose: 4000,
@@ -1291,13 +1291,16 @@ function Academics() {
                     icon: false,
                     closeButton: CustomCloseButton,
                 });
-                
+
                 handleCloseCenterModal();
                 fetchScanCenters(token);
             }
         } catch (err) {
             console.error(err);
-            const errorMessage = err.response?.data?.message || err.message || "Failed to onboard scan center";
+            const errData = err.response?.data;
+            const errorMessage = Array.isArray(errData?.errors) && errData.errors.length > 0
+                ? errData.errors.join(', ')
+                : errData?.message || err.message || "Failed to onboard scan center";
             toast.error(errorMessage, {
                 autoClose: 3000,
                 toastId: 'create-error',
@@ -1311,8 +1314,8 @@ function Academics() {
 
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
-        
-        if (!editCenterData.center_name || !editCenterData.center_email || 
+
+        if (!editCenterData.center_name || !editCenterData.center_email ||
             !editCenterData.center_phone || !editCenterData.center_address) {
             toast.error("Please fill all the fields", {
                 autoClose: 3000,
@@ -1327,14 +1330,14 @@ function Academics() {
             setLoading(true);
             // Replace with your actual API call
             // const response = await UpdateScanCenterAPI(token, editCenterData);
-            
+
             toast.success("Scan Center Updated Successfully", {
                 autoClose: 3000,
                 toastId: 'success-center-updated',
                 icon: false,
                 closeButton: CustomCloseButton,
             });
-            
+
             handleCloseEditModal();
             const token = localStorage.getItem('user_token');
             fetchScanCenters(token);
@@ -1357,14 +1360,14 @@ function Academics() {
                 setLoading(true);
                 // Replace with your actual API call
                 // await DeleteScanCenterAPI(token, center_id);
-                
+
                 toast.success("Scan Center Deleted Successfully", {
                     autoClose: 3000,
                     toastId: 'success-center-deleted',
                     icon: false,
                     closeButton: CustomCloseButton,
                 });
-                
+
                 const token = localStorage.getItem('user_token');
                 fetchScanCenters(token);
             } catch (err) {
@@ -1383,7 +1386,7 @@ function Academics() {
 
     const handleFilterSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (!filterData.center_name_filter && !filterData.admin_email_filter && !filterData.status_filter) {
             toast.error("At least one filter must be filled", {
                 autoClose: 3000,
@@ -1396,19 +1399,19 @@ function Academics() {
 
         try {
             setLoading(true);
-            
+
             // Filter locally based on API data
             const filtered = scanCentersList.filter((center) => {
-                const matchesName = !filterData.center_name_filter || 
+                const matchesName = !filterData.center_name_filter ||
                     center.center_name.toLowerCase().includes(filterData.center_name_filter.toLowerCase());
-                const matchesEmail = !filterData.admin_email_filter || 
+                const matchesEmail = !filterData.admin_email_filter ||
                     center.admin_user_email.toLowerCase().includes(filterData.admin_email_filter.toLowerCase());
-                const matchesStatus = !filterData.status_filter || 
+                const matchesStatus = !filterData.status_filter ||
                     center.status === filterData.status_filter;
-                
+
                 return matchesName && matchesEmail && matchesStatus;
             });
-            
+
             setFilteredCenters(filtered);
             setRowCount(filtered.length);
             handleCloseFilterModal();
@@ -1468,23 +1471,21 @@ function Academics() {
                 <div>
                     <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
                 </div>
-                <div 
-                    className={`${
-                        buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
-                    } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
+                <div
+                    className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
+                        } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
                 >
                     {/* Breadcrumb Navigation */}
                     <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
-                        <LayoutDashboard size={15} /> Dashboard / <Building2 size={15}/> 
+                        <LayoutDashboard size={15} /> Dashboard / <Building2 size={15} />
                         <span className="text-[15px]">Scan Centers</span>
                     </div>
 
                     {/* Main Content */}
-                    <div className={`${
-                        buttonOpen === true 
-                            ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" 
+                    <div className={`${buttonOpen === true
+                            ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
                             : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
-                    }`}>
+                        }`}>
                         {/* Page Title */}
                         <div className="mt-5 font-semibold text-xl text-gray-600">
                             Academic Management
@@ -1559,11 +1560,11 @@ function Academics() {
                             <div className="font-semibold text-xl text-gray-500 flex justify-between items-center mb-6">
                                 <div>Onboarded Scan Centers</div>
                                 <div>
-                                    <button 
-                                        className="p-2 rounded-lg active:scale-95 transition-transform duration-100 mr-2" 
+                                    <button
+                                        className="p-2 rounded-lg active:scale-95 transition-transform duration-100 mr-2"
                                         onClick={handleOpenFilterModal}
                                     >
-                                        <ListFilter size={20}/>
+                                        <ListFilter size={20} />
                                     </button>
                                 </div>
                             </div>
@@ -1580,7 +1581,7 @@ function Academics() {
                                     />
                                 </div>
                                 <div className="flex justify-end items-center">
-                                    <button 
+                                    <button
                                         className="bg-[#8DC63F] hover:bg-[#7AB52F] text-white rounded px-6 py-2 font-semibold text-sm transition-all ease-in-out"
                                         onClick={handleOpenCenterModal}
                                     >
@@ -1588,7 +1589,7 @@ function Academics() {
                                     </button>
                                 </div>
                             </div>
-                            
+
                             {/* Scan Centers Table */}
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
@@ -1597,7 +1598,7 @@ function Academics() {
                                             <th className="py-3 px-4 text-[#8DC63F]">
                                                 <div className="flex items-center gap-2">
                                                     <span>Center Name</span>
-                                                    <button><ArrowUpWideNarrow size={20}/></button>
+                                                    <button><ArrowUpWideNarrow size={20} /></button>
                                                 </div>
                                             </th>
                                             <th className="py-3 px-4 text-[#8DC63F]">Center Email</th>
@@ -1623,87 +1624,86 @@ function Academics() {
                                             filteredCenters
                                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                                 .map((center, index) => (
-                                                <tr key={center.center_id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                    <td className="py-3 px-4 text-gray-700 font-semibold">
-                                                        <div className="flex items-center gap-2">
-                                                            <Building2 size={18} className="text-[#8DC63F]" />
-                                                            {center.center_name}
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-gray-600">{center.center_email}</td>
-                                                    {/* <td className="py-3 px-4 text-gray-600">{center.admin_user_email}</td> */}
-                                                    <td className="py-3 px-4 text-gray-600">{center.center_phone}</td>
-                                                    <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={center.center_address}>
-                                                        {center.center_address}
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                                            center.status === 'Active' 
-                                                                ? 'bg-green-100 text-green-700' 
-                                                                : center.status === 'Pending'
-                                                                ? 'bg-yellow-100 text-yellow-700'
-                                                                : 'bg-red-100 text-red-700'
-                                                        }`}>
-                                                            {center.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-gray-600">
-                                                        {new Date(center.created_at).toLocaleDateString('en-US', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </td>
-                                                    <td className="py-3 px-4 relative">
-                                                        <button 
-                                                            onClick={() => toggleDropdown(index)}
-                                                            className="p-1 hover:bg-gray-100 rounded"
-                                                        >
-                                                            <MoreVertical size={20} className="text-gray-600" />
-                                                        </button>
-                                                        {openDropdownIndex === index && (
-                                                            <div
-                                                                ref={(el) => (dropdownRefs.current[index] = el)}
-                                                                className={`absolute right-8 mt-1 w-40 bg-white border border-gray-200 rounded shadow-lg z-10
+                                                    <tr key={center.center_id} className="border-b border-gray-200 hover:bg-gray-50">
+                                                        <td className="py-3 px-4 text-gray-700 font-semibold">
+                                                            <div className="flex items-center gap-2">
+                                                                <Building2 size={18} className="text-[#8DC63F]" />
+                                                                {center.center_name}
+                                                            </div>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-gray-600">{center.center_email}</td>
+                                                        {/* <td className="py-3 px-4 text-gray-600">{center.admin_user_email}</td> */}
+                                                        <td className="py-3 px-4 text-gray-600">{center.center_phone}</td>
+                                                        <td className="py-3 px-4 text-gray-600 max-w-xs truncate" title={center.center_address}>
+                                                            {center.center_address}
+                                                        </td>
+                                                        <td className="py-3 px-4">
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${center.status === 'Active'
+                                                                    ? 'bg-green-100 text-green-700'
+                                                                    : center.status === 'Pending'
+                                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                                        : 'bg-red-100 text-red-700'
+                                                                }`}>
+                                                                {center.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-3 px-4 text-gray-600">
+                                                            {new Date(center.created_at).toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric'
+                                                            })}
+                                                        </td>
+                                                        <td className="py-3 px-4 relative">
+                                                            <button
+                                                                onClick={() => toggleDropdown(index)}
+                                                                className="p-1 hover:bg-gray-100 rounded"
+                                                            >
+                                                                <MoreVertical size={20} className="text-gray-600" />
+                                                            </button>
+                                                            {openDropdownIndex === index && (
+                                                                <div
+                                                                    ref={(el) => (dropdownRefs.current[index] = el)}
+                                                                    className={`absolute right-8 mt-1 w-40 bg-white border border-gray-200 rounded shadow-lg z-10
                                                                     transition-all ease-in-out duration-500 origin-top-right
                                                                     ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
                                                                 `}
-                                                            >
-                                                                <button 
-                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
-                                                                    onClick={() => {
-                                                                        console.log("View details", center);
-                                                                        setOpenDropdownIndex(null);
-                                                                    }}
                                                                 >
-                                                                    <Eye size={16} />
-                                                                    View Details
-                                                                </button>
-                                                                <button 
-                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
-                                                                    onClick={() => {
-                                                                        handleOpenEditModal(center);
-                                                                        setOpenDropdownIndex(null);
-                                                                    }}
-                                                                >
-                                                                    <Edit size={16} />
-                                                                    Edit
-                                                                </button>
-                                                                <button 
-                                                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm text-red-600"
-                                                                    onClick={() => {
-                                                                        handleDelete(center.center_id);
-                                                                        setOpenDropdownIndex(null);
-                                                                    }}
-                                                                >
-                                                                    <Trash2 size={16} />
-                                                                    Delete
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))
+                                                                    <button
+                                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                                                                        onClick={() => {
+                                                                            console.log("View details", center);
+                                                                            setOpenDropdownIndex(null);
+                                                                        }}
+                                                                    >
+                                                                        <Eye size={16} />
+                                                                        View Details
+                                                                    </button>
+                                                                    <button
+                                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                                                                        onClick={() => {
+                                                                            handleOpenEditModal(center);
+                                                                            setOpenDropdownIndex(null);
+                                                                        }}
+                                                                    >
+                                                                        <Edit size={16} />
+                                                                        Edit
+                                                                    </button>
+                                                                    <button
+                                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm text-red-600"
+                                                                        onClick={() => {
+                                                                            handleDelete(center.center_id);
+                                                                            setOpenDropdownIndex(null);
+                                                                        }}
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                        Delete
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))
                                         ) : (
                                             <tr>
                                                 <td colSpan={8} className="py-8 px-4 text-center text-gray-500">
@@ -1717,7 +1717,7 @@ function Academics() {
 
                             {/* Pagination */}
                             <div className="flex justify-end items-center mt-6">
-                                <TablePagination 
+                                <TablePagination
                                     component="div"
                                     count={rowCount}
                                     page={page}
@@ -1735,14 +1735,14 @@ function Academics() {
                                 <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                                     <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
                                         <h2 className="text-xl font-semibold text-gray-800">Onboard New Scan Center</h2>
-                                        <button 
+                                        <button
                                             onClick={handleCloseCenterModal}
                                             className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
                                         >
                                             <X size={24} />
                                         </button>
                                     </div>
-                                    
+
                                     <form onSubmit={handleSubmit} className="p-6">
                                         {/* Scan Center Information */}
                                         <div className="mb-6">
@@ -1822,11 +1822,10 @@ function Academics() {
                                             <button
                                                 type="submit"
                                                 disabled={loading}
-                                                className={`px-6 py-2 rounded font-semibold transition-colors ${
-                                                    loading 
-                                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                                className={`px-6 py-2 rounded font-semibold transition-colors ${loading
+                                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                                         : 'bg-[#8DC63F] hover:bg-[#7AB52F] text-white'
-                                                }`}
+                                                    }`}
                                             >
                                                 {loading ? (
                                                     <div className="flex items-center gap-2">
@@ -1849,14 +1848,14 @@ function Academics() {
                                 <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
                                     <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
                                         <h2 className="text-xl font-semibold text-gray-800">Edit Scan Center</h2>
-                                        <button 
+                                        <button
                                             onClick={handleCloseEditModal}
                                             className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
                                         >
                                             <X size={24} />
                                         </button>
                                     </div>
-                                    
+
                                     <form onSubmit={handleUpdateSubmit} className="p-6">
                                         {/* Scan Center Information */}
                                         <div className="mb-6">
@@ -1952,11 +1951,10 @@ function Academics() {
                                             <button
                                                 type="submit"
                                                 disabled={loading}
-                                                className={`px-6 py-2 rounded font-semibold transition-colors ${
-                                                    loading 
-                                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                                className={`px-6 py-2 rounded font-semibold transition-colors ${loading
+                                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                                         : 'bg-[#8DC63F] hover:bg-[#7AB52F] text-white'
-                                                }`}
+                                                    }`}
                                             >
                                                 {loading ? (
                                                     <div className="flex items-center gap-2">
@@ -1979,14 +1977,14 @@ function Academics() {
                                 <div className="bg-white rounded-lg w-full max-w-md">
                                     <div className="px-6 py-4 border-b flex justify-between items-center">
                                         <h2 className="text-lg font-semibold">Filter Scan Centers</h2>
-                                        <button 
+                                        <button
                                             onClick={handleCloseFilterModal}
                                             className="text-red-500 hover:bg-red-50 p-1 rounded"
                                         >
                                             <X size={24} />
                                         </button>
                                     </div>
-                                    
+
                                     <form onSubmit={handleFilterSubmit} className="p-6">
                                         <div className="grid grid-cols-1 gap-5">
                                             <TextField
@@ -2022,16 +2020,16 @@ function Academics() {
                                                 </Select>
                                             </FormControl>
                                         </div>
-                                        
+
                                         <div className="mt-5 flex justify-end items-center gap-4">
-                                            <button 
+                                            <button
                                                 type="button"
                                                 onClick={handleClearFilter}
                                                 className="text-red-600 font-semibold hover:bg-red-50 p-2 rounded"
                                             >
                                                 Clear
                                             </button>
-                                            <button 
+                                            <button
                                                 type="submit"
                                                 className="bg-[#8DC63F] px-3 py-2 rounded-sm text-white hover:bg-[#7AB52F] transition-colors"
                                             >
