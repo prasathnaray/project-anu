@@ -871,9 +871,19 @@
 // export default NavBar;
 
 import React, { useEffect, useRef, useState } from "react";
-import { Bell, CircleUser, Scan, Minimize, Search } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  Check,
+  CheckCheck,
+  CircleUser,
+  FileText,
+  GraduationCap,
+  MessageCircle,
+  Minimize,
+  Scan,
+} from "lucide-react";
 import { Badge } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate, useLocation } from "react-router-dom";
 import MaterialRipple from "material-ripple-effects";
@@ -901,8 +911,36 @@ function NavBar() {
   // ── Notification state ────────────────────────────────────────────────────
   const [count, setCount] = useState(0);
   const [notify, setNotify] = useState([]);
-  // Track locally-dismissed query notifications (no DB column needed)
-  const [readQueryIds, setReadQueryIds] = useState(new Set());
+  const readNotificationsKey = `navbar-read-notifications:${tokenRes?.user_mail ?? "guest"}`;
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(readNotificationsKey) || "[]"));
+    } catch {
+      return new Set();
+    }
+  });
+
+  const getNotificationId = (notification) => {
+    const id =
+      notification.query_id ??
+      notification.course_id ??
+      notification.target_learning_id ??
+      notification.volume_id ??
+      notification.created_at ??
+      notification.added_by;
+
+    return `${notification.type}:${id}`;
+  };
+
+  const notificationIsRead = (notification, readIds = readNotificationIds) =>
+    Boolean(notification.is_read) || readIds.has(getNotificationId(notification));
+
+  useEffect(() => {
+    localStorage.setItem(
+      readNotificationsKey,
+      JSON.stringify([...readNotificationIds])
+    );
+  }, [readNotificationIds, readNotificationsKey]);
 
   // ── Page title helper ─────────────────────────────────────────────────────
   const getPageTitle = (loc) => {
@@ -999,7 +1037,7 @@ function NavBar() {
         mail
           ? supabase
               .from("targeted_learning")
-              .select("tar_name, target_learning_id", { count: "exact" })
+              .select("tar_name, target_learning_id, created_at", { count: "exact" })
               .contains("trainee_id", [mail])
               .then((r) => (r.error ? { data: [], count: 0 } : r))
               .catch(() => ({ data: [], count: 0 }))
@@ -1009,7 +1047,7 @@ function NavBar() {
         mail
           ? supabase
               .from("volumes")
-              .select("added_by, status", { count: "exact" })
+              .select("volume_id, volume_name, added_by, status, created_at", { count: "exact" })
               .eq("approver_id", mail)
               .eq("status", false)
               .then((r) => (r.error ? { data: [], count: 0 } : r))
@@ -1034,16 +1072,6 @@ function NavBar() {
         }));
       }
 
-      const unreadQueryCount = (queryRes?.data ?? []).filter(
-        (q) => !readQueryIds.has(q.query_id)
-      ).length;
-
-      const total =
-        (courseRes.count ?? 0) +
-        (traineeRes.count ?? 0) +
-        (volumeRes.count ?? 0) +
-        unreadQueryCount;
-
       const allData = [
         ...(courseRes.data?.map((d) => ({ ...d, type: "course" })) || []),
         ...(traineeRes.data?.map((d) => ({ ...d, type: "trainee" })) || []),
@@ -1051,27 +1079,17 @@ function NavBar() {
         ...(queryRes?.data?.map((d) => ({ ...d, type: "query" })) || []),
       ];
 
-      setCount(total);
       setNotify(allData);
+      setCount(
+        allData.filter((notification) => !notificationIsRead(notification)).length
+      );
     } catch (err) {
       console.error("Error fetching notifications:", err);
     }
   };
 
   // ── Mark course notification as read ─────────────────────────────────────
-  const readCourseNotification = (id) => {
-    setNotify((prev) =>
-      prev.map((n) => (n.course_id === id ? { ...n, is_read: true } : n))
-    );
-    setCount((prev) => Math.max(prev - 1, 0));
-  };
-
   // ── Mark query notification as read (local only) ──────────────────────────
-  const readQueryNotification = (id) => {
-    setReadQueryIds((prev) => new Set([...prev, id]));
-    setCount((prev) => Math.max(prev - 1, 0));
-  };
-
   // ── Real-time subscriptions ───────────────────────────────────────────────
   useEffect(() => {
     fetchCount();
@@ -1143,15 +1161,80 @@ function NavBar() {
     return "/dashboard";
   };
 
-  const isRead = (n) => {
-    if (n.type === "course") return !!n.is_read;
-    if (n.type === "query") return readQueryIds.has(n.query_id);
-    return false;
+  const getNotificationIcon = (type) => {
+    if (type === "course") return BookOpen;
+    if (type === "trainee") return GraduationCap;
+    if (type === "volumes") return FileText;
+    return MessageCircle;
   };
 
-  const handleMarkRead = (n) => {
-    if (n.type === "course") readCourseNotification(n.course_id);
-    if (n.type === "query") readQueryNotification(n.query_id);
+  const getNotificationTime = (n) => {
+    if (!n.created_at) return "New";
+
+    const elapsedMinutes = Math.max(
+      0,
+      Math.floor((Date.now() - new Date(n.created_at).getTime()) / 60000)
+    );
+    if (elapsedMinutes < 1) return "Just now";
+    if (elapsedMinutes < 60) return `${elapsedMinutes}m ago`;
+    if (elapsedMinutes < 1440) return `${Math.floor(elapsedMinutes / 60)}h ago`;
+    if (elapsedMinutes < 10080) return `${Math.floor(elapsedMinutes / 1440)}d ago`;
+    return new Intl.DateTimeFormat("en", {
+      month: "short",
+      day: "numeric",
+    }).format(new Date(n.created_at));
+  };
+
+  const handleMarkRead = async (notification) => {
+    if (notificationIsRead(notification)) return;
+
+    const notificationId = getNotificationId(notification);
+    setReadNotificationIds((previous) => new Set([...previous, notificationId]));
+    setNotify((previous) =>
+      previous.map((item) =>
+        getNotificationId(item) === notificationId
+          ? { ...item, is_read: true }
+          : item
+      )
+    );
+    setCount((previous) => Math.max(previous - 1, 0));
+
+    if (notification.type === "course") {
+      const { error } = await supabase
+        .from("course_availability")
+        .update({ is_read: true })
+        .eq("course_id", notification.course_id)
+        .eq("user_id", tokenRes.user_mail);
+      if (error) console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    const unreadNotifications = notify.filter(
+      (notification) => !notificationIsRead(notification)
+    );
+    if (!unreadNotifications.length) return;
+
+    const unreadIds = unreadNotifications.map(getNotificationId);
+    setReadNotificationIds(
+      (previous) => new Set([...previous, ...unreadIds])
+    );
+    setNotify((previous) =>
+      previous.map((notification) => ({ ...notification, is_read: true }))
+    );
+    setCount(0);
+
+    const courseIds = unreadNotifications
+      .filter((notification) => notification.type === "course")
+      .map((notification) => notification.course_id);
+    if (courseIds.length) {
+      const { error } = await supabase
+        .from("course_availability")
+        .update({ is_read: true })
+        .in("course_id", courseIds)
+        .eq("user_id", tokenRes.user_mail);
+      if (error) console.error("Error marking all notifications as read:", error);
+    }
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -1193,76 +1276,152 @@ function NavBar() {
               </div>
 
               {/* Notifications */}
-              <div className="relative md:block px-3 py-2 ms-1 text-gray-200">
+              <div
+                ref={(el) => (dropdownRefs.current["notifications"] = el)}
+                className="relative md:block px-2 py-1.5 ms-1 text-gray-100"
+              >
                 <button
                   onClick={() => toggleDropdown("notifications")}
-                  className="relative"
+                  className={`relative flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/60 ${
+                    openDropdownIndex === "notifications" ? "bg-white/20" : ""
+                  }`}
                   aria-label="Notifications"
+                  aria-haspopup="menu"
+                  aria-expanded={openDropdownIndex === "notifications"}
                 >
-                  <Badge badgeContent={String(count)} color="error">
+                  <Badge badgeContent={count} color="error" max={99}>
                     <Bell size={20} />
                   </Badge>
                 </button>
 
                 {openDropdownIndex === "notifications" && (
                   <div
-                    ref={(el) => (dropdownRefs.current["notifications"] = el)}
-                    className="absolute right-0 mt-1 w-[480px] bg-white border border-gray-200 rounded shadow-md z-50"
+                    className="absolute right-0 z-50 mt-2 w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-slate-200/80 bg-white text-slate-900 shadow-[0_20px_55px_-15px_rgba(15,23,42,0.35)] sm:w-[420px]"
+                    role="menu"
                   >
-                    <div className="p-3 border-b text-gray-700 text-xl font-medium">
-                      Notifications
+                    <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-lime-50 via-white to-white px-5 py-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-semibold text-slate-900">
+                            Notifications
+                          </h2>
+                          {count > 0 && (
+                            <span className="rounded-full bg-[#8DC63F]/15 px-2 py-0.5 text-xs font-semibold text-[#5f8f20]">
+                              {count} new
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          Your latest learning updates
+                        </p>
+                      </div>
+
+                      {count > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleMarkAllRead}
+                          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#659624] transition-colors hover:bg-[#8DC63F]/10 focus:outline-none focus:ring-2 focus:ring-[#8DC63F]/30"
+                        >
+                          <CheckCheck size={15} />
+                          Mark all read
+                        </button>
+                      )}
                     </div>
 
                     {notify.length > 0 ? (
-                      <ul className="max-h-60 overflow-y-auto">
-                        {notify.map((n, idx) => (
-                          <li
-                            key={n.query_id ?? n.course_id ?? n.target_learning_id ?? idx}
-                            className="px-4 py-4 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                          >
-                            <div className="flex justify-between items-center gap-2">
-                              {/* Message */}
-                              <div className="text-black text-sm flex-1">
-                                {getNotificationMessage(n)}
+                      <ul className="max-h-[380px] divide-y divide-slate-100 overflow-y-auto overscroll-contain">
+                        {notify.map((n, idx) => {
+                          const read = notificationIsRead(n);
+                          const NotificationIcon = getNotificationIcon(n.type);
+
+                          return (
+                            <li
+                              key={getNotificationId(n) || idx}
+                              className={`relative px-4 py-3.5 transition-colors hover:bg-slate-50/80 ${
+                                read ? "bg-white" : "bg-[#8DC63F]/[0.045]"
+                              }`}
+                            >
+                              {!read && (
+                                <span className="absolute left-0 top-0 h-full w-1 bg-[#8DC63F]" />
+                              )}
+                              <div className="flex items-start gap-3">
+                                <div
+                                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                                    read
+                                      ? "bg-slate-100 text-slate-500"
+                                      : "bg-[#8DC63F]/15 text-[#679b22]"
+                                  }`}
+                                >
+                                  <NotificationIcon size={18} />
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <p
+                                      className={`text-sm leading-5 ${
+                                        read
+                                          ? "font-normal text-slate-600"
+                                          : "font-medium text-slate-900"
+                                      }`}
+                                    >
+                                      {getNotificationMessage(n)}
+                                    </p>
+                                    {!read && (
+                                      <span
+                                        className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#8DC63F] ring-4 ring-[#8DC63F]/10"
+                                        aria-label="Unread"
+                                      />
+                                    )}
+                                  </div>
+
+                                  <div className="mt-2 flex items-center justify-between gap-3">
+                                    <span className="text-xs text-slate-400">
+                                      {getNotificationTime(n)}
+                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOpenDropdownIndex(null);
+                                          navigate(getNotificationRoute(n));
+                                        }}
+                                        className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                                      >
+                                        View
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleMarkRead(n)}
+                                        disabled={read}
+                                        aria-label={read ? "Notification read" : "Mark as read"}
+                                        className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[#8DC63F]/30 ${
+                                          read
+                                            ? "cursor-default text-slate-400"
+                                            : "text-[#659624] hover:bg-[#8DC63F]/10"
+                                        }`}
+                                      >
+                                        <Check size={14} />
+                                        {read ? "Read" : "Mark as read"}
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-
-                              {/* View button */}
-                              <button
-                                className="bg-gray-100 p-1 px-2 text-sm rounded-md text-gray-500 whitespace-nowrap"
-                                onClick={() => navigate(getNotificationRoute(n))}
-                              >
-                                View
-                              </button>
-
-                              {/* Mark-read dot (course & query only) */}
-                              {(n.type === "course" || n.type === "query") &&
-                                !isRead(n) && (
-                                  <IconButton
-                                    aria-label="Mark as read"
-                                    size="small"
-                                    onClick={() => handleMarkRead(n)}
-                                  >
-                                    <Badge
-                                      badgeContent=""
-                                      color="success"
-                                      sx={{
-                                        "& .MuiBadge-badge": {
-                                          minWidth: "8px",
-                                          height: "8px",
-                                          padding: 0,
-                                          borderRadius: "50%",
-                                        },
-                                      }}
-                                    />
-                                  </IconButton>
-                                )}
-                            </div>
-                          </li>
-                        ))}
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
-                      <div className="p-4 text-gray-500 text-sm">
-                        No new notifications
+                      <div className="flex flex-col items-center px-6 py-10 text-center">
+                        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-lime-50 text-[#75a92f]">
+                          <CheckCheck size={23} />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-700">
+                          You&apos;re all caught up
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          New updates will appear here.
+                        </p>
                       </div>
                     )}
                   </div>
