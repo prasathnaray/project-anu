@@ -191,7 +191,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
 
           {/* the above features are for role 103 below is the updated one */}
           {tokdata.role == 103 &&
-            ["dashboard", "my-learning", "schedules", "Queries", "Batch"].map((route, i) => {
+            ["dashboard", "my-learning", "schedules", "Queries", "Batch", "vrspace"].map((route, i) => {
               const items = [
                 { icon: <LayoutDashboard size={20} />, label: "Dashboard" },
                 { icon: <BookText size={20} />, label: "My Learning" },
@@ -199,6 +199,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                 { icon: <Calendar size={20} />, label: "Schedules" },
                 { icon: <ClipboardPenLine size={20} />, label: "Queries" },
                 { icon: <Users size={20} />, label: "Batch" },
+                { icon: <WirelessCloudAccessIcon size={20} />, label: "Streams" },
               ];
               // const isActive = data === `/${route}` || data.startsWith(`/${route}/`);
               const isActive =

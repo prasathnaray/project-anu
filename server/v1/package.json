@@ -9,7 +9,8 @@
     "test": "node --test test/*.test.js",
     "migrate:private-volumes": "node scripts/applyPrivateVolumeMigration.js",
     "migrate:course-mapping-ownership": "node scripts/applyCourseMappingOwnershipMigration.js",
-    "migrate:user-sessions": "node scripts/applyUserSessionsMigration.js --apply"
+    "migrate:user-sessions": "node scripts/applyUserSessionsMigration.js --apply",
+    "migrate:center-streaming": "node scripts/applyCenterStreamingMigration.js --apply"
   },
   "keywords": [],
   "author": "",

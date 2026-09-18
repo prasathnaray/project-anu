@@ -19,9 +19,6 @@ import Curiculum from '../pages/Curiculum';
 import BatchIndividual from '../pages/BatchIndividual';
 import Requests from '../pages/Requests';
 import Stream from '../pages/Stream';
-// import Publisher from '../components/testComp';
-import IvsSubscriber from '../components/testComp';
-import IvsPublisher from '../components/ivsPublish';
 import Chapters from '../pages/Chapters';
 import Module from '../pages/Module';
 import Resource from '../pages/Resource';
@@ -63,9 +60,9 @@ function RoutesPath() {
                             <Route path="/curriculum" element={<Curiculum />} />
                             <Route path="/batch/:batch_id" element={<BatchIndividual />} />
                             <Route path="/all-requests" element={<Requests />} />
-                            <Route path="/vrspace" element={<Stream />} />
-                            <Route path="/video" element={<IvsSubscriber />} />
-                            <Route path="/publish" element={<IvsPublisher />} />
+                            <Route element={<PrivateRoute allowedRoles={[101, 103]} />}>
+                              <Route path="/vrspace" element={<Stream />} />
+                            </Route>
                             <Route path="/chapters/:course_id" element={<Chapters />} />
                             <Route path="/module/:chapter_id/:course_id" element={<Module />} />
                             <Route path="/resource/:module_id" element={<Resource />} />

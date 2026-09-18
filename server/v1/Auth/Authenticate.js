@@ -23,7 +23,7 @@ const Authenticate = async (req, res, next) => {
     if (!session) return res.status(401).json({ status: 'Unauthorized: Session ended' });
 
     const result = await client.query(
-      `SELECT user_role, status, centre_id, center_name FROM public.user_data
+      `SELECT user_role, status, centre_id, center_name, people_id FROM public.user_data
        WHERE user_email = $1`,
       [decoded.user_mail]
     );
@@ -34,7 +34,8 @@ const Authenticate = async (req, res, next) => {
     req.user = {
       ...decoded, role: dbUser.user_role,
       centre_id: dbUser.centre_id || null,
-      center_name: dbUser.center_name || null
+      center_name: dbUser.center_name || null,
+      people_id: dbUser.people_id || null
     };
     await touchSession(decoded.sid);
     next();
