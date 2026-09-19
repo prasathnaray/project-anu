@@ -1,14 +1,15 @@
 # VR-published live streaming
 
-Each trainee publishes the VR-rendered output and headset microphone to a private Amazon IVS Real-Time stage. The LMS trainee page receives a subscribe-only token for that private stage so it can show a safe self-preview. When Unity confirms that it is publishing, the server replicates that participant into the scan-center stage watched by institution administrators.
+Each trainee publishes the VR-rendered output and headset microphone to a private Amazon IVS Real-Time stage. The LMS trainee page receives a subscribe-only token for that private stage so it can show a safe self-preview. The server automatically replicates that participant into the scan-center stage watched by institution administrators.
 
 ## Unity API contract
 
 All requests require the trainee's LMS bearer token.
 
 1. `POST /api/v1/tokenn` creates the publisher session. Client-provided stage ARNs, user IDs, capabilities, attributes, and durations are ignored. The IVS token remains at `result.data.token`; the application session ID is at `result.sessionId`.
-2. After the IVS SDK reports that the local VR video and microphone are publishing, call `POST /api/v1/streaming/publisher-session/:sessionId/activate`. A `409` response means publishing is not visible to IVS yet and the caller should retry with bounded backoff.
-3. Call `DELETE /api/v1/streaming/publisher-session/:sessionId` when the VR stream stops.
+2. Join the stage and publish the local VR video and microphone. The server retries activation in the background, so existing VR builds become visible to admins without another request.
+3. A VR client may also call `POST /api/v1/streaming/publisher-session/:sessionId/activate` as soon as its IVS SDK reports a published state. A `409` response means publishing is not visible to IVS yet and the caller should retry with bounded backoff.
+4. Call `DELETE /api/v1/streaming/publisher-session/:sessionId` when the VR stream stops.
 
 The LMS uses `POST /api/v1/streaming/self-viewer-session` for the trainee preview and `POST /api/v1/streaming/viewer-session` for the existing institution-admin view.
 

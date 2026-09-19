@@ -1,0 +1,21 @@
+info:
+  name: streaming token
+  type: http
+  seq: 29
+
+http:
+  method: POST
+  url: http://localhost:4004/api/v1/tokenn
+  body:
+    type: json
+    data: ""
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGh0aWMuaWl0bS5hYy5pbiIsInJvbGUiOiIxMDMiLCJjZW50cmVfaWQiOiIwMWM2OWJkMS1kNjJlLTQ4M2UtYjA5Zi1mMTRhMmYwZjQzZWQiLCJjZW50ZXJfbmFtZSI6IkhUSUMgSW50ZXJuYWwgVGVhbSIsInNpZCI6IjliM2Q1OTYwLTE3YzQtNDJlOS05MTI4LWQwZDZkYjQyMTA5NCIsImlhdCI6MTc4OTcyODI3NCwiZXhwIjoxNzg5NzI5NDc0fQ.gbsHuuVUA4eBe8hIgF_MulcD-KCf8XqP8aSP0_D1-es
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

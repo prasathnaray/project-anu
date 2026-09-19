@@ -19,6 +19,7 @@ const TOKEN_DURATION_MINUTES = Number.isInteger(configuredTokenDuration)
   && configuredTokenDuration <= 20160
   ? configuredTokenDuration
   : 720;
+const ACTIVATION_RETRY_DELAYS_MS = [500, 1000, 2000, 4000, 8000, 15000];
 
 const isMissingIvsResource = (error) =>
   error?.name === 'ResourceNotFoundException' || error?.$metadata?.httpStatusCode === 404;
@@ -188,6 +189,22 @@ const cleanUpPublisher = async (publisher, destinationStageArn, reason) => {
   await disconnect(publisher.source_stage_arn || destinationStageArn, publisher.participant_id, reason);
 };
 
+const schedulePublisherActivation = (requester, sessionId, attempt = 0) => {
+  if (attempt >= ACTIVATION_RETRY_DELAYS_MS.length) return;
+  const timer = setTimeout(async () => {
+    try {
+      await activatePublisherSession(requester, sessionId);
+    } catch (error) {
+      if (error?.retryStreamingActivation) {
+        schedulePublisherActivation(requester, sessionId, attempt + 1);
+      } else if (error?.statusCode !== 404) {
+        console.error('Automatic streaming activation failed:', error?.name || 'Error', error?.message || 'Unknown error');
+      }
+    }
+  }, ACTIVATION_RETRY_DELAYS_MS[attempt]);
+  timer.unref?.();
+};
+
 const createPublisherSession = async (requester) => {
   const centreId = requirePublisher(requester);
   const user = await currentUser(requester);
@@ -232,6 +249,11 @@ const createPublisherSession = async (requester) => {
   } finally {
     connection.release();
   }
+
+  // Existing VR builds only request /tokenn and do not call the activation API.
+  // Retry in the background until IVS sees the publisher, then replicate that
+  // participant into the center stage used by institution administrators.
+  schedulePublisherActivation(requester, sessionId);
 
   return {
     sessionId,
@@ -278,7 +300,9 @@ const activatePublisherSession = async (requester, sessionId) => {
         throw new HttpError(409, 'This scan center already has the maximum number of active trainee streams.');
       }
       if (isIvsConflict(error) || isMissingIvsResource(error)) {
-        throw new HttpError(409, 'The VR stream is not publishing yet. Retry activation shortly.');
+        const retryError = new HttpError(409, 'The VR stream is not publishing yet. Retry activation shortly.');
+        retryError.retryStreamingActivation = true;
+        throw retryError;
       }
       throw error;
     }
