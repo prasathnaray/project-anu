@@ -38,7 +38,7 @@ const refreshToken = async (req, res) => {
       centre_id: user.centre_id || null,
       center_name: user.center_name || null,
       sid: decoded.sid
-    }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '20m' });
+    }, process.env.ACCESS_TOKEN_SECRET);
     return res.json({ accessToken });
   } catch (queryErr) {
     return res.status(500).json({ error: 'Failed to refresh token context' });

@@ -34,7 +34,7 @@ const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
     center_name: user.center_name || null,
     sid: session.id
   };
-  const accessToken = jwt.sign(tokenPayload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '20m' });
+  const accessToken = jwt.sign(tokenPayload, process.env.ACCESS_TOKEN_SECRET);
   const refreshToken = jwt.sign(tokenPayload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
   return {
     accessToken, refreshToken, id: user.user_email, role: user.user_role,
