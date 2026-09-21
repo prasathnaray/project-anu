@@ -222,5 +222,4 @@ const getSuperAdminStats = async (requester) => {
         platformGrowth: platformGrowthRes.rows || []
     };
 };
-
 module.exports = { listSuperAdmins, createSuperAdmin, getSuperAdminStats };
