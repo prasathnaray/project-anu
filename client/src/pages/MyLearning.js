@@ -4221,7 +4221,7 @@ import {
   LayoutDashboard, Notebook, BookOpen, Dumbbell, Eye, ClipboardCheck,
   CheckCircle2, Lock, ChevronRight, ChevronDown, FileText, Brain,
   Ruler, Search, Zap, Puzzle, Loader2, History, MessageSquare,
-  Calendar, Target, CheckCheck, X, RotateCcw, StickyNote,
+  Calendar, Target, CheckCheck, X, RotateCcw, StickyNote, Trophy,
 } from 'lucide-react';
 import APP_URL from '../API/config';
 
@@ -4674,6 +4674,16 @@ const NON_RESOURCE_ORDER = {
       'Test 2': 2,
     }).map(([key, value]) => [normalizeSortKey(key), value])
   ),
+  challenge: Object.fromEntries(
+    Object.entries({
+      'Probe Selection and Orientations': 1,
+      'Probe Movements': 2,
+      'Find the Optimal Image': 1,
+      'Image Optimization': 2,
+      'Sector Orientation and Directional Terms': 1,
+      'Ultrasound Spatial Visualization': 2,
+    }).map(([key, value]) => [normalizeSortKey(key), value])
+  ),
 };
 
 const TYPE_FILTERS = [
@@ -4684,11 +4694,31 @@ const TYPE_FILTERS = [
   { id: 'test',      label: 'Test' },
 ];
 
+const UFC_TYPE_FILTERS = [
+  { id: 'all',       label: 'All' },
+  { id: 'resource',  label: 'Learning Resource' },
+  { id: 'challenge', label: 'Challenges' },
+];
+
 const RESOURCE_TYPE_MAP = {
   'Learning Resource':    'resource',
   'Practice':             'practice',
   'Image Interpretation': 'interpret',
   'Test':                 'test',
+  'Challenge':            'challenge',
+  'Challenges':           'challenge',
+  'CHALLENGE':            'challenge',
+};
+
+const getResourceTypeKey = resourceType => {
+  const rawType = String(resourceType || '').trim();
+  if (RESOURCE_TYPE_MAP[rawType]) return RESOURCE_TYPE_MAP[rawType];
+  if (rawType.toLowerCase() === 'learning resource') return 'resource';
+  if (rawType.toLowerCase() === 'image interpretation') return 'interpret';
+  if (rawType.toLowerCase() === 'practice') return 'practice';
+  if (rawType.toLowerCase() === 'test') return 'test';
+  if (rawType.toLowerCase() === 'challenge' || rawType.toLowerCase() === 'challenges') return 'challenge';
+  return 'resource';
 };
 
 const TYPE_META = {
@@ -4696,6 +4726,7 @@ const TYPE_META = {
   practice:  { label: 'Practice',             icon: Dumbbell,       color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200'  },
   interpret: { label: 'Image Interpretation', icon: Eye,            color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
   test:      { label: 'Test',                 icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+  challenge: { label: 'Challenges',           icon: Trophy,         color: 'text-rose-500',   bg: 'bg-rose-50',   border: 'border-rose-200'   },
 };
 
 const TOPIC_ORDER = [
@@ -5226,7 +5257,7 @@ const QUESTION_TYPE_META = {
   measurement: { label: 'Measurement',             color: 'bg-amber-50 text-amber-600 border-amber-200'    },
 };
 
-const SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
+const SECTION_ORDER = ['resource', 'challenge', 'practice', 'interpret', 'test'];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -5500,14 +5531,16 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     if (!resourcesByLMID[learning_module_id]) resourcesByLMID[learning_module_id] = [];
     if (resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id)) return;
 
-    const typeKey          = RESOURCE_TYPE_MAP[item.resource_type] || 'resource';
+    const typeKey          = getResourceTypeKey(item.resource_type);
     const moduleLabel      = normalizeModuleSortLabel(unit_name || course_name || '');
     const resourceName     = (item.resource_name || '').trim();
     const displayResourceName = getDisplayResourceName(moduleLabel, resourceName, item.resource_topic || '');
     const resourceTopic    = getDisplayResourceTopic(moduleLabel, item.resource_topic || '', resourceName);
     const completionSource = typeKey === 'resource'
       ? deriveCompletionSource(displayResourceName, resourceTopic)
-      : null;
+      : typeKey === 'challenge'
+        ? 'activity'
+        : null;
     const isDone = completionMap[item.resource_id] === true;
     const activityScore = activityScoreMap.get(item.resource_id);
     const isMindSparkResource = isMindSpark(item.resource_name || '');
@@ -7802,6 +7835,10 @@ function MyLearning() {
   // ── Derived ───────────────────────────────────────────────────────────────
   const currentModules = modules[activeCert] || [];
   const activeModMeta  = currentModules.find(m => m.id === activeModule);
+  const activeCertMeta = certs.find(cert => cert.id === activeCert);
+  const isUfcContext = activeCertMeta?.label === 'UFC' ||
+    normalizeModuleSortLabel(activeModMeta?.label) === 'Principles of ultrasound';
+  const visibleTypeFilters = isUfcContext ? UFC_TYPE_FILTERS : TYPE_FILTERS;
   const allRes         = (resources[activeModule] || []).filter(resource =>
     resource.learningModuleId === activeModule && resource.certificateId === activeCert
   );
@@ -7824,7 +7861,7 @@ function MyLearning() {
   const sections = SECTION_ORDER
     .filter(k => byType[k]?.length > 0)
     .map(typeKey => {
-      const isFlat = typeKey === "interpret";
+      const isFlat = typeKey === 'interpret' || typeKey === 'challenge';
       //down variable is working fine
       //const isFlat = typeKey === 'interpret' || typeKey === 'test';
       if (isFlat) return { typeKey, flatList: true, accordions: [], directRows: byType[typeKey] };
@@ -7971,7 +8008,7 @@ function MyLearning() {
                   <div className="col-span-2">
                     <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {TYPE_FILTERS.map(f => (
+                        {visibleTypeFilters.map(f => (
                           <button
                             key={f.id}
                             onClick={() => setActiveFilter(f.id)}

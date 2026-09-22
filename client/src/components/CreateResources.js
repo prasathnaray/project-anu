@@ -103,6 +103,7 @@ function CreateResources({isVisible,  onClose, learningModuleId}) {
                                         // onChange={(e) => setResourceType(e.target.value)}
                                     >
                                         <MenuItem value="Learning Resource">Learning Resource</MenuItem>
+                                        <MenuItem value="CHALLENGE">Challenges</MenuItem>
                                         <MenuItem value="Practice">Practice</MenuItem>
                                         <MenuItem value="Image Interpretation">Image Interpretation</MenuItem>
                                         <MenuItem value="Test">Test</MenuItem>

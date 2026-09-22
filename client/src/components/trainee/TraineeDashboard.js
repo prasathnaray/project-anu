@@ -4766,6 +4766,16 @@ const NEXT_NON_RESOURCE_ORDER = {
       'Test 2': 2,
     }).map(([key, value]) => [normalizeSortKey(key), value])
   ),
+  challenge: Object.fromEntries(
+    Object.entries({
+      'Probe Selection and Orientations': 1,
+      'Probe Movements': 2,
+      'Find the Optimal Image': 1,
+      'Image Optimization': 2,
+      'Sector Orientation and Directional Terms': 1,
+      'Ultrasound Spatial Visualization': 2,
+    }).map(([key, value]) => [normalizeSortKey(key), value])
+  ),
 };
 
 const NEXT_RESOURCE_TYPE_MAP = {
@@ -4773,6 +4783,9 @@ const NEXT_RESOURCE_TYPE_MAP = {
   Practice: 'practice',
   'Image Interpretation': 'interpret',
   Test: 'test',
+  Challenge: 'challenge',
+  Challenges: 'challenge',
+  CHALLENGE: 'challenge',
 };
 
 const NEXT_TOPIC_ORDER = [
@@ -5108,7 +5121,7 @@ const getNextDisplayResourceTopic = (moduleLabel, topic, resourceName) => {
 };
 
 const NEXT_MODULE_ORDER = ['BPD & HC', 'AC', 'FL'];
-const NEXT_SECTION_ORDER = ['resource', 'practice', 'interpret', 'test'];
+const NEXT_SECTION_ORDER = ['resource', 'challenge', 'practice', 'interpret', 'test'];
 
 const normalizeResourceText = value => String(value || '').trim().toLowerCase();
 const isMindSparkRecord = row => {
@@ -5140,7 +5153,15 @@ const getTimeValue = value => {
 };
 const getLatestItem = (rows, dateKey) =>
   [...rows].sort((a, b) => getTimeValue(b?.[dateKey]) - getTimeValue(a?.[dateKey]))[0] || null;
-const getLearningTypeKey = resourceType => NEXT_RESOURCE_TYPE_MAP[resourceType] || 'resource';
+const getLearningTypeKey = resourceType => {
+  const rawType = String(resourceType || '').trim();
+  if (NEXT_RESOURCE_TYPE_MAP[rawType]) return NEXT_RESOURCE_TYPE_MAP[rawType];
+  const normalizedType = rawType.toLowerCase();
+  if (normalizedType === 'challenge' || normalizedType === 'challenges') return 'challenge';
+  if (normalizedType === 'learning resource') return 'resource';
+  if (normalizedType === 'image interpretation') return 'interpret';
+  return normalizedType === 'practice' || normalizedType === 'test' ? normalizedType : 'resource';
+};
 const getTrimesterSortIndex = value => {
   const normalized = normalizeSortKey(value);
   if (normalized.includes('first trimester') || normalized.includes('1st trimester')) return 1;
@@ -5175,6 +5196,8 @@ const getNextItemMeta = item => {
       return { label: 'Image Interpretation', shortLabel: 'II', accentColor: '#a855f7', cardBg: '#faf5ff', ringBg: '#e9d5ff', Icon: Eye };
     case 'test':
       return { label: 'Test', shortLabel: 'T', accentColor: '#f97316', cardBg: '#fff7ed', ringBg: '#fed7aa', Icon: ClipboardCheck };
+    case 'challenge':
+      return { label: 'Challenges', shortLabel: 'C', accentColor: '#f43f5e', cardBg: '#fff1f2', ringBg: '#fecdd3', Icon: Target };
     default:
       return { label: 'Learning Resource', shortLabel: 'LR', accentColor: '#3b82f6', cardBg: '#eff6ff', ringBg: '#dbeafe', Icon: BookOpen };
   }
@@ -5690,6 +5713,10 @@ function TraineeDashboard() {
     () => resourceProgressResources.filter(r => r.resource_type === 'Image Interpretation').length,
     [resourceProgressResources]
   );
+  const resourceProgressTotalChallenges = useMemo(
+    () => resourceProgressResources.filter(r => getLearningTypeKey(r.resource_type) === 'challenge').length,
+    [resourceProgressResources]
+  );
 
   const resourceProgressCompletedLR = useMemo(
     () => resourceProgressResources.filter(r => r.resource_type === 'Learning Resource' && isLearningItemDone(r, activityScoreByResourceId)).length,
@@ -5705,6 +5732,10 @@ function TraineeDashboard() {
   );
   const resourceProgressCompletedIR = useMemo(
     () => resourceProgressResources.filter(r => r.resource_type === 'Image Interpretation' && isLearningItemDone(r, activityScoreByResourceId)).length,
+    [activityScoreByResourceId, resourceProgressResources]
+  );
+  const resourceProgressCompletedChallenges = useMemo(
+    () => resourceProgressResources.filter(r => getLearningTypeKey(r.resource_type) === 'challenge' && isLearningItemDone(r, activityScoreByResourceId)).length,
     [activityScoreByResourceId, resourceProgressResources]
   );
 
@@ -5944,6 +5975,14 @@ function TraineeDashboard() {
       ringBg = '#fed7aa';
       Icon = ClipboardCheck;
       summary = sessionCode ? `Completed ${sessionCode}` : 'Completed test';
+    } else if (getLearningTypeKey(resourceType) === 'challenge') {
+      kindLabel = 'Challenges';
+      shortLabel = 'C';
+      accentColor = '#f43f5e';
+      cardBg = '#fff1f2';
+      ringBg = '#fecdd3';
+      Icon = Target;
+      summary = 'Completed challenge';
     } else if (resourceType) {
       kindLabel = resourceType;
       shortLabel = resourceType.slice(0, 2).toUpperCase();
@@ -6572,16 +6611,22 @@ function TraineeDashboard() {
   );
 
   // ═══════════════════════════════════════════════════════════
-  // 6. RESOURCE PROGRESS (LR, Practice, II, Test)
+  // 6. RESOURCE PROGRESS (LR, Challenges, Practice, II, Test)
   // ═══════════════════════════════════════════════════════════
   const ResourceSummaryCard = () => {
-    const showOnlyAvailableTypes = selectedResourceCertificateLabel !== 'BTC';
+    const isBTC = selectedResourceCertificateLabel === 'BTC';
+    const isUFC = selectedResourceCertificateLabel === 'UFC';
     const items = [
       { icon: BookOpen, label: 'Learning Resources', done: resourceProgressCompletedLR, total: resourceProgressTotalLR, color: '#3b82f6', bg: '#eff6ff' },
+      { icon: Target, label: 'Challenges', done: resourceProgressCompletedChallenges, total: resourceProgressTotalChallenges, color: '#f43f5e', bg: '#fff1f2' },
       { icon: Dumbbell, label: 'Practices', done: resourceProgressCompletedPractice, total: resourceProgressTotalPractice, color: '#8DC63F', bg: '#f0fde4' },
       { icon: Eye, label: 'Image Interp.', done: resourceProgressCompletedIR, total: resourceProgressTotalIR, color: '#a78bfa', bg: '#f5f3ff' },
       { icon: ClipboardCheck, label: 'Tests', done: resourceProgressCompletedTests, total: resourceProgressTotalTests, color: '#f97316', bg: '#fff7ed' },
-    ].filter(item => !showOnlyAvailableTypes || item.total > 0);
+    ].filter(item => {
+      if (isBTC) return item.label !== 'Challenges';
+      if (isUFC) return item.label === 'Learning Resources' || item.label === 'Challenges';
+      return item.total > 0;
+    });
 
     const visibleItems = items.length
       ? items

@@ -2850,6 +2850,7 @@ const buildCertificateTree = (rows) => {
       mod.units[unit_name] = {
         unit_name,
         learning_resources: { total: 0, completed: 0, items: {} },
+        challenges: { total: 0, completed: 0, items: [] },
         image_interpretations: { total: 0, completed: 0, items: {} },
         practices: [],
         tests: [],
@@ -2859,7 +2860,14 @@ const buildCertificateTree = (rows) => {
 
     const unitLabel = unit_name || course_name;
     const displayResourceName = getDisplayResourceName(unitLabel, resource_name, resource_topic);
-    const leaf = { resource_id, resource_name: displayResourceName, display_order, is_completed: is_completed ?? false };
+    const leaf = {
+      resource_id,
+      resource_name: displayResourceName,
+      resource_type,
+      resource_topic,
+      display_order,
+      is_completed: is_completed ?? false,
+    };
     const displayResourceTopic = getDisplayResourceTopic(unitLabel, resource_topic, resource_name);
 
     if (resource_type === 'Learning Resource') {
@@ -2886,6 +2894,28 @@ const buildCertificateTree = (rows) => {
       unit.learning_resources.total += 1;
       if (is_completed) unit.learning_resources.completed += 1;
       unit.learning_resources.items[displayResourceTopic].resources.push(leaf);
+
+    } else if (['challenge', 'challenges'].includes(normalizeOrderToken(resource_type))) {
+      const existingChallenge = unit.challenges.items.find(resource =>
+        resource.resource_id === resource_id ||
+        normalizeOrderToken(resource.resource_name) === normalizeOrderToken(leaf.resource_name)
+      );
+
+      if (existingChallenge) {
+        if (!existingChallenge.is_completed && is_completed) {
+          unit.challenges.completed += 1;
+        }
+        existingChallenge.is_completed = existingChallenge.is_completed || (is_completed ?? false);
+        existingChallenge.display_order = Math.min(
+          Number.isFinite(Number(existingChallenge.display_order)) ? Number(existingChallenge.display_order) : 99,
+          Number.isFinite(Number(display_order)) ? Number(display_order) : 99
+        );
+        continue;
+      }
+
+      unit.challenges.total += 1;
+      if (is_completed) unit.challenges.completed += 1;
+      unit.challenges.items.push(leaf);
 
     } else if (resource_type === 'Image Interpretation') {
       unit.image_interpretations.total += 1;
@@ -2945,6 +2975,17 @@ const buildCertificateTree = (rows) => {
                       return getResourceOrder(orderScope, topicGroup.resource_topic, a.resource_name) - getResourceOrder(orderScope, topicGroup.resource_topic, b.resource_name);
                     }),
                 })),
+            },
+            challenges: {
+              ...unit.challenges,
+              items: [...unit.challenges.items].sort((a, b) => {
+                const aOrder = Number(a.display_order);
+                const bOrder = Number(b.display_order);
+                if (Number.isFinite(aOrder) && Number.isFinite(bOrder) && aOrder !== bOrder) {
+                  return aOrder - bOrder;
+                }
+                return a.resource_name.localeCompare(b.resource_name);
+              }),
             },
             practices: [...unit.practices].sort((a, b) => a.resource_name.localeCompare(b.resource_name)),
             image_interpretations: {

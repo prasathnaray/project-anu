@@ -10,7 +10,9 @@
     "migrate:private-volumes": "node scripts/applyPrivateVolumeMigration.js",
     "migrate:course-mapping-ownership": "node scripts/applyCourseMappingOwnershipMigration.js",
     "migrate:user-sessions": "node scripts/applyUserSessionsMigration.js --apply",
-    "migrate:center-streaming": "node scripts/applyCenterStreamingMigration.js --apply"
+    "migrate:center-streaming": "node scripts/applyCenterStreamingMigration.js --apply",
+    "migrate:ufc-challenges": "node scripts/applyUfcChallengesMigration.js --apply",
+    "verify:ufc-challenges-vr": "node scripts/verifyUfcChallengesVrApi.js"
   },
   "keywords": [],
   "author": "",
