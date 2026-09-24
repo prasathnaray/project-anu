@@ -310,7 +310,7 @@ Invalid extensions, MIME types, or malformed JSON also return `400 Bad Request`.
 GET /recordings?volume_id=:volume_id
 ```
 
-Returns recording rows for the requested volume only when they were created by the currently authenticated user. Results are ordered newest first. Asset references in `rec_files`, `audio_files`, `image_files`, and `manifest_file` are returned as signed URLs.
+Returns recording rows for the requested volume only when they were created by the currently authenticated user. Results are ordered newest first. Asset references in `rec_files`, `audio_files`, `image_files`, and `manifest_file` are returned as signed download URLs with attachment dispositions and filenames. Opening any of these URLs downloads the asset instead of rendering or playing it in the browser. The response is marked `Cache-Control: no-store` so expired signed links are not reused.
 
 ### Query parameter
 

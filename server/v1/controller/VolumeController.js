@@ -1005,6 +1005,7 @@ const getRecordingsController = async(req, res) => {
             return res.status(result.code).json({ error: result.message });
         }
 
+        res.set('Cache-Control', 'no-store');
         return res.status(200).json(await hydrateStorageFields(result.data));
     }
     catch(err) {

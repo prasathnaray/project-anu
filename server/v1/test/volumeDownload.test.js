@@ -6,13 +6,15 @@ const storagePath = require.resolve('../utils/storageAdapter');
 let volume = null;
 let recording = null;
 let recordingList = [];
+let recordings = [];
 let signedOptions = null;
 require.cache[modelPath] = {
   id: modelPath, filename: modelPath, loaded: true,
   exports: {
     getVolumeDownloadModel: async () => volume,
     getVolumeRecordingDownloadListModel: async () => recordingList,
-    getVolumeRecordingDownloadModel: async () => recording
+    getVolumeRecordingDownloadModel: async () => recording,
+    getRecordingsModel: async () => ({ code: 200, data: recordings })
   }
 };
 require.cache[storagePath] = {
@@ -28,7 +30,7 @@ require.cache[storagePath] = {
 };
 
 const { getVolumeDownloadController, getVolumeRecordingDownloadListController,
-  getVolumeRecordingDownloadController } = require('../controller/VolumeController');
+  getVolumeRecordingDownloadController, getRecordingsController } = require('../controller/VolumeController');
 const volumeId = 'c66caf93-83f7-47b9-8edb-2f6ca6f17b9b';
 const recordingId = '8df34342-521f-4cbc-ab4d-5406e1b603cc';
 const response = () => ({
@@ -95,6 +97,23 @@ test('recording files are listed only for an accessible volume', async () => {
   assert.equal(listed.code, 200);
   assert.equal(listed.body.recordings[0].recording_name, 'Shadow');
   assert.equal(listed.headers['Cache-Control'], 'no-store');
+});
+
+test('recordings endpoint prevents caching of expiring signed URLs', async () => {
+  recordings = [{
+    recording_id: recordingId,
+    manifest_file: 'projectanu/manifests/manifest.json'
+  }];
+  const res = response();
+  await getRecordingsController({
+    query: { volume_id: volumeId },
+    user: request('source').user
+  }, res);
+
+  assert.equal(res.code, 200);
+  assert.equal(res.headers['Cache-Control'], 'no-store');
+  assert.equal(res.body[0].manifest_file, 'https://storage.example.test/fresh-download');
+  assert.equal(signedOptions.downloadName, 'manifest.json');
 });
 
 test('recording downloads select only stored files and valid indexes', async () => {
