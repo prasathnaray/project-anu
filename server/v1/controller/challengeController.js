@@ -1,6 +1,7 @@
 const {
     submitChallengeAnswer,
     getChallengeAttemptDetails,
+    getChallengeQuestions,
 } = require('../model/challengem');
 
 const isBlank = (value) => value === undefined || value === null || value === '';
@@ -94,7 +95,29 @@ const getChallengeAttemptDetailsController = async (req, res) => {
     }
 };
 
+const getChallengeQuestionsController = async (req, res) => {
+    try {
+        const { resource_id, module_name, challenge_number, challenge_name, all } = req.query;
+        const result = await getChallengeQuestions(req.user, {
+            resource_id,
+            module_name,
+            challenge_number,
+            challenge_name,
+            all,
+        });
+        return res.status(result.code).json(result);
+    } catch (err) {
+        console.error('getChallengeQuestionsController error:', err);
+        return res.status(500).json({
+            status: 'Error',
+            code: 500,
+            message: err.message,
+        });
+    }
+};
+
 module.exports = {
     submitChallengeController,
     getChallengeAttemptDetailsController,
+    getChallengeQuestionsController,
 };
