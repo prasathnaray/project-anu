@@ -1,0 +1,20 @@
+ANU — Product in motion (V2)
+45 seconds, 1920 × 1080, 30 fps. Original instrumental score and click effects.
+
+00:00 Learn. Practice. Progress.
+00:03 Find your next module.
+00:09 Open a topic. Go deeper.
+00:13 Review MindSparks.
+00:19 See the score. Review the answers.
+00:24 Keep practice in the same workflow.
+00:27 Track image interpretation.
+00:29 Bring it all into focus.
+00:32 See strengths. Find the next focus.
+00:37 Keep your learning path in view.
+00:42 ANU. One place. Every next step. Ultrasound learning, connected. Discover ANU.
+
+The film uses actual React application screens captured from the local codebase.
+All API responses, learner information, questions, results, and metrics are fictional demo fixtures.
+Camera movement, pacing, and cursor choreography are edited for the film.
+The question viewer is shown as a viewer; the film does not claim answers can be submitted there.
+No production backend was accessed and no live data was changed.

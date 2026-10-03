@@ -1,0 +1,44 @@
+ANU — Every step counts
+45-second product film. Original instrumental music; no voice-over.
+
+00:00–00:05
+Learning is a journey. Make every step count.
+Learn. Build the foundation.
+Practice. Put knowledge to work.
+Progress. See what comes next.
+
+00:05–00:10
+Ultrasound learning, connected.
+Meet ANU. Your learning management system.
+Structured modules. Interactive learning. Progress tracking.
+
+00:10–00:18
+A clear path. At every step.
+Courses, modules, and resources. Organized around the learner.
+Learn → Practice → Interpret → Test.
+Visual: stylized learning interface using modules and resource names from MyLearning.js.
+
+00:18–00:25
+Go beyond watching.
+Quizzes. Interpretation. Practice. A more active way to learn.
+MindSparks. OB Boosters. Practice activities.
+Learn. Apply. Repeat.
+
+00:25–00:33
+See progress. Find focus.
+Review attempts and scores. Understand skill competency. Choose the next step.
+Visual: illustrative dashboard with sample metrics and animated attempt history.
+
+00:33–00:39
+For learners. For educators.
+Coordinate batches and instructors. Keep the learning journey in view.
+Trainees. Instructors. Admins.
+Visual: illustrative batch overview with sample progress.
+
+00:39–00:45
+Build the next chapter of ultrasound learning.
+One platform. A clearer learning journey.
+Discover ANU.
+
+All UI visuals are stylized reconstructions rather than captured application sessions.
+Displayed numbers are sample data and do not represent measured customer outcomes.

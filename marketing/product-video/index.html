@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102b30">
+  <link rel="icon" href="data:,">
+  <title>ANU — Product in motion · V2</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#102b30;color:#f5f7ee;font-family:Segoe UI,Arial,sans-serif}main{max-width:1320px;margin:auto;padding:48px 32px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.brand{font-weight:700;letter-spacing:.08em;font-size:22px}.label{color:#a8bebb;font-size:13px;letter-spacing:.12em;text-transform:uppercase}h1{font-size:clamp(28px,4vw,52px);line-height:1.12;margin:0 0 28px;font-weight:600;letter-spacing:-.035em}video{width:100%;display:block;background:#102b30;border-radius:16px;border:1px solid #345052;box-shadow:0 25px 70px #00141566;aspect-ratio:16/9}.chapters{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 26px}button,a{font:inherit}button{background:#1c3b3e;border:1px solid #355356;color:#d3e0d8;border-radius:30px;padding:9px 15px;cursor:pointer;font-size:13px}button:hover,button.active{background:#a8d65d;color:#132d32;border-color:#a8d65d}button:focus-visible,a:focus-visible{outline:3px solid #0aafd6;outline-offset:4px}.footer{display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}.links{display:flex;gap:18px;flex-wrap:wrap}a{color:#b9df7c;text-underline-offset:4px;font-size:14px}.note{font-size:12px;color:#99b2ae;line-height:1.65;max-width:690px;margin-top:25px}@media(max-width:600px){main{padding:28px 16px}.label{font-size:10px}.chapters{gap:6px}button{padding:8px 11px}}
+  </style>
+</head>
+<body>
+<main>
+  <header><div class="brand">ANU</div><div class="label">Product demo · V2 · 45 seconds</div></header>
+  <h1>See ANU in motion.</h1>
+  <video id="film" controls playsinline preload="metadata" poster="poster-v2.jpg" aria-label="ANU learning management system product demo version two">
+    <source src="anu-product-demo-v2-1080p.mp4" type="video/mp4">
+    <track kind="descriptions" label="Visual descriptions" src="descriptions-v2.vtt" srclang="en">
+    Your browser does not support video. <a href="anu-product-demo-v2-1080p.mp4">Download the film</a>.
+  </video>
+  <nav class="chapters" aria-label="Video chapters">
+    <button data-time="0">Opening</button><button data-time="3">Learning</button><button data-time="12.8">MindSparks</button><button data-time="19.2">Scores</button><button data-time="23.5">Practice</button><button data-time="29">Progress</button><button data-time="42">Discover ANU</button>
+  </nav>
+  <div class="footer"><div class="label">Actual interface · 1080p · Original score</div><div class="links"><a href="anu-product-demo-v2-1080p.mp4" download>Download V2 master</a><a href="anu-product-demo-v2-web.mp4" download>Download V2 web version</a><a href="transcript-v2.txt">Read visual transcript</a></div></div>
+  <p class="note">Captured from the actual local ANU interface using fictional demo data, with edited camera moves and cursor choreography. Original instrumental music and click effects; no narration. V1 is preserved in the output folder.</p>
+</main>
+<script>
+const video=document.getElementById('film');
+const chapters=[...document.querySelectorAll('[data-time]')];
+chapters.forEach(button=>button.addEventListener('click',()=>{video.currentTime=Number(button.dataset.time);video.play().catch(()=>{});}));
+video.addEventListener('timeupdate',()=>{let active=0;chapters.forEach((b,i)=>{if(video.currentTime>=Number(b.dataset.time))active=i;});chapters.forEach((b,i)=>{b.classList.toggle('active',i===active);b.setAttribute('aria-pressed',String(i===active));});});
+</script>
+</body>
+</html>

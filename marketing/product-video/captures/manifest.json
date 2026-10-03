@@ -1,0 +1,44 @@
+{
+  "viewport": {
+    "width": 1440,
+    "height": 810
+  },
+  "screens": {
+    "learning": "learning.png",
+    "anatomy": "anatomy.png",
+    "questions": "questions.png",
+    "score": "score.png",
+    "practice": "practice.png",
+    "interpret": "interpret.png",
+    "dashboard": "dashboard.png",
+    "competency": "competency.png",
+    "path": "path.png"
+  },
+  "actions": {
+    "anatomy": {
+      "x": 1030.328125,
+      "y": 341.75
+    },
+    "questions": {
+      "x": 1148.3046875,
+      "y": 483
+    },
+    "closeQuestions": {
+      "x": 1052.34375,
+      "y": 673.25
+    },
+    "score": {
+      "x": 1243.8359375,
+      "y": 483
+    },
+    "practice": {
+      "x": 857.2578125,
+      "y": 174
+    },
+    "interpret": {
+      "x": 969.21875,
+      "y": 174
+    }
+  },
+  "errors": []
+}

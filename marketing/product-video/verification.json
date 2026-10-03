@@ -1,0 +1,20 @@
+{
+  "master": {
+    "duration": 45,
+    "width": 1920,
+    "height": 1080,
+    "error": null
+  },
+  "web": {
+    "duration": 45.013,
+    "width": 1920,
+    "height": 1080,
+    "error": null
+  },
+  "mobile": {
+    "width": 390,
+    "scrollWidth": 390
+  },
+  "chapterNavigation": "passed",
+  "browserErrors": []
+}

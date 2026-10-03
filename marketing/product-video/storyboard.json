@@ -1,0 +1,14 @@
+{
+  "title": "ANU — Every step counts",
+  "duration": 45,
+  "format": "1920 × 1080 / 30 fps / 16:9",
+  "scenes": [
+    {"start": 0, "end": 5, "purpose": "Hook", "copy": "Learning is a journey. Make every step count."},
+    {"start": 5, "end": 10, "purpose": "Product introduction", "copy": "Ultrasound learning, connected. Meet ANU. Your learning management system."},
+    {"start": 10, "end": 18, "purpose": "Structured learning", "copy": "A clear path. At every step.", "source": "client/src/pages/MyLearning.js"},
+    {"start": 18, "end": 25, "purpose": "Active learning", "copy": "Go beyond watching.", "source": "client/src/pages/MyLearning.js"},
+    {"start": 25, "end": 33, "purpose": "Progress visibility", "copy": "See progress. Find focus.", "source": "client/src/components/trainee/TraineeDashboard.js"},
+    {"start": 33, "end": 39, "purpose": "Training coordination", "copy": "For learners. For educators.", "source": "client/src/pages/Batch.js; client/src/pages/Instructors.js; client/src/pages/Trainee.js"},
+    {"start": 39, "end": 45, "purpose": "Brand and call to action", "copy": "Build the next chapter of ultrasound learning. Discover ANU."}
+  ]
+}
