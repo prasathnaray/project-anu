@@ -10,7 +10,25 @@ import {
   Activity, 
   LayoutDashboard,
   ClipboardPenLine,
-  NotepadText
+  NotepadText,
+  Zap,
+  Radio,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  RefreshCw,
+  Filter,
+  ArrowUpRight,
+  ShieldCheck,
+  Check,
+  X,
+  Search,
+  Sparkles,
+  Layers,
+  Award,
+  Video,
+  FileCheck2,
+  FolderKanban
 } from 'lucide-react';
 import GetScanCentersAPI from '../../API/GetScanCentersAPI';
 import GetCoursesAPI from '../../API/GetCoursesAPI';
@@ -19,6 +37,8 @@ import TraineeListAPI from '../../API/TraineeListAPI';
 import UserStatsAPI from '../../API/UserStatsAPI';
 import getDashboardAPI from '../../API/dashboardAPI';
 import SuperAdminStatsAPI from '../../API/SuperAdminStatsAPI';
+import { getActivityStatistics } from '../../API/ActivityTrackingAPI';
+import { getSocket } from '../../utils/socket';
 import { useNavigate } from 'react-router-dom';
 
 function SuperAdminDashboard() {
@@ -38,6 +58,62 @@ function SuperAdminDashboard() {
     courses: 0,
     activeUsers: 0,
   });
+
+  // Global Activity Tracking State
+  const [activityStats, setActivityStats] = useState({
+    totalActions: 0,
+    todayActions: 0,
+    weekActions: 0,
+    monthActions: 0,
+    successfulActions: 0,
+    failedActions: 0,
+    actionBreakdown: {
+      batchCreated: 0,
+      batchUpdated: 0,
+      usersCreated: 0,
+      volumesUploaded: 0,
+      challengesAttempted: 0,
+      challengesCompleted: 0,
+      certificatesGenerated: 0,
+      vrAttempts: 0,
+    },
+    byRole: [],
+    roleMap: { Instructor: 0, Trainee: 0, Admin: 0, 'Super Admin': 0 },
+    byModule: [],
+    byAction: [],
+    trendOverTime: [],
+    recentActivities: []
+  });
+  const [isLive, setIsLive] = useState(false);
+  const [isRefreshingActivities, setIsRefreshingActivities] = useState(false);
+  const [recentActivitiesList, setRecentActivitiesList] = useState([]);
+  const [activityFilterRole, setActivityFilterRole] = useState('ALL');
+  const [activityFilterModule, setActivityFilterModule] = useState('ALL');
+  const [activityFilterStatus, setActivityFilterStatus] = useState('ALL');
+  const [activitySearchTerm, setActivitySearchTerm] = useState('');
+
+  const fetchActivityData = async (showLoading = false) => {
+    if (showLoading) setIsRefreshingActivities(true);
+    try {
+      const res = await getActivityStatistics();
+      const data = res?.data?.data || res?.data;
+      if (data) {
+        setActivityStats((prev) => ({
+          ...prev,
+          ...data,
+          actionBreakdown: data.actionBreakdown || prev.actionBreakdown,
+          roleMap: data.roleMap || prev.roleMap
+        }));
+        if (Array.isArray(data.recentActivities) && data.recentActivities.length > 0) {
+          setRecentActivitiesList(data.recentActivities);
+        }
+      }
+    } catch (err) {
+      console.debug('Activity stats fetch notice:', err.message);
+    } finally {
+      if (showLoading) setIsRefreshingActivities(false);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -67,6 +143,14 @@ function SuperAdminDashboard() {
             courses: Number(crs).toLocaleString(),
             activeUsers: Number(act).toLocaleString(),
           });
+
+          // If activity stats bundled in payload
+          if (payload.globalActivityStats) {
+            setActivityStats(payload.globalActivityStats);
+            if (payload.globalActivityStats.recentActivities) {
+              setRecentActivitiesList(payload.globalActivityStats.recentActivities);
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching superadmin stats:', err);
@@ -74,18 +158,108 @@ function SuperAdminDashboard() {
     };
 
     fetchDashboardStats();
+    fetchActivityData();
+
+    // Socket.IO real-time updates
+    let socket;
+    try {
+      socket = getSocket();
+      if (socket) {
+        if (socket.connected) setIsLive(true);
+        socket.on('connect', () => setIsLive(true));
+        socket.on('disconnect', () => setIsLive(false));
+
+        socket.on('activity:new', (newLog) => {
+          setIsLive(true);
+          setRecentActivitiesList((prev) => [newLog, ...prev.filter((i) => i.id !== newLog.id).slice(0, 49)]);
+          setActivityStats((prev) => {
+            const isSuccess = newLog.status === 'SUCCESS';
+            const roleName = newLog.role || 'User';
+            const curRoles = { ...(prev.roleMap || {}) };
+            curRoles[roleName] = (curRoles[roleName] || 0) + 1;
+
+            const breakdown = { ...(prev.actionBreakdown || {}) };
+            const act = String(newLog.action || '').toUpperCase();
+            const mod = String(newLog.module || '').toUpperCase();
+            if (act.includes('CREATE_BATCH') || act.includes('BATCH_CREATED')) breakdown.batchCreated = (breakdown.batchCreated || 0) + 1;
+            if (act.includes('UPDATE_BATCH') || act.includes('BATCH_UPDATED')) breakdown.batchUpdated = (breakdown.batchUpdated || 0) + 1;
+            if (act.includes('CREATE_USER') || act.includes('USER_CREATED')) breakdown.usersCreated = (breakdown.usersCreated || 0) + 1;
+            if (act.includes('UPLOAD_VOLUME') || act.includes('VOLUME_UPLOADED')) breakdown.volumesUploaded = (breakdown.volumesUploaded || 0) + 1;
+            if (act.includes('ATTEMPT_CHALLENGE')) breakdown.challengesAttempted = (breakdown.challengesAttempted || 0) + 1;
+            if (act.includes('COMPLETE_CHALLENGE')) breakdown.challengesCompleted = (breakdown.challengesCompleted || 0) + 1;
+            if (act.includes('CERTIFICATE')) breakdown.certificatesGenerated = (breakdown.certificatesGenerated || 0) + 1;
+            if (act.includes('VR') || act.includes('PRACTICE') || mod.includes('VR')) breakdown.vrAttempts = (breakdown.vrAttempts || 0) + 1;
+
+            return {
+              ...prev,
+              totalActions: (prev.totalActions || 0) + 1,
+              todayActions: (prev.todayActions || 0) + 1,
+              successfulActions: isSuccess ? (prev.successfulActions || 0) + 1 : (prev.successfulActions || 0),
+              failedActions: !isSuccess ? (prev.failedActions || 0) + 1 : (prev.failedActions || 0),
+              roleMap: curRoles,
+              actionBreakdown: breakdown
+            };
+          });
+        });
+
+        socket.on('stats:update', (updatedStats) => {
+          if (updatedStats) setActivityStats(updatedStats);
+        });
+      }
+    } catch (e) {
+      console.debug('Socket error:', e.message);
+    }
+
+    // Polling fallback to keep numbers synchronized
+    const pollInterval = setInterval(() => {
+      fetchActivityData();
+    }, 15000);
+
     return () => {
       isMounted = false;
+      clearInterval(pollInterval);
+      if (socket) {
+        socket.off('connect');
+        socket.off('disconnect');
+        socket.off('activity:new');
+        socket.off('stats:update');
+      }
     };
   }, []);
 
-  const getRoleLabel = (role) => {
-    const r = String(role);
-    if (r === '99') return { text: 'Super Admin', bg: 'bg-purple-100 text-purple-700' };
-    if (r === '101') return { text: 'Admin', bg: 'bg-blue-100 text-blue-700' };
-    if (r === '102') return { text: 'Instructor', bg: 'bg-amber-100 text-amber-700' };
-    if (r === '103') return { text: 'Student', bg: 'bg-emerald-100 text-emerald-700' };
-    return { text: 'User', bg: 'bg-gray-100 text-gray-700' };
+  const getRoleLabel = (role, userId = '') => {
+    const r = String(role || '').trim().toLowerCase();
+    if (r === '99' || r.includes('super') || r === 'superadmin' || r === 'super admin' || r === 'super_admin') {
+      return { text: 'Super Admin', bg: 'bg-purple-100 text-purple-700' };
+    }
+    if (r === '101' || r === 'institution_admin' || r === 'institution admin' || (r.includes('admin') && !r.includes('super'))) {
+      return { text: 'Admin', bg: 'bg-blue-100 text-blue-700' };
+    }
+    if (r === '102' || r.includes('instructor') || r.includes('tutor')) {
+      return { text: 'Instructor', bg: 'bg-amber-100 text-amber-700' };
+    }
+    if (r === '103' || r.includes('trainee') || r.includes('student')) {
+      return { text: 'Trainee', bg: 'bg-emerald-100 text-emerald-700' };
+    }
+
+    // Contextual lookup from user identifier / email
+    const u = String(userId || '').trim().toLowerCase();
+    if (u.includes('super')) return { text: 'Super Admin', bg: 'bg-purple-100 text-purple-700' };
+    if (u.includes('admin')) return { text: 'Admin', bg: 'bg-blue-100 text-blue-700' };
+    if (u.includes('instructor') || u.includes('tutor')) return { text: 'Instructor', bg: 'bg-amber-100 text-amber-700' };
+    if (u.includes('trainee') || u.includes('student')) return { text: 'Trainee', bg: 'bg-emerald-100 text-emerald-700' };
+
+    return { text: 'Super Admin', bg: 'bg-purple-100 text-purple-700' };
+  };
+
+  const formatShortTime = (dateStr) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '';
+    }
   };
 
   const activeUsers = dashboardData?.activeUsersList || [];
@@ -147,17 +321,34 @@ function SuperAdminDashboard() {
   const studentPath = growthPoints.reduce((acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x},${p.sY}`, '');
   const coursePath = growthPoints.reduce((acc, p, i) => `${acc} ${i === 0 ? 'M' : 'L'} ${p.x},${p.cY}`, '');
 
-  const RenderGenderPie = () => (
-    <div className="flex items-center justify-center gap-6 my-4">
-      <span className="text-sm text-gray-500">No data available</span>
-    </div>
-  );
+  // Role Action Calculations for Progress Bars
+  const instructorActions = Number(activityStats.roleMap?.['Instructor'] || 0);
+  const traineeActions = Number(activityStats.roleMap?.['Trainee'] || 0);
+  const adminActions = Number(activityStats.roleMap?.['Admin'] || 0);
+  const superAdminActions = Number(activityStats.roleMap?.['Super Admin'] || 0);
+  const totalRoleSum = Math.max(instructorActions + traineeActions + adminActions + superAdminActions, 1);
 
-  const RenderTargetedChart = () => (
-    <div className="flex items-center justify-center gap-6 my-4">
-      <span className="text-sm text-gray-500">No data available</span>
-    </div>
-  );
+  // Filtered Activities
+  const filteredActivities = recentActivitiesList.filter((act) => {
+    const roleObj = getRoleLabel(act.role, act.user_id);
+    if (activityFilterRole !== 'ALL') {
+      if (roleObj.text.toLowerCase() !== activityFilterRole.toLowerCase()) return false;
+    }
+    if (activityFilterModule !== 'ALL' && act.module !== activityFilterModule) return false;
+    if (activityFilterStatus !== 'ALL' && act.status !== activityFilterStatus) return false;
+    if (activitySearchTerm) {
+      const q = activitySearchTerm.toLowerCase();
+      return (
+        act.action?.toLowerCase().includes(q) ||
+        act.module?.toLowerCase().includes(q) ||
+        act.role?.toLowerCase().includes(q) ||
+        roleObj.text.toLowerCase().includes(q) ||
+        act.user_id?.toLowerCase().includes(q) ||
+        act.description?.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -179,30 +370,64 @@ function SuperAdminDashboard() {
           } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
         >
           {/* Sub-Header Navigation Tabs */}
-          <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
-            <button
-              onClick={() => setDashboardState('dashboard')}
-              className={`flex justify-between gap-2 items-center px-2 py-[2px] rounded cursor-pointer font-semibold transition-all ease-in-out duration-300 ${
-                dashboardState === 'dashboard'
-                  ? 'bg-[#8DC63F] text-white'
-                  : 'hover:bg-gray-100 hover:text-[#8DC63F]'
-              }`}
-            >
-              <span className="text-[13px]">Overview</span>
-            </button>
+          <div className="text-gray-500 bg-white px-3 py-2 flex items-center justify-between border-b">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setDashboardState('dashboard')}
+                className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer font-semibold transition-all ease-in-out duration-200 ${
+                  dashboardState === 'dashboard'
+                    ? 'bg-[#8DC63F] text-white shadow-sm'
+                    : 'hover:bg-gray-100 hover:text-[#8DC63F]'
+                }`}
+              >
+                <LayoutDashboard size={14} />
+                <span className="text-[13px]">Overview</span>
+              </button>
 
-            <button
-              onClick={() => setDashboardState('users')}
-              className={`flex items-center gap-1 px-2 py-[2px] rounded cursor-pointer transition-all duration-300 ease-in-out font-semibold ${
-                dashboardState === 'users'
-                  ? 'bg-[#8DC63F] text-white'
-                  : 'hover:bg-gray-100 hover:text-[#8DC63F]'
-              }`}
-            >
-              <span className="text-[13px]">Active Users (24h)</span>
-            </button>
+              <button
+                onClick={() => setDashboardState('activities')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded cursor-pointer transition-all duration-200 ease-in-out font-semibold ${
+                  dashboardState === 'activities'
+                    ? 'bg-[#8DC63F] text-white shadow-sm'
+                    : 'hover:bg-gray-100 hover:text-[#8DC63F]'
+                }`}
+              >
+                <Zap size={14} />
+                <span className="text-[13px]">Global Activity Tracking</span>
+                <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-gray-300'}`} />
+              </button>
+
+              <button
+                onClick={() => setDashboardState('users')}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded cursor-pointer transition-all duration-200 ease-in-out font-semibold ${
+                  dashboardState === 'users'
+                    ? 'bg-[#8DC63F] text-white shadow-sm'
+                    : 'hover:bg-gray-100 hover:text-[#8DC63F]'
+                }`}
+              >
+                <Activity size={14} />
+                <span className="text-[13px]">Active Users (24h)</span>
+              </button>
+            </div>
+
+            {/* Live Indicator Pill */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="font-semibold">{isLive ? 'LIVE Real-Time Stream' : 'Live Sync Active'}</span>
+              </div>
+              <button
+                onClick={() => fetchActivityData(true)}
+                disabled={isRefreshingActivities}
+                className="p-1 text-gray-500 hover:text-gray-800 rounded hover:bg-gray-100 transition-colors"
+                title="Refresh Activity Stats"
+              >
+                <RefreshCw size={14} className={isRefreshingActivities ? 'animate-spin text-[#8DC63F]' : ''} />
+              </button>
+            </div>
           </div>
 
+          {/* Tab 1: Overview */}
           {dashboardState === 'dashboard' && (
             <div className="p-3 flex flex-col gap-4">
               {/* Header Title Banner */}
@@ -213,12 +438,12 @@ function SuperAdminDashboard() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-gray-800">Super Admin Dashboard</h2>
-                    <p className="text-xs text-gray-500">Manage your entire LMS platform from one place</p>
+                    <p className="text-xs text-gray-500">Global control center & central action tracking across Project ANU</p>
                   </div>
                 </div>
               </div>
 
-              {/* 5 KPI Cards Section */}
+              {/* 5 Standard KPI Cards Section */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 {/* Card 1: Total Institutions */}
                 <div
@@ -301,7 +526,377 @@ function SuperAdminDashboard() {
                 </div>
               </div>
 
-              {/* 6 Panels Section Below Cards */}
+              {/* ======================================================== */}
+              {/* GLOBAL ACTIVITY STATISTICS & ACTION TRACKING COMMAND CARD */}
+              {/* ======================================================== */}
+              <div className="bg-white border rounded-xl shadow-sm p-4 flex flex-col gap-4">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
+                      <Zap size={20} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-base text-gray-900 tracking-tight">GLOBAL ACTIVITY STATISTICS</h3>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 uppercase tracking-wide">
+                          Live Monitor
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">Every action performed in any dashboard is centrally captured and reflected here</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDashboardState('activities')}
+                      className="text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                      <span>Detailed Audit View</span>
+                      <ArrowUpRight size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Top Action Metrics Counters */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+                  <div className="bg-gradient-to-br from-indigo-50/70 to-indigo-100/40 border border-indigo-100 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-indigo-700 uppercase tracking-wider block">Total Actions</span>
+                    <span className="text-2xl font-black text-indigo-900 mt-1 block">
+                      {Number(activityStats.totalActions || 0).toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-indigo-500 font-medium mt-0.5 block">Lifetime recorded</span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-emerald-50/70 to-emerald-100/40 border border-emerald-100 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider block">Today's Actions</span>
+                    <span className="text-2xl font-black text-emerald-900 mt-1 block">
+                      {Number(activityStats.todayActions || 0).toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-emerald-600 font-medium mt-0.5 block">Past 24 hours</span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-amber-50/70 to-amber-100/40 border border-amber-100 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-amber-700 uppercase tracking-wider block">Instructor Actions</span>
+                    <span className="text-2xl font-black text-amber-900 mt-1 block">
+                      {instructorActions.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-amber-600 font-medium mt-0.5 block">Tutors & trainers</span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-teal-50/70 to-teal-100/40 border border-teal-100 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-teal-700 uppercase tracking-wider block">Trainee Actions</span>
+                    <span className="text-2xl font-black text-teal-900 mt-1 block">
+                      {traineeActions.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-teal-600 font-medium mt-0.5 block">Students & learners</span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-50/70 to-blue-100/40 border border-blue-100 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-blue-700 uppercase tracking-wider block">Admin Actions</span>
+                    <span className="text-2xl font-black text-blue-900 mt-1 block">
+                      {adminActions.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-blue-600 font-medium mt-0.5 block">Institution admins</span>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-purple-50/70 to-purple-100/40 border border-purple-100 p-3 rounded-lg">
+                    <span className="text-[11px] font-semibold text-purple-700 uppercase tracking-wider block">Super Admin</span>
+                    <span className="text-2xl font-black text-purple-900 mt-1 block">
+                      {superAdminActions.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-purple-600 font-medium mt-0.5 block">Platform operators</span>
+                  </div>
+                </div>
+
+                {/* Middle Grid: Activity by Role & Activity by Module */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Left: Activity by Dashboard / Role */}
+                  <div className="border rounded-lg p-3.5 bg-gray-50/60 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-bold text-xs text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Users size={14} className="text-emerald-600" />
+                          Activity by Dashboard / Role
+                        </span>
+                        <span className="text-[11px] text-gray-500 font-medium">Total: {totalRoleSum.toLocaleString()}</span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {/* Instructor */}
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                              Instructor
+                            </span>
+                            <span className="font-mono text-gray-900">{instructorActions.toLocaleString()}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-amber-500 h-2.5 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(100, Math.round((instructorActions / totalRoleSum) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Trainee */}
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
+                              Trainee
+                            </span>
+                            <span className="font-mono text-gray-900">{traineeActions.toLocaleString()}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-teal-500 h-2.5 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(100, Math.round((traineeActions / totalRoleSum) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Admin */}
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                              Admin
+                            </span>
+                            <span className="font-mono text-gray-900">{adminActions.toLocaleString()}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-blue-500 h-2.5 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(100, Math.round((adminActions / totalRoleSum) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Super Admin */}
+                        <div>
+                          <div className="flex justify-between text-xs font-semibold text-gray-700 mb-1">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                              Super Admin
+                            </span>
+                            <span className="font-mono text-gray-900">{superAdminActions.toLocaleString()}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-purple-500 h-2.5 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(100, Math.round((superAdminActions / totalRoleSum) * 100))}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-3 border-t text-[11px] text-gray-500 mt-2">
+                      <span className="flex items-center gap-1 text-emerald-600 font-semibold">
+                        <CheckCircle2 size={13} />
+                        {Number(activityStats.successfulActions || 0).toLocaleString()} Successful
+                      </span>
+                      <span className="flex items-center gap-1 text-rose-500 font-semibold">
+                        <XCircle size={13} />
+                        {Number(activityStats.failedActions || 0).toLocaleString()} Failed
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right: Activity by Module */}
+                  <div className="border rounded-lg p-3.5 bg-gray-50/60 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="font-bold text-xs text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Layers size={14} className="text-emerald-600" />
+                          Activity by Module
+                        </span>
+                        <span className="text-[11px] text-gray-400">Captured in real-time</span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        {(activityStats.byModule && activityStats.byModule.length > 0) ? (
+                          activityStats.byModule.slice(0, 6).map((mod, i) => (
+                            <div key={i} className="bg-white border rounded p-2 flex justify-between items-center shadow-xs">
+                              <span className="font-medium text-gray-700 truncate pr-1">{mod.module}</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number(mod.count).toLocaleString()}
+                              </span>
+                            </div>
+                          ))
+                        ) : (
+                          <>
+                            <div className="bg-white border rounded p-2 flex justify-between items-center">
+                              <span className="font-medium text-gray-700">VR Modules</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number(activityStats.actionBreakdown?.vrAttempts || 0).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded p-2 flex justify-between items-center">
+                              <span className="font-medium text-gray-700">Challenges</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number((activityStats.actionBreakdown?.challengesAttempted || 0) + (activityStats.actionBreakdown?.challengesCompleted || 0)).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded p-2 flex justify-between items-center">
+                              <span className="font-medium text-gray-700">Batch Management</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number((activityStats.actionBreakdown?.batchCreated || 0) + (activityStats.actionBreakdown?.batchUpdated || 0)).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded p-2 flex justify-between items-center">
+                              <span className="font-medium text-gray-700">User Management</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number(activityStats.actionBreakdown?.usersCreated || 0).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded p-2 flex justify-between items-center">
+                              <span className="font-medium text-gray-700">Certificates & Courses</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number(activityStats.actionBreakdown?.certificatesGenerated || 0).toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="bg-white border rounded p-2 flex justify-between items-center">
+                              <span className="font-medium text-gray-700">Volume Management</span>
+                              <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                                {Number(activityStats.actionBreakdown?.volumesUploaded || 0).toLocaleString()}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] text-gray-400 pt-3 border-t mt-2 flex justify-between">
+                      <span>Actions tracked across all application dashboards</span>
+                      <span className="text-[#8DC63F] font-semibold cursor-pointer" onClick={() => setDashboardState('activities')}>
+                        View all modules →
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Grid: 8 Specific Statistics Counters & Live Recent Activities Stream */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
+                  {/* Left: 8 Specific Action Counters */}
+                  <div className="border rounded-lg p-3.5 bg-gray-50/60">
+                    <span className="font-bold text-xs text-gray-700 uppercase tracking-wider block mb-2.5">
+                      Key Action Statistics
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Batch Created</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.batchCreated || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Batch Updated</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.batchUpdated || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Users Created</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.usersCreated || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Volumes Uploaded</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.volumesUploaded || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Challenges Att.</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.challengesAttempted || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Challenges Comp.</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.challengesCompleted || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">Certificates Gen.</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.certificatesGenerated || 0).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="bg-white border rounded-lg p-2.5 text-center shadow-xs">
+                        <span className="text-[11px] text-gray-500 block truncate">VR Attempts</span>
+                        <span className="text-xl font-bold text-gray-800 mt-1 block">
+                          {Number(activityStats.actionBreakdown?.vrAttempts || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Recent Activities Stream */}
+                  <div className="border rounded-lg p-3.5 bg-gray-50/60 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center mb-2.5">
+                        <span className="font-bold text-xs text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Clock size={14} className="text-emerald-600" />
+                          Recent Activities Stream
+                        </span>
+                        <button
+                          onClick={() => setDashboardState('activities')}
+                          className="text-[11px] text-[#8DC63F] font-semibold hover:underline"
+                        >
+                          View Log ({recentActivitiesList.length})
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5 overflow-y-auto max-h-[175px] pr-1">
+                        {recentActivitiesList.length > 0 ? (
+                          recentActivitiesList.slice(0, 5).map((act, idx) => {
+                            const roleInfo = getRoleLabel(act.role, act.user_id);
+                            const timeStr = formatShortTime(act.created_at);
+                            const isFail = act.status === 'FAILED';
+
+                            return (
+                              <div
+                                key={act.id || idx}
+                                className="bg-white border rounded-lg p-2 text-xs flex items-center justify-between gap-2 shadow-xs hover:border-[#8DC63F] transition-all"
+                              >
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <span className="text-[10px] font-mono text-gray-400 shrink-0 font-medium">
+                                    {timeStr || 'now'}
+                                  </span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 ${roleInfo.bg}`}>
+                                    {roleInfo.text}
+                                  </span>
+                                  <p className="text-gray-800 font-medium truncate" title={act.description || act.action}>
+                                    {act.description ? act.description.replace(/^User\b/i, roleInfo.text) : `${roleInfo.text} performed ${act.action}`}
+                                  </p>
+                                </div>
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
+                                  isFail ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                                }`}>
+                                  {act.status}
+                                </span>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-6 text-gray-400 text-xs">
+                            <Clock size={20} className="mx-auto mb-1 text-gray-300" />
+                            No recent activities yet. Actions performed in any dashboard will appear here in real-time.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 6 Panels Section Below */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Panel 1: Institution Activity */}
                 <div className="bg-white border rounded-lg shadow-sm p-4 flex flex-col justify-between h-64">
@@ -348,7 +943,6 @@ function SuperAdminDashboard() {
                     </button>
                   </div>
                   <div className="flex items-center justify-around py-2 gap-2 flex-1">
-                    {/* Donut Chart Graphic */}
                     <div className="relative w-28 h-28 flex items-center justify-center">
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                         {courseDistItems.map((item, idx) => (
@@ -370,7 +964,6 @@ function SuperAdminDashboard() {
                         <span className="text-[10px] text-gray-400">Courses</span>
                       </div>
                     </div>
-                    {/* Legend */}
                     <div className="flex flex-col gap-1.5 text-xs text-gray-600">
                       {courseDistItems.map((item, idx) => (
                         <div key={idx} className="flex items-center gap-2">
@@ -531,6 +1124,205 @@ function SuperAdminDashboard() {
             </div>
           )}
 
+          {/* Tab 2: Dedicated Global Activity Tracking & Audit Stream */}
+          {dashboardState === 'activities' && (
+            <div className="p-4 sm:p-6 bg-white m-4 rounded-xl shadow-sm border space-y-5">
+              {/* Header Title with Live Badge */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <Zap className="text-[#8DC63F]" size={24} />
+                      Central Activity Tracking & Event Audit
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Stream
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Complete central event log of all actions across Super Admin, Admin, Instructor, and Trainee dashboards.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => fetchActivityData(true)}
+                    disabled={isRefreshingActivities}
+                    className="flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <RefreshCw size={13} className={isRefreshingActivities ? 'animate-spin text-[#8DC63F]' : ''} />
+                    <span>Refresh Now</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Summary Stat Mini Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-indigo-50/60 border border-indigo-100 rounded-lg p-3">
+                  <span className="text-xs font-semibold text-indigo-700">Total Actions</span>
+                  <p className="text-2xl font-black text-indigo-950 mt-1">
+                    {Number(activityStats.totalActions || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-3">
+                  <span className="text-xs font-semibold text-emerald-700">Today's Actions</span>
+                  <p className="text-2xl font-black text-emerald-950 mt-1">
+                    {Number(activityStats.todayActions || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-teal-50/60 border border-teal-100 rounded-lg p-3">
+                  <span className="text-xs font-semibold text-teal-700">Successful</span>
+                  <p className="text-2xl font-black text-teal-950 mt-1">
+                    {Number(activityStats.successfulActions || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-rose-50/60 border border-rose-100 rounded-lg p-3">
+                  <span className="text-xs font-semibold text-rose-700">Failed / Errors</span>
+                  <p className="text-2xl font-black text-rose-950 mt-1">
+                    {Number(activityStats.failedActions || 0).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Filters Bar */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                {/* Search */}
+                <div className="relative flex-1 w-full">
+                  <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by action, user, module, description..."
+                    value={activitySearchTerm}
+                    onChange={(e) => setActivitySearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-1.5 text-xs bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DC63F]"
+                  />
+                </div>
+
+                {/* Filter by Role */}
+                <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                  <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Role:</span>
+                  <select
+                    value={activityFilterRole}
+                    onChange={(e) => setActivityFilterRole(e.target.value)}
+                    className="text-xs bg-white border rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8DC63F]"
+                  >
+                    <option value="ALL">All Roles</option>
+                    <option value="Instructor">Instructor</option>
+                    <option value="Trainee">Trainee</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Super Admin">Super Admin</option>
+                  </select>
+                </div>
+
+                {/* Filter by Module */}
+                <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                  <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Module:</span>
+                  <select
+                    value={activityFilterModule}
+                    onChange={(e) => setActivityFilterModule(e.target.value)}
+                    className="text-xs bg-white border rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8DC63F]"
+                  >
+                    <option value="ALL">All Modules</option>
+                    <option value="Batch Management">Batch Management</option>
+                    <option value="User Management">User Management</option>
+                    <option value="Volume Management">Volume Management</option>
+                    <option value="VR Modules">VR Modules</option>
+                    <option value="Challenge Modules">Challenge Modules</option>
+                    <option value="Course Modules">Course Modules</option>
+                    <option value="Targeted Learning">Targeted Learning</option>
+                    <option value="Assessment Modules">Assessment Modules</option>
+                  </select>
+                </div>
+
+                {/* Filter by Status */}
+                <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                  <span className="text-xs font-medium text-gray-500 whitespace-nowrap">Status:</span>
+                  <select
+                    value={activityFilterStatus}
+                    onChange={(e) => setActivityFilterStatus(e.target.value)}
+                    className="text-xs bg-white border rounded px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#8DC63F]"
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="SUCCESS">Success Only</option>
+                    <option value="FAILED">Failed Only</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Activity Log Table */}
+              {filteredActivities.length > 0 ? (
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-gray-50 text-gray-600 font-semibold uppercase tracking-wider border-b">
+                        <th className="py-2.5 px-3">Time</th>
+                        <th className="py-2.5 px-3">Role</th>
+                        <th className="py-2.5 px-3">User</th>
+                        <th className="py-2.5 px-3">Action</th>
+                        <th className="py-2.5 px-3">Module</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3">Details / Target</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredActivities.map((act, index) => {
+                        const roleInfo = getRoleLabel(act.role, act.user_id);
+                        const isSuccess = act.status === 'SUCCESS';
+                        const time = new Date(act.created_at).toLocaleString();
+                        const displayDesc = act.description
+                          ? act.description.replace(/^User\b/i, roleInfo.text)
+                          : (act.target_id ? `Target: ${act.target_id}` : '-');
+
+                        return (
+                          <tr key={act.id || index} className="hover:bg-gray-50/70 transition-colors">
+                            <td className="py-2.5 px-3 text-gray-500 font-mono whitespace-nowrap">
+                              {time}
+                            </td>
+                            <td className="py-2.5 px-3 whitespace-nowrap">
+                              <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${roleInfo.bg}`}>
+                                {roleInfo.text}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 font-medium text-gray-700 max-w-[140px] truncate" title={act.user_id}>
+                              {act.user_id}
+                            </td>
+                            <td className="py-2.5 px-3 font-semibold text-gray-800 font-mono">
+                              {act.action}
+                            </td>
+                            <td className="py-2.5 px-3 text-gray-600">
+                              <span className="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[11px] font-medium">
+                                {act.module}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 whitespace-nowrap">
+                              <span className={`px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 w-fit ${
+                                isSuccess ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                              }`}>
+                                {isSuccess ? <Check size={12} /> : <X size={12} />}
+                                {act.status}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-gray-600 max-w-[200px] truncate" title={displayDesc}>
+                              {displayDesc}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500 bg-gray-50/50 rounded-lg border border-dashed">
+                  <Zap className="mx-auto mb-2 text-gray-400" size={32} />
+                  <p className="font-semibold text-gray-700">No activity events found matching your criteria</p>
+                  <p className="text-xs text-gray-400 mt-1">Actions performed on any dashboard will automatically record and appear here in real-time.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 3: Active Users (24h) */}
           {dashboardState === 'users' && (
             <div className="p-6 bg-white m-4 rounded-lg shadow-sm border">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b">

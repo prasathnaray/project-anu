@@ -151,9 +151,18 @@ const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, e
             { expiresIn }
         );
     } catch (error) {
-        if (!isNotFound(error) || !fallbackEnabled()) throw error;
-        console.warn(`S3 storage fallback used for ${parsed.s3Key}`);
-        return signSupabaseFallback(parsed, expiresIn, downloadName);
+        if (fallbackEnabled()) {
+            try {
+                const fallbackUrl = await signSupabaseFallback(parsed, expiresIn, downloadName);
+                console.warn(`S3 storage fallback used for ${parsed.s3Key}`);
+                return fallbackUrl;
+            } catch (fallbackErr) {
+                console.warn(`Fallback to Supabase also failed for ${parsed.s3Key}:`, fallbackErr.message);
+                return value;
+            }
+        }
+        if (!isNotFound(error)) throw error;
+        return null;
     }
 };
 

@@ -1,9 +1,14 @@
 const express = require('express');
+const http = require('http');
 const app = express();
 //cookies
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
 //db
 const client = require('./utils/conn');
+const { initSocket } = require('./services/socketService');
+const { initActivityTable } = require('./services/activityTrackingService');
+const activityTrackerMiddleware = require('./utils/activityTrackerMiddleware');
+const activityTrackerRouter = require('./routes/activityTrackerRoute');
 //Auth
 const LoginRouter = require('./routes/Auth')
 const ProfileRouter = require('./routes/profileRoute');
@@ -123,14 +128,17 @@ app.use(cors({
     credentials: true
 }));
 app.use(cookieParser());
-app.listen('4004', (err) => {
+const server = http.createServer(app);
+initSocket(server);
+server.listen('4004', (err) => {
     if (err) {
-        console.log(err)
+        console.log(err);
     }
     else {
-        console.log(`Working`)
+        console.log(`Working `);
+        initActivityTable();
     }
-})
+});
 app.get('/health', (req, res) => {
     res.status(200).json({
         status: 'Healthy',
@@ -146,9 +154,12 @@ app.use(express.json({
         && Boolean(req.is(['application/json', 'application/*+json']))
 }));
 app.use(express.urlencoded({ extended: true, limit: process.env.REQUEST_BODY_LIMIT || '100mb' }));
+// Device detection middleware
+app.use(deviceMiddleware);
+// Central Activity Tracker Middleware
+app.use(activityTrackerMiddleware);
 //Auth route
 //routes
-app.use(deviceMiddleware);
 app.use('/api/v1', LoginRouter);
 app.use('/api/v1', ForgotPRouter);
 app.use('/api/v1', refreshTokenRouter);
@@ -249,6 +260,7 @@ app.use('/api/v1', Authenticate, contentAccessRouter);
 app.use('/api/v1', Authenticate, mrContentRouter);
 app.use('/api/v1', Authenticate, institutionRouter);
 app.use('/api/v1', Authenticate, superAdminRouter);
+app.use('/api/v1', Authenticate, activityTrackerRouter);
 //recordings
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
 //associated volume  

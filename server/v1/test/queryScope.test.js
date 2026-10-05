@@ -12,6 +12,7 @@ require.cache[connectionPath] = {
             calls.push({ sql, params });
             const result = /SELECT COUNT\(\*\)/.test(sql)
                 ? { rows: [{ count: '2' }] }
+                
                 : { rows: [], rowCount: 1 };
             callback(null, result);
         }
