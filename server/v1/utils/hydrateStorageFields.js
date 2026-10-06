@@ -39,17 +39,22 @@ const hydrateStorageFields = async (value, fields = DEFAULT_FIELDS) => {
     if (Array.isArray(value)) return Promise.all(value.map((item) => hydrateStorageFields(item, fields)));
     if (!value || typeof value !== 'object' || value instanceof Date) return value;
     const entries = await Promise.all(Object.entries(value).map(async ([key, item]) => {
-        if (fields.has(key) && Array.isArray(item)) {
-            return [key, DOWNLOAD_FIELDS.has(key)
-                ? await Promise.all(item.map(signDownload))
-                : await signAssets(item)];
+        try {
+            if (fields.has(key) && Array.isArray(item)) {
+                return [key, DOWNLOAD_FIELDS.has(key)
+                    ? await Promise.all(item.map(signDownload))
+                    : await signAssets(item)];
+            }
+            if (fields.has(key) && typeof item === 'string' && item && item !== '-') {
+                return [key, DOWNLOAD_FIELDS.has(key)
+                    ? await signDownload(item)
+                    : await signAsset(item)];
+            }
+            return [key, await hydrateStorageFields(item, fields)];
+        } catch (fieldErr) {
+            console.warn(`hydrateStorageFields warning for ${key}:`, fieldErr.message);
+            return [key, item];
         }
-        if (fields.has(key) && typeof item === 'string' && item && item !== '-') {
-            return [key, DOWNLOAD_FIELDS.has(key)
-                ? await signDownload(item)
-                : await signAsset(item)];
-        }
-        return [key, await hydrateStorageFields(item, fields)];
     }));
     return Object.fromEntries(entries);
 };

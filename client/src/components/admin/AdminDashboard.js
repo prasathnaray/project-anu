@@ -149,7 +149,7 @@ function AdminDashboard(){
                       <GraduationCap size={43} />
                     </div>
                     <div className="text-3xl text-gray-600">
-                      {dashboardData?.getTraineesIns?.rows[1]?.count || 0}
+                      {dashboardData?.getTraineesIns?.rows?.find(r => r.user_role == 103 || r.user_role === '103')?.count || 0}
                     </div>
                   </div>
                 </div>
@@ -160,7 +160,7 @@ function AdminDashboard(){
                       <ClipboardPenLine size={43} />
                     </div>
                     <div className="text-3xl text-gray-600">
-                      {dashboardData?.getTraineesIns?.rows[0]?.count || 0}
+                      {dashboardData?.getTraineesIns?.rows?.find(r => r.user_role == 102 || r.user_role === '102')?.count || 0}
                     </div>
                   </div>
                 </div>

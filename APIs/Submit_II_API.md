@@ -10,6 +10,7 @@
 
 Submits a trainee's Image Interpretation answer for one question. The same endpoint supports five question types:
 
+
 - `type1`
 - `type2`
 - `annotation1`
@@ -318,3 +319,262 @@ curl -X POST "http://localhost:4004/api/v1/submit-ii" \
   -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5" \
   -F "userImage=@/path/to/answer.png"
 ```
+
+---
+
+## BPD/HC Module - Image Interpretation: Find the Image (`type1`)
+
+The following questions specify the **Find the Image** (`type1`) activity under **Image Interpretation** in the **BPD/HC** module.
+
+### Question 1
+
+**Prompt:** Which image shows the biparietal diameter measurement plane with the thalami, arrow sign, midline falx, and cavum septi pellucidi visible?
+
+- **Question Type:** `type1`
+- **Question Number:** `1`
+- **Options:**
+  - A. Only A
+  - B. Both A & D
+  - C. Only C
+  - D. Both A & C
+- **Correct Answer:** `C` (Only C)
+- **Feedback (If correct):** You correctly identified the BPD measurement plane, which shows the thalami, arrow sign, midline falx, and cavum septi pellucidi, consistent with the transthalamic view.
+- **Feedback (If wrong):** The selected image does not correspond to the transthalamic plane. Ensure the thalami, CSP, arrow sign, and midline falx are clearly visualized for accurate BPD measurement.
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=1" \
+  -F "isCorrect=true" \
+  -F "optionChosen=3" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 2
+
+**Prompt:** Which image shows the midline falx, arrow sign, thalami, and CSP essential for BPD measurement?
+
+- **Question Type:** `type1`
+- **Question Number:** `2`
+- **Options:**
+  - A. Only B
+  - B. Both B & D
+  - C. Only D
+  - D. Both B & C
+- **Correct Answer:** `B` (Both B & D)
+- **Feedback (If correct):** Correct! You selected the transthalamic images, which show the midline falx, thalami, arrow sign, and cavum septi pellucidi, essential landmarks for BPD measurement.
+- **Feedback (If wrong):** Incorrect. B & D are the correct images with all the key landmarks.
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=2" \
+  -F "isCorrect=true" \
+  -F "optionChosen=2" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 3
+
+**Prompt:** Which of the following images corresponds to the transthalamic section without visualization of the cerebellum or orbits?
+
+- **Question Type:** `type1`
+- **Question Number:** `3`
+- **Options:**
+  - A. Both B & C
+  - B. Both B & A
+  - C. Only A
+  - D. None of the above
+- **Correct Answer:** `A` (Both B & C)
+- **Feedback (If correct):** Correct! You chose the transthalamic section showing the thalami, arrow sign, midline falx and CSP, while excluding the cerebellum and orbits.
+- **Feedback (If wrong / If none of the above):** Incorrect! Images B and C actually show the correct transthalamic plane with visible thalami, arrow sign, falx and CSP, and without cerebellum or orbits.
+- **Alternative Feedback:**
+  - *If correct:* Correct! You successfully identified the proper transthalamic plane.
+  - *If wrong:* Incorrect! A, C & D represent the correct plane with proper anatomical landmarks.
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=3" \
+  -F "isCorrect=true" \
+  -F "optionChosen=1" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 4
+
+**Prompt:** Select the correct image for BPD measurement.
+
+- **Question Type:** `type1`
+- **Question Number:** `4`
+- **Options:**
+  - A
+  - B
+  - C
+  - D
+- **Correct Option:** `B`
+- **Feedback (If correct):** Excellent! You chose the correct transthalamic image suitable for BPD measurement where thalami and CSP are seen clearly.
+- **Feedback (If wrong):** The selected image corresponds to a transventricular plane. Remember, the BPD is measured in the transthalamic section showing falx, arrow sign, thalami and CSP.
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=4" \
+  -F "isCorrect=true" \
+  -F "optionChosen=2" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 5
+
+**Prompt:** Select the correct image for HC measurement
+
+- **Question Type:** `type1`
+- **Question Number:** `5`
+- **Options:**
+  - A
+  - B
+  - C
+  - D
+- **Correct Option:** `C`
+- **Feedback (If correct):** Correct! You identified the appropriate image for HC measurement - a symmetrical transthalamic plane with the midline falx, arrow sign, thalami and CSP in view.
+- **Feedback (If wrong):** Incorrect. The chosen image is not suitable for HC measurement.
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=5" \
+  -F "isCorrect=true" \
+  -F "optionChosen=3" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+## BPD/HC Module - Freeze the Plane (Questions 6 to 10)
+
+The following questions specify the **Freeze the plane** activity under the **BPD/HC** module.
+
+### Question 6
+
+**Prompt:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (or `freeze` / `type2`)
+- **Question Number:** `6`
+- **Feedback (If correct):** Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **Feedback (If wrong):** Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=6" \
+  -F "isCorrect=true" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 7
+
+**Prompt:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (or `freeze` / `type2`)
+- **Question Number:** `7`
+- **Feedback (If correct):** Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **Feedback (If wrong):** Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=7" \
+  -F "isCorrect=true" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 8
+
+**Prompt:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (or `freeze` / `type2`)
+- **Question Number:** `8`
+- **Feedback (If correct):** Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **Feedback (If wrong):** Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=8" \
+  -F "isCorrect=true" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 9
+
+**Prompt:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (or `freeze` / `type2`)
+- **Question Number:** `9`
+- **Feedback (If correct):** Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **Feedback (If wrong):** Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=9" \
+  -F "isCorrect=true" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+---
+
+### Question 10
+
+**Prompt:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (or `freeze` / `type2`)
+- **Question Number:** `10`
+- **Feedback (If correct):** Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **Feedback (If wrong):** Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+```bash
+curl -X POST "http://localhost:4004/api/v1/submit-ii" \
+  -H "Authorization: Bearer <access_token>" \
+  -F "questionType=type1" \
+  -F "questionNo=10" \
+  -F "isCorrect=true" \
+  -F "session_id=021306f8-580b-4634-a809-7796b5843387" \
+  -F "resource_id=e196c6db-dc0b-4ebd-93b2-10a2125188e5"
+```
+
+
+

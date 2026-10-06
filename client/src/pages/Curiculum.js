@@ -16,7 +16,8 @@ function Curiculam() {
   const navigate = useNavigate();
   const token = jwtDecode(localStorage.getItem('user_token'));
   const [buttonOpen, setButtonOpen] = React.useState(true);
-  const [curiculumList, setCuriculumList] = React.useState({})
+  const [curiculumList, setCuriculumList] = React.useState([]);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [curriculumData, setCurriculumData] = React.useState({
       curiculum_name: ''
   })
@@ -112,6 +113,15 @@ function Curiculam() {
   React.useEffect(() => {
       GetCuriculumList();
   }, [])
+  const list = Array.isArray(curiculumList) ? curiculumList : [];
+  const filteredCuriculumList = list.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const term = searchQuery.toLowerCase().trim();
+    return (
+      (item?.curiculum_nam && item.curiculum_nam.toLowerCase().includes(term)) ||
+      (item?.curiculum_id && item.curiculum_id.toLowerCase().includes(term))
+    );
+  });
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
@@ -137,6 +147,8 @@ function Curiculam() {
                                                               <input
                                                                   type="text"
                                                                   placeholder="Search Curriculum"
+                                                                  value={searchQuery}
+                                                                  onChange={(e) => setSearchQuery(e.target.value)}
                                                                   className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
                                                               />
                                                         </div>
@@ -152,15 +164,17 @@ function Curiculam() {
                                                                 </tr>
                                                     </thead>
                                                     <tbody>
-                                                          {curiculumList.length > 0 ? (
-                                                                curiculumList.map((data, index) => (
+                                                          {filteredCuriculumList.length > 0 ? (
+                                                                filteredCuriculumList.map((data, index) => (
                                                                   <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">
                                                                       {data?.curiculum_nam || 'N/A'}
                                                                     </td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">scv</td>
                                                                     <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                      {data?.code || 'N/A'}
+                                                                      {data?.total_courses !== undefined && data?.total_courses !== null ? data.total_courses : 0}
+                                                                    </td>
+                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                      {data?.total_centres !== undefined && data?.total_centres !== null ? data.total_centres : 0}
                                                                     </td>
                                                                     <td className="relative py-2 px-4 text-[#8DC63F] font-semibold">
                                                                         <button onClick={() => toggleDropdown(index)}>
@@ -181,6 +195,12 @@ function Curiculam() {
                                                                     </td>
                                                                   </tr>
                                                                 ))
+                                                              ) : list.length > 0 ? (
+                                                                <tr>
+                                                                  <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                    No curriculum found
+                                                                  </td>
+                                                                </tr>
                                                               ) : (
                                                                 <tr>
                                                                   <td colSpan={6} className="py-4 px-4 text-center text-gray-500">

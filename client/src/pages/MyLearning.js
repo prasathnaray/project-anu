@@ -5255,6 +5255,7 @@ const QUESTION_TYPE_META = {
   annotation1: { label: 'Annotation 1',            color: 'bg-purple-50 text-purple-600 border-purple-200' },
   annotation2: { label: 'Annotation 2',            color: 'bg-pink-50 text-pink-600 border-pink-200'       },
   measurement: { label: 'Measurement',             color: 'bg-amber-50 text-amber-600 border-amber-200'    },
+  freeze:      { label: 'Freeze the Plane',        color: 'bg-cyan-50 text-cyan-600 border-cyan-200'       },
 };
 
 const SECTION_ORDER = ['resource', 'challenge', 'practice', 'interpret', 'test'];
@@ -5552,6 +5553,10 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       name:             displayResourceName,
       type:             typeKey,
       topic:            resourceTopic,
+      unit_name:        item.unit_name || item.course_name || '',
+      module_name:      item.module_name || item.unit_name || '',
+      course_name:      item.course_name || '',
+      moduleLabel,
       displayOrder:     item.display_order ?? null,
       completionSource,
       done:             isDone,
@@ -5674,12 +5679,13 @@ const getLeadingAnswerToken = value => {
   return markerMatch?.[1] || normalizedValue;
 };
 
-const optionMatchesConfiguredKey = (option, answer) => {
+const optionMatchesConfiguredKey = (option, answer, optionIndex) => {
   const normalizedAnswer = normalizeAnswerValue(answer);
   if (!normalizedAnswer) return false;
 
   const answerToken = getLeadingAnswerToken(normalizedAnswer);
-  const optionValues = [option?.key, option?.value, option?.label, option?.text]
+  const indexToken = optionIndex !== undefined ? String(optionIndex + 1) : '';
+  const optionValues = [option?.key, option?.value, option?.label, option?.text, indexToken]
     .map(normalizeAnswerValue)
     .filter(Boolean);
 
@@ -5690,8 +5696,8 @@ const optionMatchesConfiguredKey = (option, answer) => {
 };
 
 const getConfiguredOptionDetails = (options, key) => {
-  return (Array.isArray(options) ? options : []).find(item =>
-    optionMatchesConfiguredKey(item, key)
+  return (Array.isArray(options) ? options : []).find((item, index) =>
+    optionMatchesConfiguredKey(item, key, index)
   ) || null;
 };
 
@@ -5723,10 +5729,1876 @@ const getQuestionMetadataList = (metadata, key) => {
   return [];
 };
 
-function buildImageInterpretationSessions(submissions, questions) {
-  const questionRows = Array.isArray(questions)
-    ? [...questions].sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0))
-    : [];
+// ─── BPD/HC FIND THE IMAGE DEFAULT/CONFIGURED QUESTIONS ───────────────────────
+const BPD_HC_FIND_THE_IMAGE_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'type1',
+    prompt: 'Which image shows the biparietal diameter measurement plane with the thalami, arrow sign, midline falx, and cavum septi pellucidi visible?',
+    options: [
+      { key: 'A', value: '1', text: 'Only A' },
+      { key: 'B', value: '2', text: 'Both A & D' },
+      { key: 'C', value: '3', text: 'Only C' },
+      { key: 'D', value: '4', text: 'Both A & C' },
+    ],
+    correct_answer: { key: 'C', value: 'Only C', answer: 'C. (Only C)' },
+    feedback_correct: 'You correctly identified the BPD measurement plane, which shows the thalami, arrow sign, midline falx, and cavum septi pellucidi, consistent with the transthalamic view.',
+    feedback_wrong: 'The selected image does not correspond to the transthalamic plane. Ensure the thalami, CSP, arrow sign, and midline falx are clearly visualized for accurate BPD measurement.',
+  },
+  2: {
+    question_no: 2,
+    question_type: 'type1',
+    prompt: 'Which image shows the midline falx, arrow sign, thalami, and CSP essential for BPD measurement?',
+    options: [
+      { key: 'A', value: '1', text: 'Only B' },
+      { key: 'B', value: '2', text: 'Both B & D' },
+      { key: 'C', value: '3', text: 'Only D' },
+      { key: 'D', value: '4', text: 'Both B & C' },
+    ],
+    correct_answer: { key: 'B', value: 'Both B & D', answer: 'B. (Both B & D)' },
+    feedback_correct: 'Correct! You selected the transthalamic images, which show the midline falx, thalami, arrow sign, and cavum septi pellucidi, essential landmarks for BPD measurement.',
+    feedback_wrong: 'Incorrect. B & D are the correct images with all the key landmarks.',
+  },
+  3: {
+    question_no: 3,
+    question_type: 'type1',
+    prompt: 'Which of the following images corresponds to the transthalamic section without visualization of the cerebellum or orbits?',
+    options: [
+      { key: 'A', value: '1', text: 'Both B & C' },
+      { key: 'B', value: '2', text: 'Both B & A' },
+      { key: 'C', value: '3', text: 'Only A' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'A', value: 'Both B & C', answer: 'A. Both B & C' },
+    feedback_correct: 'Correct! You chose the transthalamic section showing the thalami, arrow sign, midline falx and CSP, while excluding the cerebellum and orbits.',
+    feedback_wrong: 'Incorrect! Images B and C actually show the correct transthalamic plane with visible thalami, arrow sign, falx and CSP, and without cerebellum or orbits.',
+  },
+  4: {
+    question_no: 4,
+    question_type: 'type1',
+    prompt: 'Select the correct image for BPD measurement.',
+    options: [
+      { key: 'A', value: '1', text: 'A' },
+      { key: 'B', value: '2', text: 'B' },
+      { key: 'C', value: '3', text: 'C' },
+      { key: 'D', value: '4', text: 'D' },
+    ],
+    correct_answer: { key: 'B', value: 'B', answer: 'B' },
+    feedback_correct: 'Excellent! You chose the correct transthalamic image suitable for BPD measurement where thalami and CSP are seen clearly.',
+    feedback_wrong: 'The selected image corresponds to a transventricular plane. Remember, the BPD is measured in the transthalamic section showing falx, arrow sign, thalami and CSP.',
+  },
+  5: {
+    question_no: 5,
+    question_type: 'type1',
+    prompt: 'Select the correct image for HC measurement',
+    options: [
+      { key: 'A', value: '1', text: 'A' },
+      { key: 'B', value: '2', text: 'B' },
+      { key: 'C', value: '3', text: 'C' },
+      { key: 'D', value: '4', text: 'D' },
+    ],
+    correct_answer: { key: 'C', value: 'C', answer: 'C' },
+    feedback_correct: 'Correct! You identified the appropriate image for HC measurement - a symmetrical transthalamic plane with the midline falx, arrow sign, thalami and CSP in view.',
+    feedback_wrong: 'Incorrect. The chosen image is not suitable for HC measurement.',
+  },
+};
+
+// ─── BPD/HC FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10) ───────────
+const BPD_HC_FREEZE_THE_PLANE_QUESTIONS = {
+  6: {
+    question_no: 6,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  7: {
+    question_no: 7,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  8: {
+    question_no: 8,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  9: {
+    question_no: 9,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  10: {
+    question_no: 10,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+};
+
+// ─── BPD/HC ANNOTATION 1 (DRAG AND DROP) DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ─
+const BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES = {
+  case1: 'Your annotations are WRONG!\nOops! None of the key landmarks were correctly labelled.\nRefer to the annotated reference image of the transthalamic plane and understand the key landmarks.\nThe correct landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case2: 'Your annotations are WRONG!\nOops! None of the key landmarks were correctly labelled.\nRefer to the annotated reference image of the transthalamic plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case3: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have labelled some landmarks correctly, but have also included non-essential landmarks.\nRefer to the annotated reference image of the transthalamic plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case4: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have labelled some landmarks correctly and missed out on some.\nRefer to the annotated reference image of the transthalamic plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case5: 'Your annotations are NEARLY CORRECT! INCLUDED EXTRA LANDMARKS!\nAlmost there! You have correctly labelled all the key landmarks, but have also included non-essential landmarks.\nRefer to the annotated reference image of the transthalamic plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case6: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have correctly identified some landmarks.\nRefer to the annotated reference image of the transthalamic plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+};
+
+function getBpdAnnotation1WrongFeedback(submission) {
+  const correct = Number(submission?.correct_label_count ?? 0);
+  const wrong = Number(submission?.wrong_label_count ?? 0);
+  const unused = Number(submission?.unused_label_count ?? 0);
+
+  if (correct >= 5 && wrong > 0) return BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case5;
+  if (correct > 0 && correct < 5 && wrong > 0) return BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case3;
+  if (correct > 0 && correct < 5 && wrong === 0) return BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case4;
+  if (correct === 0) {
+    if (unused === 5 || (wrong === 0 && unused > 0)) {
+      return BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case2;
+    }
+    return BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1;
+  }
+  return BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case6;
+}
+
+const BPD_HC_ANNOTATION1_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transthalamic plane.\nThe expected landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transthalamic plane.\nThe expected landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transthalamic plane.\nThe expected landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transthalamic plane.\nThe expected landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transthalamic plane.\nThe expected landmarks to be labelled are Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+// ─── BPD/HC ANNOTATION 2 (LABELLING) DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ───
+const BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES = {
+  case1: 'Your annotations are WRONG!\nOops! None of the labelling was done! \nRefer to the annotated reference image of the transthalamic plane and label the key landmarks. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case2: 'Your annotations are WRONG! \nOops! Only non-essential landmarks were labelled. \nRefer to the annotated reference image of the transthalamic plane and label the key landmarks. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case3: 'Your annotations are NEARLY CORRECT! INCLUDED EXTRA LANDMARKS! \nAlmost there!You have correctly labelled the key landmarks, but have also used non-essential landmarks. \nRefer to the annotated reference image of the transthalamic plane and label the key landmarks. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case4: 'Your annotations are WRONG! \nOops! You have selected the correct landmarks, but placed them in wrong positions. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case5: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have correctly labelled some landmarks, but also used non-essential landmarks. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case6: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have correctly labelled some landmarks, but missed out on some. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case7: 'Your annotations are WRONG! \nOops! None of the key landmarks were correctly labelled and also used non-essential landmarks. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case8: 'Your annotations are WRONG! \nOops! The landmarks you selected are correct, but they are placed in wrong positions. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case9: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have identified all the correct landmarks, but some are placed in wrong positions. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+  case10: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have identified the correct landmarks, but misplaced and also used non-essential landmarks. \nRefer to the annotated reference image of the transthalamic plane and correct your placements. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+};
+
+function getBpdAnnotation2WrongFeedback(submission) {
+  const explicitCaseKey = String(
+    submission?.case_no ?? submission?.caseNo ?? submission?.feedback_case ?? submission?.feedbackCase ?? submission?.case ?? ''
+  ).toLowerCase().trim();
+  const matchedKey = explicitCaseKey.startsWith('case') ? explicitCaseKey : (explicitCaseKey ? `case${explicitCaseKey}` : '');
+  if (matchedKey && BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES[matchedKey]) {
+    return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES[matchedKey];
+  }
+
+  const correct = Number(submission?.correct_label_count ?? 0);
+  const wrong = Number(submission?.wrong_label_count ?? 0);
+  const unused = Number(submission?.unused_label_count ?? 0);
+  const misplaced = Number(submission?.misplaced_label_count ?? submission?.misplacedCount ?? submission?.wrong_position_count ?? 0);
+
+  if (misplaced > 0) {
+    if (wrong > 0) return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case10;
+    if (correct > 0 && correct + misplaced >= 5) return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case9;
+    if (correct === 0 && misplaced >= 5) return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case4;
+    return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case8;
+  }
+
+  if (correct >= 5 && wrong > 0) return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case3;
+  if (correct > 0 && correct < 5 && wrong > 0) return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case5;
+  if (correct > 0 && correct < 5 && wrong === 0) return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case6;
+  if (correct === 0) {
+    if (wrong === 0 && (unused === 5 || unused > 0)) {
+      return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1;
+    }
+    if (wrong > 0) {
+      return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case2;
+    }
+    return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1;
+  }
+  return BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case6;
+}
+
+const BPD_HC_ANNOTATION2_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+      answer: 'Arrow Sign, Midline Falx, Thalamus, CSP, Cranium',
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transthalamic plane. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+      answer: 'Arrow Sign, Midline Falx, Thalamus, CSP, Cranium',
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transthalamic plane. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+      answer: 'Arrow Sign, Midline Falx, Thalamus, CSP, Cranium',
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transthalamic plane. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+      answer: 'Arrow Sign, Midline Falx, Thalamus, CSP, Cranium',
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transthalamic plane. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+      answer: 'Arrow Sign, Midline Falx, Thalamus, CSP, Cranium',
+    },
+    metadata: {
+      expected_landmarks: ['Arrow Sign', 'Midline Falx', 'Thalamus', 'CSP', 'Cranium'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transthalamic plane. \nThe expected landmarks to be labelled are the Arrow Sign, Midline Falx, Thalamus, CSP and Cranium.',
+    feedback_wrong: BPD_HC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+// ─── BPD/HC MEASUREMENT DEFAULT/CONFIGURED QUESTIONS (Q1-Q15) ────────────────
+const BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES = {
+  case1: 'Well done! Your caliper placement is accurate, but the interpretation is incorrect. \nAccording to standard biometry charts, BPD values between the 5th and 95th percentiles are considered normal. ',
+  case2: 'Your interpretation is clinically correct, but the caliper placement is inaccurate. \nThe placement is suboptimal and does not align with the standard reference positioning. ',
+  case3: 'The measurement and interpretation are both incorrect. \nAccording to standard biometry charts, BPD values between the 5th and 95th percentiles are considered normal. ',
+};
+
+const BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES = {
+  case1: 'Well done! Your caliper placement is accurate, but the interpretation is incorrect. \nAccording to standard biometry charts, BPD values between the 5th and 95th percentiles are considered normal. ',
+  case2: 'Your interpretation is clinically correct, but the caliper placement is inaccurate. \nThe placement is suboptimal and does not align with the standard reference positioning. ',
+  case3: 'The measurement and interpretation are both incorrect. \nAccording to standard biometry charts, BPD values between the 5th and 95th percentiles are considered normal. ',
+};
+
+const BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES = {
+  case1: 'Good attempt! \nThe ellipse is correctly placed along the outer border of the cranium; however, the interpretation is incorrect. \nAccording to standard biometry charts, HC values between the 5th and 95th percentiles are considered normal. ',
+  case2: 'The interpretation is correct; however, the ellipse placement does not match the reference standard. \nEnsure the ellipse is positioned accurately along the outer border of the cranium to obtain a valid measurement. ',
+  case3: 'The measurement and interpretation are both incorrect. \nThe ellipse placement does not match the reference standard and is not positioned along the outer skin edge of the fetal abdomen. \nAccording to standard biometry charts, AC values between the 5th and 95th percentiles are considered normal. ',
+};
+
+function getBpdHcMeasurementWrongFeedback(submission, qNo = 1, prompt = '') {
+  const num = Number(qNo);
+  const promptStr = String(prompt || '').toLowerCase();
+  const isEllipse = promptStr.includes('ellipse') || num >= 11;
+  const isHcCaliper = !isEllipse && (promptStr.includes('bpd and ofd') || promptStr.includes('ofd') || (num >= 6 && num <= 10));
+
+  const cases = isEllipse
+    ? BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES
+    : (isHcCaliper ? BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES : BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES);
+
+  const explicitCase = submission?.case || submission?.case_no || submission?.caseNo || submission?.case_num || submission?.feedback_case;
+  if (explicitCase) {
+    const caseKey = String(explicitCase).toLowerCase().startsWith('case') ? String(explicitCase).toLowerCase() : `case${explicitCase}`;
+    if (cases[caseKey]) {
+      return cases[caseKey];
+    }
+  }
+
+  const placementStr = String(
+    submission?.caliper_placement_interpretation ?? submission?.caliperPlacementInterpretation ?? submission?.placement ?? ''
+  ).toLowerCase();
+  const interpStr = String(submission?.interpretation ?? '').toLowerCase();
+
+  const isPlacementGood = /good|accurate|correct|normal/i.test(placementStr) && !/inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+  const isPlacementBad = /inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+
+  const isInterpGood = /good|accurate|correct|normal/i.test(interpStr) && !/incorrect|inaccurate|wrong|bad/i.test(interpStr);
+  const isInterpBad = /incorrect|inaccurate|wrong|bad/i.test(interpStr);
+
+  if (isPlacementGood && isInterpBad) {
+    return cases.case1;
+  }
+  if (isInterpGood && isPlacementBad) {
+    return cases.case2;
+  }
+  if (isPlacementBad && isInterpBad) {
+    return cases.case3;
+  }
+
+  const partial = Number(submission?.partial);
+  if (partial === 0.5) {
+    if (isPlacementGood) return cases.case1;
+    if (isInterpGood) return cases.case2;
+    return cases.case1;
+  }
+  if (partial === 0) {
+    return cases.case3;
+  }
+
+  return cases.case3;
+}
+
+const BPD_HC_MEASUREMENT_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Biparietal diameter and interpret the values, given the gestational age for each case.',
+    options: [],
+    correct_answer: { answer: 'Normal BPD', measurement_type: 'BPD', method: 'caliper' },
+    metadata: {
+      measurement_type: 'BPD',
+      method: 'caliper',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Biparietal diameter and interpret the values, given the gestational age for each case.',
+    options: [],
+    correct_answer: { answer: 'Normal BPD', measurement_type: 'BPD', method: 'caliper' },
+    metadata: {
+      measurement_type: 'BPD',
+      method: 'caliper',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Biparietal diameter and interpret the values, given the gestational age for each case.',
+    options: [],
+    correct_answer: { answer: 'Normal BPD', measurement_type: 'BPD', method: 'caliper' },
+    metadata: {
+      measurement_type: 'BPD',
+      method: 'caliper',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Biparietal diameter and interpret the values, given the gestational age for each case.',
+    options: [],
+    correct_answer: { answer: 'Normal BPD', measurement_type: 'BPD', method: 'caliper' },
+    metadata: {
+      measurement_type: 'BPD',
+      method: 'caliper',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Biparietal diameter and interpret the values, given the gestational age for each case.',
+    options: [],
+    correct_answer: { answer: 'Normal BPD', measurement_type: 'BPD', method: 'caliper' },
+    metadata: {
+      measurement_type: 'BPD',
+      method: 'caliper',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_BPD_FEEDBACK_WRONG_CASES.case1,
+  },
+  6: {
+    question_no: 6,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Head circumference by measuring  BPD and OFD, and interpret the values given the gestational age given in each case.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'caliper_bpd_ofd' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'caliper_bpd_ofd',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES.case1,
+  },
+  7: {
+    question_no: 7,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Head circumference by measuring  BPD and OFD, and interpret the values given the gestational age given in each case.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'caliper_bpd_ofd' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'caliper_bpd_ofd',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES.case1,
+  },
+  8: {
+    question_no: 8,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Head circumference by measuring  BPD and OFD, and interpret the values given the gestational age given in each case.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'caliper_bpd_ofd' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'caliper_bpd_ofd',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES.case1,
+  },
+  9: {
+    question_no: 9,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Head circumference by measuring  BPD and OFD, and interpret the values given the gestational age given in each case.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'caliper_bpd_ofd' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'caliper_bpd_ofd',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES.case1,
+  },
+  10: {
+    question_no: 10,
+    question_type: 'measurement',
+    prompt: 'Place the caliper and measure the Head circumference by measuring  BPD and OFD, and interpret the values given the gestational age given in each case.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'caliper_bpd_ofd' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'caliper_bpd_ofd',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_CALIPER_FEEDBACK_WRONG_CASES.case1,
+  },
+  11: {
+    question_no: 11,
+    question_type: 'measurement',
+    prompt: 'Measure the head circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'ellipse',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer border of the cranium. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  12: {
+    question_no: 12,
+    question_type: 'measurement',
+    prompt: 'Measure the head circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'ellipse',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer border of the cranium. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  13: {
+    question_no: 13,
+    question_type: 'measurement',
+    prompt: 'Measure the head circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'ellipse',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer border of the cranium. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  14: {
+    question_no: 14,
+    question_type: 'measurement',
+    prompt: 'Measure the head circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'ellipse',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer border of the cranium. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  15: {
+    question_no: 15,
+    question_type: 'measurement',
+    prompt: 'Measure the head circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal HC', measurement_type: 'HC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'HC',
+      method: 'ellipse',
+      feedback_wrong_cases: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer border of the cranium. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: BPD_HC_MEASUREMENT_HC_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+const BPD_HC_ALL_QUESTIONS = {
+  ...BPD_HC_FIND_THE_IMAGE_QUESTIONS,
+  ...BPD_HC_FREEZE_THE_PLANE_QUESTIONS,
+  ...BPD_HC_ANNOTATION1_QUESTIONS,
+  ...BPD_HC_ANNOTATION2_QUESTIONS,
+  ...BPD_HC_MEASUREMENT_QUESTIONS,
+};
+
+// ─── AC FIND THE IMAGE DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ───────────────────
+const AC_FIND_THE_IMAGE_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'type1',
+    prompt: 'Which among the given planes are used to measure AC?',
+    options: [
+      { key: 'A', value: '1', text: 'Both A & C' },
+      { key: 'B', value: '2', text: 'Both B & D' },
+      { key: 'C', value: '3', text: 'Only C' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'A', value: 'Both A & C', answer: 'A. (Both A & C)' },
+    feedback_correct: 'Well done! A and C represent the correct transverse abdominal planes for AC measurement.',
+    feedback_wrong: 'Incorrect! Both A and C show the standard AC measurement view with symmetrical appearance and correct landmarks.',
+  },
+  2: {
+    question_no: 2,
+    question_type: 'type1',
+    prompt: 'Choose the correct option for measuring AC',
+    options: [
+      { key: 'A', value: '1', text: 'Both A & D' },
+      { key: 'B', value: '2', text: 'Only B' },
+      { key: 'C', value: '3', text: 'Both B & D' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'B', value: 'Only B', answer: 'B. (Only B)' },
+    feedback_correct: 'Perfect! You accurately selected image B — it displays the proper transverse view for measuring the fetal abdominal circumference.',
+    feedback_wrong: 'Incorrect! The selected image does not represent the correct AC measurement plane. If they select None of the above: Your selection is incorrect. The correct AC plane present in B.',
+  },
+  3: {
+    question_no: 3,
+    question_type: 'type1',
+    prompt: 'Select among the given planes are used to measure AC?',
+    options: [
+      { key: 'A', value: '1', text: 'A' },
+      { key: 'B', value: '2', text: 'B' },
+      { key: 'C', value: '3', text: 'C' },
+      { key: 'D', value: '4', text: 'D' },
+    ],
+    correct_answer: { key: 'C', value: 'C', answer: 'C' },
+    feedback_correct: 'Well done! You identified the correct AC measurement plane that includes the stomach bubble, portal vein, ribs and cross-section of the spine.',
+    feedback_wrong: 'The selected image does not represent the proper AC plane.',
+  },
+  4: {
+    question_no: 4,
+    question_type: 'type1',
+    prompt: 'Which among the given planes are used to measure AC?',
+    options: [
+      { key: 'A', value: '1', text: 'A' },
+      { key: 'B', value: '2', text: 'B' },
+      { key: 'C', value: '3', text: 'C' },
+      { key: 'D', value: '4', text: 'D' },
+    ],
+    correct_answer: { key: 'D', value: 'D', answer: 'D' },
+    feedback_correct: 'Good job! You correctly identified D as the AC measurement plane with the appropriate fetal abdominal landmarks.',
+    feedback_wrong: 'The chosen plane is incorrect. The AC plane should include the fetal stomach and spine in a true transverse circular section of the abdomen.',
+  },
+  5: {
+    question_no: 5,
+    question_type: 'type1',
+    prompt: 'Select the correct planes for AC measurement',
+    options: [
+      { key: 'A', value: '1', text: 'A' },
+      { key: 'B', value: '2', text: 'B' },
+      { key: 'C', value: '3', text: 'C' },
+      { key: 'D', value: '4', text: 'D' },
+    ],
+    correct_answer: { key: 'D', value: 'D', answer: 'D' },
+    feedback_correct: 'Great work! You selected D — the correct plane for AC measurement that includes the stomach bubble and spine in a circular section.',
+    feedback_wrong: 'The chosen plane is not correct.',
+  },
+};
+
+// ─── AC FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10) ───────────────
+const AC_FREEZE_THE_PLANE_QUESTIONS = {
+  6: {
+    question_no: 6,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  7: {
+    question_no: 7,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  8: {
+    question_no: 8,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  9: {
+    question_no: 9,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  10: {
+    question_no: 10,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+};
+
+// ─── AC ANNOTATION 1 (DRAG AND DROP) DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ───
+const AC_ANNOTATION1_FEEDBACK_WRONG_CASES = {
+  case1: 'Your annotations are WRONG!\nOops! None of the key landmarks were correctly labelled.\nRefer to the annotated reference image of the abdominal plane and understand the key landmarks.\nThe correct landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+  case2: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have labelled some landmarks correctly, but have also included non-essential landmarks.\nRefer to the annotated reference image of the abdominal plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+  case3: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have labelled some landmarks correctly and missed out on some.\nRefer to the annotated reference image of the abdominal plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+  case4: 'Your annotations are NEARLY CORRECT! INCLUDED EXTRA LANDMARKS!\nAlmost there! You have correctly labelled all the key landmarks, but have also included non-essential landmarks.\nRefer to the annotated reference image of the abdominal plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+  case5: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have correctly identified some landmarks.\nRefer to the annotated reference image of the abdominal plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+};
+
+function getAcAnnotation1WrongFeedback(submission) {
+  const correct = Number(submission?.correct_label_count ?? 0);
+  const wrong = Number(submission?.wrong_label_count ?? 0);
+
+  if (correct >= 5 && wrong > 0) return AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case4;
+  if (correct > 0 && correct < 5 && wrong > 0) return AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case2;
+  if (correct > 0 && correct < 5 && wrong === 0) return AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case3;
+  if (correct === 0) return AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1;
+  return AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case5;
+}
+
+const AC_ANNOTATION1_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the abdominal plane.\nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+    feedback_wrong: AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the abdominal plane.\nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+    feedback_wrong: AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the abdominal plane.\nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+    feedback_wrong: AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the abdominal plane.\nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+    feedback_wrong: AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the abdominal plane.\nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+    feedback_wrong: AC_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+// ─── AC ANNOTATION 2 (LABELLING) DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ────────
+const AC_ANNOTATION2_FEEDBACK_WRONG_CASES = {
+  case1: 'Your annotations are WRONG! \nOops! None of the labelling was done! \nRefer to the annotated reference image of the abdominal plane and label the key landmarks. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case2: 'Your annotations are WRONG! \nOops! Only non-essential landmarks were labelled. \nRefer to the annotated reference image of the abdominal plane and label the key landmarks. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case3: 'Your annotations are NEARLY CORRECT! INCLUDED EXTRA LANDMARKS! \nAlmost there! You have correctly labelled the key landmarks, but have also used non-essential landmarks. \nRefer to the annotated reference image of the abdominal plane and label the key landmarks. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.',
+  case4: 'Your annotations are WRONG! \nOops! You have selected the correct landmarks, but placed them in wrong positions. \nRefer to the annotated reference image of the abdominal plane and correct your placements. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein.  ',
+  case5: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have correctly labelled some landmarks, but also used non-essential landmarks. \nRefer to the annotated reference image of the abdominal plane and correct your placements. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case6: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have correctly labelled some landmarks, but missed out on some. \nRefer to the annotated reference image of the abdominal plane and correct your placements. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case7: 'Your annotations are WRONG! \nOops! None of the key landmarks were correctly labelled and also used non-essential landmarks. \nRefer to the annotated reference image of the abdominal plane and correct your placements. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case8: 'Your annotations are WRONG! \nOops! The landmarks you selected are correct, but they are placed in wrong positions. \nRefer to the annotated reference image of the abdominal plane and correct your placements. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case9: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have identified all the correct landmarks, but some are placed in wrong positions. \nRefer to the annotated reference image of the abdominal plane and correct your placements. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case10: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have identified the correct landmarks, but misplaced and also used non-essential landmarks. \nRefer to the annotated reference image of the abdominal plane and improve your understanding. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+  case11: 'Your annotations are REVIEW NEEDED \nReview needed Please review your selections. \nRefer to the annotated reference image of the abdominal plane and try again. ',
+};
+
+function getAcAnnotation2WrongFeedback(submission) {
+  const explicitCase = submission?.case || submission?.case_no || submission?.caseNo || submission?.case_num || submission?.feedback_case;
+  if (explicitCase) {
+    const caseKey = String(explicitCase).toLowerCase().startsWith('case') ? String(explicitCase).toLowerCase() : `case${explicitCase}`;
+    if (AC_ANNOTATION2_FEEDBACK_WRONG_CASES[caseKey]) {
+      return AC_ANNOTATION2_FEEDBACK_WRONG_CASES[caseKey];
+    }
+  }
+
+  const correct = Number(submission?.correct_label_count ?? 0);
+  const wrong = Number(submission?.wrong_label_count ?? 0);
+  const misplaced = Number(submission?.misplaced_label_count ?? submission?.misplaced_count ?? 0);
+  const unused = Number(submission?.unused_label_count ?? 0);
+  const totalPlaced = Number(submission?.total_placed ?? (correct + wrong + misplaced));
+
+  if (submission?.status === 'review_needed' || submission?.review_needed) {
+    return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case11;
+  }
+
+  if (misplaced > 0) {
+    if (wrong > 0) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case10;
+    if (correct > 0 && (correct + misplaced >= 5)) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case9;
+    if (correct === 0 && misplaced >= 5) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case4;
+    return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case8;
+  }
+
+  if (correct >= 5 && wrong > 0) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case3;
+  if (correct > 0 && correct < 5 && wrong > 0) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case5;
+  if (correct > 0 && correct < 5 && wrong === 0) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case6;
+  if (correct === 0 && wrong === 0 && (unused > 0 || totalPlaced === 0)) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1;
+  if (correct === 0 && wrong > 0) return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case2;
+
+  return AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case11;
+}
+
+const AC_ANNOTATION2_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the abdominal plane. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+    feedback_wrong: AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the abdominal plane. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+    feedback_wrong: AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the abdominal plane. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+    feedback_wrong: AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the abdominal plane. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+    feedback_wrong: AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 5,
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+      answer: 'Rib 1, Rib 2, Stomach bubble, Spine, Portal vein',
+    },
+    metadata: {
+      expected_landmarks: ['Rib 1', 'Rib 2', 'Stomach bubble', 'Spine', 'Portal vein'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the abdominal plane. \nThe expected landmarks to be labelled are Rib 1, Rib 2, Stomach bubble, Spine, Portal vein. ',
+    feedback_wrong: AC_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+// ─── AC MEASUREMENT DEFAULT/CONFIGURED QUESTIONS (Q1-Q10) ───────────────────
+const AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES = {
+  case1: 'Well done! Your caliper placement is accurate, but the interpretation is incorrect. \nAccording to standard biometry charts, AC values between the 5th and 95th percentiles are considered normal. ',
+  case2: 'Your interpretation is clinically correct, but the caliper placement is inaccurate. \nThe placement is suboptimal and does not align with the standard reference positioning. ',
+  case3: 'The measurement and interpretation are both incorrect. \nAccording to standard biometry charts, AC values between the 5th and 95th percentiles are considered normal. ',
+};
+
+const AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES = {
+  case1: 'Good attempt! \nThe ellipse is accurately placed along the outer skin edge of the fetal abdomen; however, the interpretation is incorrect. \nAccording to standard biometry charts, AC values between the 5th and 95th percentiles are considered normal. ',
+  case2: 'The interpretation is correct; however, the ellipse placement does not match the reference standard. \nEnsure the ellipse is positioned along the outer skin edge of the fetal abdomen to obtain a valid measurement. ',
+  case3: 'The measurement and interpretation are both incorrect. \nThe ellipse placement does not match the reference standard and is not positioned along the outer skin edge of the fetal abdomen. \nAccording to standard biometry charts, AC values between the 5th and 95th percentiles are considered normal. ',
+};
+
+function getAcMeasurementWrongFeedback(submission, qNo = 1, prompt = '') {
+  const num = Number(qNo);
+  const promptStr = String(prompt || '').toLowerCase();
+  const isEllipse = promptStr.includes('ellipse') || num >= 6;
+
+  const cases = isEllipse
+    ? AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES
+    : AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES;
+
+  const explicitCase = submission?.case || submission?.case_no || submission?.caseNo || submission?.case_num || submission?.feedback_case;
+  if (explicitCase) {
+    const caseKey = String(explicitCase).toLowerCase().startsWith('case') ? String(explicitCase).toLowerCase() : `case${explicitCase}`;
+    if (cases[caseKey]) {
+      return cases[caseKey];
+    }
+  }
+
+  const placementStr = String(
+    submission?.caliper_placement_interpretation ?? submission?.caliperPlacementInterpretation ?? submission?.placement ?? ''
+  ).toLowerCase();
+  const interpStr = String(submission?.interpretation ?? '').toLowerCase();
+
+  const isPlacementGood = /good|accurate|correct|normal/i.test(placementStr) && !/inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+  const isPlacementBad = /inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+
+  const isInterpGood = /good|accurate|correct|normal/i.test(interpStr) && !/incorrect|inaccurate|wrong|bad/i.test(interpStr);
+  const isInterpBad = /incorrect|inaccurate|wrong|bad/i.test(interpStr);
+
+  if (isPlacementGood && isInterpBad) {
+    return cases.case1;
+  }
+  if (isInterpGood && isPlacementBad) {
+    return cases.case2;
+  }
+  if (isPlacementBad && isInterpBad) {
+    return cases.case3;
+  }
+
+  const partial = Number(submission?.partial);
+  if (partial === 0.5) {
+    if (isPlacementGood) return cases.case1;
+    if (isInterpGood) return cases.case2;
+    return cases.case1;
+  }
+  if (partial === 0) {
+    return cases.case3;
+  }
+
+  return cases.case3;
+}
+
+const AC_MEASUREMENT_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'measurement',
+    prompt: 'Measure the AC through the APAD and TAD method and interpret the image, given the gestational age',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'caliper_apad_tad' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'caliper_apad_tad',
+      feedback_wrong_cases: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct. ',
+    feedback_wrong: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'measurement',
+    prompt: 'Measure the AC through the APAD and TAD method and interpret the image, given the gestational age',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'caliper_apad_tad' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'caliper_apad_tad',
+      feedback_wrong_cases: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct. ',
+    feedback_wrong: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'measurement',
+    prompt: 'Measure the AC through the APAD and TAD method and interpret the image, given the gestational age',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'caliper_apad_tad' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'caliper_apad_tad',
+      feedback_wrong_cases: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct. ',
+    feedback_wrong: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'measurement',
+    prompt: 'Measure the AC through the APAD and TAD method and interpret the image, given the gestational age',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'caliper_apad_tad' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'caliper_apad_tad',
+      feedback_wrong_cases: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct. ',
+    feedback_wrong: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'measurement',
+    prompt: 'Measure the AC through the APAD and TAD method and interpret the image, given the gestational age',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'caliper_apad_tad' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'caliper_apad_tad',
+      feedback_wrong_cases: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct. ',
+    feedback_wrong: AC_MEASUREMENT_APAD_TAD_FEEDBACK_WRONG_CASES.case1,
+  },
+  6: {
+    question_no: 6,
+    question_type: 'measurement',
+    prompt: 'Measure the abdominal circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'ellipse',
+      feedback_wrong_cases: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer skin edge of the fetal abdomen. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  7: {
+    question_no: 7,
+    question_type: 'measurement',
+    prompt: 'Measure the abdominal circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'ellipse',
+      feedback_wrong_cases: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer skin edge of the fetal abdomen. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  8: {
+    question_no: 8,
+    question_type: 'measurement',
+    prompt: 'Measure the abdominal circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'ellipse',
+      feedback_wrong_cases: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer skin edge of the fetal abdomen. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  9: {
+    question_no: 9,
+    question_type: 'measurement',
+    prompt: 'Measure the abdominal circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'ellipse',
+      feedback_wrong_cases: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer skin edge of the fetal abdomen. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+  10: {
+    question_no: 10,
+    question_type: 'measurement',
+    prompt: 'Measure the abdominal circumference using the ellipse method. Compare the measurement with the percentile chart to interpret it based on the given gestational age.',
+    options: [],
+    correct_answer: { answer: 'Normal AC', measurement_type: 'AC', method: 'ellipse' },
+    metadata: {
+      measurement_type: 'AC',
+      method: 'ellipse',
+      feedback_wrong_cases: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! \nThe ellipse is correctly positioned along the outer skin edge of the fetal abdomen. \nYour interpretation based on this measurement is also accurate. ',
+    feedback_wrong: AC_MEASUREMENT_ELLIPSE_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+const AC_ALL_QUESTIONS = {
+  ...AC_FIND_THE_IMAGE_QUESTIONS,
+  ...AC_FREEZE_THE_PLANE_QUESTIONS,
+  ...AC_ANNOTATION1_QUESTIONS,
+  ...AC_ANNOTATION2_QUESTIONS,
+  ...AC_MEASUREMENT_QUESTIONS,
+};
+
+// ─── FL MEASUREMENT DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ────────────────────
+const FL_MEASUREMENT_FEEDBACK_WRONG_CASES = {
+  case1: 'Well done! Your caliper placement is accurate, but the interpretation is incorrect. \nAccording to standard biometry charts, FL values between the 5th and 95th percentiles are considered normal. ',
+  case2: 'Your interpretation is clinically correct, but the caliper placement is inaccurate. \nThe placement is suboptimal and does not align with the standard reference positioning. ',
+  case3: 'The measurement and interpretation are both incorrect. \nAccording to standard biometry charts, FL values between the 5th and 95th percentiles are considered normal. ',
+};
+
+function getFlMeasurementWrongFeedback(submission) {
+  const explicitCase = submission?.case || submission?.case_no || submission?.caseNo || submission?.case_num || submission?.feedback_case;
+  if (explicitCase) {
+    const caseKey = String(explicitCase).toLowerCase().startsWith('case') ? String(explicitCase).toLowerCase() : `case${explicitCase}`;
+    if (FL_MEASUREMENT_FEEDBACK_WRONG_CASES[caseKey]) {
+      return FL_MEASUREMENT_FEEDBACK_WRONG_CASES[caseKey];
+    }
+  }
+
+  const placementStr = String(
+    submission?.caliper_placement_interpretation ?? submission?.caliperPlacementInterpretation ?? submission?.placement ?? ''
+  ).toLowerCase();
+  const interpStr = String(submission?.interpretation ?? '').toLowerCase();
+  const isPlacementGood = /good|accurate|correct|normal/i.test(placementStr) && !/inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+  const isPlacementBad = /inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+  const isInterpGood = /good|accurate|correct|normal/i.test(interpStr) && !/incorrect|inaccurate|wrong|bad/i.test(interpStr);
+  const isInterpBad = /incorrect|inaccurate|wrong|bad/i.test(interpStr);
+
+  if (isPlacementGood && isInterpBad) return FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case1;
+  if (isInterpGood && isPlacementBad) return FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case2;
+  if (isPlacementBad && isInterpBad) return FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case3;
+  if (Number(submission?.partial) === 0.5) {
+    if (isPlacementGood) return FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case1;
+    if (isInterpGood) return FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case2;
+  }
+  return FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case3;
+}
+
+const FL_MEASUREMENT_QUESTIONS = Object.fromEntries([1, 2, 3, 4, 5].map(questionNo => [
+  questionNo,
+  {
+    question_no: questionNo,
+    question_type: 'measurement',
+    prompt: 'Measure the Femur length (FL) and interpret the image, given the gestational age (GA) for each case.',
+    options: [],
+    correct_answer: { answer: 'Normal FL', measurement_type: 'FL', method: 'caliper' },
+    metadata: {
+      measurement_type: 'FL',
+      method: 'caliper',
+      feedback_wrong_cases: FL_MEASUREMENT_FEEDBACK_WRONG_CASES,
+    },
+    feedback_correct: 'Excellent work! Your caliper placement is accurately positioned, and your interpretation is correct.',
+    feedback_wrong: FL_MEASUREMENT_FEEDBACK_WRONG_CASES.case1,
+  },
+]));
+
+// ─── FL FIND THE IMAGE DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ───────────────────
+const FL_FIND_THE_IMAGE_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'type1',
+    prompt: 'Select the correct planes for the Femur Length measurement',
+    options: [
+      { key: 'A', value: '1', text: 'Both A & B' },
+      { key: 'B', value: '2', text: 'A, B & D' },
+      { key: 'C', value: '3', text: 'Both B & D' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'A', value: 'Both A & B', answer: 'a.  Both A & B' },
+    feedback_correct: 'Correct! The selected planes show the femur in proper orientation for measurement.',
+    feedback_wrong: 'Not correct! Both A and B are the correct femur diaphysis.',
+  },
+  2: {
+    question_no: 2,
+    question_type: 'type1',
+    prompt: 'Select the correct planes for Femur Length(FL) measurement',
+    options: [
+      { key: 'A', value: '1', text: 'Both A & D' },
+      { key: 'B', value: '2', text: 'A, B & D' },
+      { key: 'C', value: '3', text: 'A, B & C' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'C', value: 'A, B & C', answer: 'c. A, B & C' },
+    feedback_correct: 'Great! You selected all correct FL planes, clearly depicting the long axis of the femur suitable for accurate biometry.',
+    feedback_wrong: 'Incorrect. A, B & C images represent the proper femur orientation.',
+  },
+  3: {
+    question_no: 3,
+    question_type: 'type1',
+    prompt: 'Select the correct planes for Femur Length(FL) measurement',
+    options: [
+      { key: 'A', value: '1', text: 'Both A & C' },
+      { key: 'B', value: '2', text: 'Only D' },
+      { key: 'C', value: '3', text: 'Both C & D' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'A', value: 'Both A & C', answer: 'a. Both A & C' },
+    feedback_correct: 'Nice work! You correctly picked the planes displaying the femur in its entirety, suitable for accurate length measurement.',
+    feedback_wrong: 'Incorrect selection! Both A and C are the accurate femur diaphysis length.',
+  },
+  4: {
+    question_no: 4,
+    question_type: 'type1',
+    prompt: 'Choose the correct options that contain the correct plane for  measuring Femur Length.',
+    options: [
+      { key: 'A', value: '1', text: 'Both A & D' },
+      { key: 'B', value: '2', text: 'Only C' },
+      { key: 'C', value: '3', text: 'Both C & D' },
+      { key: 'D', value: '4', text: 'None of the above' },
+    ],
+    correct_answer: { key: 'B', value: 'Only C', answer: 'B Only C' },
+    feedback_correct: 'Perfect! You accurately selected the correct femur plane showing a clear and complete visualization of the femoral shaft.',
+    feedback_wrong: 'Incorrect. The selected planes do not show the femur. If they select None of the above: Your selection is incorrect. The correct FL planes are present in C.',
+  },
+  5: {
+    question_no: 5,
+    question_type: 'type1',
+    prompt: 'Select the correct planes for Femur Length(FL) measurement',
+    options: [
+      { key: 'A', value: '1', text: 'A' },
+      { key: 'B', value: '2', text: 'B' },
+      { key: 'C', value: '3', text: 'C' },
+      { key: 'D', value: '4', text: 'D' },
+    ],
+    correct_answer: { key: 'A', value: 'A', answer: 'A' },
+    feedback_correct: 'You accurately identified the correct FL plane with full femur visualization.',
+    feedback_wrong: 'Incorrect choice! The selected image does not represent the proper femur orientation.',
+  },
+};
+
+// ─── FL FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10 & Q11-Q15) ──────
+const FL_FREEZE_THE_PLANE_QUESTIONS = {
+  6: {
+    question_no: 6,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  7: {
+    question_no: 7,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  8: {
+    question_no: 8,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  9: {
+    question_no: 9,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  10: {
+    question_no: 10,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  11: {
+    question_no: 11,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  12: {
+    question_no: 12,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  13: {
+    question_no: 13,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  14: {
+    question_no: 14,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  15: {
+    question_no: 15,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+};
+
+// ─── FL ANNOTATION 1 (DRAG AND DROP) DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ───
+const FL_ANNOTATION1_FEEDBACK_WRONG_CASES = {
+  case1: 'Your annotations are WRONG!\nOops! None of the key landmarks were correctly labelled.\nRefer to the annotated reference image of the transfemoral plane and understand the key landmarks.\nThe correct landmarks to be labelled are Diaphysis and Metaphysis.',
+  case2: 'Your annotations are WRONG!\nOops! None of the key landmarks were correctly labelled.\nRefer to the annotated reference image of the transfemoral plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Diaphysis and Metaphysis.',
+  case3: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have labelled some landmarks correctly, but have also included non-essential landmarks.\nRefer to the annotated reference image of the transfemoral plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Diaphysis and Metaphysis.',
+  case4: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have labelled some landmarks correctly and missed out on some.\nRefer to the annotated reference image of the transfemoral plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Diaphysis and Metaphysis.',
+  case5: 'Your annotations are NEARLY CORRECT! INCLUDED EXTRA LANDMARKS!\nAlmost there! You have correctly labelled all the key landmarks, but have also included non-essential landmarks.\nRefer to the annotated reference image of the transfemoral plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Diaphysis and Metaphysis.',
+  case6: 'Your annotations are ALMOST CORRECT!\nAlmost there! You have correctly identified some landmarks.\nRefer to the annotated reference image of the transfemoral plane to learn and improve your understanding.\nThe correct landmarks to be labelled are Diaphysis and Metaphysis.',
+};
+
+function getFlAnnotation1WrongFeedback(submission) {
+  const correct = Number(submission?.correct_label_count ?? 0);
+  const wrong = Number(submission?.wrong_label_count ?? 0);
+  const unused = Number(submission?.unused_label_count ?? 0);
+
+  if (correct >= 2 && wrong > 0) return FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case5;
+  if (correct > 0 && correct < 2 && wrong > 0) return FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case3;
+  if (correct > 0 && correct < 2 && wrong === 0) return FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case4;
+  if (correct === 0) {
+    if (unused === 2 || (wrong === 0 && unused > 0)) {
+      return FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case2;
+    }
+    return FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case1;
+  }
+  return FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case6;
+}
+
+const FL_ANNOTATION1_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transfemoral plane.\nThe expected landmarks to be labelled are Diaphysis and Metaphysis.',
+    feedback_wrong: FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transfemoral plane.\nThe expected landmarks to be labelled are Diaphysis and Metaphysis.',
+    feedback_wrong: FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transfemoral plane.\nThe expected landmarks to be labelled are Diaphysis and Metaphysis.',
+    feedback_wrong: FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transfemoral plane.\nThe expected landmarks to be labelled are Diaphysis and Metaphysis.',
+    feedback_wrong: FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'annotation1',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT!\nWell done! You have correctly labelled all the key landmarks of the transfemoral plane.\nThe expected landmarks to be labelled are Diaphysis and Metaphysis.',
+    feedback_wrong: FL_ANNOTATION1_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+// ─── FL ANNOTATION 2 (LABELLING) DEFAULT/CONFIGURED QUESTIONS (Q1-Q5) ────────
+const FL_ANNOTATION2_FEEDBACK_WRONG_CASES = {
+  case1: 'Your annotations are WRONG! \nOops! None of the labelling was done! \nRefer to the annotated reference image of the transfemoral plane and label the key landmarks. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case2: 'Your annotations are WRONG! \nOops! Only non-essential landmarks were labelled. \nRefer to the annotated reference image of the transfemoral plane and label the key landmarks. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case3: 'Your annotations are NEARLY CORRECT! INCLUDED EXTRA LANDMARKS! \nAlmost there!, You have correctly labelled the key landmarks, but have also used non-essential landmarks. \nRefer to the annotated reference image of the transfemoral plane and label the key landmarks. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case4: 'Your annotations are WRONG! \nOops! You have selected the correct landmarks, but placed them in wrong positions. \nRefer to the annotated reference image of the transfemoral plane and correct your placements. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case5: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have correctly labelled some landmarks, but also used non-essential landmarks. \nRefer to the annotated reference image of the transfemoral plane and correct your placements. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case6: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have correctly labelled some landmarks, but missed out on some. \nRefer to the annotated reference image of the transfemoral plane and correct your placements. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case7: 'Your annotations are WRONG! \nOops! None of the key landmarks were correctly labelled and also used non-essential landmarks. \nRefer to the annotated reference image of the transfemoral plane and correct your placements. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case8: 'Your annotations are WRONG! \nOops! The landmarks you selected are correct, but they are placed in wrong positions. \nRefer to the annotated reference image of the transfemoral plane and correct your placements. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case9: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have identified all the correct landmarks, but some are placed in wrong positions. \nRefer to the annotated reference image of the transfemoral plane and correct your placements. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case10: 'Your annotations are ALMOST CORRECT! \nAlmost there! You have identified the correct landmarks, but misplaced and also used non-essential landmarks. \nRefer to the annotated reference image of the transfemoral plane and improve your understanding. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+  case11: 'Your annotations are REVIEW NEEDED \nReview needed Please review your selections. \nRefer to the annotated reference image of the transfemoral plane and try again. ',
+};
+
+function getFlAnnotation2WrongFeedback(submission) {
+  const explicitCase = submission?.case || submission?.case_no || submission?.caseNo || submission?.case_num || submission?.feedback_case;
+  if (explicitCase) {
+    const caseKey = String(explicitCase).toLowerCase().startsWith('case') ? String(explicitCase).toLowerCase() : `case${explicitCase}`;
+    if (FL_ANNOTATION2_FEEDBACK_WRONG_CASES[caseKey]) {
+      return FL_ANNOTATION2_FEEDBACK_WRONG_CASES[caseKey];
+    }
+  }
+
+  const correct = Number(submission?.correct_label_count ?? 0);
+  const wrong = Number(submission?.wrong_label_count ?? 0);
+  const misplaced = Number(submission?.misplaced_label_count ?? submission?.misplaced_count ?? 0);
+  const unused = Number(submission?.unused_label_count ?? 0);
+  const totalPlaced = Number(submission?.total_placed ?? (correct + wrong + misplaced));
+
+  if (submission?.status === 'review_needed' || submission?.review_needed) {
+    return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case11;
+  }
+
+  if (misplaced > 0) {
+    if (wrong > 0) {
+      if (correct === 0) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case7;
+      return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case10;
+    }
+    if (correct > 0 && (correct + misplaced >= 2)) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case9;
+    if (correct === 0 && misplaced >= 2) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case4;
+    return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case8;
+  }
+
+  if (correct >= 2 && wrong > 0) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case3;
+  if (correct > 0 && correct < 2 && wrong > 0) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case5;
+  if (correct > 0 && correct < 2 && wrong === 0) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case6;
+  if (correct === 0 && wrong === 0 && (unused > 0 || totalPlaced === 0)) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case1;
+  if (correct === 0 && wrong > 0) return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case2;
+
+  return FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case11;
+}
+
+const FL_ANNOTATION2_QUESTIONS = {
+  1: {
+    question_no: 1,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transfemoral plane. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+    feedback_wrong: FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  2: {
+    question_no: 2,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transfemoral plane. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+    feedback_wrong: FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  3: {
+    question_no: 3,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transfemoral plane. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+    feedback_wrong: FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  4: {
+    question_no: 4,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transfemoral plane. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+    feedback_wrong: FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+  5: {
+    question_no: 5,
+    question_type: 'annotation2',
+    prompt: 'Label the correct anatomical parts in the image',
+    options: [],
+    correct_answer: {
+      expected_label_count: 2,
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+      answer: 'Diaphysis and Metaphysis',
+    },
+    metadata: {
+      expected_landmarks: ['Diaphysis', 'Metaphysis'],
+    },
+    feedback_correct: 'Your annotations are CORRECT! \nWell done! You have correctly labelled all the key landmarks of the transfemoral plane. \nThe expected landmarks to be labelled are Diaphysis and Metaphysis. ',
+    feedback_wrong: FL_ANNOTATION2_FEEDBACK_WRONG_CASES.case1,
+  },
+};
+
+const FL_ALL_QUESTIONS = {
+  ...FL_FIND_THE_IMAGE_QUESTIONS,
+  ...FL_FREEZE_THE_PLANE_QUESTIONS,
+  ...FL_ANNOTATION1_QUESTIONS,
+  ...FL_ANNOTATION2_QUESTIONS,
+};
+
+function buildImageInterpretationSessions(submissions, questions, resource = null) {
+  const isMeasurementResource = Boolean(
+    String(resource?.name || '').toLowerCase().includes('measure') ||
+    String(resource?.topic || '').toLowerCase().includes('measure') ||
+    (Array.isArray(questions) && questions.some(q => q?.question_type === 'measurement' || /biparietal|head circumference|ellipse|caliper|apad|tad|abdominal circumference|femur|femoral|\bfl\b/i.test(String(q?.prompt || '')))) ||
+    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'measurement'))
+  );
+
+  const isFlResource = Boolean(
+    /\bfl\b|femur|femoral/i.test(String(resource?.name || '')) ||
+    /\bfl\b|femur|femoral/i.test(String(resource?.topic || '')) ||
+    /\bfl\b|femur|femoral/i.test(String(resource?.unit_name || '')) ||
+    /\bfl\b|femur|femoral/i.test(String(resource?.moduleLabel || '')) ||
+    /\bfl\b|femur|femoral/i.test(String(resource?.module_name || '')) ||
+    /\bfl\b|femur|femoral/i.test(String(resource?.course_name || '')) ||
+    (Array.isArray(questions) && questions.some(q => /\bfl\b|femur|femoral/i.test(String(q?.prompt || ''))))
+  );
+
+  const isAcResource = !isFlResource && Boolean(
+    /ac\b|abdomen|abdominal/i.test(String(resource?.name || '')) ||
+    /ac\b|abdomen|abdominal/i.test(String(resource?.topic || '')) ||
+    /ac\b|abdomen|abdominal/i.test(String(resource?.unit_name || '')) ||
+    /ac\b|abdomen|abdominal/i.test(String(resource?.moduleLabel || '')) ||
+    /ac\b|abdomen|abdominal/i.test(String(resource?.module_name || '')) ||
+    /ac\b|abdomen|abdominal/i.test(String(resource?.course_name || '')) ||
+    (Array.isArray(questions) && questions.some(q => /ac\b|abdomen|abdominal|transabdominal|apad|tad|fetal abdomen/i.test(String(q?.prompt || '')))) ||
+    (Array.isArray(questions) && questions.some(q => /abdominal plane|stomach bubble|portal vein|fetal abdomen/i.test(String(q?.feedback_correct || ''))))
+  );
+
+  const rawQuestions = (Array.isArray(questions) ? [...questions] : []).filter(
+    q => {
+      const qNo = Number(q?.question_no);
+      if (isFlResource && isMeasurementResource) return qNo >= 1 && qNo <= 5;
+      if (isAcResource && isMeasurementResource) return qNo >= 1 && qNo <= 10;
+      return isMeasurementResource ? true : !(qNo >= 11 && qNo <= 15);
+    }
+  );
+
+  const isAnnotation1Resource = !isMeasurementResource && Boolean(
+    String(resource?.name || '').toLowerCase().includes('drag') ||
+    (String(resource?.name || '').toLowerCase().includes('annotation') && !String(resource?.name || '').toLowerCase().includes('label') && !String(resource?.name || '').toLowerCase().includes('2')) ||
+    rawQuestions.some(q => q?.question_type === 'annotation1') ||
+    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'annotation1'))
+  );
+
+  const isAnnotation2Resource = !isMeasurementResource && Boolean(
+    String(resource?.name || '').toLowerCase().includes('label') ||
+    String(resource?.name || '').toLowerCase().includes('annotation 2') ||
+    String(resource?.name || '').toLowerCase().includes('annotation: label') ||
+    rawQuestions.some(q => q?.question_type === 'annotation2') ||
+    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'annotation2'))
+  );
+
+  const isFreezePlaneResource = !isMeasurementResource && !isAnnotation1Resource && !isAnnotation2Resource && (
+    String(resource?.name || '').toLowerCase().includes('freeze')
+    || rawQuestions.some(q => ((Number(q?.question_no) >= 6 && Number(q?.question_no) <= 10) || (Number(q?.question_no) >= 11 && Number(q?.question_no) <= 15)) && /freeze|timeframe|angulation/i.test(String(q?.prompt || '')))
+  );
+  const isFindImageResource = !isMeasurementResource && !isAnnotation1Resource && !isAnnotation2Resource && (!resource ||
+    String(resource?.name || '').toLowerCase().includes('find the image') ||
+    String(resource?.name || '').toLowerCase().includes('interpret') ||
+    resource?.type === 'interpret' ||
+    rawQuestions.some(q => Number(q?.question_no) >= 1 && Number(q?.question_no) <= 5));
+
+  const questionMap = {};
+  if (isFlResource) {
+    if (isMeasurementResource) {
+      Object.values(FL_MEASUREMENT_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isAnnotation2Resource) {
+      Object.values(FL_ANNOTATION2_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isAnnotation1Resource) {
+      Object.values(FL_ANNOTATION1_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isFreezePlaneResource && !String(resource?.name || '').toLowerCase().includes('find')) {
+      [6, 7, 8, 9, 10].forEach(qNo => {
+        if (FL_FREEZE_THE_PLANE_QUESTIONS[qNo]) {
+          questionMap[String(qNo)] = { ...FL_FREEZE_THE_PLANE_QUESTIONS[qNo] };
+        }
+      });
+    } else {
+      Object.values(FL_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    }
+  } else if (isAcResource) {
+    if (isMeasurementResource) {
+      Object.values(AC_MEASUREMENT_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isAnnotation2Resource) {
+      Object.values(AC_ANNOTATION2_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isAnnotation1Resource) {
+      Object.values(AC_ANNOTATION1_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isFreezePlaneResource && !String(resource?.name || '').toLowerCase().includes('find')) {
+      Object.values(AC_FREEZE_THE_PLANE_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else {
+      Object.values(AC_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    }
+  } else if (isMeasurementResource) {
+    Object.values(isAcResource ? AC_MEASUREMENT_QUESTIONS : BPD_HC_MEASUREMENT_QUESTIONS).forEach(q => {
+      questionMap[String(q.question_no)] = { ...q };
+    });
+  } else if (isAnnotation2Resource) {
+    Object.values(BPD_HC_ANNOTATION2_QUESTIONS).forEach(q => {
+      questionMap[String(q.question_no)] = { ...q };
+    });
+  } else if (isAnnotation1Resource) {
+    Object.values(BPD_HC_ANNOTATION1_QUESTIONS).forEach(q => {
+      questionMap[String(q.question_no)] = { ...q };
+    });
+  } else if (isFreezePlaneResource) {
+    Object.values(BPD_HC_FREEZE_THE_PLANE_QUESTIONS).forEach(q => {
+      questionMap[String(q.question_no)] = { ...q };
+    });
+  } else if (isFindImageResource) {
+    Object.values(BPD_HC_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
+      questionMap[String(q.question_no)] = { ...q };
+    });
+  }
+  rawQuestions.forEach(q => {
+    const qNoStr = String(q.question_no ?? '');
+    if (isFlResource && isMeasurementResource && (Number(qNoStr) < 1 || Number(qNoStr) > 5)) return;
+    if (isAcResource && isMeasurementResource && (Number(qNoStr) < 1 || Number(qNoStr) > 10)) return;
+    if (!isMeasurementResource && Number(qNoStr) >= 11 && Number(qNoStr) <= 15) return;
+    const bpdFallback = isMeasurementResource
+      ? (isFlResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAcResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : BPD_HC_MEASUREMENT_QUESTIONS[Number(qNoStr)]))
+      : (isAnnotation2Resource
+        ? BPD_HC_ANNOTATION2_QUESTIONS[Number(qNoStr)]
+        : (isAnnotation1Resource
+          ? (isFlResource ? FL_ANNOTATION1_QUESTIONS[Number(qNoStr)] : (isAcResource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : BPD_HC_ANNOTATION1_QUESTIONS[Number(qNoStr)]))
+          : (isFreezePlaneResource ? BPD_HC_FREEZE_THE_PLANE_QUESTIONS[Number(qNoStr)] : BPD_HC_FIND_THE_IMAGE_QUESTIONS[Number(qNoStr)])));
+    const fallback = questionMap[qNoStr] || (
+      isFlResource ? (isMeasurementResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? FL_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? FL_ANNOTATION1_QUESTIONS[Number(qNoStr)] : FL_ALL_QUESTIONS[Number(qNoStr)]))) :
+      isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
+      bpdFallback
+    );
+    if (fallback) {
+      const hasCompleteOptions = Array.isArray(q.options) && q.options.length >= 4 && q.options.every(o => o?.text || o?.label);
+      const isQuestion4 = Number(qNoStr) === 4 && !isAnnotation1Resource && !isAnnotation2Resource && !isMeasurementResource;
+      const authoritativeAnswer = (isFlResource || isAcResource || isAnnotation1Resource || isAnnotation2Resource || isMeasurementResource)
+        ? (fallback.correct_answer || q.correct_answer)
+        : (isQuestion4 ? { key: 'B', value: 'B', answer: 'B' } : (fallback.correct_answer || q.correct_answer));
+      questionMap[qNoStr] = {
+        ...fallback,
+        ...q,
+        prompt: (isAnnotation1Resource || isAnnotation2Resource || isMeasurementResource) ? fallback.prompt : (q.prompt || fallback.prompt),
+        options: isFlResource && isMeasurementResource ? [] : (hasCompleteOptions ? q.options : (fallback.options || q.options)),
+        correct_answer: authoritativeAnswer,
+        feedback_correct: fallback.feedback_correct || q.feedback_correct,
+        feedback_wrong: fallback.feedback_wrong || q.feedback_wrong,
+      };
+    } else {
+      questionMap[qNoStr] = q;
+    }
+  });
+
+  const questionRows = Object.values(questionMap).sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0));
 
   if ((!Array.isArray(submissions) || submissions.length === 0) && questionRows.length > 0) {
     return [{
@@ -5739,11 +7611,18 @@ function buildImageInterpretationSessions(submissions, questions) {
 
   const submissionsBySession = {};
   (Array.isArray(submissions) ? submissions : []).forEach((submission) => {
-    const sessionId = submission.session_id || 'unknown';
+    const rawQNo = Number(submission?.question_no);
+    if (isFlResource && isMeasurementResource && (rawQNo < 1 || rawQNo > 5)) return;
+    if (isAcResource && isMeasurementResource && (rawQNo < 1 || rawQNo > 10)) return;
+    const normalizedSubmission = (!isMeasurementResource && rawQNo >= 11 && rawQNo <= 15)
+      ? { ...submission, question_no: rawQNo - 5 }
+      : submission;
+    if (!isMeasurementResource && Number(normalizedSubmission?.question_no) >= 11 && Number(normalizedSubmission?.question_no) <= 15) return;
+    const sessionId = normalizedSubmission.session_id || 'unknown';
     if (!submissionsBySession[sessionId]) {
       submissionsBySession[sessionId] = [];
     }
-    submissionsBySession[sessionId].push(submission);
+    submissionsBySession[sessionId].push(normalizedSubmission);
   });
 
   return Object.entries(submissionsBySession)
@@ -5759,20 +7638,146 @@ function buildImageInterpretationSessions(submissions, questions) {
         }
       });
 
-      const mergedRows = questionRows.length > 0
-        ? questionRows.map((question) => ({
-            ...question,
-            ...latestByQuestion[String(question.question_no ?? '')],
-            question_no: question.question_no,
-            question_type: question.question_type ?? latestByQuestion[String(question.question_no ?? '')]?.question_type,
-            prompt: question.prompt ?? latestByQuestion[String(question.question_no ?? '')]?.prompt ?? '',
-            options: Array.isArray(question.options) ? question.options : [],
-            correct_answer: question.correct_answer ?? null,
-            feedback_correct: question.feedback_correct ?? null,
-            feedback_wrong: question.feedback_wrong ?? null,
-            assets: Array.isArray(question.assets) ? question.assets : [],
-          }))
-        : Object.values(latestByQuestion).sort((a, b) => Number(a.question_no || 0) - Number(b.question_no || 0));
+      const allQNos = Array.from(new Set([
+        ...questionRows.map(q => String(q.question_no ?? '')),
+        ...Object.keys(latestByQuestion),
+      ])).filter(qNo => {
+        if (!qNo) return false;
+        const n = Number(qNo);
+        if (isFlResource && isMeasurementResource) return n >= 1 && n <= 5;
+        if (isAcResource && isMeasurementResource) return n >= 1 && n <= 10;
+        return isMeasurementResource || !(n >= 11 && n <= 15);
+      }).sort((a, b) => Number(a) - Number(b));
+
+      const mergedRows = allQNos.map((qNoStr) => {
+        const question = questionMap[qNoStr] || {};
+        const submission = latestByQuestion[qNoStr] || {};
+        const bpdFallback = isMeasurementResource
+          ? (isFlResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAcResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : BPD_HC_MEASUREMENT_QUESTIONS[Number(qNoStr)]))
+          : (isAnnotation2Resource
+            ? BPD_HC_ANNOTATION2_QUESTIONS[Number(qNoStr)]
+            : (isAnnotation1Resource
+              ? (isFlResource ? FL_ANNOTATION1_QUESTIONS[Number(qNoStr)] : (isAcResource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : BPD_HC_ANNOTATION1_QUESTIONS[Number(qNoStr)]))
+              : (isFreezePlaneResource ? BPD_HC_FREEZE_THE_PLANE_QUESTIONS[Number(qNoStr)] : BPD_HC_FIND_THE_IMAGE_QUESTIONS[Number(qNoStr)])));
+        const fallback = (
+          isFlResource ? (isMeasurementResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? FL_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? FL_ANNOTATION1_QUESTIONS[Number(qNoStr)] : FL_ALL_QUESTIONS[Number(qNoStr)]))) :
+          isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
+          bpdFallback
+        ) || {};
+
+        const hasCompleteOptions = Array.isArray(question.options) && question.options.length >= 4 && question.options.every(o => o?.text || o?.label);
+        const options = isFlResource && isMeasurementResource
+          ? []
+          : (hasCompleteOptions
+            ? question.options
+            : (fallback.options || (Array.isArray(question.options) ? question.options : [])));
+
+        const isMeasurement = question.question_type === 'measurement' || submission.question_type === 'measurement' || fallback.question_type === 'measurement' || isMeasurementResource;
+        const isAnnotation2 = !isMeasurement && (question.question_type === 'annotation2' || submission.question_type === 'annotation2' || fallback.question_type === 'annotation2' || isAnnotation2Resource);
+        const isAnnotation1 = !isMeasurement && !isAnnotation2 && (question.question_type === 'annotation1' || submission.question_type === 'annotation1' || fallback.question_type === 'annotation1' || isAnnotation1Resource);
+        const isAnnotation = isAnnotation1 || isAnnotation2;
+        const isQuestion4 = Number(qNoStr) === 4 && !isAnnotation && !isMeasurement;
+        const correctAnswer = (isFlResource || isAcResource || isAnnotation || isMeasurement)
+          ? (fallback.correct_answer || question.correct_answer || null)
+          : (isQuestion4 ? { key: 'B', value: 'B', answer: 'B' } : (fallback.correct_answer || question.correct_answer || null));
+        const correctKey = getConfiguredAnswerKey(correctAnswer);
+        const selectedKey = String(submission.option_chosen ?? '');
+
+        let isCorrect = submission.is_correct;
+        if (isMeasurement) {
+          if (submission.is_correct !== undefined && submission.is_correct !== null) {
+            isCorrect = submission.is_correct === true || String(submission.is_correct).toLowerCase() === 'true' || submission.is_correct === 1;
+          } else if (submission.partial !== undefined && submission.partial !== null) {
+            isCorrect = Number(submission.partial) >= 1;
+          } else if (submission.caliper_placement_interpretation || submission.caliperPlacementInterpretation || submission.interpretation || submission.placement) {
+            const placementStr = String(
+              submission.caliper_placement_interpretation ?? submission.caliperPlacementInterpretation ?? submission.placement ?? ''
+            ).toLowerCase();
+            const interpStr = String(submission.interpretation ?? '').toLowerCase();
+            const isPlacementGood = /good|accurate|correct|normal/i.test(placementStr) && !/inaccurate|suboptimal|incorrect|wrong|bad/i.test(placementStr);
+            const isInterpGood = /good|accurate|correct|normal/i.test(interpStr) && !/incorrect|inaccurate|wrong|bad/i.test(interpStr);
+            isCorrect = isPlacementGood && isInterpGood;
+          }
+        } else if (isAnnotation && (submission.correct_label_count !== undefined || submission.wrong_label_count !== undefined)) {
+          const cCount = Number(submission.correct_label_count ?? 0);
+          const wCount = Number(submission.wrong_label_count ?? 0);
+          const expectedCount = Number(fallback?.correct_answer?.expected_label_count || question?.correct_answer?.expected_label_count || (isFlResource ? 2 : 5));
+          if (cCount >= expectedCount && wCount === 0) {
+            isCorrect = true;
+          } else if (cCount > 0 || wCount > 0 || submission.unused_label_count !== undefined) {
+            isCorrect = false;
+          }
+        } else if (selectedKey && correctKey && submission.option_chosen !== undefined && submission.option_chosen !== null) {
+          const selectedMatchesCorrect = optionMatchesConfiguredKey(
+            getConfiguredOptionDetails(options, correctKey),
+            selectedKey
+          ) || selectedKey.trim().toUpperCase() === correctKey.trim().toUpperCase() ||
+          (correctKey === 'A' && (selectedKey === '1' || selectedKey.toUpperCase() === 'A')) ||
+          (correctKey === 'B' && (selectedKey === '2' || selectedKey.toUpperCase() === 'B')) ||
+          (correctKey === 'C' && (selectedKey === '3' || selectedKey.toUpperCase() === 'C')) ||
+          (correctKey === 'D' && (selectedKey === '4' || selectedKey.toUpperCase() === 'D'));
+          if (selectedMatchesCorrect) {
+            isCorrect = true;
+          } else if (isCorrect === true && !selectedMatchesCorrect) {
+            isCorrect = false;
+          }
+        }
+
+        const feedbackCorrect = isMeasurement
+          ? (fallback.feedback_correct || question.feedback_correct)
+          : (isAnnotation
+            ? (fallback.feedback_correct || question.feedback_correct)
+            : (isFlResource || isAcResource)
+              ? (fallback.feedback_correct || question.feedback_correct || null)
+              : (isQuestion4
+                ? 'Excellent! You chose the correct transthalamic image suitable for BPD measurement where thalami and CSP are seen clearly.'
+                : (fallback.feedback_correct || question.feedback_correct || null)));
+
+        const isFlAnnotation = isAnnotation1 && (isFlResource || /transfemoral|femur|diaphysis|metaphysis/i.test(String(question.feedback_correct || fallback.feedback_correct || '')));
+        const isAcAnnotation = !isFlAnnotation && isAnnotation1 && (isAcResource || /abdominal|stomach|portal/i.test(String(question.feedback_correct || fallback.feedback_correct || '')));
+        const isFlAnnotation2Type = isAnnotation2 && (isFlResource || /transfemoral|femur|diaphysis|metaphysis/i.test(String(question.feedback_correct || fallback.feedback_correct || '')));
+        const isAcAnnotation2Type = !isFlAnnotation2Type && isAnnotation2 && (isAcResource || /abdominal|stomach|portal|rib 1/i.test(String(question.feedback_correct || fallback.feedback_correct || '')));
+        const isAcMeasurementType = isMeasurement && (isAcResource || /apad|tad|fetal abdomen|abdominal circumference/i.test(fallback.prompt || question.prompt || ''));
+        const isFlMeasurementType = isMeasurement && isFlResource;
+        const feedbackWrong = isMeasurement
+          ? (isCorrect === false
+              ? (isFlMeasurementType
+                  ? getFlMeasurementWrongFeedback(submission)
+                  : (isAcMeasurementType
+                    ? getAcMeasurementWrongFeedback(submission, qNoStr, fallback.prompt || question.prompt)
+                    : getBpdHcMeasurementWrongFeedback(submission, qNoStr, fallback.prompt || question.prompt)))
+              : (fallback.feedback_wrong || question.feedback_wrong || null))
+          : (isAnnotation2
+            ? (isCorrect === false
+                ? (isFlAnnotation2Type ? getFlAnnotation2WrongFeedback(submission) : (isAcAnnotation2Type ? getAcAnnotation2WrongFeedback(submission) : getBpdAnnotation2WrongFeedback(submission)))
+                : (fallback.feedback_wrong || question.feedback_wrong || null))
+            : (isAnnotation1
+              ? (isCorrect === false
+                  ? (isFlAnnotation ? getFlAnnotation1WrongFeedback(submission) : (isAcAnnotation ? getAcAnnotation1WrongFeedback(submission) : getBpdAnnotation1WrongFeedback(submission)))
+                  : (fallback.feedback_wrong || question.feedback_wrong || null))
+              : (isFlResource || isAcResource)
+                ? (fallback.feedback_wrong || question.feedback_wrong || null)
+                : (isQuestion4
+                  ? 'The selected image corresponds to a transventricular plane. Remember, the BPD is measured in the transthalamic section showing falx, arrow sign, thalami and CSP.'
+                  : (fallback.feedback_wrong || question.feedback_wrong || null))));
+
+        return {
+          ...fallback,
+          ...question,
+          ...submission,
+          question_no: Number(qNoStr) || question.question_no || submission.question_no,
+          question_type: question.question_type || submission.question_type || fallback.question_type || (isMeasurement ? 'measurement' : 'type1'),
+          prompt: isMeasurement
+            ? (fallback.prompt || question.prompt || '')
+            : (isAnnotation ? (fallback.prompt || question.prompt || 'Label the correct anatomical parts in the image') : (fallback.prompt || question.prompt || submission.prompt || '')),
+          options,
+          correct_answer: correctAnswer,
+          feedback_correct: feedbackCorrect,
+          feedback_wrong: feedbackWrong,
+          is_correct: isCorrect,
+          assets: Array.isArray(question.assets) && question.assets.length > 0 ? question.assets : (Array.isArray(submission.assets) ? submission.assets : []),
+        };
+      });
 
       const byType = groupQuestionsByType(mergedRows);
 
@@ -5841,6 +7846,7 @@ function QuestionRow({ q }) {
   const right = q.is_correct === true;
   const questionType = String(q.question_type || '');
   const isFindImage = questionType === 'type1';
+  const isFreeze = questionType === 'freeze' || /freeze/i.test(questionType) || (Number(q.question_no) >= 6 && Number(q.question_no) <= 10);
   const isImageUpload = questionType === 'type2';
   const isAnnotation  = q.question_type === 'annotation1' || q.question_type === 'annotation2';
   const isMeasurement = q.question_type === 'measurement';
@@ -5852,7 +7858,9 @@ function QuestionRow({ q }) {
   const correctText = getConfiguredOptionText(options, correctKey);
   const selectedOption = getConfiguredOptionDetails(options, selectedKey);
   const correctOption = getConfiguredOptionDetails(options, correctKey);
-  const expectedLandmarks = getQuestionMetadataList(q.metadata, 'expected_landmarks');
+  const expectedLandmarks = getQuestionMetadataList(q.metadata, 'expected_landmarks').length > 0
+    ? getQuestionMetadataList(q.metadata, 'expected_landmarks')
+    : (Array.isArray(q.correct_answer?.expected_landmarks) ? q.correct_answer.expected_landmarks : []);
 
   return (
     <div className={`rounded-xl border bg-white p-3 ${
@@ -5899,17 +7907,20 @@ function QuestionRow({ q }) {
           {options.length > 0 && (
             <div className="mt-3 grid gap-2">
               {options.map((option, optionIndex) => {
-                const optionKey = String(option.key ?? option.value ?? optionIndex + 1);
-                const optionText = option.text ?? option.label ?? String(option);
+                const optionKey = String(option.key ?? option.value ?? String.fromCharCode(65 + optionIndex));
+                const optionText = option.text ?? option.label ?? (typeof option === 'string' ? option : '');
                 const optionImageUrl = option.image_url ?? option.imageUrl ?? option.url ?? option.asset_url;
-                const selected = answered && optionMatchesConfiguredKey(option, selectedKey);
-                const isCorrectOption = optionMatchesConfiguredKey(option, correctKey);
+                const isOptionSelected = answered && (
+                  optionMatchesConfiguredKey(option, selectedKey, optionIndex) ||
+                  (right && optionMatchesConfiguredKey(option, correctKey, optionIndex))
+                );
+                const isCorrectOption = optionMatchesConfiguredKey(option, correctKey, optionIndex);
 
                 return (
                   <div
-                    key={`${q.question_id || q.question_no}-${optionKey}`}
-                    className={`rounded-lg border px-3 py-2 text-xs ${
-                      selected
+                    key={`${q.question_id || q.question_no}-${optionKey}-${optionIndex}`}
+                    className={`rounded-lg border px-3 py-2 text-xs transition-all ${
+                      isOptionSelected
                         ? right
                           ? 'border-[#8DC63F]/50 bg-[#8DC63F]/5'
                           : 'border-red-200 bg-red-50'
@@ -5920,17 +7931,22 @@ function QuestionRow({ q }) {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-gray-700">
-                        <span className="mr-2">{optionKey}.</span>
+                        <span className="mr-2 font-semibold">{optionKey}.</span>
                         {optionText && optionText !== '[object Object]' ? optionText : ''}
                       </span>
                       <div className="flex gap-1">
-                        {selected && <span className="rounded-full bg-gray-900/5 px-2 py-0.5 text-[10px] text-gray-600">Selected</span>}
+                        {isOptionSelected && <span className="rounded-full bg-gray-900/5 px-2 py-0.5 text-[10px] text-gray-600">Selected</span>}
                         {isCorrectOption && <span className="rounded-full bg-[#8DC63F]/10 px-2 py-0.5 text-[10px] text-[#5d8f20]">Correct</span>}
                       </div>
                     </div>
                     {optionImageUrl && (
                       <div className="mt-2 h-28 rounded-md bg-white overflow-hidden flex items-center justify-center">
-                        <img src={optionImageUrl} alt={option.image_alt || optionText || `Option ${optionKey}`} className="h-full w-full object-contain" />
+                        <img
+                          src={optionImageUrl}
+                          alt={option.image_alt || optionText || `Option ${optionKey}`}
+                          className="h-full w-full object-contain"
+                          onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
+                        />
                       </div>
                     )}
                   </div>
@@ -5939,25 +7955,37 @@ function QuestionRow({ q }) {
             </div>
           )}
 
-          {isFindImage && options.length === 0 && (
+          {isFindImage && !isFreeze && options.length === 0 && (
             <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 px-3 py-2 text-xs text-blue-600">
               No image options are configured for this Find the Image question.
             </div>
           )}
 
+          {isFreeze && options.length === 0 && (
+            <div className="mt-3 rounded-lg border border-cyan-100 bg-cyan-50/50 px-3 py-2 text-xs text-cyan-700">
+              Ultrasound video freeze timeframe question.
+            </div>
+          )}
+
           <div className="mt-3 space-y-2">
-            {isFindImage && (answered || options.length > 0 || correctKey || expectedTimeframe) && (
+            {(isFindImage || isFreeze) && (answered || options.length > 0 || correctKey || expectedTimeframe) && (
               <div className="grid gap-2 text-xs">
                 <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
                   <span className="text-gray-400">Selected: </span>
                   <span className={right ? 'font-semibold text-[#8DC63F]' : answered ? 'font-semibold text-red-500' : 'font-semibold text-gray-500'}>
-                    {answered ? (selectedText || selectedOption?.key || q.option_chosen || '—') : '—'}
+                    {answered ? (
+                      selectedOption
+                        ? `${selectedOption.key}. ${selectedText && selectedText !== selectedOption.key ? selectedText : ''}`.trim()
+                        : right && correctOption
+                          ? `${correctOption.key}. ${correctText && correctText !== correctOption.key ? correctText : ''}`.trim()
+                          : (selectedText || q.option_chosen || q.selected_timeframe || '—')
+                    ) : '—'}
                   </span>
                 </div>
                 <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
                   <span className="text-gray-400">Correct answer: </span>
                   <span className="font-semibold text-gray-700">
-                    {correctText || correctOption?.key || correctKey || expectedTimeframe || '—'}
+                    {q.correct_answer?.answer || (correctOption && correctText && correctText !== correctOption.key ? `${correctOption.key}. (${correctText})` : correctOption?.key || correctKey || expectedTimeframe || '—')}
                   </span>
                 </div>
               </div>
@@ -6015,7 +8043,10 @@ function QuestionRow({ q }) {
           )}
 
           {answered && (right ? q.feedback_correct : q.feedback_wrong) && (
-            <p className="mt-2 text-xs text-gray-500">{right ? q.feedback_correct : q.feedback_wrong}</p>
+            <div className={`mt-2 rounded-lg p-2.5 text-xs ${right ? 'bg-[#8DC63F]/10 border border-[#8DC63F]/20 text-[#3b6311]' : 'bg-red-50 border border-red-100 text-red-700'}`}>
+              <span className="font-semibold">Feedback: </span>
+              <span className="whitespace-pre-line">{right ? q.feedback_correct : q.feedback_wrong}</span>
+            </div>
           )}
         </div>
       </div>
@@ -6116,7 +8147,7 @@ function ImageInterpretModal({ r, token, onClose }) {
     ])
       .then(([submissionData, questionData]) => {
         if (!active) return;
-        setSessions(buildImageInterpretationSessions(submissionData, questionData));
+        setSessions(buildImageInterpretationSessions(submissionData, questionData, r));
       })
       .catch(err => {
         if (active) setError(err.message);
