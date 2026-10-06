@@ -1085,11 +1085,18 @@ const groupCoursesByCertificate = (courses) => {
       });
     }
     if (course.batch_name) {
-      map.get(key).batches.push({
+      const batch = {
         batch_name: course.batch_name,
         batch_start_date: course.batch_start_date,
         batch_end_date: course.batch_end_date,
-      });
+      };
+      const alreadyAdded = map.get(key).batches.some(
+        (existing) =>
+          existing.batch_name === batch.batch_name &&
+          existing.batch_start_date === batch.batch_start_date &&
+          existing.batch_end_date === batch.batch_end_date
+      );
+      if (!alreadyAdded) map.get(key).batches.push(batch);
     }
   });
   return Array.from(map.values());
@@ -1494,8 +1501,7 @@ function Course() {
                                     className="cursor-pointer text-[#8DC63F] underline underline-offset-2 text-xs"
                                     onClick={() => toggleExpandRow(data.certificate_id)}
                                   >
-                                    {data.batches.length} batch
-                                    {data.batches.length > 1 ? "es" : ""}
+                                    {data.batches.map((batch) => batch.batch_name).join(", ")}
                                   </span>
                                 ) : (
                                   <span className="text-gray-400">Not Associated</span>

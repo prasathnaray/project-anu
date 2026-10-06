@@ -144,13 +144,44 @@ const listCourses = async (requester, view = 'management') => {
     }
 
     const centreId = requireInstitution(requester);
+    // The certifications screen still consumes the legacy flat course shape.
+    // Keep the modern ownership/eligibility rules, but include the batch and
+    // availability fields that the screen needs for institution admins.
+    const accessStatusSql = role === ROLES.INSTITUTION_ADMIN
+        ? 'TRUE'
+        : `(${courseEligibilitySql('cd', '$1')})`;
     const result = await client.query(
         `SELECT cd.*,
+                (${accessStatusSql}) AS access_status,
+                batches.batch_name,
+                batches.batch_start_date,
+                batches.batch_end_date,
                 (cd.owner_scope = 'institution' AND cd.owner_centre_id = $1) AS can_edit
          FROM certification_data cd
+         LEFT JOIN LATERAL (
+             -- New assignments created through course management.
+             SELECT bd.batch_name, bd.batch_start_date, bd.batch_end_date
+             FROM course_batch_assignments cba
+             JOIN batch_data bd ON bd.batch_id = cba.batch_id
+             WHERE cba.course_id = cd.certificate_id
+               AND cba.centre_id = $1
+               AND bd.centre_id = $1
+             UNION
+             -- Existing batches store certificate ids in certification_data.
+             SELECT bd.batch_name, bd.batch_start_date, bd.batch_end_date
+             FROM batch_data bd
+             CROSS JOIN LATERAL jsonb_array_elements_text(
+                 CASE
+                     WHEN jsonb_typeof(bd.certification_data) = 'array' THEN bd.certification_data
+                     ELSE '[]'::jsonb
+                 END
+             ) AS certificate(value)
+             WHERE certificate.value = cd.certificate_id::text
+               AND bd.centre_id = $1
+         ) batches ON TRUE
          WHERE (cd.owner_scope = 'institution' AND cd.owner_centre_id = $1)
             OR (${courseEligibilitySql('cd', '$1')})
-         ORDER BY can_edit DESC, cd.created_at DESC`,
+         ORDER BY can_edit DESC, cd.created_at DESC, batches.batch_name`,
         [centreId]
     );
     return result.rows;
