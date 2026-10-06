@@ -16,7 +16,7 @@ class HttpError extends Error {
         super(message);
         this.name = 'HttpError';
         this.statusCode = statusCode;
-    }
+    } 
 }
 
 const roleOf = (requester) => Number(requester?.role);
