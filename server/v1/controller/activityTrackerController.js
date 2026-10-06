@@ -19,15 +19,30 @@ const trackClientActivity = async (req, res) => {
     const userId = req.user?.user_mail || req.user?.people_id || req.body.userId || 'anonymous';
     const role = req.user?.role || req.body.role || 'User';
 
+    const isVR = Boolean(
+      metadata?.isVR ||
+      req.body?.isVr === true ||
+      req.query?.isVr === 'true' ||
+      req.deviceInfo?.isVR ||
+      req.headers?.['x-device-type']?.toLowerCase()?.includes('vr') ||
+      req.headers?.['x-client']?.toLowerCase()?.includes('vr') ||
+      req.headers?.['x-vr-device']
+    );
+
+    const mergedMetadata = {
+      ...(metadata || {}),
+      ...(isVR ? { isVR: true, device: metadata?.device || 'VR Headset' } : {})
+    };
+
     const recorded = await trackActivity({
       userId,
       role,
       action,
-      module: module || 'General',
+      module: isVR && (!module || module === 'General') ? 'VR Modules' : (module || 'General'),
       targetType,
       targetId,
       status: status || 'SUCCESS',
-      metadata: metadata || {}
+      metadata: mergedMetadata
     });
 
     return res.status(201).json({

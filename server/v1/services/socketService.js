@@ -7,15 +7,7 @@ const initSocket = (httpServer) => {
 
   io = new Server(httpServer, {
     cors: {
-      origin: [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:3001",
-        "https://project-anu.hticlab.org",
-        "http://project-anu.hticlab.org",
-        "https://project-anu.vercel.app"
-      ],
+      origin: true,
       methods: ["GET", "POST"],
       credentials: true
     },

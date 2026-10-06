@@ -174,13 +174,21 @@ function SuperAdminDashboard() {
           setRecentActivitiesList((prev) => [newLog, ...prev.filter((i) => i.id !== newLog.id).slice(0, 49)]);
           setActivityStats((prev) => {
             const isSuccess = newLog.status === 'SUCCESS';
-            const roleName = newLog.role || 'User';
+            const roleName = newLog.role || (newLog.metadata?.isVR ? 'Trainee' : 'User');
             const curRoles = { ...(prev.roleMap || {}) };
-            curRoles[roleName] = (curRoles[roleName] || 0) + 1;
+            if (curRoles[roleName] !== undefined) {
+              curRoles[roleName] = (curRoles[roleName] || 0) + 1;
+            } else if (roleName === 'Super Admin' || roleName === 'Admin' || roleName === 'Instructor' || roleName === 'Trainee') {
+              curRoles[roleName] = (curRoles[roleName] || 0) + 1;
+            } else if (newLog.metadata?.isVR) {
+              curRoles['Trainee'] = (curRoles['Trainee'] || 0) + 1;
+            }
 
             const breakdown = { ...(prev.actionBreakdown || {}) };
             const act = String(newLog.action || '').toUpperCase();
             const mod = String(newLog.module || '').toUpperCase();
+            const isVR = Boolean(newLog.metadata?.isVR || act.includes('VR') || mod.includes('VR'));
+
             if (act.includes('CREATE_BATCH') || act.includes('BATCH_CREATED')) breakdown.batchCreated = (breakdown.batchCreated || 0) + 1;
             if (act.includes('UPDATE_BATCH') || act.includes('BATCH_UPDATED')) breakdown.batchUpdated = (breakdown.batchUpdated || 0) + 1;
             if (act.includes('CREATE_USER') || act.includes('USER_CREATED')) breakdown.usersCreated = (breakdown.usersCreated || 0) + 1;
@@ -188,7 +196,17 @@ function SuperAdminDashboard() {
             if (act.includes('ATTEMPT_CHALLENGE')) breakdown.challengesAttempted = (breakdown.challengesAttempted || 0) + 1;
             if (act.includes('COMPLETE_CHALLENGE')) breakdown.challengesCompleted = (breakdown.challengesCompleted || 0) + 1;
             if (act.includes('CERTIFICATE')) breakdown.certificatesGenerated = (breakdown.certificatesGenerated || 0) + 1;
-            if (act.includes('VR') || act.includes('PRACTICE') || mod.includes('VR')) breakdown.vrAttempts = (breakdown.vrAttempts || 0) + 1;
+            if (isVR || act.includes('PRACTICE')) breakdown.vrAttempts = (breakdown.vrAttempts || 0) + 1;
+
+            // Dynamically update byModule in real-time
+            const curModules = [...(prev.byModule || [])];
+            const modName = newLog.module || (isVR ? 'VR Modules' : 'General');
+            const mIdx = curModules.findIndex((m) => m.module === modName);
+            if (mIdx >= 0) {
+              curModules[mIdx] = { ...curModules[mIdx], count: Number(curModules[mIdx].count || 0) + 1 };
+            } else {
+              curModules.unshift({ module: modName, count: 1 });
+            }
 
             return {
               ...prev,
@@ -197,13 +215,24 @@ function SuperAdminDashboard() {
               successfulActions: isSuccess ? (prev.successfulActions || 0) + 1 : (prev.successfulActions || 0),
               failedActions: !isSuccess ? (prev.failedActions || 0) + 1 : (prev.failedActions || 0),
               roleMap: curRoles,
+              byModule: curModules,
               actionBreakdown: breakdown
             };
           });
         });
 
         socket.on('stats:update', (updatedStats) => {
-          if (updatedStats) setActivityStats(updatedStats);
+          if (updatedStats) {
+            setActivityStats((prev) => ({
+              ...prev,
+              ...updatedStats,
+              roleMap: updatedStats.roleMap || prev.roleMap,
+              actionBreakdown: updatedStats.actionBreakdown || prev.actionBreakdown
+            }));
+            if (Array.isArray(updatedStats.recentActivities) && updatedStats.recentActivities.length > 0) {
+              setRecentActivitiesList(updatedStats.recentActivities);
+            }
+          }
         });
       }
     } catch (e) {
@@ -249,7 +278,7 @@ function SuperAdminDashboard() {
     if (u.includes('instructor') || u.includes('tutor')) return { text: 'Instructor', bg: 'bg-amber-100 text-amber-700' };
     if (u.includes('trainee') || u.includes('student')) return { text: 'Trainee', bg: 'bg-emerald-100 text-emerald-700' };
 
-    return { text: 'Super Admin', bg: 'bg-purple-100 text-purple-700' };
+    return { text: 'Trainee', bg: 'bg-emerald-100 text-emerald-700' };
   };
 
   const formatShortTime = (dateStr) => {

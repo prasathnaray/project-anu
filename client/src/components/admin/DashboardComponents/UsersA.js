@@ -72,7 +72,7 @@ function UsersA({APIS}){
                                                     <InputLabel id="program-select-label">Select people</InputLabel>
                                                     <Select
                                                       labelId="program-select-label"
-                                                      value={setRoleData.role}
+                                                      value={roleData.role}
                                                       onChange={handleChange}
                                                       label="Select people"
                                                       name="role"
@@ -105,7 +105,7 @@ function UsersA({APIS}){
                                                                         {instructor?.user_name}
                                                                     </td>
                                                                     <td className="py-3 px-4 text-[#8DC63F] font-semibold border-b-2">
-                                                                        {instructor?.batch_names || instructor?.batch_name || 'N/A'}
+                                                                        {Array.isArray(instructor?.batch_names) ? (instructor.batch_names.filter(Boolean).join(', ') || 'N/A') : (instructor?.batch_names || instructor?.batch_name || 'N/A')}
                                                                     </td>
                                                                     <td className="py-3 px-4 text-[#8DC63F] font-semibold border-b-2">
                                                                         <div>{instructor?.status}</div>

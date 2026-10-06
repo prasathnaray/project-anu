@@ -65,6 +65,19 @@ const formatActionDescription = (action, module, role, metadata = {}) => {
   const target = meta.name || meta.title || meta.batch_name || meta.module_name || meta.targetId || '';
   const actionLower = action.toLowerCase();
 
+  if (actionLower.includes('button') || actionLower.includes('click')) {
+    const btnName = meta.buttonName || meta.button || meta.targetId || target || 'Button';
+    return `${role} clicked "${btnName}" in ${module}`.trim();
+  }
+  if (actionLower.includes('vr_session')) {
+    return `${role} launched VR session ${target}`.trim();
+  }
+  if (actionLower.includes('complete_vr') || actionLower.includes('vr_resource')) {
+    return `${role} completed VR module activity ${target}`.trim();
+  }
+  if (actionLower.includes('vr_data')) {
+    return `${role} accessed VR training data`.trim();
+  }
   if (actionLower.includes('create_batch') || actionLower.includes('batch_created')) {
     return `${role} created Batch ${target}`.trim();
   }
@@ -153,19 +166,36 @@ const trackActivity = async ({
     const cleanTargetId = targetId ? String(targetId) : null;
     const metaJson = typeof metadata === 'object' && metadata !== null ? JSON.stringify(metadata) : '{}';
 
-    // If cleanRole is still 'User' and cleanUserId is an email, resolve role from user_data
-    if (cleanRole === 'User' && cleanUserId && cleanUserId.includes('@')) {
+    // If cleanRole is still 'User', try to resolve from user_data by email or people_id UUID
+    if (cleanRole === 'User' && cleanUserId && cleanUserId !== 'system') {
       try {
-        const userRes = await client.query(
-          'SELECT user_role FROM public.user_data WHERE LOWER(user_email) = LOWER($1)',
-          [cleanUserId]
-        );
-        if (userRes.rows.length > 0 && userRes.rows[0].user_role) {
-          cleanRole = normalizeRole(userRes.rows[0].user_role);
+        const isEmail = cleanUserId.includes('@');
+        const queryText = isEmail
+          ? 'SELECT user_role, user_email FROM public.user_data WHERE LOWER(user_email) = LOWER($1)'
+          : 'SELECT user_role, user_email FROM public.user_data WHERE people_id::text = $1 OR LOWER(user_email) = LOWER($1)';
+        const userRes = await client.query(queryText, [cleanUserId]);
+        if (userRes.rows.length > 0) {
+          if (userRes.rows[0].user_role) {
+            cleanRole = normalizeRole(userRes.rows[0].user_role);
+          }
+          if (!isEmail && userRes.rows[0].user_email) {
+            cleanUserId = userRes.rows[0].user_email;
+          }
         }
       } catch (err) {
         console.error('Error resolving user_role for activity:', err.message);
       }
+    }
+
+    // Default VR actions with unresolved role to Trainee (VR users are learners/trainees)
+    const isVRAction = Boolean(
+      metadata?.isVR ||
+      cleanModule === 'VR Modules' ||
+      cleanAction.includes('VR') ||
+      cleanAction.includes('PRACTICE')
+    );
+    if (cleanRole === 'User' && isVRAction) {
+      cleanRole = 'Trainee';
     }
 
     const result = await client.query(
@@ -184,6 +214,17 @@ const trackActivity = async ({
 
     // Broadcast to connected Super Admins in real time via Socket.IO
     broadcastActivity(enrichedLog);
+
+    // Asynchronously calculate and broadcast fresh aggregated statistics so all counters, progress bars, and module counts update in real-time
+    setImmediate(async () => {
+      try {
+        const { broadcastStatsUpdate } = require('./socketService');
+        const stats = await getActivityStatistics();
+        broadcastStatsUpdate(stats);
+      } catch (err) {
+        console.error('Error broadcasting fresh stats update:', err.message);
+      }
+    });
 
     return enrichedLog;
   } catch (err) {
@@ -216,7 +257,7 @@ const getActivityStatistics = async () => {
       COUNT(*) FILTER (WHERE action IN ('ATTEMPT_CHALLENGE', 'CHALLENGE_ATTEMPTED', 'START_CHALLENGE'))::int AS challenges_attempted,
       COUNT(*) FILTER (WHERE action IN ('COMPLETE_CHALLENGE', 'CHALLENGE_COMPLETED', 'SUBMIT_CHALLENGE'))::int AS challenges_completed,
       COUNT(*) FILTER (WHERE action IN ('CERTIFICATE_GENERATED', 'CREATE_CERTIFICATE', 'GENERATE_CERTIFICATE'))::int AS certificates_generated,
-      COUNT(*) FILTER (WHERE module = 'VR Modules' OR action LIKE '%VR%' OR action IN ('START_VR_TEST', 'END_VR_TEST', 'VR_ATTEMPT', 'VR_ATTEMPT_STARTED', 'PRACTICE_ATTEMPT', 'VR_SESSION', 'SUBMIT_VR_MEASUREMENT', 'SAVE_VR_RECORDING', 'START_VR_STREAM', 'END_VR_STREAM', 'VR_LOGIN'))::int AS vr_attempts
+      COUNT(*) FILTER (WHERE module = 'VR Modules' OR action LIKE '%VR%' OR (metadata->>'isVR') = 'true' OR action IN ('START_VR_TEST', 'END_VR_TEST', 'VR_ATTEMPT', 'VR_ATTEMPT_STARTED', 'PRACTICE_ATTEMPT', 'VR_SESSION', 'SUBMIT_VR_MEASUREMENT', 'SAVE_VR_RECORDING', 'START_VR_STREAM', 'END_VR_STREAM', 'VR_LOGIN', 'VR_DATA_ACCESS', 'COMPLETE_VR_RESOURCE'))::int AS vr_attempts
     FROM public.activity_logs
   `);
 

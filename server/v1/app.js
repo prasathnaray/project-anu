@@ -260,7 +260,7 @@ app.use('/api/v1', Authenticate, contentAccessRouter);
 app.use('/api/v1', Authenticate, mrContentRouter);
 app.use('/api/v1', Authenticate, institutionRouter);
 app.use('/api/v1', Authenticate, superAdminRouter);
-app.use('/api/v1', Authenticate, activityTrackerRouter);
+app.use('/api/v1', activityTrackerRouter);
 //recordings
 app.use('/api/v1', Authenticate, GetShadowRecordingRouter);
 //associated volume  

@@ -34,6 +34,7 @@ const ROUTE_ACTION_MAP = [
 
   // VR Modules
   { method: 'POST', pattern: /^\/api\/v1\/volume-placements?/i, action: 'START_VR_TEST', module: 'VR Modules', targetType: 'vr_placement' },
+  { method: 'GET', pattern: /^\/api\/v1\/volume-placements?/i, action: 'VR_VOLUME_DATA', module: 'VR Modules', targetType: 'vr_placement' },
   { method: 'POST', pattern: /^\/api\/v1\/(uploadvolumerecording|volume-recordings?)/i, action: 'SAVE_VR_RECORDING', module: 'VR Modules', targetType: 'vr_recording' },
   { method: 'POST', pattern: /^\/api\/v1\/(start-ii-prac|iivr-start-test)/i, action: 'START_VR_TEST', module: 'VR Modules', targetType: 'vr_test' },
   { method: 'PUT', pattern: /^\/api\/v1\/(end-ii-prac|iivr-end-test)/i, action: 'END_VR_TEST', module: 'VR Modules', targetType: 'vr_test' },
@@ -41,9 +42,13 @@ const ROUTE_ACTION_MAP = [
   { method: 'POST', pattern: /^\/api\/v1\/(submit-ii|iivr)/i, action: 'SUBMIT_VR_MEASUREMENT', module: 'VR Modules', targetType: 'iivr' },
   { method: 'POST', pattern: /^\/api\/v1\/(practice-i-ii|practice)/i, action: 'PRACTICE_ATTEMPT', module: 'VR Modules', targetType: 'practice' },
   { method: 'POST', pattern: /^\/api\/v1\/(submit-prac-test|prac-test)/i, action: 'PRACTICE_ATTEMPT', module: 'VR Modules', targetType: 'practice_test' },
+  { method: 'GET', pattern: /^\/api\/v1\/prac-test-attempt-details/i, action: 'VR_DATA_ACCESS', module: 'VR Modules', targetType: 'practice_test' },
   { method: 'POST', pattern: /^\/api\/v1\/(submit-msob|lrob)/i, action: 'SUBMIT_VR_MEASUREMENT', module: 'VR Modules', targetType: 'msob' },
-  { method: 'POST', pattern: /^\/api\/v1\/streaming\/(tokenn|publisher-session\/[^/]+\/activate)/i, action: 'START_VR_STREAM', module: 'VR Modules', targetType: 'vr_stream' },
+  { method: 'POST', pattern: /^\/api\/v1\/(streaming\/)?(tokenn|publisher-session\/[^/]+\/activate)/i, action: 'START_VR_STREAM', module: 'VR Modules', targetType: 'vr_stream' },
   { method: 'DELETE', pattern: /^\/api\/v1\/streaming\/publisher-session/i, action: 'END_VR_STREAM', module: 'VR Modules', targetType: 'vr_stream' },
+  { method: 'GET', pattern: /^\/api\/v1\/trainee\/[^/]+/i, action: 'VR_SESSION', module: 'VR Modules', targetType: 'vr_session', condition: (req) => req.query?.isVr === 'true' || req.query?.isvr === 'true' || req.deviceInfo?.isVR },
+  { method: 'GET', pattern: /^\/api\/v1\/get-vr-data/i, action: 'VR_DATA_ACCESS', module: 'VR Modules', targetType: 'vr_data' },
+  { method: 'POST', pattern: /^\/api\/v1\/user-completion/i, action: 'COMPLETE_VR_RESOURCE', module: 'VR Modules', targetType: 'resource' },
 
   // Challenge Modules
   { method: 'POST', pattern: /^\/api\/v1\/challenges\/submit/i, action: 'COMPLETE_CHALLENGE', module: 'Challenge Modules', targetType: 'challenge' },
@@ -110,14 +115,26 @@ const activityTrackerMiddleware = (req, res, next) => {
     return next();
   }
 
-  // Find matching route rule
-  const matchedRule = ROUTE_ACTION_MAP.find(
-    (rule) => rule.method === req.method && rule.pattern.test(url)
+  const isVRRequest = Boolean(
+    req.deviceInfo?.isVR ||
+    req.query?.isVr === 'true' ||
+    req.query?.isvr === 'true' ||
+    req.body?.isVr === true ||
+    req.body?.isvr === true ||
+    req.body?.loginContext === 'vr' ||
+    req.headers?.['x-device-type']?.toLowerCase()?.includes('vr') ||
+    req.headers?.['x-client']?.toLowerCase()?.includes('vr') ||
+    req.headers?.['x-vr-device']
   );
 
-  // If not matched, but it's a state-mutating action (POST, PUT, DELETE, PATCH), track as generic action
+  // Find matching route rule
+  const matchedRule = ROUTE_ACTION_MAP.find(
+    (rule) => rule.method === req.method && rule.pattern.test(url) && (!rule.condition || rule.condition(req))
+  );
+
+  // If not matched, but it's a state-mutating action or request originating from VR, track it
   const isMutating = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method);
-  if (!matchedRule && !isMutating) {
+  if (!matchedRule && !isMutating && !isVRRequest) {
     return next();
   }
 
@@ -143,13 +160,23 @@ const activityTrackerMiddleware = (req, res, next) => {
       if (endpointName === 'v1' || endpointName === 'api') {
         return; // Skip invalid root calls
       }
-      action = `${req.method}_${endpointName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
-      module = parts[2] ? parts[2].replace(/[-_]/g, ' ').toUpperCase() : (parts[1] || 'General');
+      action = isVRRequest
+        ? `VR_${req.method}_${endpointName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`
+        : `${req.method}_${endpointName.toUpperCase().replace(/[^A-Z0-9]/g, '_')}`;
+      module = isVRRequest ? 'VR Modules' : (parts[2] ? parts[2].replace(/[-_]/g, ' ').toUpperCase() : (parts[1] || 'General'));
       targetType = endpointName;
     }
 
     // Extract user info
-    let userId = req.user?.user_mail || req.user?.email || req.body?.user_mail || req.user?.people_id;
+    let userId = req.user?.user_mail ||
+      req.user?.email ||
+      req.body?.user_mail ||
+      req.user?.people_id ||
+      req.params?.people_id ||
+      req.body?.people_id ||
+      req.body?.trainee_id ||
+      req.query?.people_id ||
+      req.query?.trainee_id;
     let rawRole = req.user?.role;
 
     // Decode from Authorization Bearer token or cookies if req.user is not yet attached
@@ -173,15 +200,7 @@ const activityTrackerMiddleware = (req, res, next) => {
 
     // Detect if request originated from a VR headset or client
     const isVR = Boolean(
-      req.deviceInfo?.isVR ||
-      req.query?.isVr === 'true' ||
-      req.query?.isvr === 'true' ||
-      req.body?.isVr === true ||
-      req.body?.isvr === true ||
-      req.body?.loginContext === 'vr' ||
-      req.headers?.['x-device-type']?.toLowerCase()?.includes('vr') ||
-      req.headers?.['x-client']?.toLowerCase()?.includes('vr') ||
-      req.headers?.['x-vr-device'] ||
+      isVRRequest ||
       module === 'VR Modules' ||
       action.includes('VR')
     );

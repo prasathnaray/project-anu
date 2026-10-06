@@ -4,8 +4,11 @@ import React from 'react';
 import RoutesPath from './routes/route';
 import { ToastContainer, toast, Slide, Zoom } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { initGlobalActivityTracker } from './utils/activityTracker';
+
 function App() {
   React.useEffect(() => {
+      initGlobalActivityTracker();
       const handleContextmenu = e => {
           e.preventDefault()
       }

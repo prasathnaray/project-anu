@@ -91,6 +91,22 @@ const CustomDateInput2 = React.forwardRef(({ value, onClick, onChange }, ref) =>
                 </label>
         </div>
 ));
+
+const getBatchRoleCount = (roleCounts, targetRole) => {
+        if (!roleCounts) return 0;
+        let counts = roleCounts;
+        if (typeof counts === 'string') {
+                try {
+                        counts = JSON.parse(counts);
+                } catch (e) {
+                        return 0;
+                }
+        }
+        if (!Array.isArray(counts)) return 0;
+        const match = counts.find((r) => r && (r.role == targetRole || String(r.role) === String(targetRole)));
+        return match?.count != null ? Number(match.count) : 0;
+};
+
 function Batch() {
         const navigate = useNavigate();
         const [filterData, setFilterData] = useState({
@@ -802,11 +818,11 @@ function Batch() {
                                                                                                                 </td>
                                                                                                                 {(decoded.role == 99 || decoded.role == 101) && (
                                                                                                                         <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                                                                {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[1]?.count}
+                                                                                                                                {getBatchRoleCount(listBatch?.role_counts, 102)}
                                                                                                                         </th>
                                                                                                                 )}
                                                                                                                 <th className="py-2 px-4 font-semibold text-[#8DC63F]">
-                                                                                                                        {listBatch?.role_counts == null ? 0 : listBatch?.role_counts[0]?.count ?? 0}
+                                                                                                                        {getBatchRoleCount(listBatch?.role_counts, 103)}
                                                                                                                 </th>
                                                                                                                 {(decoded.role == 99 || decoded.role == 101) && (
                                                                                                                          <th className="py-2 px-4 font-semibold text-[#8DC63F] relative">
