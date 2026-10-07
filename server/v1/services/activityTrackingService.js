@@ -257,7 +257,7 @@ const getActivityStatistics = async () => {
       COUNT(*) FILTER (WHERE action IN ('ATTEMPT_CHALLENGE', 'CHALLENGE_ATTEMPTED', 'START_CHALLENGE'))::int AS challenges_attempted,
       COUNT(*) FILTER (WHERE action IN ('COMPLETE_CHALLENGE', 'CHALLENGE_COMPLETED', 'SUBMIT_CHALLENGE'))::int AS challenges_completed,
       COUNT(*) FILTER (WHERE action IN ('CERTIFICATE_GENERATED', 'CREATE_CERTIFICATE', 'GENERATE_CERTIFICATE'))::int AS certificates_generated,
-      COUNT(*) FILTER (WHERE module = 'VR Modules' OR action LIKE '%VR%' OR (metadata->>'isVR') = 'true' OR action IN ('START_VR_TEST', 'END_VR_TEST', 'VR_ATTEMPT', 'VR_ATTEMPT_STARTED', 'PRACTICE_ATTEMPT', 'VR_SESSION', 'SUBMIT_VR_MEASUREMENT', 'SAVE_VR_RECORDING', 'START_VR_STREAM', 'END_VR_STREAM', 'VR_LOGIN', 'VR_DATA_ACCESS', 'COMPLETE_VR_RESOURCE'))::int AS vr_attempts
+      COUNT(*) FILTER (WHERE module = 'VR Modules' OR action LIKE '%VR%' OR (metadata->>'isVR') = 'true' OR (metadata->>'isvr') = 'true' OR (metadata->>'device') ILIKE '%vr%' OR action IN ('START_VR_TEST', 'END_VR_TEST', 'VR_ATTEMPT', 'VR_ATTEMPT_STARTED', 'PRACTICE_ATTEMPT', 'VR_SESSION', 'SUBMIT_VR_MEASUREMENT', 'SAVE_VR_RECORDING', 'START_VR_STREAM', 'END_VR_STREAM', 'VR_LOGIN', 'VR_DATA_ACCESS', 'COMPLETE_VR_RESOURCE'))::int AS vr_attempts
     FROM public.activity_logs
   `);
 

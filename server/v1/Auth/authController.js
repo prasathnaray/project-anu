@@ -45,7 +45,8 @@ const LoginModel = require("./authModel");
 const { revokeSession } = require('./sessionStore');
 
 const LoginRequest = async (req, res) => {
-  const { user_mail, user_password } = req.body;
+  const user_mail = req.body?.user_mail || req.body?.email || req.body?.user_email;
+  const user_password = req.body?.user_password || req.body?.password;
 
   try {
     if (!user_mail || !user_password) {

@@ -3,12 +3,70 @@ import axios from 'axios';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import APP_URL from '../API/config';
+import api from '../API/api';
+import { getSocket } from '../utils/socket';
 import clearLocalSession from '../Auth/clearLocalSession';
 
 const PrivateRoute = ({ allowedRoles }) => {
   const location = useLocation();
   const [token, setToken] = useState(() => localStorage.getItem('user_token'));
   const [renewing, setRenewing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let socket = null;
+
+    try {
+      socket = getSocket();
+      if (socket) {
+        const handleSessionRevoked = (data) => {
+          try {
+            const currentToken = localStorage.getItem('user_token');
+            if (!currentToken) return;
+            const decoded = jwtDecode(currentToken);
+            const isMatch =
+              (data?.sessionId && decoded.sid === data.sessionId) ||
+              (data?.all && decoded.user_mail?.toLowerCase() === data.userEmail?.toLowerCase());
+
+            if (isMatch) {
+              clearLocalSession();
+              setToken(null);
+              window.location.href = '/';
+            }
+          } catch (_) {}
+        };
+
+        socket.on('session:revoked', handleSessionRevoked);
+      }
+    } catch (_) {}
+
+    const checkActiveSession = () => {
+      if (cancelled) return;
+      const currentToken = localStorage.getItem('user_token');
+      if (!currentToken) return;
+      api.get('/api/v1/sessions/validate').catch((err) => {
+        if (cancelled) return;
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          clearLocalSession();
+          setToken(null);
+          window.location.href = '/';
+        }
+      });
+    };
+
+    // Heartbeat check every 10 seconds
+    const interval = setInterval(checkActiveSession, 10000);
+    window.addEventListener('focus', checkActiveSession);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener('focus', checkActiveSession);
+      if (socket) {
+        socket.off('session:revoked');
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

@@ -11,12 +11,24 @@ const softAuth = (req, res, next) => {
     try {
       const decoded = jwt.decode(token);
       if (decoded) {
+        const isVR = Boolean(
+          decoded.isVR ||
+          decoded.loginSource === 'VR Device' ||
+          (decoded.device && String(decoded.device).toLowerCase().includes('vr'))
+        );
         req.user = {
           ...decoded,
           user_mail: decoded.user_mail || decoded.email,
           role: decoded.role,
-          people_id: decoded.people_id || decoded.id
+          people_id: decoded.people_id || decoded.id,
+          isVR,
+          loginSource: decoded.loginSource || (isVR ? 'VR Device' : 'Normal Browser'),
+          device: decoded.device || (isVR ? 'VR Headset' : 'browser')
         };
+        if (isVR && req.deviceInfo) {
+          req.deviceInfo.isVR = true;
+          req.deviceInfo.device = req.user.device || 'VR Headset';
+        }
       }
     } catch (_) {}
   }

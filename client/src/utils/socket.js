@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { jwtDecode } from 'jwt-decode';
 import APP_URL from '../API/config';
 
 let socket = null;
@@ -16,6 +17,15 @@ export const getSocket = () => {
 
     socket.on('connect', () => {
       socket.emit('subscribe:superadmin');
+      try {
+        const token = localStorage.getItem('user_token');
+        if (token) {
+          const decoded = jwtDecode(token);
+          if (decoded?.user_mail) {
+            socket.emit('subscribe:user', decoded.user_mail);
+          }
+        }
+      } catch (_) {}
     });
 
     socket.on('connect_error', (err) => {

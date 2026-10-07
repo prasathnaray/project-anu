@@ -21,12 +21,24 @@ const trackClientActivity = async (req, res) => {
 
     const isVR = Boolean(
       metadata?.isVR ||
+      req.user?.isVR ||
+      req.user?.loginSource === 'VR Device' ||
       req.body?.isVr === true ||
+      req.body?.isvr === true ||
+      req.body?.isVR === true ||
+      String(req.body?.isVr).toLowerCase() === 'true' ||
+      String(req.body?.isvr).toLowerCase() === 'true' ||
+      String(req.body?.isVR).toLowerCase() === 'true' ||
       req.query?.isVr === 'true' ||
+      req.query?.isvr === 'true' ||
+      req.query?.isVR === 'true' ||
+      String(req.query?.isVr).toLowerCase() === 'true' ||
       req.deviceInfo?.isVR ||
       req.headers?.['x-device-type']?.toLowerCase()?.includes('vr') ||
       req.headers?.['x-client']?.toLowerCase()?.includes('vr') ||
-      req.headers?.['x-vr-device']
+      req.headers?.['x-vr-device'] ||
+      req.headers?.['x-vr'] === 'true' ||
+      req.headers?.['x-vr'] === true
     );
 
     const mergedMetadata = {

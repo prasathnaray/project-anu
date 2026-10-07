@@ -171,15 +171,28 @@ function SuperAdminDashboard() {
 
         socket.on('activity:new', (newLog) => {
           setIsLive(true);
+          if (newLog?.action && (String(newLog.action).includes('LOGIN') || String(newLog.action).includes('VR'))) {
+            fetchDashboardStats();
+          }
           setRecentActivitiesList((prev) => [newLog, ...prev.filter((i) => i.id !== newLog.id).slice(0, 49)]);
           setActivityStats((prev) => {
-            const isSuccess = newLog.status === 'SUCCESS';
-            const roleName = newLog.role || (newLog.metadata?.isVR ? 'Trainee' : 'User');
+            const rawRole = String(newLog.role || '').toLowerCase();
+            let mappedRole = newLog.role || 'User';
+            if (rawRole === '103' || rawRole.includes('trainee') || rawRole.includes('student') || newLog.metadata?.isVR) {
+              mappedRole = 'Trainee';
+            } else if (rawRole === '102' || rawRole.includes('instructor') || rawRole.includes('tutor')) {
+              mappedRole = 'Instructor';
+            } else if (rawRole === '101' || (rawRole.includes('admin') && !rawRole.includes('super'))) {
+              mappedRole = 'Admin';
+            } else if (rawRole === '99' || rawRole.includes('super')) {
+              mappedRole = 'Super Admin';
+            }
+
             const curRoles = { ...(prev.roleMap || {}) };
-            if (curRoles[roleName] !== undefined) {
-              curRoles[roleName] = (curRoles[roleName] || 0) + 1;
-            } else if (roleName === 'Super Admin' || roleName === 'Admin' || roleName === 'Instructor' || roleName === 'Trainee') {
-              curRoles[roleName] = (curRoles[roleName] || 0) + 1;
+            if (curRoles[mappedRole] !== undefined) {
+              curRoles[mappedRole] = (curRoles[mappedRole] || 0) + 1;
+            } else if (mappedRole in curRoles) {
+              curRoles[mappedRole] = 1;
             } else if (newLog.metadata?.isVR) {
               curRoles['Trainee'] = (curRoles['Trainee'] || 0) + 1;
             }
@@ -207,6 +220,8 @@ function SuperAdminDashboard() {
             } else {
               curModules.unshift({ module: modName, count: 1 });
             }
+
+            const isSuccess = newLog.status === 'SUCCESS' || !newLog.status;
 
             return {
               ...prev,
@@ -242,6 +257,7 @@ function SuperAdminDashboard() {
     // Polling fallback to keep numbers synchronized
     const pollInterval = setInterval(() => {
       fetchActivityData();
+      fetchDashboardStats();
     }, 15000);
 
     return () => {

@@ -46,7 +46,7 @@ const ROUTE_ACTION_MAP = [
   { method: 'POST', pattern: /^\/api\/v1\/(submit-msob|lrob)/i, action: 'SUBMIT_VR_MEASUREMENT', module: 'VR Modules', targetType: 'msob' },
   { method: 'POST', pattern: /^\/api\/v1\/(streaming\/)?(tokenn|publisher-session\/[^/]+\/activate)/i, action: 'START_VR_STREAM', module: 'VR Modules', targetType: 'vr_stream' },
   { method: 'DELETE', pattern: /^\/api\/v1\/streaming\/publisher-session/i, action: 'END_VR_STREAM', module: 'VR Modules', targetType: 'vr_stream' },
-  { method: 'GET', pattern: /^\/api\/v1\/trainee\/[^/]+/i, action: 'VR_SESSION', module: 'VR Modules', targetType: 'vr_session', condition: (req) => req.query?.isVr === 'true' || req.query?.isvr === 'true' || req.deviceInfo?.isVR },
+  { method: 'GET', pattern: /^\/api\/v1\/trainee\/[^/]+/i, action: 'VR_SESSION', module: 'VR Modules', targetType: 'vr_session', condition: (req) => req.query?.isVr === 'true' || req.query?.isvr === 'true' || req.query?.isVR === 'true' || String(req.query?.isVr).toLowerCase() === 'true' || req.deviceInfo?.isVR || req.user?.isVR },
   { method: 'GET', pattern: /^\/api\/v1\/get-vr-data/i, action: 'VR_DATA_ACCESS', module: 'VR Modules', targetType: 'vr_data' },
   { method: 'POST', pattern: /^\/api\/v1\/user-completion/i, action: 'COMPLETE_VR_RESOURCE', module: 'VR Modules', targetType: 'resource' },
 
@@ -117,14 +117,31 @@ const activityTrackerMiddleware = (req, res, next) => {
 
   const isVRRequest = Boolean(
     req.deviceInfo?.isVR ||
+    req.user?.isVR ||
+    req.user?.loginSource === 'VR Device' ||
     req.query?.isVr === 'true' ||
     req.query?.isvr === 'true' ||
+    req.query?.isVR === 'true' ||
+    String(req.query?.isVr).toLowerCase() === 'true' ||
+    String(req.query?.isvr).toLowerCase() === 'true' ||
+    String(req.query?.isVR).toLowerCase() === 'true' ||
     req.body?.isVr === true ||
     req.body?.isvr === true ||
-    req.body?.loginContext === 'vr' ||
+    req.body?.isVR === true ||
+    String(req.body?.isVr).toLowerCase() === 'true' ||
+    String(req.body?.isvr).toLowerCase() === 'true' ||
+    String(req.body?.isVR).toLowerCase() === 'true' ||
+    String(req.body?.loginContext).toLowerCase() === 'vr' ||
+    String(req.body?.login_context).toLowerCase() === 'vr' ||
+    String(req.body?.loginSource).toLowerCase().includes('vr') ||
+    String(req.body?.login_source).toLowerCase().includes('vr') ||
+    String(req.body?.device).toLowerCase().includes('vr') ||
     req.headers?.['x-device-type']?.toLowerCase()?.includes('vr') ||
     req.headers?.['x-client']?.toLowerCase()?.includes('vr') ||
-    req.headers?.['x-vr-device']
+    req.headers?.['x-vr-device'] ||
+    req.headers?.['x-vr'] === 'true' ||
+    req.headers?.['x-vr'] === true ||
+    req.headers?.['login-source']?.toLowerCase()?.includes('vr')
   );
 
   // Find matching route rule
@@ -171,6 +188,8 @@ const activityTrackerMiddleware = (req, res, next) => {
     let userId = req.user?.user_mail ||
       req.user?.email ||
       req.body?.user_mail ||
+      req.body?.email ||
+      req.body?.user_email ||
       req.user?.people_id ||
       req.params?.people_id ||
       req.body?.people_id ||
@@ -178,9 +197,10 @@ const activityTrackerMiddleware = (req, res, next) => {
       req.query?.people_id ||
       req.query?.trainee_id;
     let rawRole = req.user?.role;
+    let isVRFromToken = Boolean(req.user?.isVR);
 
     // Decode from Authorization Bearer token or cookies if req.user is not yet attached
-    if (!userId || !rawRole) {
+    if (!userId || !rawRole || !isVRFromToken) {
       const authHeader = req.headers?.authorization || '';
       const bearerToken = /^Bearer (.+)$/i.exec(authHeader)?.[1];
       const tokenToDecode = bearerToken || req.cookies?.refreshToken;
@@ -188,19 +208,25 @@ const activityTrackerMiddleware = (req, res, next) => {
         try {
           const decoded = jwt.decode(tokenToDecode);
           if (decoded) {
-            if (!userId) userId = decoded.user_mail || decoded.id;
+            if (!userId) userId = decoded.user_mail || decoded.email || decoded.id;
             if (!rawRole) rawRole = decoded.role;
+            if (decoded.isVR || decoded.loginSource === 'VR Device' || (decoded.device && String(decoded.device).toLowerCase().includes('vr'))) {
+              isVRFromToken = true;
+            }
           }
         } catch (_) {}
       }
     }
 
-    userId = userId || (action === 'USER_LOGIN' && req.body?.user_mail) || 'system';
-    const role = rawRole || (action === 'USER_LOGIN' ? 'User' : null);
+    userId = userId || ((action === 'USER_LOGIN' || action === 'VR_LOGIN') && (req.body?.user_mail || req.body?.email || req.body?.user_email)) || 'system';
+    const role = rawRole || ((action === 'USER_LOGIN' || action === 'VR_LOGIN') ? 'User' : null);
 
-    // Detect if request originated from a VR headset or client
+    // Detect if request originated from a VR headset or client, or user is in a VR session
     const isVR = Boolean(
       isVRRequest ||
+      isVRFromToken ||
+      req.user?.isVR ||
+      req.deviceInfo?.isVR ||
       module === 'VR Modules' ||
       action.includes('VR')
     );
@@ -240,7 +266,7 @@ const activityTrackerMiddleware = (req, res, next) => {
       name: req.body?.batch_name || req.body?.course_name || req.body?.user_name || req.body?.tar_name || req.body?.challenge_id || req.body?.resource_name || req.body?.resource_id || req.body?.volume_id || req.body?.session_id || req.body?.questionType || req.params?.resource_id || req.params?.volume_id || null,
       ip: req.ip || null,
       isVR,
-      device: isVR ? (req.deviceInfo?.device || 'VR Headset') : (req.deviceInfo?.device || 'Browser')
+      device: isVR ? (req.deviceInfo?.device || req.user?.device || 'VR Headset') : (req.deviceInfo?.device || 'Browser')
     };
 
     // Asynchronously record activity

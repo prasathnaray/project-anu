@@ -22,7 +22,7 @@ const createSession = async (user, deviceInfo = {}, ipAddress) => {
 const getActiveSession = async (id, userEmail) => {
   if (!id) return null;
   const result = await client.query(
-    `SELECT id, user_email, expires_at FROM public.user_sessions
+    `SELECT id, user_email, login_source, device, expires_at FROM public.user_sessions
      WHERE id = $1 AND user_email = $2 AND revoked_at IS NULL AND expires_at > now()`,
     [id, userEmail]
   );

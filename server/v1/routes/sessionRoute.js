@@ -2,11 +2,16 @@ const express = require('express');
 const client = require('../utils/conn');
 const { canManageSessions } = require('../Auth/sessionAuthorization');
 const { revokeSession, revokeAllSessions } = require('../Auth/sessionStore');
+const { broadcastSessionRevoked } = require('../services/socketService');
 
 const router = express.Router();
 const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const clearRefreshCookie = (res) => res.clearCookie('refreshToken', {
   httpOnly: true, secure: true, sameSite: 'None', path: '/'
+});
+
+router.get('/validate', (req, res) => {
+  res.json({ valid: true, sid: req.user.sid, user_mail: req.user.user_mail });
 });
 
 const targetFor = async (req, res) => {
@@ -89,6 +94,9 @@ router.delete('/users/:email/:id', handler(async (req, res) => {
   if (!ended) return res.status(404).json({ message: 'Active session not found' });
   const currentSessionEnded = req.user.sid === req.params.id;
   if (currentSessionEnded) clearRefreshCookie(res);
+
+  broadcastSessionRevoked({ sessionId: req.params.id, userEmail: target.user_email });
+
   res.json({ ended: true, currentSessionEnded });
 }));
 
@@ -98,12 +106,16 @@ router.post('/users/:email/logout-all', handler(async (req, res) => {
   const ended = await revokeAllSessions(target.user_email);
   const currentSessionEnded = req.user.user_mail === target.user_email;
   if (currentSessionEnded) clearRefreshCookie(res);
+
+  broadcastSessionRevoked({ userEmail: target.user_email, all: true });
+
   res.json({ ended, currentSessionEnded });
 }));
 
 router.post('/logout', handler(async (req, res) => {
   await revokeSession(req.user.sid, req.user.user_mail);
   clearRefreshCookie(res);
+  broadcastSessionRevoked({ sessionId: req.user.sid, userEmail: req.user.user_mail });
   res.json({ ended: true, currentSessionEnded: true });
 }));
 
