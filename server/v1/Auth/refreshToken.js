@@ -32,14 +32,27 @@ const refreshToken = async (req, res) => {
     }
 
     await touchSession(decoded.sid);
+    const isVR = Boolean(
+      decoded.isVR ||
+      session.login_source === 'VR Device' ||
+      (session.device && String(session.device).toLowerCase().includes('vr'))
+    );
     const accessToken = jwt.sign({
       user_mail: decoded.user_mail,
       role: user.user_role,
       centre_id: user.centre_id || null,
       center_name: user.center_name || null,
-      sid: decoded.sid
+      sid: decoded.sid,
+      isVR: isVR,
+      loginSource: decoded.loginSource || session.login_source || (isVR ? 'VR Device' : 'Normal Browser'),
+      device: decoded.device || session.device || (isVR ? 'VR Headset' : 'browser')
     }, process.env.ACCESS_TOKEN_SECRET);
-    return res.json({ accessToken });
+    return res.json({
+      accessToken,
+      isVr: isVR,
+      loginSource: decoded.loginSource || session.login_source || (isVR ? 'VR Device' : 'Normal Browser'),
+      device: decoded.device || session.device || (isVR ? 'VR Headset' : 'browser')
+    });
   } catch (queryErr) {
     return res.status(500).json({ error: 'Failed to refresh token context' });
   }

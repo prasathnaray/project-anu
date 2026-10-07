@@ -12,6 +12,9 @@ function detectVRDevice(req) {
     samsungGearVR: /samsung.+gearvr/i,
     googleDaydream: /daydream/i,
     unityVR: /unity|unreal|openxr|webxr/i,
+    wolvicVR: /wolvic/i,
+    firefoxReality: /firefoxreality/i,
+    genericVR: /mobile vr|headset|standalone vr/i,
   };
 
   for (const [device, regex] of Object.entries(vrDevices)) {
@@ -20,13 +23,42 @@ function detectVRDevice(req) {
     }
   }
 
-  const headerDevice = req.headers?.['x-device-type'] || req.headers?.['x-client'] || req.headers?.['x-vr-device'];
+  const headerDevice = req.headers?.['x-device-type'] ||
+    req.headers?.['x-client'] ||
+    req.headers?.['x-vr-device'] ||
+    req.headers?.['login-source'] ||
+    req.headers?.['device'];
   if (headerDevice && String(headerDevice).toLowerCase().includes('vr')) {
     return { isVR: true, device: String(headerDevice) };
   }
 
-  if (req.query?.isVr === 'true' || req.query?.isvr === 'true' || req.body?.isVr === true || req.body?.loginContext === 'vr') {
+  if (req.headers?.['x-vr'] === 'true' || req.headers?.['x-vr'] === true) {
     return { isVR: true, device: 'VR Headset' };
+  }
+
+  const isQueryVR = req.query?.isVr === 'true' ||
+    req.query?.isvr === 'true' ||
+    req.query?.isVR === 'true' ||
+    String(req.query?.isVr).toLowerCase() === 'true' ||
+    String(req.query?.isvr).toLowerCase() === 'true' ||
+    String(req.query?.isVR).toLowerCase() === 'true' ||
+    String(req.query?.loginContext).toLowerCase() === 'vr' ||
+    String(req.query?.login_context).toLowerCase() === 'vr';
+
+  const isBodyVR = req.body?.isVr === true ||
+    req.body?.isvr === true ||
+    req.body?.isVR === true ||
+    String(req.body?.isVr).toLowerCase() === 'true' ||
+    String(req.body?.isvr).toLowerCase() === 'true' ||
+    String(req.body?.isVR).toLowerCase() === 'true' ||
+    String(req.body?.loginContext).toLowerCase() === 'vr' ||
+    String(req.body?.login_context).toLowerCase() === 'vr' ||
+    String(req.body?.loginSource).toLowerCase().includes('vr') ||
+    String(req.body?.login_source).toLowerCase().includes('vr') ||
+    String(req.body?.device).toLowerCase().includes('vr');
+
+  if (isQueryVR || isBodyVR) {
+    return { isVR: true, device: req.body?.device || 'VR Headset' };
   }
 
   return { isVR: false, device: "browser" };

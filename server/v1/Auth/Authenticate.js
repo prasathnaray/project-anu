@@ -31,12 +31,24 @@ const Authenticate = async (req, res, next) => {
     if (!dbUser || String(dbUser.status).toLowerCase() !== 'active') {
       return res.status(401).json({ status: 'Unauthorized: Account is not active' });
     }
+    const isVR = Boolean(
+      decoded.isVR ||
+      session.login_source === 'VR Device' ||
+      (session.device && String(session.device).toLowerCase().includes('vr'))
+    );
     req.user = {
       ...decoded, role: dbUser.user_role,
       centre_id: dbUser.centre_id || null,
       center_name: dbUser.center_name || null,
-      people_id: dbUser.people_id || null
+      people_id: dbUser.people_id || null,
+      isVR,
+      loginSource: decoded.loginSource || session.login_source || (isVR ? 'VR Device' : 'Normal Browser'),
+      device: decoded.device || session.device || (isVR ? 'VR Headset' : 'browser')
     };
+    if (isVR && req.deviceInfo) {
+      req.deviceInfo.isVR = true;
+      req.deviceInfo.device = req.user.device || 'VR Headset';
+    }
     await touchSession(decoded.sid);
     next();
   } catch (queryErr) {

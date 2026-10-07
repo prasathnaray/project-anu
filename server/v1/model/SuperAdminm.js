@@ -45,10 +45,13 @@ const getSuperAdminStats = async (requester) => {
             (SELECT COUNT(*) FROM user_data WHERE user_role = '103') AS students,
             (SELECT COUNT(*) FROM user_data WHERE user_role = '102') AS instructors,
             (SELECT COUNT(*) FROM certification_data) AS courses,
-            (SELECT COUNT(DISTINCT la.user_id)
-             FROM login_activity la
-             JOIN user_data ud ON ud.user_email = la.user_id
-             WHERE la.logged_at >= NOW() - INTERVAL '24 hours') AS active_users`
+            (SELECT COUNT(DISTINCT combined.user_id)
+             FROM (
+                 SELECT user_id FROM login_activity WHERE logged_at >= NOW() - INTERVAL '24 hours'
+                 UNION
+                 SELECT user_id FROM activity_logs WHERE created_at >= NOW() - INTERVAL '24 hours' AND user_id IS NOT NULL AND user_id != 'system' AND user_id != 'anonymous'
+             ) combined
+             JOIN user_data ud ON LOWER(ud.user_email) = LOWER(combined.user_id)) AS active_users`
     );
 
     const activeUsersListQuery = client.query(
@@ -58,11 +61,14 @@ const getSuperAdminStats = async (requester) => {
             ud.user_role,
             ud.user_profile_photo,
             COALESCE(sc.center_name, ud.center_name) AS centre_name,
-            MAX(la.logged_at) AS last_login
-         FROM login_activity la
-         JOIN user_data ud ON ud.user_email = la.user_id
+            MAX(combined.last_act) AS last_login
+         FROM (
+             SELECT user_id, logged_at AS last_act FROM login_activity WHERE logged_at >= NOW() - INTERVAL '24 hours'
+             UNION ALL
+             SELECT user_id, created_at AS last_act FROM activity_logs WHERE created_at >= NOW() - INTERVAL '24 hours' AND user_id IS NOT NULL AND user_id != 'system' AND user_id != 'anonymous'
+         ) combined
+         JOIN user_data ud ON LOWER(ud.user_email) = LOWER(combined.user_id)
          LEFT JOIN scan_centers sc ON sc.center_id::text = ud.centre_id::text
-         WHERE la.logged_at >= NOW() - INTERVAL '24 hours'
          GROUP BY ud.user_email, ud.user_name, ud.user_role, ud.user_profile_photo, sc.center_name, ud.center_name
          ORDER BY last_login DESC;`
     );

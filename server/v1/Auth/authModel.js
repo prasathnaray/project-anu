@@ -27,12 +27,16 @@ const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
     console.error('Failed to log login attempt:', attemptErr);
   }
 
+  const isVR = Boolean(deviceInfo?.isVR);
   const tokenPayload = {
     user_mail: user.user_email,
     role: user.user_role,
     centre_id: user.centre_id || null,
     center_name: user.center_name || null,
-    sid: session.id
+    sid: session.id,
+    isVR: isVR,
+    loginSource: isVR ? 'VR Device' : 'Normal Browser',
+    device: deviceInfo?.device || (isVR ? 'VR Headset' : 'browser')
   };
   const accessToken = jwt.sign(tokenPayload, process.env.ACCESS_TOKEN_SECRET);
   const refreshToken = jwt.sign(tokenPayload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
@@ -40,7 +44,10 @@ const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
     accessToken, refreshToken, id: user.user_email, role: user.user_role,
     people_id: user.people_id, centre_id: user.centre_id,
     center_name: user.center_name, status: 'Login Authenticated',
-    name: user.user_name, code: 200
+    name: user.user_name, code: 200,
+    isVr: isVR,
+    loginSource: isVR ? 'VR Device' : 'Normal Browser',
+    device: deviceInfo?.device || (isVR ? 'VR Headset' : 'browser')
   };
 };
 

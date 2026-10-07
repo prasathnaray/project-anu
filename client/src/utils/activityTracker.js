@@ -106,13 +106,17 @@ export const trackActivity = async ({
       }
     }
 
+    const isVrStored = typeof localStorage !== 'undefined' && localStorage.getItem('isVr') === 'true';
     const payload = {
       action,
-      module,
+      module: isVrStored && (!module || module === 'General') ? 'VR Modules' : module,
       targetType,
       targetId,
       status: status?.toUpperCase() === 'FAILED' ? 'FAILED' : 'SUCCESS',
-      metadata,
+      metadata: {
+        ...(metadata || {}),
+        ...(isVrStored ? { isVR: true, device: localStorage.getItem('device') || 'VR Headset' } : {})
+      },
       userId: resolvedUserId,
       role: resolvedRole
     };
@@ -249,7 +253,8 @@ export const initGlobalActivityTracker = () => {
       }
       lastTracked = { key: clickKey, time: now };
 
-      const module = getModuleFromPath(window.location.pathname, role);
+      const isVrStored = typeof localStorage !== 'undefined' && localStorage.getItem('isVr') === 'true';
+      const module = isVrStored ? 'VR Modules' : getModuleFromPath(window.location.pathname, role);
 
       trackActivity({
         action: 'BUTTON_CLICK',
@@ -260,7 +265,8 @@ export const initGlobalActivityTracker = () => {
           buttonName: label,
           path: window.location.pathname,
           element: clickable.tagName.toLowerCase(),
-          device: 'Browser'
+          device: isVrStored ? (localStorage.getItem('device') || 'VR Headset') : 'Browser',
+          isVR: isVrStored
         },
         userId,
         role
