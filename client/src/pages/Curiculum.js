@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Navigate, useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { ArrowUpWideNarrow, EllipsisVertical, X } from 'lucide-react';
+import { ArrowUpWideNarrow, BookOpen, EllipsisVertical, GraduationCap, Search, UsersRound, X } from 'lucide-react';
 import CurriculumCreation from '../components/superadmin/CuriculumCreation';
 import AddCuriculumAPI from '../API/AddCuriculumAPI';
 import { TextField } from '@mui/material';
@@ -25,7 +25,7 @@ function Curiculam() {
   const handleChange = (e) => {
       const {name, value} = e.target;
       setCurriculumData({
-            ...openCuriculum,
+            ...curriculumData,
             [name]: value,
       });
   }
@@ -122,12 +122,14 @@ function Curiculam() {
       (item?.curiculum_id && item.curiculum_id.toLowerCase().includes(term))
     );
   });
+  const totalCourses = list.reduce((total, item) => total + Number(item?.total_courses || 0), 0);
+  const totalCentres = list.reduce((total, item) => total + Number(item?.total_centres || 0), 0);
   if(!token.role == 99)
   {
      return <Navigate to="/" replace/>
   }
   return (
-      <div className={`flex flex-col min-h-screen`}>
+      <div className="flex min-h-screen flex-col bg-slate-50">
               <div>
                    <NavBar />
               </div>
@@ -135,61 +137,85 @@ function Curiculam() {
                     <div>
                         <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen}/>  
                     </div>
-                    <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}>
-                            <div>
-                                  <div className={` ${buttonOpen === true ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto" : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"}`}>
-                                      <div className="text-gray-600">Curiculum / All Curiculum</div>
-                                      <div className="mt-5 font-semibold text-xl text-gray-600">Curiculum</div>
-                                      <div className="mt-5 bg-white rounded px-8 py-10">
-                                              <div className="font-semibold text-xl text-gray-500">All Curiculam</div>
-                                              <div className="grid grid-cols-2 items-center my-5">
-                                                        <div className="">
-                                                              <input
-                                                                  type="text"
-                                                                  placeholder="Search Curriculum"
-                                                                  value={searchQuery}
-                                                                  onChange={(e) => setSearchQuery(e.target.value)}
-                                                                  className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
-                                                              />
-                                                        </div>
-                                                        <div className="flex justify-end items-center"><button onClick={() => setOpenCuriculum(true)} className="bg-[#8DC63F] hover:bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out">Create Curiculam</button></div>
-                                                </div>
-                                                <table className="w-full text-left border-collapse">
+                    <main className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} flex-grow overflow-y-auto bg-[radial-gradient(circle_at_top_right,_rgba(141,198,63,0.13),_transparent_32%),#f8fafc] h-[calc(100vh-3rem)] transition-all`}>
+                              <div className="mx-auto w-full max-w-[1600px] px-5 py-6 sm:px-8 lg:px-12 xl:px-16">
+                                      <div className="relative mb-6 overflow-hidden rounded-3xl border border-[#8DC63F]/20 bg-gradient-to-br from-[#f4faea] via-white to-white px-5 py-5 shadow-[0_14px_40px_-30px_rgba(72,104,30,0.5)] sm:px-7 sm:py-6">
+                                        <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full border-[18px] border-[#8DC63F]/10" />
+                                        <div className="pointer-events-none absolute -bottom-16 right-28 h-28 w-28 rounded-full bg-[#8DC63F]/[0.06] blur-2xl" />
+                                        <div className="relative flex flex-wrap items-end justify-between gap-4">
+                                        <div>
+                                          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                            <span>Super admin</span><span className="text-[#8DC63F]">/</span><span>Curriculum</span>
+                                          </div>
+                                          <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">Curriculum library</h1>
+                                          <p className="mt-1 text-sm text-slate-500">Manage learning paths, courses and centre associations.</p>
+                                        </div>
+                                        <div className="flex items-center gap-2 rounded-full border border-[#8DC63F]/25 bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#638f25] shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-[#8DC63F] shadow-[0_0_0_4px_rgba(141,198,63,0.16)]" />Admin workspace</div>
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+                                        {[
+                                          { label: 'Total curriculums', value: list.length, icon: BookOpen },
+                                          { label: 'Courses associated', value: totalCourses, icon: GraduationCap },
+                                          { label: 'Centres associated', value: totalCentres, icon: UsersRound },
+                                        ].map(({ label, value, icon: Icon }) => (
+                                          <div key={label} className="group flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_30px_-22px_rgba(15,23,42,0.45)] transition duration-200 hover:-translate-y-0.5 hover:border-[#8DC63F]/30 hover:shadow-[0_16px_35px_-24px_rgba(72,104,30,0.55)]">
+                                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#8DC63F]/12 text-[#719f2c] transition group-hover:bg-[#8DC63F] group-hover:text-white"><Icon size={21} /></div>
+                                            <div><div className="text-2xl font-bold text-slate-800">{value}</div><div className="text-xs font-medium text-slate-500">{label}</div></div>
+                                          </div>
+                                        ))}
+                                      </div>
+
+                                      <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_16px_45px_-28px_rgba(15,23,42,0.45)]">
+                                        <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+                                          <div><h2 className="text-lg font-bold text-slate-800">All curriculums</h2><p className="mt-1 text-xs text-slate-500">{filteredCuriculumList.length} of {list.length} records shown</p></div>
+                                          <button onClick={() => setOpenCuriculum(true)} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#8DC63F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#78ac32] focus:outline-none focus:ring-4 focus:ring-[#8DC63F]/20"><span className="text-lg leading-none">+</span> Create curriculum</button>
+                                        </div>
+                                        <div className="border-b border-slate-100 px-5 py-4 sm:px-7">
+                                          <div className="relative max-w-md">
+                                            <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                                            <input type="text" placeholder="Search by curriculum name or ID" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#8DC63F] focus:bg-white focus:ring-4 focus:ring-[#8DC63F]/10" />
+                                          </div>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                                <table className="w-full min-w-[720px] text-left">
                                                     <thead className=''>
-                                                                <tr className="border-b border-gray-300 shadow-sm text-sm">
-                                                                        <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2"><div>Curiculum Name </div><button className=""><ArrowUpWideNarrow size={20}/></button></th>
-                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Total Courses Asscoiated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Total Centres Associated</span><button className=""><ArrowUpWideNarrow size={20} /></button></div></th>
-                                                                        <th className="py-2 px-4 text-[#8DC63F]"><div className="flex items-center gap-2"><span>Actions</span></div></th>
+                                                                <tr className="border-b border-slate-100 bg-slate-50/80 text-[11px] uppercase tracking-wider text-slate-500">
+                                                                        <th className="px-5 py-3.5 font-semibold sm:px-7"><div className="flex items-center gap-2">Curriculum name <ArrowUpWideNarrow size={15} className="text-[#8DC63F]" /></div></th>
+                                                                        <th className="px-4 py-3.5 font-semibold"><div className="flex items-center gap-2">Courses associated <ArrowUpWideNarrow size={15} className="text-[#8DC63F]" /></div></th>
+                                                                        <th className="px-4 py-3.5 font-semibold"><div className="flex items-center gap-2">Centres associated <ArrowUpWideNarrow size={15} className="text-[#8DC63F]" /></div></th>
+                                                                        <th className="px-4 py-3.5 font-semibold">Actions</th>
                                                                 </tr>
                                                     </thead>
                                                     <tbody>
                                                           {filteredCuriculumList.length > 0 ? (
                                                                 filteredCuriculumList.map((data, index) => (
-                                                                  <tr key={index} className="border-b border-gray-200 hover:bg-gray-50 shadow-sm">
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                      {data?.curiculum_nam || 'N/A'}
+                                                                  <tr key={index} className="border-b border-slate-100 transition hover:bg-[#8DC63F]/[0.035]">
+                                                                    <td className="px-5 py-4 sm:px-7"><div className="flex items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#8DC63F]/10 text-[#719f2c]"><BookOpen size={17} /></div><div><div className="font-semibold text-slate-700">{data?.curiculum_nam || 'N/A'}</div><div className="mt-0.5 text-xs text-slate-400">ID: {data?.curiculum_id || '—'}</div></div></div>
                                                                     </td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                    <td className="px-4 py-4"><span className="inline-flex min-w-8 items-center justify-center rounded-full bg-[#8DC63F]/12 px-2.5 py-1 text-sm font-semibold text-[#638f25]">
                                                                       {data?.total_courses !== undefined && data?.total_courses !== null ? data.total_courses : 0}
+                                                                    </span>
                                                                     </td>
-                                                                    <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                                                                    <td className="px-4 py-4"><span className="inline-flex min-w-8 items-center justify-center rounded-full bg-slate-100 px-2.5 py-1 text-sm font-semibold text-slate-600">
                                                                       {data?.total_centres !== undefined && data?.total_centres !== null ? data.total_centres : 0}
+                                                                    </span>
                                                                     </td>
-                                                                    <td className="relative py-2 px-4 text-[#8DC63F] font-semibold">
-                                                                        <button onClick={() => toggleDropdown(index)}>
-                                                                          <EllipsisVertical size={24} />
+                                                                    <td className="relative px-4 py-4">
+                                                                        <button aria-label={`Actions for ${data?.curiculum_nam || 'curriculum'}`} onClick={() => toggleDropdown(index)} className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+                                                                          <EllipsisVertical size={20} />
                                                                         </button>
                                                                         {openDropdownIndex === index && (
                                                                           <div
                                                                             ref={(el) => (dropdownRefs.current[index] = el)}
-                                                                            className="absolute right-4 top-10 w-44 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1"
+                                                                            className="absolute right-4 top-11 z-50 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_16px_35px_-12px_rgba(15,23,42,0.3)]"
                                                                           >
-                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/certificate'); }}>View</button>
-                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-red-600" onClick={() => { setOpenDropdownIndex(null); DeleteCuriculum(data?.curiculum_id); }}>Delete</button>
-                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/trainees'); }}>Tag Trainees</button>
-                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/certificate'); }}>Add Course</button>
-                                                                            <button className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm font-normal text-gray-700" onClick={() => { setOpenDropdownIndex(null); navigate('/instructors'); }}>Tag Instructors</button>
+                                                                            <button className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50" onClick={() => { setOpenDropdownIndex(null); navigate('/certificate'); }}>View</button>
+                                                                            <button className="block w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50" onClick={() => { setOpenDropdownIndex(null); DeleteCuriculum(data?.curiculum_id); }}>Delete</button>
+                                                                            <button className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50" onClick={() => { setOpenDropdownIndex(null); navigate('/trainees'); }}>Tag trainees</button>
+                                                                            <button className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50" onClick={() => { setOpenDropdownIndex(null); navigate('/certificate'); }}>Add course</button>
+                                                                            <button className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50" onClick={() => { setOpenDropdownIndex(null); navigate('/instructors'); }}>Tag instructors</button>
                                                                           </div>
                                                                         )}
                                                                     </td>
@@ -197,13 +223,13 @@ function Curiculam() {
                                                                 ))
                                                               ) : list.length > 0 ? (
                                                                 <tr>
-                                                                  <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                    <td colSpan={6} className="px-4 py-12 text-center text-sm text-slate-500">
                                                                     No curriculum found
                                                                   </td>
                                                                 </tr>
                                                               ) : (
                                                                 <tr>
-                                                                  <td colSpan={6} className="py-4 px-4 text-center text-gray-500">
+                                                                    <td colSpan={6} className="px-4 py-12 text-center text-slate-500">
                                                                     <ClipLoader color="#8DC63F" size={24} className="ms-2" cssOverride={{ borderWidth: "4px",  }}/>
                                                                   </td>
                                                                 </tr>
@@ -211,16 +237,16 @@ function Curiculam() {
 
                                                     </tbody>
                                                 </table>
-                                      </div>
-                                  </div>
-                            </div>
+                                        </div>
+                                      </section>
+                              </div>
+                    </main>
                     </div>
-              </div>
               <CurriculumCreation isVisible={openCuriculum} onClose={handleClose}>
-                        <div className="">
-                                    <div className="flex justify-between items-center gap-5">
-                                                  <div>Create Curiculum</div>
-                                                  <button onClick={handleClose} className="hover:bg-red-100 p-1 hover:text-gray-700 rounded"><X size={20}/></button>
+                        <div className="p-1">
+                                    <div className="flex items-start justify-between gap-5">
+                                                  <div><div className="text-lg font-bold text-slate-800">Create curriculum</div><p className="mt-1 text-sm text-slate-500">Add a new learning path to your library.</p></div>
+                                                  <button onClick={handleClose} aria-label="Close" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-500"><X size={19}/></button>
                                     </div>
                                     <div className="mt-5">
                                             <TextField
@@ -229,14 +255,14 @@ function Curiculam() {
                                                     size="small"
                                                     sx={{ minHeight: "35px" }}  
                                                     id="outlined-basic"
-                                                    label="Curiculum Name"
+                                                    label="Curriculum name"
                                                     name="curiculum_name"
                                                     onChange={handleChange}
                                                     value={curriculumData.curiculum_name}
                                             />
                                     </div>
                                     <div className="flex justify-end items-end mt-5">
-                                              <button className="bg-[#8DC63F] px-3 py-2 text-white" onClick={createCuriculum}>Save</button>
+                                              <button className="rounded-lg bg-[#8DC63F] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#78ac32]" onClick={createCuriculum}>Save curriculum</button>
                                     </div>
                         </div>
               </CurriculumCreation>

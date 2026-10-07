@@ -42,34 +42,44 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     data.startsWith("/resource/");
   // console.log(data)
   return (
-    <div className={`fixed top-[50px] left-0 z-40 h-screen ${buttonOpen === false
+    <div className={`fixed top-[50px] left-0 z-40 h-screen overflow-visible ${buttonOpen === false
         ? "md:w-[55px] transition-all"
         : "md:w-[220px] transition-all"
-      } sm:w-9 w-9 m-0 flex flex-col text-black border-r-0 border-gray-500 shadow-md bg-white `}>
+      } sm:w-9 w-9 m-0 flex flex-col border-r border-slate-200/80 bg-white/95 text-black shadow-[8px_0_30px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl `}>
       <div className="relative">
         <div
           className={`absolute top-20 left-0 ${buttonOpen === false ? "left-9" : "left-[185px]"
-            } text-md text-[#8DC63F] shadow-lg rounded-2xl px-[5.5px] bg-white border`}
+            } z-50 rounded-full border border-[#8DC63F]/25 bg-white p-1 text-[#719f2c] shadow-[0_8px_18px_-8px_rgba(72,104,30,0.45)] transition hover:scale-105`}
         >
-          <button onClick={() => handleButtonOpen()} className="pt-1">
-            {buttonOpen === false ? <ChevronRight size={18} /> : <ChevronLeft size={20} />}
+          <button onClick={() => handleButtonOpen()} aria-label={buttonOpen === false ? "Expand sidebar" : "Collapse sidebar"} className="flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-[#8DC63F]/10">
+            {buttonOpen === false ? <ChevronRight size={16} /> : <ChevronLeft size={17} />}
           </button>
         </div>
       </div>
-      <div className={`${buttonOpen === false ? "md:px-[4px] pt-4" : "md:px-[50px] pt-4"}`}><button className="w-full flex justify-center"><img src={logo} alt="logo" className="w-full h-auto max-h-12 object-contain" /></button></div>
+      <div className={`${buttonOpen === false ? "md:px-[5px] pt-5" : "md:px-[30px] pt-5"} border-b border-slate-100 pb-5`}>
+        <button className="w-full flex justify-center transition hover:opacity-80"><img src={logo} alt="logo" className="w-full h-auto max-h-11 object-contain" /></button>
+        {buttonOpen !== false && (
+          <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-[#8DC63F]/[0.08] px-3 py-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8DC63F] text-white shadow-sm"><GraduationCap size={17} /></div>
+            <div className="min-w-0"><div className="truncate text-xs font-bold tracking-wide text-slate-700">ANU Learning Hub</div><div className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#719f2c]">LMS control center</div></div>
+          </div>
+        )}
+      </div>
       <div className="">
-        <ul className={`${buttonOpen === false ? "py-3 px-[7px]" : "py-5 px-8"}`}>
+        <div className={`${buttonOpen === false ? "hidden" : "px-7 pt-5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400"}`}>Navigation</div>
+        <ul className={`${buttonOpen === false ? "py-3 px-[7px]" : "py-4 px-7"}`}>
 
           {tokdata.role == 99 &&
             <>
+              <li className={`${buttonOpen === false ? "hidden" : "mb-2 mt-1 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400"}`}>Learning operations</li>
               <li className="mb-1 mt-2">
                 <button
                   onMouseDown={(e) => ripple.create(e, "dark", "circle")}
                   onClick={() => navigate("/dashboard")}
                   className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 ${
                     data === "/dashboard"
-                      ? "bg-[#8DC63F] text-white"
-                      : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      ? "bg-[#8DC63F] text-white shadow-[0_8px_18px_-10px_rgba(99,143,37,0.9)] ring-1 ring-[#8DC63F]/20"
+                      : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
                   <BookCheck size={20} />
@@ -82,22 +92,23 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                   onClick={() => navigate("/curriculum")}
                   className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 ${
                     data === "/curriculum"
-                      ? "bg-[#8DC63F] text-white"
-                      : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      ? "bg-[#8DC63F] text-white shadow-[0_8px_18px_-10px_rgba(99,143,37,0.9)] ring-1 ring-[#8DC63F]/20"
+                      : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
                   <BookCheck size={20} />
                   <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Curriculum</div>
                 </button>
               </li>
+              <li className={`${buttonOpen === false ? "hidden" : "mb-2 mt-5 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400"}`}>Content & delivery</li>
               <li className="mb-1 mt-2">
                 <button
                   onMouseDown={(e) => ripple.create(e, "dark", "circle")}
                   onClick={() => navigate("/certificate")}
                   className={`w-full text-left flex items-center gap-5 p-[10px] rounded-xl transition-all duration-200 ${
                     isCoursePath
-                      ? "bg-[#8DC63F] text-white"
-                      : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
+                      ? "bg-[#8DC63F] text-white shadow-[0_8px_18px_-10px_rgba(99,143,37,0.9)] ring-1 ring-[#8DC63F]/20"
+                      : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
                   <Notebook size={20} />

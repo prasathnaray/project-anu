@@ -1254,14 +1254,16 @@ function NavBar() {
   return (
     <>
       <div className="navbar dm-sans">
-        <nav className="bg-[#8DC63F] shadow-sm border">
-          <div className="flex flex-wrap items-center justify-between py-[3px] px-1">
+        <nav className="border-b border-[#6e9f2e]/60 bg-gradient-to-r from-[#78aa35] via-[#8DC63F] to-[#9dce5b] shadow-[0_8px_22px_-16px_rgba(70,105,28,0.9)]">
+          <div className="flex min-h-[50px] flex-wrap items-center justify-between px-2 py-1 sm:px-3">
 
             {/* Left: page title */}
-            <div className="flex justify-start items-center ms-3 gap-10">
-              {pageTitle && (
-                <div className="text-white text-sm font-medium">{pageTitle}</div>
-              )}
+            <div className="ms-2 flex items-center gap-3 sm:ms-3">
+              <div className="hidden h-8 w-8 items-center justify-center rounded-xl bg-white/20 text-white shadow-inner sm:flex"><GraduationCap size={18} /></div>
+              <div className="leading-tight">
+                <div className="hidden text-[10px] font-bold uppercase tracking-[0.16em] text-white/70 sm:block">ANU Learning Hub</div>
+                {pageTitle && <div className="text-sm font-semibold text-white">{pageTitle}</div>}
+              </div>
             </div>
 
             {/* Right: action icons */}
@@ -1269,8 +1271,8 @@ function NavBar() {
 
               {/* Role greeting */}
               {roleLabel && (
-                <div className="px-2 py-2 ms-3 text-sm text-white hidden md:block">
-                  {roleLabel}
+                <div className="hidden items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white shadow-inner md:flex">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_0_3px_rgba(255,255,255,0.18)]" />{roleLabel}
                 </div>
               )}
 
@@ -1282,8 +1284,8 @@ function NavBar() {
               </div> */}
 
               {/* Fullscreen toggle */}
-              <div className="px-3 py-2 ms-1 text-gray-200">
-                <button onClick={toggleFullscreen} aria-label="Toggle fullscreen">
+              <div className="ms-1 px-1 py-1 text-white/85">
+                <button onClick={toggleFullscreen} aria-label="Toggle fullscreen" className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50">
                   {isFullscreen ? <Minimize size={20} /> : <Scan size={20} />}
                 </button>
               </div>
@@ -1445,7 +1447,7 @@ function NavBar() {
               <div className="ms-1 relative">
                 <button
                   onClick={() => toggleDropdown("user-options")}
-                  className="text-gray-200 hover:bg-[#74a832] p-2 rounded"
+                  className="rounded-full p-2 text-white/90 transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/50"
                   onMouseDown={(e) => ripple.create(e, "dark", "circle")}
                   aria-label="User menu"
                 >
@@ -1455,7 +1457,7 @@ function NavBar() {
                 {openDropdownIndex === "user-options" && (
                   <div
                     ref={(el) => (dropdownRefs.current["user-options"] = el)}
-                    className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-md z-50"
+                    className="absolute right-0 z-50 mt-2 w-36 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_16px_35px_-12px_rgba(15,23,42,0.3)]"
                   >
                     <button
                       className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
@@ -1467,7 +1469,7 @@ function NavBar() {
                       Profile
                     </button>
                     <button
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
                       onClick={() => {
                         setOpenDropdownIndex(null);
                         navigate('/sessions');
@@ -1476,13 +1478,13 @@ function NavBar() {
                       Sessions
                     </button>
                     {/* <button
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
                       onClick={() => navigate("/settings")}
                     >
                       Settings
                     </button> */}
                     <button
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-50 text-sm"
+                      className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
                       onClick={handleLogout}
                     >
                       Logout
@@ -1494,7 +1496,7 @@ function NavBar() {
               {/* Mobile hamburger */}
               <button
                 type="button"
-                className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-200 rounded-lg md:hidden hover:bg-[#74a832] focus:outline-none focus:ring-2 focus:ring-white/30"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full p-2 text-sm text-white/90 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 md:hidden"
                 aria-label="Open menu"
               >
                 <svg
