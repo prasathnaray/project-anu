@@ -20,6 +20,12 @@ const initSocket = (httpServer) => {
       socket.join('superadmin_room');
     });
 
+    socket.on('subscribe:user', (userEmail) => {
+      if (userEmail) {
+        socket.join(`user:${String(userEmail).toLowerCase()}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       // Clean disconnect
     });
@@ -50,9 +56,22 @@ const broadcastStatsUpdate = (stats) => {
   }
 };
 
+const broadcastSessionRevoked = (data) => {
+  if (!io) return;
+  try {
+    io.emit('session:revoked', data);
+    if (data?.userEmail) {
+      io.to(`user:${String(data.userEmail).toLowerCase()}`).emit('session:revoked', data);
+    }
+  } catch (err) {
+    console.error('Error broadcasting session:revoked socket:', err.message);
+  }
+};
+
 module.exports = {
   initSocket,
   getIo,
   broadcastActivity,
-  broadcastStatsUpdate
+  broadcastStatsUpdate,
+  broadcastSessionRevoked
 };
