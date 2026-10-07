@@ -82,6 +82,9 @@ const createTargetedLearningC = async(req, res) => {
                 else
                 {
                         const result = await createTargetedLearning(requester, tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id)
+                        if (result?.code && result.code !== 200) {
+                                return res.status(result.code).json(result);
+                        }
                         res.status(200).json({
                                 code: 200,
                                 status: "Targeted learning created successfully"

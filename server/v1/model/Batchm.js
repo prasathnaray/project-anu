@@ -390,29 +390,52 @@ const deleteBatchm = (requester, batch_id) => {
         })
     })
 }
-const createTargetedLearning = (requester, tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id) => {
-    return new Promise((resolve, reject) => {
-        const isPrivileged = [101, 102].includes(Number(requester.role))
-        if (!isPrivileged) {
-            return resolve({
-                status: 'Unauthorized',
-                code: 401,
-                message: 'You do not have permission to view trainee profiles'
-            })
-        }
-        //  const safeModuleIds = Array.isArray(module_id) && module_id.length > 0 ? module_id : null;
-        const safeResourceIds = Array.isArray(resources_id) && resources_id.length > 0 ? resources_id : null;
-        const traineeIds = Array.isArray(trainee_id) && trainee_id.length > 0 ? trainee_id : null;
-        client.query('INSERT INTO targeted_learning(tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id, created_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [tar_name, curiculum_id, certificate_id, learning_module_id, safeResourceIds, start_date, end_date, resource_type, traineeIds, requester.user_mail], (err, result) => {
-            if (err) {
-                return reject(err)
-            }
-            else {
-                return resolve(result);
-            }
-        })
-    })
-}
+const createTargetedLearning = async (requester, tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id) => {
+    const isPrivileged = [101, 102].includes(Number(requester.role));
+    if (!isPrivileged) {
+        return {
+            status: 'Unauthorized',
+            code: 401,
+            message: 'You do not have permission to create targeted learning'
+        };
+    }
+    if (!requester.centre_id) {
+        return {
+            status: 'Unauthorized',
+            code: 403,
+            message: 'Your account is not linked to an institution'
+        };
+    }
+
+    const safeResourceIds = Array.isArray(resources_id) && resources_id.length > 0 ? resources_id : null;
+    const traineeIds = Array.isArray(trainee_id) ? trainee_id.filter(Boolean) : [];
+    if (traineeIds.length === 0) {
+        return { status: 'Invalid request', code: 400, message: 'At least one trainee is required' };
+    }
+
+    // Prevent an institution admin/instructor from targeting trainees outside
+    // their own institution, even if another user's email is posted directly.
+    const traineeResult = await client.query(
+        `SELECT user_email
+         FROM user_data
+         WHERE user_role = '103'
+           AND centre_id = $1
+           AND user_email = ANY($2::varchar[])`,
+        [requester.centre_id, traineeIds]
+    );
+    if (traineeResult.rows.length !== traineeIds.length) {
+        return {
+            status: 'Unauthorized',
+            code: 403,
+            message: 'Targeted learning can only be assigned to trainees in your institution'
+        };
+    }
+
+    return client.query(
+        'INSERT INTO targeted_learning(tar_name, curiculum_id, certificate_id, learning_module_id, resources_id, start_date, end_date, resource_type, trainee_id, created_by) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [tar_name, curiculum_id, certificate_id, learning_module_id, safeResourceIds, start_date, end_date, resource_type, traineeIds, requester.user_mail]
+    );
+};
 
 const getTargetedLearningListModel = (requester) => {
     return new Promise((resolve, reject) => {
@@ -435,11 +458,36 @@ const getTargetedLearningListModel = (requester) => {
                     return resolve(result);
                 }
             );
-        } else {
+        } else if (role === 99) {
             client.query('SELECT * FROM targeted_learning ORDER BY created_at DESC', (err, result) => {
                 if (err) return reject(err);
                 return resolve(result);
             });
+        } else {
+            if (!requester.centre_id) {
+                return resolve({
+                    status: 'Unauthorized',
+                    code: 403,
+                    message: 'Your account is not linked to an institution'
+                });
+            }
+            client.query(
+                `SELECT tl.*
+                 FROM targeted_learning tl
+                 WHERE EXISTS (
+                     SELECT 1
+                     FROM user_data u
+                     WHERE u.user_role = '103'
+                       AND u.centre_id = $1
+                       AND u.user_email = ANY(tl.trainee_id)
+                 )
+                 ORDER BY tl.created_at DESC`,
+                [requester.centre_id],
+                (err, result) => {
+                    if (err) return reject(err);
+                    return resolve(result);
+                }
+            );
         }
     });
 };
@@ -453,7 +501,19 @@ const deleteTargetedLearningModel = (requester, targeted_learning_id) => {
                 message: "You do not have permission to view"
             });
         }
-        client.query('DELETE FROM targeted_learning WHERE target_learning_id=$1', [targeted_learning_id], (err, result) => {
+        const role = Number(requester.role);
+        const params = [targeted_learning_id];
+        const institutionScope = [101, 102].includes(role);
+        const scopeSql = institutionScope
+            ? ` AND EXISTS (
+                    SELECT 1 FROM user_data u
+                    WHERE u.user_role = '103'
+                      AND u.centre_id = $2
+                      AND u.user_email = ANY(targeted_learning.trainee_id)
+                )`
+            : '';
+        if (institutionScope) params.push(requester.centre_id);
+        client.query(`DELETE FROM targeted_learning WHERE target_learning_id=$1${scopeSql}`, params, (err, result) => {
             if (err) {
                 return reject(err);
             }
@@ -474,7 +534,24 @@ const IndividualtllList = (requester, target_user_mail) => {
             });
         }
         const searchMail = target_user_mail || requester.user_mail;
-        client.query('SELECT * FROM targeted_learning WHERE $1::varchar = ANY(trainee_id) OR trainee_id @> $2', [searchMail, `{${searchMail}}`], (err, result) => {
+        const role = Number(requester.role);
+        if ([101, 102].includes(role) && !requester.centre_id) {
+            return resolve({ code: 403, status: 'Your account is not linked to an institution' });
+        }
+        const query = [101, 102].includes(role)
+            ? `SELECT tl.*
+               FROM targeted_learning tl
+               WHERE $1::varchar = ANY(tl.trainee_id)
+                 AND EXISTS (
+                     SELECT 1 FROM user_data u
+                     WHERE u.user_role = '103'
+                       AND u.centre_id = $3
+                       AND u.user_email = $1
+                 )`
+            : 'SELECT * FROM targeted_learning WHERE $1::varchar = ANY(trainee_id) OR trainee_id @> $2';
+        const params = [searchMail, `{${searchMail}}`];
+        if ([101, 102].includes(role)) params.push(requester.centre_id);
+        client.query(query, params, (err, result) => {
             if (err) {
                 return reject(err);
             } else {
