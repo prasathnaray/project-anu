@@ -307,8 +307,9 @@ import { TablePagination, Select, MenuItem, FormControl } from "@mui/material";
 import SideBar from "../sideBar";
 import NavBar from "../navBar";
 import {
-  ArrowUpWideNarrow,
   EllipsisVertical,
+  Search,
+  UserPlus,
   X,
 } from "lucide-react";
 import TraineeListAPI from "../../API/TraineeListAPI";
@@ -488,135 +489,100 @@ function TraineeList() {
         </div>
 
         {/* Main Content */}
-        <div
-          className={`${
-            buttonOpen ? "ms-[221px]" : "ms-[55.5px]"
-          } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
-        >
-          <div className="bg-gray-100">
-            <div
-              className={`${
-                buttonOpen
-                  ? "px-[130px] py-4 w-full max-w-[1800px] mx-auto"
-                  : "px-[200px] py-4 w-full max-w-[1800px] mx-auto"
-              }`}
-            >
-              {/* Breadcrumb */}
-              <div className="text-gray-500">Dashboard / Trainees</div>
-              <div className="mt-5 font-semibold text-xl text-gray-600">
-                Trainees
+        <div className={`${buttonOpen ? "ms-[221px]" : "ms-[55.5px]"} min-w-0 flex-grow overflow-y-auto bg-[#f6f9f3] h-[calc(100vh-3rem)]`}>
+          <div className="mx-auto w-full max-w-[1500px] px-3 py-4 sm:px-6 sm:py-5 lg:px-8 xl:px-12">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[#789383]">Workspace / People</div>
+              <div className="mt-2 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">Trainees</h1>
+                  <p className="mt-1 text-sm text-slate-500">Manage learners, batches, and access status from one place.</p>
+                </div>
+                <a href="/trainee/add" className="inline-flex w-fit items-center gap-2 rounded-xl bg-[#8DC63F] px-4 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_-14px_rgba(99,143,37,.9)] transition hover:-translate-y-0.5 hover:bg-[#7caf35]">
+                  <UserPlus size={17} /> Add trainee
+                </a>
               </div>
 
-              {/* Card */}
-              <div className="mt-5 bg-white rounded px-8 py-10">
-                <div className="font-semibold text-xl text-gray-500">
-                  All Trainees
-                </div>
-
-                {/* Search + Add */}
-                <div className="grid grid-cols-2 items-center my-5">
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Search Trainee"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="rounded px-2 py-2 w-full mb-6 focus:outline-none focus:ring-0 border mt-4"
-                    />
-                  </div>
-                  <div className="flex justify-end items-center">
-                    <a
-                      href="/trainee/add"
-                      className="bg-[#8DC63F] text-white rounded px-10 py-3 font-semibold text-sm transition-all ease-in-out"
-                    >
-                      Add Trainee
-                    </a>
+              <div className="mt-6 overflow-hidden rounded-2xl border border-[#e1ead8] bg-white shadow-[0_18px_50px_-35px_rgba(72,104,30,.55)] sm:rounded-3xl">
+                <div className="flex flex-col gap-3 border-b border-[#edf2e9] px-4 py-4 sm:gap-4 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between">
+                  <div><h2 className="text-lg font-bold text-slate-800">Trainee directory</h2><p className="mt-1 text-sm text-slate-500">A complete view of your learner community.</p></div>
+                  <div className="relative w-full md:max-w-xs">
+                    <Search size={17} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input type="text" placeholder="Search name, email, or batch" value={searchQuery} onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }} className="w-full rounded-xl border border-[#dfead5] bg-[#fbfdf9] py-2.5 pl-10 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#8dc63f] focus:ring-4 focus:ring-[#8dc63f]/10" />
                   </div>
                 </div>
 
                 {/* Table */}
-                <table className="w-full text-left border-collapse">
-                  <thead>
+                <div className="overflow-x-auto">
+                <table className="min-w-[640px] w-full border-collapse text-left md:min-w-[720px]">
+                  <thead className="bg-[#fbfdf9]">
                     <tr className="border-b border-gray-300 shadow-sm">
-                      <th className="py-2 px-4"></th>
-                      <th className="py-2 px-4 text-[#8DC63F] flex items-center gap-2">
+                      <th className="w-14 px-4 py-3"></th>
+                      <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#719f2c] sm:px-4">
                         <div>Trainee Name</div>
-                        <button>
-                          <ArrowUpWideNarrow size={20} />
-                        </button>
                       </th>
-                      <th className="py-2 px-4 text-[#8DC63F]">
+                      <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#719f2c] sm:px-4">
                         <div className="flex items-center gap-2">
                           <span>Batch</span>
-                          <button>
-                            <ArrowUpWideNarrow size={20} />
-                          </button>
                         </div>
                       </th>
-                      <th className="py-2 px-4 text-[#8DC63F]">
+                      <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#719f2c] sm:px-4">
                         <div className="flex items-center gap-2">
                           <span>Status</span>
-                          <button>
-                            <ArrowUpWideNarrow size={20} />
-                          </button>
                         </div>
                       </th>
-                      <th className="py-2 px-4"></th>
+                      <th className="w-14 px-4 py-3"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       Array.from({ length: rowsPerPage }).map((_, index) => (
-                        <tr key={index} className="border-b border-gray-200 animate-pulse">
-                          <td className="py-2 px-4">
-                            <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        <tr key={index} className="animate-pulse border-b border-[#edf2e9]">
+                          <td className="px-4 py-3"><div className="h-9 w-9 rounded-xl bg-[#edf2e8]"></div>
                           </td>
-                          <td className="py-2 px-4">
-                            <div className="h-4 bg-gray-300 rounded w-24"></div>
+                          <td className="px-3 py-3"><div className="h-4 w-32 rounded bg-[#edf2e8]"></div>
                           </td>
-                          <td className="py-2 px-4">
-                            <div className="h-4 bg-gray-300 rounded w-32"></div>
+                          <td className="px-3 py-3"><div className="h-4 w-28 rounded bg-[#edf2e8]"></div>
                           </td>
-                          <td className="py-2 px-4">
-                            <div className="h-4 bg-gray-300 rounded w-16"></div>
+                          <td className="px-3 py-3"><div className="h-4 w-16 rounded bg-[#edf2e8]"></div>
                           </td>
-                          <td className="py-2 px-4"></td>
+                          <td className="px-4 py-3"></td>
                         </tr>
                       ))
                     ) : filteredTrainees.length > 0 ? (
                       filteredTrainees.map((trainee, index) => (
                         <tr
                           key={index}
-                          className="border-b border-gray-200 hover:bg-gray-50 shadow-sm text-sm text-gray-700"
+                          className="border-b border-[#edf2e9] text-sm text-slate-700 transition hover:bg-[#fbfdf9]"
                         >
-                          <td className="py-2 px-4">
+                          <td className="px-4 py-3">
                             <img
                               src={trainee.user_profile_photo || "/default-profile.png"}
-                              className="w-10 h-10 rounded-full cursor-pointer object-cover"
+                              className="h-9 w-9 rounded-xl border border-[#dfead5] object-cover shadow-sm sm:h-10 sm:w-10"
                               alt="profile"
                               onError={(e) =>
                                 (e.currentTarget.src = "/default-profile.png")
                               }
                             />
                           </td>
-                          <td className="py-2 px-4 text-[#8DC63F] font-semibold">
+                          <td className="px-3 py-3 sm:px-4">
                             <button
+                              className="text-left font-bold text-slate-800 transition hover:text-[#719f2c]"
                               onClick={() =>
                                 navigate(`/trainee/${trainee.people_id}`)
                               }
                             >
-                              {trainee.user_name}
+                              <span className="block">{trainee.user_name || "Unnamed trainee"}</span><span className="mt-0.5 block max-w-[260px] truncate text-xs font-medium text-slate-400">{trainee.user_email}</span>
                             </button>
                           </td>
-                          <td className="py-2 px-4 font-semibold text-[#8DC63F]">
-                            {trainee.batch_name || "-"}
+                          <td className="px-3 py-3 font-semibold text-slate-600 sm:px-4">
+                            <span className="rounded-lg bg-[#f1f7e9] px-2.5 py-1.5 text-xs font-bold text-[#719f2c]">{trainee.batch_name || "Unassigned"}</span>
                           </td>
-                          <td className="py-2 px-4 font-normal">
+                          <td className="px-3 py-3 font-normal sm:px-4">
                             <div
                               className={`inline-block px-3 py-1 rounded text-sm ${
                                 trainee.status === "inactive"
-                                  ? "bg-red-100 animate-pulse text-red-600 font-semibold rounded-full"
-                                  : "text-green-600 bg-green-100 animate-pulse font-semibold rounded-full"
+                                  ? "bg-rose-50 text-rose-600 font-semibold rounded-full border border-rose-100"
+                                  : "text-[#5f9222] bg-[#eff8e5] font-semibold rounded-full border border-[#d9edc2]"
                               }`}
                             >
                               {trainee.status === "inactive" ? "Disabled" : "Active"}
@@ -624,7 +590,7 @@ function TraineeList() {
                           </td>
 
                           {/* ── Action dropdown (MUI Select like Instructors) ── */}
-                          <td className="py-2 px-4 relative">
+                          <td className="relative px-4 py-3">
                             <Select
                               displayEmpty
                               variant="standard"
@@ -632,8 +598,8 @@ function TraineeList() {
                               IconComponent={() => null}
                               className="text-sm text-[#8DC63F] bg-transparent cursor-pointer"
                               renderValue={() => (
-                                <button className="text-gray-500">
-                                  <EllipsisVertical size={23} />
+                                  <button className="rounded-lg p-2 text-gray-500 transition hover:bg-[#eef7e5] hover:text-[#719f2c]">
+                                    <EllipsisVertical size={20} />
                                 </button>
                               )}
                               MenuProps={{
@@ -711,7 +677,7 @@ function TraineeList() {
                       <tr>
                         <td
                           colSpan={5}
-                          className="py-4 px-4 text-center text-gray-500"
+                          className="px-4 py-12 text-center text-slate-500"
                         >
                           No data found
                         </td>
@@ -719,9 +685,10 @@ function TraineeList() {
                     )}
                   </tbody>
                 </table>
+                </div>
 
                 {/* Pagination */}
-                <div className="mt-3">
+                <div className="border-t border-[#edf2e9] px-2 sm:px-5">
                   <TablePagination
                     component="div"
                     count={count}
@@ -730,12 +697,17 @@ function TraineeList() {
                     rowsPerPage={rowsPerPage}
                     onRowsPerPageChange={handleChangeRowsPerPage}
                     rowsPerPageOptions={[5, 10, 25]}
+                    sx={{
+                      ".MuiTablePagination-toolbar": { minHeight: 64, paddingLeft: 0, paddingRight: 0, flexWrap: "wrap", gap: 1 },
+                      ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows": { color: "#718096", fontSize: "0.78rem" },
+                      ".MuiTablePagination-select": { color: "#526b48" },
+                      ".MuiTablePagination-actions button": { color: "#719f2c" },
+                    }}
                   />
                 </div>
               </div>
-            </div>
-          </div>
         </div>
+      </div>
       </div>
 
       {/* ── Edit Trainee Modal ─────────────────────────────────────────────── */}

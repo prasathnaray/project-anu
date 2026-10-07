@@ -7,6 +7,18 @@ import api from '../API/api';
 import { getSocket } from '../utils/socket';
 import clearLocalSession from '../Auth/clearLocalSession';
 
+const SessionLoading = () => (
+  <main className="flex min-h-screen items-center justify-center bg-[#f7faf5] px-6 text-slate-800">
+    <div className="flex w-full max-w-sm flex-col items-center rounded-3xl border border-[#e1ead8] bg-white px-8 py-10 text-center shadow-[0_20px_60px_-35px_rgba(72,104,30,0.45)]">
+      <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eef7df] text-[#6fae2b]">
+        <span className="h-6 w-6 animate-spin rounded-full border-[3px] border-[#d8eac0] border-t-[#8dc63f]" aria-hidden="true" />
+      </div>
+      <p className="text-sm font-semibold tracking-wide text-slate-800">Preparing your learning space</p>
+      <p className="mt-2 text-xs text-slate-500">Just a moment while we get everything ready.</p>
+    </div>
+  </main>
+);
+
 const PrivateRoute = ({ allowedRoles }) => {
   const location = useLocation();
   const [token, setToken] = useState(() => localStorage.getItem('user_token'));
@@ -109,13 +121,13 @@ const PrivateRoute = ({ allowedRoles }) => {
     return () => { cancelled = true; };
   }, [location.pathname]);
 
-  if (renewing) return <div className="p-6 text-gray-500">Restoring session…</div>;
+  if (renewing) return <SessionLoading />;
   if (!token) return <Navigate to="/" replace />;
 
   try {
     const decoded = jwtDecode(token);
     if (!decoded.sid || decoded.exp * 1000 <= Date.now()) {
-      return <div className="p-6 text-gray-500">Restoring session…</div>;
+      return <SessionLoading />;
     }
     if (allowedRoles && !allowedRoles.map(Number).includes(Number(decoded.role))) {
       return <Navigate to="/dashboard" replace />;

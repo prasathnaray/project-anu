@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, RotateCcw, Scan, School } from 'lucide-react';
+import { Award, BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, RotateCcw, Scan, School, UsersRound, Video } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import MaterialRipple from "material-ripple-effects";
 import {
@@ -17,15 +16,16 @@ import {
   UserIcon,
   Message01Icon,
   StudentCardIcon,
+  Presentation01Icon,
   ChartRoseIcon,
-  WirelessCloudAccessIcon,
 } from "hugeicons-react";
 import { ChevronRight } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, BookText, MessageSquareText, User, ChartPie, Notebook, Network } from 'lucide-react';
 function SideBar({ handleButtonOpen, buttonOpen }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const ripple = new MaterialRipple();
   const [tokdata, setTokData] = useState({});
   const token = jwtDecode(localStorage.getItem('user_token'));
@@ -34,7 +34,8 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     }
     setTokData(token);
   }, []);
-  const data = window.location.pathname;
+  const data = location.pathname;
+  const roleName = { 99: "Super Admin", 101: "Admin", 102: "Instructor", 103: "Learner" }[tokdata.role] || "LMS User";
   const isCoursePath = data === "/certificate" ||
     data.startsWith("/chapters/") ||
     data.startsWith("/module/") ||
@@ -42,36 +43,50 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
     data.startsWith("/resource/");
   // console.log(data)
   return (
-    <div className={`fixed top-[50px] left-0 z-40 h-screen overflow-visible ${buttonOpen === false
-        ? "md:w-[55px] transition-all"
-        : "md:w-[220px] transition-all"
-      } sm:w-9 w-9 m-0 flex flex-col border-r border-slate-200/80 bg-white/95 text-black shadow-[8px_0_30px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl `}>
+    <div className={`lms-sidebar fixed left-0 top-[50px] z-40 flex h-[calc(100vh-3rem)] flex-col overflow-visible border-r border-[#e1ead8] bg-[#fbfdf9] text-slate-800 shadow-[10px_0_35px_-24px_rgba(72,104,30,0.45)] backdrop-blur-xl transition-all duration-300 ${buttonOpen === false
+        ? "w-[55px] max-md:-translate-x-full md:translate-x-0"
+        : "w-[270px] translate-x-0 md:w-[220px]"
+      }`}>
       <div className="relative">
         <div
           className={`absolute top-20 left-0 ${buttonOpen === false ? "left-9" : "left-[185px]"
-            } z-50 rounded-full border border-[#8DC63F]/25 bg-white p-1 text-[#719f2c] shadow-[0_8px_18px_-8px_rgba(72,104,30,0.45)] transition hover:scale-105`}
+            } z-50 rounded-full border border-[#cfe3bb] bg-white p-1 text-[#719f2c] shadow-[0_8px_18px_-8px_rgba(72,104,30,0.45)] transition hover:scale-105`}
         >
           <button onClick={() => handleButtonOpen()} aria-label={buttonOpen === false ? "Expand sidebar" : "Collapse sidebar"} className="flex h-6 w-6 items-center justify-center rounded-full transition hover:bg-[#8DC63F]/10">
             {buttonOpen === false ? <ChevronRight size={16} /> : <ChevronLeft size={17} />}
           </button>
         </div>
       </div>
-      <div className={`${buttonOpen === false ? "md:px-[5px] pt-5" : "md:px-[30px] pt-5"} border-b border-slate-100 pb-5`}>
-        <button className="w-full flex justify-center transition hover:opacity-80"><img src={logo} alt="logo" className="w-full h-auto max-h-11 object-contain" /></button>
+      <div className={`${buttonOpen === false ? "md:px-[5px] pt-5" : "md:px-[22px] pt-5"} border-b border-[#e5eee0] pb-5`}>
+        <button className="w-full flex justify-center transition hover:opacity-80"><img src={logo} alt="logo" className="w-full h-auto max-h-10 object-contain" /></button>
         {buttonOpen !== false && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-[#8DC63F]/[0.08] px-3 py-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8DC63F] text-white shadow-sm"><GraduationCap size={17} /></div>
-            <div className="min-w-0"><div className="truncate text-xs font-bold tracking-wide text-slate-700">ANU Learning Hub</div><div className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-[#719f2c]">LMS control center</div></div>
+          <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-[#dfead5] bg-white px-3 py-2.5 shadow-[0_8px_18px_-16px_rgba(72,104,30,0.55)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#edf6df] text-[#719f2c]"><GraduationCap size={17} /></div>
+            <div className="min-w-0"><div className="truncate text-xs font-bold tracking-wide text-slate-700">ANU Learning Hub</div><div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#719f2c]">Learning workspace</div></div>
           </div>
         )}
       </div>
-      <div className="">
-        <div className={`${buttonOpen === false ? "hidden" : "px-7 pt-5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400"}`}>Navigation</div>
+      <style>{`
+        .lms-sidebar ul button { border: 1px solid transparent; border-radius: 14px; color: #64746a !important; transition: background-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease; }
+        .lms-sidebar ul button:hover:not([class*=" bg-[#8DC63F]"]) { background: #ffffff !important; border-color: #e0ead8; color: #638f25 !important; transform: translateX(2px); box-shadow: 0 7px 18px -16px rgba(72,104,30,.7); }
+        .lms-sidebar ul button[class*=" bg-[#8DC63F]"] { background: #eef8e5 !important; border-color: #d4e9bd; color: #527a1f !important; box-shadow: 0 9px 22px -17px rgba(72,104,30,.75); position: relative; }
+        .lms-sidebar ul button[class*=" bg-[#8DC63F]"]::before { content: ""; position: absolute; left: -1px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 6px 6px 0; background: #8DC63F; box-shadow: 0 0 12px rgba(141,198,63,.4); }
+        .lms-sidebar ul button[class*=" bg-[#8DC63F]"] svg { color: #719f2c; }
+        .lms-sidebar ul button:focus-visible { outline: 3px solid rgba(141, 198, 63, .28); outline-offset: 2px; }
+        .lms-sidebar ul { scrollbar-width: thin; scrollbar-color: #d6e5c6 transparent; }
+        @media (max-width: 767px) {
+          [class*="ms-[221px]"], [class*="ms-[55.5px]"] { margin-left: 0 !important; }
+          .lms-sidebar { height: calc(100vh - 3rem); }
+          .lms-sidebar::after { content: ""; position: fixed; inset: 0; z-index: -1; background: rgba(15, 23, 42, .18); pointer-events: none; }
+        }
+      `}</style>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className={`${buttonOpen === false ? "hidden" : "px-7 pt-5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#789383]"}`}>Navigation</div>
         <ul className={`${buttonOpen === false ? "py-3 px-[7px]" : "py-4 px-7"}`}>
 
           {tokdata.role == 99 &&
             <>
-              <li className={`${buttonOpen === false ? "hidden" : "mb-2 mt-1 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400"}`}>Learning operations</li>
+              <li className={`${buttonOpen === false ? "hidden" : "mb-2 mt-1 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#789383]"}`}>Learning operations</li>
               <li className="mb-1 mt-2">
                 <button
                   onMouseDown={(e) => ripple.create(e, "dark", "circle")}
@@ -82,7 +97,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
-                  <BookCheck size={20} />
+                  <LayoutDashboard size={20} />
                   <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Dashboard</div>
                 </button>
               </li>
@@ -96,11 +111,11 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
-                  <BookCheck size={20} />
+                  <BookOpen size={20} />
                   <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Curriculum</div>
                 </button>
               </li>
-              <li className={`${buttonOpen === false ? "hidden" : "mb-2 mt-5 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400"}`}>Content & delivery</li>
+              <li className={`${buttonOpen === false ? "hidden" : "mb-2 mt-5 px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#789383]"}`}>Content & delivery</li>
               <li className="mb-1 mt-2">
                 <button
                   onMouseDown={(e) => ripple.create(e, "dark", "circle")}
@@ -111,7 +126,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
-                  <Notebook size={20} />
+                  <Award size={20} />
                   <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Certifications</div>
                 </button>
               </li>
@@ -205,12 +220,12 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
             ["dashboard", "my-learning", "schedules", "Queries", "Batch", "vrspace"].map((route, i) => {
               const items = [
                 { icon: <LayoutDashboard size={20} />, label: "Dashboard" },
-                { icon: <BookText size={20} />, label: "My Learning" },
+                { icon: <BookOpen size={20} />, label: "My Learning" },
                 // {icon:  <BarChart size={20}/>, label: "My Progress" },
                 { icon: <Calendar size={20} />, label: "Schedules" },
                 { icon: <ClipboardPenLine size={20} />, label: "Queries" },
-                { icon: <Users size={20} />, label: "Batch" },
-                { icon: <WirelessCloudAccessIcon size={20} />, label: "Streams" },
+                { icon: <UsersRound size={20} />, label: "Batch" },
+                { icon: <Video size={20} />, label: "Streams" },
               ];
               // const isActive = data === `/${route}` || data.startsWith(`/${route}/`);
               const isActive =
@@ -262,7 +277,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <Users size={20} />
+                  <UsersRound size={20} />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Batch</div>
                 </button>
               </li>
@@ -276,7 +291,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <ClipboardPenLine size={20} />
+                  <Presentation01Icon size={20} strokeWidth={1.8} className="shrink-0" />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Instructors</div>
                 </button>
               </li>
@@ -290,7 +305,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <GraduationCap size={20} />
+                  <StudentCardIcon size={20} strokeWidth={1.8} className="shrink-0" />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Trainees</div>
                 </button>
               </li>
@@ -322,7 +337,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <Notebook size={20} />
+                  <Award size={20} />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certifications</div>
                 </button>
               </li>
@@ -336,7 +351,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <WirelessCloudAccessIcon size={20} />
+                  <Video size={20} />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Streams</div>
                 </button>
               </li>
@@ -410,7 +425,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <Users size={20} />
+                  <UsersRound size={20} strokeWidth={1.8} className="shrink-0" />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Batch</div>
                 </button>
               </li>
@@ -425,7 +440,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <Users size={20} />
+                  <StudentCardIcon size={20} strokeWidth={1.8} className="shrink-0" />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Trainees</div>
                 </button>
               </li>
@@ -488,7 +503,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                   }`}
               >
-                <Notebook size={20} />
+                <BookOpen size={20} />
                 <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>SVT Course</div>
               </button>
             </li>
@@ -510,6 +525,14 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
           )}
         </ul>
       </div>
+      {buttonOpen !== false && (
+        <div className="border-t border-[#e5eee0] px-5 py-4">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-[#dfead5] bg-white px-3 py-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#edf6df] text-xs font-bold text-[#719f2c]">{roleName.charAt(0)}</div>
+            <div className="min-w-0"><div className="text-xs font-bold text-slate-700">{roleName}</div><div className="mt-0.5 flex items-center gap-1 text-[10px] font-medium text-slate-400"><span className="h-1.5 w-1.5 rounded-full bg-[#8DC63F]" />Active workspace</div></div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

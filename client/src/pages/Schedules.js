@@ -140,7 +140,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Navigate, useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { LayoutDashboard, Notebook, SlidersHorizontal, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { SlidersHorizontal, CalendarDays, ChevronLeft, ChevronRight, CalendarCheck2 } from 'lucide-react';
 import Calendar from '@toast-ui/react-calendar';
 import '@toast-ui/calendar/dist/toastui-calendar.min.css';
 import GetTarLearningAPI from '../API/GetTarLearningAPI';
@@ -209,6 +209,11 @@ function Schedules() {
   if (decoded.role != 101 && decoded.role != 102 && decoded.role !=103) {
       return <Navigate to="/" replace />;
   }
+  const upcomingEvents = [...events]
+    .filter((event) => new Date(event.start) >= new Date(new Date().setHours(0, 0, 0, 0)))
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 5);
+  const formatEventDate = (date) => new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(date));
 
   // 🔹 Navigate calendar
   const handlePrev = () => {
@@ -238,90 +243,48 @@ function Schedules() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen flex-col bg-slate-50">
       <NavBar />
       <div className="flex flex-grow">
         <SideBar handleButtonOpen={handleButtonOpen} buttonOpen={buttonOpen} />
         <div
           className={`${
             buttonOpen ? 'ms-[221px]' : 'ms-[55.5px]'
-          } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
+          } flex-grow overflow-y-auto bg-[#f7f8f5] h-[calc(100vh-3rem)] transition-all`}
         >
-          <div className="text-gray-500 bg-white px-3 py-2 flex items-center gap-2 border">
-            <LayoutDashboard size={15} /> Dashboard / <Notebook size={15} />{' '}
-            <span className="text-[15px] hover:underline hover:underline-offset-4">
-              <button onClick={() => navigate('/schedules')}>schedule</button>
-            </span>
-          </div>
-
-          {/* 🔹 Calendar Toolbar */}
-          <div className="flex justify-between items-center bg-white px-4 py-3 border-b">
-            <div className="flex gap-2">
-              <button
-                onClick={handlePrev}
-                className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center gap-1"
-              >
-                <ChevronLeft size={16} /> Prev
-              </button>
-              <button
-                onClick={handleToday}
-                className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300"
-              >
-                Today
-              </button>
-              <button
-                onClick={handleNext}
-                className="px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center gap-1"
-              >
-                Next <ChevronRight size={16} />
-              </button>
+          <style>{`
+            .lms-schedule-calendar .toastui-calendar-layout { border: 0 !important; border-radius: 10px; overflow: hidden; }
+            .lms-schedule-calendar .toastui-calendar-day-name-item { color: #64746a !important; font-weight: 700; }
+            .lms-schedule-calendar .toastui-calendar-grid-cell-date { color: #526158 !important; font-weight: 600; }
+            .lms-schedule-calendar .toastui-calendar-grid-cell-date.toastui-calendar-grid-cell-date-today { color: #638f25 !important; }
+            .lms-schedule-calendar .toastui-calendar-grid-cell-more-events { color: #719f2c !important; font-weight: 700; }
+            .lms-schedule-calendar .toastui-calendar-panel-event { border-radius: 7px !important; box-shadow: 0 3px 8px -6px rgba(72,104,30,.75); }
+          `}</style>
+          <div className="mx-auto w-full max-w-[1500px] px-5 py-7 sm:px-8 lg:px-10 xl:px-12">
+            <div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-slate-200 pb-5">
+              <div><div className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400"><span>LMS workspace</span><span className="text-[#8DC63F]">/</span><span>Schedules</span></div><h1 className="text-2xl font-bold tracking-tight text-slate-900">Schedule</h1><p className="mt-1 text-sm text-slate-500">Plan and review targeted learning activity.</p></div>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500"><span className="h-2 w-2 rounded-full bg-[#8DC63F]" />{events.length} scheduled {events.length === 1 ? 'activity' : 'activities'}</div>
             </div>
 
-            <h2 className="text-lg font-semibold text-gray-700">
-              {currentDate.toLocaleString('en-us', {
-                month: 'long',
-                year: 'numeric',
-              })}
-            </h2>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_280px]">
+              <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="flex flex-col gap-4 border-b border-slate-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                  <div><h2 className="text-sm font-bold text-slate-800">Learning calendar</h2><p className="mt-1 text-xs text-slate-500">{currentDate.toLocaleString('en-us', { month: 'long', year: 'numeric' })}</p></div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex rounded-lg border border-slate-200 p-0.5"><button onClick={handlePrev} aria-label="Previous period" className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-[#8DC63F]/10 hover:text-[#638f25]"><ChevronLeft size={16} /></button><button onClick={handleToday} className="px-2 text-xs font-semibold text-slate-600 transition hover:text-[#638f25]">Today</button><button onClick={handleNext} aria-label="Next period" className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 transition hover:bg-[#8DC63F]/10 hover:text-[#638f25]"><ChevronRight size={16} /></button></div>
+                    <div className="flex rounded-lg bg-slate-100 p-0.5"><button onClick={() => setView('month')} className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${view === 'month' ? 'bg-white text-[#638f25] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><CalendarDays size={13} /> Month</button><button onClick={() => setView('week')} className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${view === 'week' ? 'bg-white text-[#638f25] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}><SlidersHorizontal size={13} /> Week</button></div>
+                  </div>
+                </div>
+                <div className="lms-schedule-calendar overflow-x-auto p-2 sm:p-4"><Calendar ref={calendarRef} height="680px" usageStatistics={false} view={view} calendars={[{ id: '1', name: 'Targeted Learning', color: '#fff', bgColor: '#8DC63F' }]} events={events} onClickEvent={handleEventClick} onClickSchedule={handleEventClick} /></div>
+              </section>
 
-            <div className="flex gap-2">
-              <button
-                onClick={() => setView('month')}
-                className={`px-3 py-1 rounded-md flex items-center gap-1 ${
-                  view === 'month'
-                    ? 'bg-[#8DC63F] text-white'
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-              >
-                <CalendarDays size={15} /> Month
-              </button>
-              <button
-                onClick={() => setView('week')}
-                className={`px-3 py-1 rounded-md flex items-center gap-1 ${
-                  view === 'week'
-                    ? 'bg-[#8DC63F] text-white'
-                    : 'bg-gray-100 hover:bg-gray-200'
-                }`}
-              >
-                <SlidersHorizontal size={15} /> Week
-              </button>
+              <aside className="h-fit rounded-xl border border-slate-200 bg-white">
+                <div className="border-b border-slate-100 px-5 py-4"><h2 className="text-sm font-bold text-slate-800">Upcoming learning</h2><p className="mt-1 text-xs text-slate-500">Your next scheduled activities</p></div>
+                <div className="divide-y divide-slate-100">
+                  {upcomingEvents.length > 0 ? upcomingEvents.map((event) => <button key={event.id} onClick={() => handleEventClick({ event })} className="block w-full px-5 py-4 text-left transition hover:bg-[#8DC63F]/[0.04]"><div className="flex items-start gap-3"><span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#8DC63F] ring-4 ring-[#8DC63F]/10" /><div className="min-w-0"><div className="truncate text-sm font-semibold text-slate-700">{event.title}</div><div className="mt-1 text-xs text-slate-400">{formatEventDate(event.start)} · Targeted learning</div></div></div></button>) : <div className="px-5 py-10 text-center"><CalendarCheck2 size={22} className="mx-auto mb-3 text-[#8DC63F]" /><p className="text-sm font-semibold text-slate-600">No upcoming activity</p><p className="mt-1 text-xs leading-5 text-slate-400">Scheduled learning will appear here.</p></div>}
+                </div>
+              </aside>
             </div>
-          </div>
-
-          {/* 🔹 Calendar */}
-          <div className="px-3 py-3 bg-gray-100">
-            <Calendar
-              ref={calendarRef}
-              height="700px"
-              usageStatistics={false}
-              view={view}
-              calendars={[
-                { id: '1', name: 'Targeted Learning', color: '#fff', bgColor: '#8DC63F' },
-              ]}
-              events={events}
-              onClickEvent={handleEventClick}
-              onClickSchedule={handleEventClick}
-            />
           </div>
         </div>
       </div>
