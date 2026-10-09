@@ -150,7 +150,7 @@ function Curiculam() {
                                           <h1 className="text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl">Curriculum library</h1>
                                           <p className="mt-1 text-sm text-slate-500">Manage learning paths, courses and centre associations.</p>
                                         </div>
-                                        <div className="flex items-center gap-2 rounded-full border border-[#8DC63F]/25 bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#638f25] shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-[#8DC63F] shadow-[0_0_0_4px_rgba(141,198,63,0.16)]" />Admin workspace</div>
+                                        <div className="flex items-center gap-2 rounded-full border border-[#8DC63F]/25 bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#638f25] shadow-sm"><span className="h-1.5 w-1.5 rounded-full bg-[#8DC63F] shadow-[0_0_0_4px_rgba(141,198,63,0.16)]" />{token?.role == 99 ? 'Super Admin Workspace' : 'Admin Workspace'}</div>
                                         </div>
                                       </div>
 

@@ -40,6 +40,12 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                 });
             }
 
+            const batchIdArray = Array.isArray(user_batch)
+                ? user_batch.map(String).filter(Boolean)
+                : (user_batch !== undefined && user_batch !== null && user_batch !== '' ? [String(user_batch)].filter(Boolean) : []);
+
+            const dob = (user_dob && String(user_dob).trim()) ? user_dob : null;
+
             client.query(
                 `INSERT INTO public.user_data(
                     user_profile_photo,
@@ -55,25 +61,39 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                     centre_id,
                     center_name
                 ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-                [user_profile_photo, user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, requester.centre_id, requester.center_name],
+                [user_profile_photo, user_name, user_email, user_contact_num, dob, user_gender, user_password, user_role, status, description, requester.centre_id, requester.center_name],
                 (err, result) => {
                   if(err){
                     return reject(err);
                   }  
                   else
                   {
-                            client.query('INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)', [user_batch, user_email] ,(err2, result2) => {
-                                if (err2) return reject(err2)
-                                
-                                return resolve({
-                                    status: 'success',
-                                    code: 200,
-                                    message: 'Profile Created Successfully',
-                                    data: {
-                                        user_email
+                            client.query('SELECT 1 FROM public.batch_people_data WHERE user_id = $1', [user_email], (errCheck, resCheck) => {
+                                if (errCheck) {
+                                    client.query('DELETE FROM public.user_data WHERE user_email = $1', [user_email], () => {});
+                                    return reject(errCheck);
+                                }
+
+                                const bpdQuery = (resCheck && resCheck.rows && resCheck.rows.length > 0)
+                                    ? 'UPDATE public.batch_people_data SET batch_id = $1 WHERE user_id = $2'
+                                    : 'INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)';
+
+                                client.query(bpdQuery, [batchIdArray, user_email], (err2, result2) => {
+                                    if (err2) {
+                                        client.query('DELETE FROM public.user_data WHERE user_email = $1', [user_email], () => {});
+                                        return reject(err2);
                                     }
-                                })
-                            })
+
+                                    return resolve({
+                                        status: 'success',
+                                        code: 200,
+                                        message: 'Profile Created Successfully',
+                                        data: {
+                                            user_email
+                                        }
+                                    });
+                                });
+                            });
                   }
             })
     })

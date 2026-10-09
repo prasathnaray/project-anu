@@ -5169,6 +5169,21 @@ const getTrimesterSortIndex = value => {
   if (normalized.includes('third trimester') || normalized.includes('3rd trimester')) return 3;
   return 99;
 };
+const STANDARD_TRIMESTERS = ['First Trimester', 'Second Trimester', 'Third Trimester'];
+const matchesTrimester = (item, trimester) => {
+  if (!trimester) return true;
+  const target = String(trimester).trim().toLowerCase();
+  const cName = String(item?.course_name || '').trim().toLowerCase();
+  const tName = String(item?.trimester || '').trim().toLowerCase();
+  if (cName === target || tName === target) return true;
+  const targetIndex = getTrimesterSortIndex(target);
+  if (targetIndex !== 99) {
+    if (getTrimesterSortIndex(cName) === targetIndex || getTrimesterSortIndex(tName) === targetIndex) {
+      return true;
+    }
+  }
+  return false;
+};
 const isActivityDrivenLearningItem = row =>
   getLearningTypeKey(row?.resource_type) === 'resource' && (isMindSparkRecord(row) || isOBRecord(row));
 const isLearningItemDone = (row, activityScoreMap) =>
@@ -5360,7 +5375,7 @@ function TraineeDashboard() {
     [allResources, batchCertificateIds]);
 
   const [selectedCertificate, setSelectedCertificate] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
+  const [selectedTrimester, setSelectedTrimester] = useState('');
 
   useEffect(() => {
     if (selectedCertificate && !certificates.some(cert => cert.id === selectedCertificate)) {
@@ -5368,9 +5383,39 @@ function TraineeDashboard() {
     }
   }, [certificates, selectedCertificate]);
 
+  const trimesterOptions = useMemo(() => {
+    const seen = new Set();
+    const list = [];
+    const addTrimester = (val) => {
+      const trimmed = String(val || '').trim();
+      if (!trimmed || seen.has(trimmed.toLowerCase())) return;
+      seen.add(trimmed.toLowerCase());
+      list.push(trimmed);
+    };
+
+    (allResources || []).forEach(r => {
+      const c = String(r?.course_name || '').trim();
+      const t = String(r?.trimester || '').trim();
+      if (/trimester/i.test(c)) addTrimester(c);
+      if (/trimester/i.test(t)) addTrimester(t);
+    });
+    (individualTraineeProfile?.moduleCompletion || []).forEach(m => {
+      const c = String(m?.course_name || '').trim();
+      const t = String(m?.trimester || '').trim();
+      if (/trimester/i.test(c)) addTrimester(c);
+      if (/trimester/i.test(t)) addTrimester(t);
+    });
+
+    STANDARD_TRIMESTERS.forEach(addTrimester);
+
+    return list.sort((a, b) => getTrimesterSortIndex(a) - getTrimesterSortIndex(b));
+  }, [allResources, individualTraineeProfile.moduleCompletion]);
+
   useEffect(() => {
-    setSelectedCourse('');
-  }, [selectedCertificate]);
+    if (selectedTrimester && !trimesterOptions.some(t => t.toLowerCase() === selectedTrimester.toLowerCase())) {
+      setSelectedTrimester('');
+    }
+  }, [trimesterOptions, selectedTrimester]);
 
   const certificateResources = useMemo(() =>
     selectedCertificate
@@ -5378,28 +5423,13 @@ function TraineeDashboard() {
       : scopedResources,
     [scopedResources, selectedCertificate]);
 
-  const courseOptions = useMemo(() => {
-    const seen = new Set();
-    return certificateResources.reduce((acc, row) => {
-      const course = String(row?.course_name || '').trim();
-      if (!course || seen.has(course)) return acc;
-      seen.add(course);
-      acc.push(course);
-      return acc;
-    }, []);
-  }, [certificateResources]);
-
-  useEffect(() => {
-    if (selectedCourse && !courseOptions.includes(selectedCourse)) {
-      setSelectedCourse('');
+  const filteredResources = useMemo(() => {
+    let rows = certificateResources;
+    if (selectedTrimester) {
+      rows = rows.filter(r => matchesTrimester(r, selectedTrimester));
     }
-  }, [courseOptions, selectedCourse]);
-
-  const filteredResources = useMemo(() =>
-    selectedCourse
-      ? certificateResources.filter(r => String(r?.course_name || '').trim() === selectedCourse)
-      : certificateResources,
-    [certificateResources, selectedCourse]);
+    return rows;
+  }, [certificateResources, selectedTrimester]);
 
   const overallProgressLabel = 'All';
 
@@ -5407,16 +5437,6 @@ function TraineeDashboard() {
     () => certificates.find(cert => cert.id === selectedCertificate)?.label || '',
     [certificates, selectedCertificate]
   );
-
-  const usesTrimesterFilter = useMemo(
-    () =>
-      selectedCertificateLabel === 'BTC' ||
-      courseOptions.some(course => /trimester/i.test(String(course || ''))),
-    [courseOptions, selectedCertificateLabel]
-  );
-
-  const secondaryFilterLabel = selectedCourse || (usesTrimesterFilter ? 'All trimesters' : 'All courses');
-  const secondaryFilterTitle = usesTrimesterFilter ? 'Trimester' : 'Course';
 
   const [selectedScoreCertificate, setSelectedScoreCertificate] = useState('');
   const [selectedScoreCourse, setSelectedScoreCourse] = useState('');
@@ -5505,12 +5525,8 @@ function TraineeDashboard() {
   const [selectedResourceTopic, setSelectedResourceTopic] = useState('');
 
   useEffect(() => {
-    if (!certificates.length) {
+    if (selectedResourceCertificate && !certificates.some(cert => cert.id === selectedResourceCertificate)) {
       setSelectedResourceCertificate('');
-      return;
-    }
-    if (!selectedResourceCertificate || !certificates.some(cert => cert.id === selectedResourceCertificate)) {
-      setSelectedResourceCertificate(certificates[0].id);
     }
   }, [certificates, selectedResourceCertificate]);
 
@@ -5528,59 +5544,81 @@ function TraineeDashboard() {
 
   const resourceCourseOptions = useMemo(() => {
     const seen = new Set();
-    return resourceCertificateResources.reduce((acc, row) => {
-      const course = String(row?.course_name || '').trim();
-      if (!course || seen.has(course)) return acc;
-      seen.add(course);
-      acc.push(course);
-      return acc;
-    }, []);
-  }, [resourceCertificateResources]);
+    const list = [];
+    const addCourse = (val) => {
+      const course = String(val || '').trim();
+      if (!course || seen.has(course.toLowerCase())) return;
+      seen.add(course.toLowerCase());
+      list.push(course);
+    };
+
+    const source = (scopedResources && scopedResources.length) ? scopedResources : (allResources || []);
+    source.forEach(row => addCourse(row?.course_name));
+    (individualTraineeProfile?.moduleCompletion || []).forEach(m => addCourse(m?.course_name));
+
+    return list;
+  }, [allResources, scopedResources, individualTraineeProfile.moduleCompletion]);
 
   useEffect(() => {
-    if (!resourceCourseOptions.length) {
+    if (selectedResourceCourse && !resourceCourseOptions.some(c => c.toLowerCase() === selectedResourceCourse.toLowerCase())) {
       setSelectedResourceCourse('');
-      return;
     }
-    if (selectedResourceCourse && resourceCourseOptions.includes(selectedResourceCourse)) return;
-    setSelectedResourceCourse(resourceCourseOptions.length === 1 ? resourceCourseOptions[0] : '');
   }, [resourceCourseOptions, selectedResourceCourse]);
 
-  const resourceNeedsTopic = selectedResourceCertificateLabel === 'BTC';
-
-  const resourceCourseResources = useMemo(() =>
-    selectedResourceCourse
-      ? resourceCertificateResources.filter(r => String(r?.course_name || '').trim() === selectedResourceCourse)
-      : resourceCertificateResources,
-    [resourceCertificateResources, selectedResourceCourse]
-  );
+  const resourceNeedsTopic = useMemo(() => {
+    if (selectedResourceCertificateLabel === 'BTC') return true;
+    if (selectedResourceCourse && /second trimester/i.test(selectedResourceCourse)) return true;
+    if (selectedTrimester && /second trimester/i.test(selectedTrimester)) return true;
+    return false;
+  }, [selectedResourceCertificateLabel, selectedResourceCourse, selectedTrimester]);
 
   const resourceTopicOptions = useMemo(() => {
     const seen = new Set();
-    return resourceCourseResources.reduce((acc, row) => {
+    const baseRows = selectedResourceCourse
+      ? resourceCertificateResources.filter(r => String(r?.course_name || '').trim().toLowerCase() === selectedResourceCourse.trim().toLowerCase())
+      : (selectedTrimester ? resourceCertificateResources.filter(r => matchesTrimester(r, selectedTrimester)) : resourceCertificateResources);
+    return baseRows.reduce((acc, row) => {
       const topic = getScoreTopicValue(row);
       if (!topic || seen.has(topic)) return acc;
       seen.add(topic);
       acc.push(topic);
       return acc;
     }, []);
-  }, [resourceCourseResources]);
+  }, [resourceCertificateResources, selectedResourceCourse, selectedTrimester]);
 
   useEffect(() => {
     if (!resourceNeedsTopic) {
       setSelectedResourceTopic('');
       return;
     }
-    if (selectedResourceTopic && resourceTopicOptions.includes(selectedResourceTopic)) return;
-    setSelectedResourceTopic('');
+    if (selectedResourceTopic && !resourceTopicOptions.includes(selectedResourceTopic)) {
+      setSelectedResourceTopic('');
+    }
   }, [resourceNeedsTopic, resourceTopicOptions, selectedResourceTopic]);
 
-  const resourceProgressResources = useMemo(() =>
-    resourceNeedsTopic && selectedResourceTopic
-      ? resourceCourseResources.filter(r => getScoreTopicValue(r) === selectedResourceTopic)
-      : resourceCourseResources,
-    [resourceCourseResources, resourceNeedsTopic, selectedResourceTopic]
-  );
+  const resourceProgressResources = useMemo(() => {
+    let rows = resourceCertificateResources;
+
+    if (selectedTrimester) {
+      rows = rows.filter(r => matchesTrimester(r, selectedTrimester));
+    }
+
+    if (selectedResourceCourse) {
+      rows = rows.filter(r => String(r?.course_name || '').trim().toLowerCase() === selectedResourceCourse.trim().toLowerCase());
+    }
+
+    if (resourceNeedsTopic && selectedResourceTopic) {
+      rows = rows.filter(r => getScoreTopicValue(r) === selectedResourceTopic);
+    }
+
+    return rows;
+  }, [
+    resourceCertificateResources,
+    selectedTrimester,
+    selectedResourceCourse,
+    resourceNeedsTopic,
+    selectedResourceTopic,
+  ]);
 
   const resourceMetaById = useMemo(() => {
     const map = new Map();
@@ -5874,7 +5912,11 @@ function TraineeDashboard() {
     );
 
     return moduleCompletion
-      .filter(module => visibleModuleIds.has(module?.learning_module_id))
+      .filter(module => {
+        if (!visibleModuleIds.has(module?.learning_module_id)) return false;
+        if (selectedTrimester && !matchesTrimester(module, selectedTrimester)) return false;
+        return true;
+      })
       .sort((a, b) => {
         const courseOrder = getTrimesterSortIndex(a?.course_name) - getTrimesterSortIndex(b?.course_name);
         if (courseOrder !== 0) return courseOrder;
@@ -5886,7 +5928,7 @@ function TraineeDashboard() {
 
         return String(a?.unit_name || a?.module_name || '').localeCompare(String(b?.unit_name || b?.module_name || ''));
       });
-  }, [filteredResources, moduleCompletion]);
+  }, [filteredResources, moduleCompletion, selectedTrimester]);
 
   const learningPathProgress = useMemo(() => {
     const map = {};
@@ -6532,13 +6574,23 @@ function TraineeDashboard() {
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
+          <select
+            value={selectedCertificate}
+            onChange={e => setSelectedCertificate(e.target.value)}
+            className={selectCls}
+            aria-label="Certificate filter"
+          >
             <option value="">{overallProgressLabel}</option>
             {certificates.map(cert => <option key={cert.id} value={cert.id}>{cert.label}</option>)}
           </select>
-          <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className={selectCls} aria-label={`${secondaryFilterTitle} filter`}>
-            <option value="">{secondaryFilterLabel}</option>
-            {courseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+          <select
+            value={selectedTrimester}
+            onChange={e => setSelectedTrimester(e.target.value)}
+            className={selectCls}
+            aria-label="Trimester filter"
+          >
+            <option value="">All Trimesters</option>
+            {trimesterOptions.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
       </div>
@@ -6641,17 +6693,29 @@ function TraineeDashboard() {
               value={selectedResourceCertificate}
               onChange={e => setSelectedResourceCertificate(e.target.value)}
               className={selectCls}
+              aria-label="Certificate filter"
             >
-              <option value="">{selectedResourceCertificateLabel || 'Certification'}</option>
+              <option value="">All Certifications</option>
               {certificates.map(cert => <option key={cert.id} value={cert.id}>{cert.label}</option>)}
+            </select>
+
+            <select
+              value={selectedTrimester}
+              onChange={e => setSelectedTrimester(e.target.value)}
+              className={selectCls}
+              aria-label="Trimester filter"
+            >
+              <option value="">All Trimesters</option>
+              {trimesterOptions.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
 
             <select
               value={selectedResourceCourse}
               onChange={e => setSelectedResourceCourse(e.target.value)}
               className={selectCls}
+              aria-label="Course filter"
             >
-              <option value="">{selectedResourceCourse || 'All courses'}</option>
+              <option value="">All Courses</option>
               {resourceCourseOptions.map(course => <option key={course} value={course}>{course}</option>)}
             </select>
 
@@ -6660,8 +6724,9 @@ function TraineeDashboard() {
                 value={selectedResourceTopic}
                 onChange={e => setSelectedResourceTopic(e.target.value)}
                 className={selectCls}
+                aria-label="Topic filter"
               >
-                <option value="">{selectedResourceTopic || 'All topics'}</option>
+                <option value="">All Topics</option>
                 {resourceTopicOptions.map(topic => <option key={topic} value={topic}>{topic}</option>)}
               </select>
             )}
@@ -6733,13 +6798,23 @@ function TraineeDashboard() {
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-bold text-gray-700">Overall Progress</span>
           <div className="flex items-center gap-2">
-            <select value={selectedCertificate} onChange={e => setSelectedCertificate(e.target.value)} className={selectCls}>
+            <select
+              value={selectedCertificate}
+              onChange={e => setSelectedCertificate(e.target.value)}
+              className={selectCls}
+              aria-label="Certificate filter"
+            >
               <option value="">{overallProgressLabel}</option>
               {certificates.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
-            <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className={selectCls} aria-label={`${secondaryFilterTitle} filter`}>
-              <option value="">{secondaryFilterLabel}</option>
-              {courseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+            <select
+              value={selectedTrimester}
+              onChange={e => setSelectedTrimester(e.target.value)}
+              className={selectCls}
+              aria-label="Trimester filter"
+            >
+              <option value="">All Trimesters</option>
+              {trimesterOptions.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
         </div>

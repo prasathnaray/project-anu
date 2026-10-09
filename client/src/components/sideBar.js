@@ -57,13 +57,36 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
           </button>
         </div>
       </div>
-      <div className={`${buttonOpen === false ? "md:px-[5px] pt-5" : "md:px-[22px] pt-5"} border-b border-[#e5eee0] pb-5`}>
-        <button className="w-full flex justify-center transition hover:opacity-80"><img src={logo} alt="logo" className="w-full h-auto max-h-10 object-contain" /></button>
+      <div className={`${buttonOpen === false ? "md:px-[5px] pt-5" : "md:px-[14px] pt-5"} border-b border-[#e5eee0] pb-5`}>
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard")}
+          title="ANU Learning Hub"
+          aria-label="ANU Learning Hub"
+          className="w-full flex justify-center transition hover:opacity-80 cursor-pointer"
+        >
+          <img src={logo} alt="ANU Learning Hub" className="w-full h-auto max-h-10 object-contain" />
+        </button>
         {buttonOpen !== false && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-[#dfead5] bg-white px-3 py-2.5 shadow-[0_8px_18px_-16px_rgba(72,104,30,0.55)]">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#edf6df] text-[#719f2c]"><GraduationCap size={17} /></div>
-            <div className="min-w-0"><div className="truncate text-xs font-bold tracking-wide text-slate-700">ANU Learning Hub</div><div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#719f2c]">Learning workspace</div></div>
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate("/dashboard")}
+            title="ANU Learning Hub"
+            aria-label="ANU Learning Hub"
+            className="mt-4 w-full flex items-center gap-2 rounded-2xl border border-[#dfead5] bg-white pl-2.5 pr-8 py-2 text-left shadow-[0_8px_18px_-16px_rgba(72,104,30,0.55)] transition hover:bg-[#f6faf1] hover:border-[#cfe3bb] cursor-pointer"
+          >
+            <div className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-xl bg-[#edf6df] text-[#719f2c]">
+              <GraduationCap size={16} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold tracking-tight text-slate-700 whitespace-nowrap overflow-visible">
+                ANU Learning Hub
+              </div>
+              <div className="mt-0.5 text-[8.5px] font-semibold uppercase tracking-[0.03em] text-[#719f2c] whitespace-nowrap">
+                Learning workspace
+              </div>
+            </div>
+          </button>
         )}
       </div>
       <style>{`
@@ -126,7 +149,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:translate-x-0.5 hover:bg-[#8DC63F]/10 hover:text-[#638f25]"
                   }`}
                 >
-                  <Award size={20} />
+                  <Award size={22} strokeWidth={2.2} className="shrink-0" />
                   <div className={`${buttonOpen === false ? 'hidden' : 'text-md'}`}>Certifications</div>
                 </button>
               </li>
@@ -337,7 +360,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                       : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                     }`}
                 >
-                  <Award size={20} />
+                  <Award size={22} strokeWidth={2.2} className="shrink-0" />
                   <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Certifications</div>
                 </button>
               </li>

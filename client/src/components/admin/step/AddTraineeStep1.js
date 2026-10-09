@@ -69,7 +69,7 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
     }
   };
   return (
-    <ValidatorForm className="mt-7 grid grid-cols-2 gap-5">
+    <ValidatorForm className="mt-7 grid grid-cols-2 gap-5" onSubmit={(e) => { e && e.preventDefault && e.preventDefault(); }}>
       <div>
         <TextField
           fullWidth
@@ -245,7 +245,7 @@ function AddTraineeStep1({ handleChange, handleInputData, listBatches, data }) {
               labelId="batch-select-label"
               onChange={handleChange}
               name="trainee_batch"
-              value={handleInputData.trainee_batch}
+              value={Array.isArray(handleInputData.trainee_batch) ? (handleInputData.trainee_batch[0] ?? '') : (handleInputData.trainee_batch ?? '')}
               label="Select Batch"
             >
               {Array.isArray(listBatches) &&

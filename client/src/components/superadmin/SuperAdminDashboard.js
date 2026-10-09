@@ -1123,7 +1123,13 @@ function SuperAdminDashboard() {
                 <div className="bg-white border rounded-lg shadow-sm p-4 flex flex-col justify-between h-64">
                   <div className="flex justify-between items-center pb-2 border-b">
                     <h4 className="font-bold text-gray-800 text-sm">System Overview</h4>
-                    <button className="text-xs text-blue-600 font-semibold hover:underline">
+                    <button
+                      onClick={() => {
+                        setDashboardState('activities');
+                        navigate('/dashboard');
+                      }}
+                      className="text-xs text-blue-600 font-semibold hover:underline"
+                    >
                       View All
                     </button>
                   </div>

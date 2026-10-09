@@ -30,13 +30,38 @@ const CreateTraineeController = async (req, res) => {
                         })
                 }
                 const file = req.file;
-                const {user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, user_batch } = req.body;
+                const {user_name, user_email, user_contact_num, user_dob, user_gender, user_password, user_role, status, description, institution_name } = req.body;
                 if(!user_name || !user_email || !user_contact_num)
                 {
                         return res.status(501).json({
                                 error: `${'Missing Fields'}`
                         })
                 }
+
+                const rawBatch = req.body.user_batch ?? req.body['user_batch[]'] ?? [];
+                let user_batch = [];
+                if (Array.isArray(rawBatch)) {
+                        user_batch = rawBatch;
+                } else if (typeof rawBatch === 'string') {
+                        const trimmed = rawBatch.trim();
+                        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+                                try {
+                                        user_batch = JSON.parse(trimmed);
+                                } catch (_) {
+                                        user_batch = [trimmed];
+                                }
+                        } else if (trimmed) {
+                                user_batch = [trimmed];
+                        }
+                } else if (rawBatch !== undefined && rawBatch !== null && rawBatch !== '') {
+                        user_batch = [rawBatch];
+                }
+                user_batch = (Array.isArray(user_batch) ? user_batch : [user_batch]).map(String).filter(Boolean);
+
+                if (requester && !requester.center_name && institution_name) {
+                        requester.center_name = institution_name;
+                }
+
                 const filePath = `trainee_images/${file.originalname}`;
                 const uploaded = await uploadAsset({
                         sourceBucket: process.env.BUCKET_NAME,
@@ -45,7 +70,7 @@ const CreateTraineeController = async (req, res) => {
                         contentType: file.mimetype,
                         upsert: true
                 });
-                let hashedPass = await HashPassword(user_password); ;
+                let hashedPass = await HashPassword(user_password);
                 const result = await traineem(uploaded.reference, user_name, user_email, user_contact_num, user_dob, user_gender, hashedPass, user_role, status, description, user_batch, requester);
                 if (result.code && result.code !== 200) {
                         return res.status(result.code).json(result);
@@ -60,7 +85,8 @@ const CreateTraineeController = async (req, res) => {
         }
         catch(err)
         {
-                res.status(500).send(err)
+                console.error('CreateTraineeController error:', err);
+                res.status(500).send(err);
         }
 }
 const DisableTrainee = async(req, res) => {

@@ -5803,11 +5803,11 @@ const BPD_HC_FIND_THE_IMAGE_QUESTIONS = {
   },
 };
 
-// ─── BPD/HC FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10) ───────────
+// ─── BPD/HC FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10 & Q11-Q15) ──
 const BPD_HC_FREEZE_THE_PLANE_QUESTIONS = {
   6: {
     question_no: 6,
-    question_type: 'type1',
+    question_type: 'freeze',
     prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
     options: [],
     correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
@@ -5816,7 +5816,7 @@ const BPD_HC_FREEZE_THE_PLANE_QUESTIONS = {
   },
   7: {
     question_no: 7,
-    question_type: 'type1',
+    question_type: 'freeze',
     prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
     options: [],
     correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
@@ -5825,7 +5825,7 @@ const BPD_HC_FREEZE_THE_PLANE_QUESTIONS = {
   },
   8: {
     question_no: 8,
-    question_type: 'type1',
+    question_type: 'freeze',
     prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
     options: [],
     correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
@@ -5834,7 +5834,7 @@ const BPD_HC_FREEZE_THE_PLANE_QUESTIONS = {
   },
   9: {
     question_no: 9,
-    question_type: 'type1',
+    question_type: 'freeze',
     prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
     options: [],
     correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
@@ -5843,7 +5843,52 @@ const BPD_HC_FREEZE_THE_PLANE_QUESTIONS = {
   },
   10: {
     question_no: 10,
-    question_type: 'type1',
+    question_type: 'freeze',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  11: {
+    question_no: 11,
+    question_type: 'freeze',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  12: {
+    question_no: 12,
+    question_type: 'freeze',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  13: {
+    question_no: 13,
+    question_type: 'freeze',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  14: {
+    question_no: 14,
+    question_type: 'freeze',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  15: {
+    question_no: 15,
+    question_type: 'freeze',
     prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
     options: [],
     correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
@@ -7064,8 +7109,8 @@ const FL_FIND_THE_IMAGE_QUESTIONS = {
       { key: 'D', value: '4', text: 'None of the above' },
     ],
     correct_answer: { key: 'B', value: 'Only C', answer: 'B Only C' },
-    feedback_correct: 'Perfect! You accurately selected the correct femur plane showing a clear and complete visualization of the femoral shaft.',
-    feedback_wrong: 'Incorrect. The selected planes do not show the femur. If they select None of the above: Your selection is incorrect. The correct FL planes are present in C.',
+    feedback_correct: 'Perfect! You selected the correct femur plane showing a clear and complete visualization of the femoral shaft.',
+    feedback_wrong: 'Incorrect. The selected planes do not show the femur.',
   },
   5: {
     question_no: 5,
@@ -7082,6 +7127,17 @@ const FL_FIND_THE_IMAGE_QUESTIONS = {
     feedback_wrong: 'Incorrect choice! The selected image does not represent the proper femur orientation.',
   },
 };
+
+function getFlFindImageWrongFeedback(submission, qNoStr, fallbackWrong) {
+  if (Number(qNoStr) === 4) {
+    const sel = String(submission?.option_chosen ?? '').trim().toLowerCase();
+    if (sel === 'd' || sel === '4' || sel.includes('none')) {
+      return 'Your selection is incorrect. The correct FL planes are present in C.';
+    }
+    return 'Incorrect. The selected planes do not show the femur.';
+  }
+  return fallbackWrong;
+}
 
 // ─── FL FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10 & Q11-Q15) ──────
 const FL_FREEZE_THE_PLANE_QUESTIONS = {
@@ -7431,12 +7487,8 @@ const FL_ALL_QUESTIONS = {
 };
 
 function buildImageInterpretationSessions(submissions, questions, resource = null) {
-  const isMeasurementResource = Boolean(
-    String(resource?.name || '').toLowerCase().includes('measure') ||
-    String(resource?.topic || '').toLowerCase().includes('measure') ||
-    (Array.isArray(questions) && questions.some(q => q?.question_type === 'measurement' || /biparietal|head circumference|ellipse|caliper|apad|tad|abdominal circumference|femur|femoral|\bfl\b/i.test(String(q?.prompt || '')))) ||
-    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'measurement'))
-  );
+  const resName = String(resource?.name || '').trim().toLowerCase();
+  const resTopic = String(resource?.topic || '').trim().toLowerCase();
 
   const isFlResource = Boolean(
     /\bfl\b|femur|femoral/i.test(String(resource?.name || '')) ||
@@ -7459,42 +7511,73 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
     (Array.isArray(questions) && questions.some(q => /abdominal plane|stomach bubble|portal vein|fetal abdomen/i.test(String(q?.feedback_correct || ''))))
   );
 
+  const isExplicitFindImage = Boolean(
+    resName.includes('find the image') ||
+    resName.includes('find image') ||
+    resName === 'find' ||
+    (!resName.includes('measure') && !resTopic.includes('measure') &&
+     !resName.includes('drag') && !resName.includes('annotation') && !resName.includes('label') &&
+     !resName.includes('freeze') && (
+       !resource || resource?.type === 'interpret' || resName === ''
+     ))
+  );
+
+  const isMeasurementResource = !isExplicitFindImage && Boolean(
+    resName.includes('measure') ||
+    resTopic.includes('measure') ||
+    (Array.isArray(questions) && questions.some(q => q?.question_type === 'measurement')) ||
+    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'measurement'))
+  );
+
+  const isAnnotation2Resource = !isExplicitFindImage && !isMeasurementResource && Boolean(
+    resName.includes('label') ||
+    resName.includes('annotation 2') ||
+    resName.includes('annotation: label') ||
+    (Array.isArray(questions) && questions.some(q => q?.question_type === 'annotation2')) ||
+    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'annotation2'))
+  );
+
+  const isAnnotation1Resource = !isExplicitFindImage && !isMeasurementResource && !isAnnotation2Resource && Boolean(
+    resName.includes('drag') ||
+    (resName.includes('annotation') && !resName.includes('label') && !resName.includes('2')) ||
+    (Array.isArray(questions) && questions.some(q => q?.question_type === 'annotation1')) ||
+    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'annotation1'))
+  );
+
+  const isFreezePlaneResource = !isExplicitFindImage && !isMeasurementResource && !isAnnotation1Resource && !isAnnotation2Resource && (
+    resName.includes('freeze') ||
+    (Array.isArray(questions) && questions.some(q => ((Number(q?.question_no) >= 6 && Number(q?.question_no) <= 10) || (Number(q?.question_no) >= 11 && Number(q?.question_no) <= 15)) && /freeze|timeframe|angulation/i.test(String(q?.prompt || ''))))
+  );
+
+  const isFindImageResource = isExplicitFindImage || (!isMeasurementResource && !isAnnotation1Resource && !isAnnotation2Resource && !isFreezePlaneResource);
+
   const rawQuestions = (Array.isArray(questions) ? [...questions] : []).filter(
     q => {
       const qNo = Number(q?.question_no);
+      if (isFindImageResource) return qNo >= 1 && qNo <= 5;
+      if (isFreezePlaneResource) return (qNo >= 6 && qNo <= 10) || (qNo >= 11 && qNo <= 15);
       if (isFlResource && isMeasurementResource) return qNo >= 1 && qNo <= 5;
       if (isAcResource && isMeasurementResource) return qNo >= 1 && qNo <= 10;
       return isMeasurementResource ? true : !(qNo >= 11 && qNo <= 15);
     }
   );
 
-  const isAnnotation1Resource = !isMeasurementResource && Boolean(
-    String(resource?.name || '').toLowerCase().includes('drag') ||
-    (String(resource?.name || '').toLowerCase().includes('annotation') && !String(resource?.name || '').toLowerCase().includes('label') && !String(resource?.name || '').toLowerCase().includes('2')) ||
-    rawQuestions.some(q => q?.question_type === 'annotation1') ||
-    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'annotation1'))
-  );
-
-  const isAnnotation2Resource = !isMeasurementResource && Boolean(
-    String(resource?.name || '').toLowerCase().includes('label') ||
-    String(resource?.name || '').toLowerCase().includes('annotation 2') ||
-    String(resource?.name || '').toLowerCase().includes('annotation: label') ||
-    rawQuestions.some(q => q?.question_type === 'annotation2') ||
-    (Array.isArray(submissions) && submissions.some(s => s?.question_type === 'annotation2'))
-  );
-
-  const isFreezePlaneResource = !isMeasurementResource && !isAnnotation1Resource && !isAnnotation2Resource && (
-    String(resource?.name || '').toLowerCase().includes('freeze')
-    || rawQuestions.some(q => ((Number(q?.question_no) >= 6 && Number(q?.question_no) <= 10) || (Number(q?.question_no) >= 11 && Number(q?.question_no) <= 15)) && /freeze|timeframe|angulation/i.test(String(q?.prompt || '')))
-  );
-  const isFindImageResource = !isMeasurementResource && !isAnnotation1Resource && !isAnnotation2Resource && (!resource ||
-    String(resource?.name || '').toLowerCase().includes('find the image') ||
-    String(resource?.name || '').toLowerCase().includes('interpret') ||
-    resource?.type === 'interpret' ||
-    rawQuestions.some(q => Number(q?.question_no) >= 1 && Number(q?.question_no) <= 5));
-
   const questionMap = {};
-  if (isFlResource) {
+  if (isFindImageResource) {
+    if (isFlResource) {
+      Object.values(FL_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else if (isAcResource) {
+      Object.values(AC_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    } else {
+      Object.values(BPD_HC_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
+        questionMap[String(q.question_no)] = { ...q };
+      });
+    }
+  } else if (isFlResource) {
     if (isMeasurementResource) {
       Object.values(FL_MEASUREMENT_QUESTIONS).forEach(q => {
         questionMap[String(q.question_no)] = { ...q };
@@ -7553,8 +7636,10 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
       questionMap[String(q.question_no)] = { ...q };
     });
   } else if (isFreezePlaneResource) {
-    Object.values(BPD_HC_FREEZE_THE_PLANE_QUESTIONS).forEach(q => {
-      questionMap[String(q.question_no)] = { ...q };
+    [6, 7, 8, 9, 10].forEach(qNo => {
+      if (BPD_HC_FREEZE_THE_PLANE_QUESTIONS[qNo]) {
+        questionMap[String(qNo)] = { ...BPD_HC_FREEZE_THE_PLANE_QUESTIONS[qNo] };
+      }
     });
   } else if (isFindImageResource) {
     Object.values(BPD_HC_FIND_THE_IMAGE_QUESTIONS).forEach(q => {
@@ -7563,9 +7648,11 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
   }
   rawQuestions.forEach(q => {
     const qNoStr = String(q.question_no ?? '');
+    if (isFindImageResource && (Number(qNoStr) < 1 || Number(qNoStr) > 5)) return;
+    if (isFreezePlaneResource && (Number(qNoStr) < 6 || Number(qNoStr) > 15)) return;
     if (isFlResource && isMeasurementResource && (Number(qNoStr) < 1 || Number(qNoStr) > 5)) return;
     if (isAcResource && isMeasurementResource && (Number(qNoStr) < 1 || Number(qNoStr) > 10)) return;
-    if (!isMeasurementResource && Number(qNoStr) >= 11 && Number(qNoStr) <= 15) return;
+    if (!isMeasurementResource && !isFreezePlaneResource && Number(qNoStr) >= 11 && Number(qNoStr) <= 15) return;
     const bpdFallback = isMeasurementResource
       ? (isFlResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAcResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : BPD_HC_MEASUREMENT_QUESTIONS[Number(qNoStr)]))
       : (isAnnotation2Resource
@@ -7579,6 +7666,30 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
       bpdFallback
     );
     if (fallback) {
+      if (isFindImageResource) {
+        questionMap[qNoStr] = {
+          ...fallback,
+          question_type: 'type1',
+          assets: (Array.isArray(q.assets) && q.assets.length > 0) ? q.assets : fallback.assets,
+        };
+        return;
+      }
+      if (isFreezePlaneResource) {
+        const targetQNo = (Number(qNoStr) >= 11 && Number(qNoStr) <= 15) ? String(Number(qNoStr) - 5) : qNoStr;
+        questionMap[targetQNo] = {
+          ...fallback,
+          ...q,
+          question_no: Number(targetQNo),
+          question_type: 'freeze',
+          prompt: fallback.prompt || q.prompt || '',
+          options: [],
+          correct_answer: fallback.correct_answer || q.correct_answer,
+          feedback_correct: fallback.feedback_correct || q.feedback_correct,
+          feedback_wrong: fallback.feedback_wrong || q.feedback_wrong,
+          assets: (Array.isArray(q.assets) && q.assets.length > 0) ? q.assets : fallback.assets,
+        };
+        return;
+      }
       const hasCompleteOptions = Array.isArray(q.options) && q.options.length >= 4 && q.options.every(o => o?.text || o?.label);
       const isQuestion4 = Number(qNoStr) === 4 && !isAnnotation1Resource && !isAnnotation2Resource && !isMeasurementResource;
       const authoritativeAnswer = (isFlResource || isAcResource || isAnnotation1Resource || isAnnotation2Resource || isMeasurementResource)
@@ -7612,12 +7723,16 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
   const submissionsBySession = {};
   (Array.isArray(submissions) ? submissions : []).forEach((submission) => {
     const rawQNo = Number(submission?.question_no);
+    if (isFindImageResource && (rawQNo < 1 || rawQNo > 5)) return;
+    if (isFreezePlaneResource && (rawQNo < 6 || rawQNo > 15)) return;
     if (isFlResource && isMeasurementResource && (rawQNo < 1 || rawQNo > 5)) return;
     if (isAcResource && isMeasurementResource && (rawQNo < 1 || rawQNo > 10)) return;
     const normalizedSubmission = (!isMeasurementResource && rawQNo >= 11 && rawQNo <= 15)
       ? { ...submission, question_no: rawQNo - 5 }
       : submission;
-    if (!isMeasurementResource && Number(normalizedSubmission?.question_no) >= 11 && Number(normalizedSubmission?.question_no) <= 15) return;
+    if (!isMeasurementResource && !isFreezePlaneResource && Number(normalizedSubmission?.question_no) >= 11 && Number(normalizedSubmission?.question_no) <= 15) return;
+    if (isFindImageResource && (Number(normalizedSubmission?.question_no) < 1 || Number(normalizedSubmission?.question_no) > 5)) return;
+    if (isFreezePlaneResource && (Number(normalizedSubmission?.question_no) < 6 || Number(normalizedSubmission?.question_no) > 10)) return;
     const sessionId = normalizedSubmission.session_id || 'unknown';
     if (!submissionsBySession[sessionId]) {
       submissionsBySession[sessionId] = [];
@@ -7644,6 +7759,8 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
       ])).filter(qNo => {
         if (!qNo) return false;
         const n = Number(qNo);
+        if (isFindImageResource) return n >= 1 && n <= 5;
+        if (isFreezePlaneResource) return n >= 6 && n <= 10;
         if (isFlResource && isMeasurementResource) return n >= 1 && n <= 5;
         if (isAcResource && isMeasurementResource) return n >= 1 && n <= 10;
         return isMeasurementResource || !(n >= 11 && n <= 15);
@@ -7664,6 +7781,71 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
           isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
           bpdFallback
         ) || {};
+
+        if (isFindImageResource) {
+          const options = Array.isArray(fallback.options) && fallback.options.length > 0 ? fallback.options : (Array.isArray(question.options) ? question.options : []);
+          const correctAnswer = fallback.correct_answer || question.correct_answer || null;
+          const correctKey = getConfiguredAnswerKey(correctAnswer);
+          const selectedKey = String(submission.option_chosen ?? '');
+          let isCorrect = submission.is_correct;
+
+          if (submission.option_chosen !== undefined && submission.option_chosen !== null && String(submission.option_chosen).trim() !== '') {
+            const selectedMatchesCorrect = optionMatchesConfiguredKey(
+              getConfiguredOptionDetails(options, correctKey),
+              selectedKey
+            ) || selectedKey.trim().toUpperCase() === correctKey.trim().toUpperCase() ||
+            (correctKey === 'A' && (selectedKey === '1' || selectedKey.toUpperCase() === 'A')) ||
+            (correctKey === 'B' && (selectedKey === '2' || selectedKey.toUpperCase() === 'B')) ||
+            (correctKey === 'C' && (selectedKey === '3' || selectedKey.toUpperCase() === 'C')) ||
+            (correctKey === 'D' && (selectedKey === '4' || selectedKey.toUpperCase() === 'D'));
+            isCorrect = selectedMatchesCorrect;
+          } else if (submission.is_correct !== undefined && submission.is_correct !== null) {
+            isCorrect = submission.is_correct === true || String(submission.is_correct).toLowerCase() === 'true' || submission.is_correct === 1;
+          }
+
+          const feedbackWrong = isFlResource
+            ? getFlFindImageWrongFeedback(submission, qNoStr, fallback.feedback_wrong)
+            : (fallback.feedback_wrong || question.feedback_wrong || null);
+
+          return {
+            ...fallback,
+            ...question,
+            ...submission,
+            question_no: Number(qNoStr) || question.question_no || submission.question_no,
+            question_type: 'type1',
+            prompt: fallback.prompt || question.prompt || '',
+            options,
+            correct_answer: correctAnswer,
+            feedback_correct: fallback.feedback_correct || question.feedback_correct || null,
+            feedback_wrong: feedbackWrong,
+            is_correct: isCorrect,
+            assets: Array.isArray(question.assets) && question.assets.length > 0 ? question.assets : (Array.isArray(submission.assets) ? submission.assets : []),
+            metadata: {},
+          };
+        }
+
+        if (isFreezePlaneResource) {
+          let isCorrect = submission.is_correct;
+          if (submission.is_correct !== undefined && submission.is_correct !== null) {
+            isCorrect = submission.is_correct === true || String(submission.is_correct).toLowerCase() === 'true' || submission.is_correct === 1;
+          }
+
+          return {
+            ...fallback,
+            ...question,
+            ...submission,
+            question_no: Number(qNoStr),
+            question_type: 'freeze',
+            prompt: fallback.prompt || question.prompt || '',
+            options: [],
+            correct_answer: fallback.correct_answer || question.correct_answer,
+            feedback_correct: fallback.feedback_correct || question.feedback_correct || null,
+            feedback_wrong: fallback.feedback_wrong || question.feedback_wrong || null,
+            is_correct: isCorrect,
+            assets: Array.isArray(question.assets) && question.assets.length > 0 ? question.assets : (Array.isArray(submission.assets) ? submission.assets : []),
+            metadata: {},
+          };
+        }
 
         const hasCompleteOptions = Array.isArray(question.options) && question.options.length >= 4 && question.options.every(o => o?.text || o?.label);
         const options = isFlResource && isMeasurementResource

@@ -104,8 +104,12 @@ function AddTrainee() {
       formData.append('institution_name', handleInputData.institution_name || '')
       formData.append('user_dob', handleInputData.trainee_dob);
       formData.append('user_gender', handleInputData.trainee_gender)
-      handleInputData.trainee_batch.forEach((batch) => {
-            formData.append('user_batch[]', batch);
+      const rawBatches = Array.isArray(handleInputData.trainee_batch)
+        ? handleInputData.trainee_batch
+        : (handleInputData.trainee_batch ? [handleInputData.trainee_batch] : []);
+      rawBatches.forEach((batch) => {
+        formData.append('user_batch[]', batch);
+        formData.append('user_batch', batch);
       });
       formData.append('user_password', handleInputData.trainee_password)
       formData.append('user_role', roleCode)

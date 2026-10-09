@@ -12,11 +12,15 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
     );
   }
 
-  const data = PropsTraineesPerBatch.map((batch, index) => ({
-    id: index,
-    value: Number(batch.total_users) || 0,
-    label: batch.batch_name, // needed for tooltip only
-  }));
+  const data = PropsTraineesPerBatch.map((batch, index) => {
+    const count = Number(batch.total_users) || 0;
+    const name = batch.batch_name || `Batch ${index + 1}`;
+    return {
+      id: index,
+      value: count,
+      label: `${name}: ${count}`,
+    };
+  });
 
   const totalUsers = data.reduce((sum, item) => sum + item.value, 0);
 
@@ -36,10 +40,8 @@ export default function TraineesPerBatch({ PropsTraineesPerBatch }) {
             innerRadius: 80,
             outerRadius: 120,
             paddingAngle: 2,
-            label: {show: false},
-            tooltip: {
-              formatter: (datum) => `${datum.label}: ${datum.value}`, // show on hover
-            },
+            valueFormatter: (item) =>
+              `${item?.value ?? 0} ${Number(item?.value) === 1 ? "trainee" : "trainees"}`,
           },
         ]}
         width={400}
