@@ -1,5 +1,6 @@
 const client = require('../utils/conn');
 const { HashPassword } = require('../utils/hash');
+const { encryptedUserFields } = require('../utils/userEmailCrypto');
 const { ROLES, HttpError, requireRole } = require('../Auth/authorization');
 const { audit } = require('./ContentAccessm');
 
@@ -20,17 +21,20 @@ const listSuperAdmins = async (requester) => {
 const createSuperAdmin = async (requester, input) => {
     requireRole(requester, [ROLES.SUPER_ADMIN]);
     if (!input.user_email?.trim() || !input.user_name?.trim()) throw new HttpError(400, 'user_email and user_name are required.');
-    const email = input.user_email.trim().toLowerCase();
-    const duplicate = await client.query('SELECT 1 FROM user_data WHERE user_email = $1', [email]);
+    const pii = encryptedUserFields(input.user_email, input.user_name.trim(), input.user_contact_num || null);
+    const email = pii.user_email;
+    const duplicate = await client.query('SELECT 1 FROM user_data WHERE user_email_lookup = $1', [pii.user_email_lookup]);
     if (duplicate.rows.length > 0) throw new HttpError(409, 'A user with this email already exists.');
     const password = temporaryPassword();
     const hashed = await HashPassword(password);
     const result = await client.query(
         `INSERT INTO user_data
-            (user_email, user_name, user_contact_num, user_password, user_role, status, centre_id, center_name)
-         VALUES ($1, $2, $3, $4, '99', 'active', NULL, NULL)
+            (user_email, user_name, user_contact_num, user_password, user_role, status, centre_id, center_name,
+             user_email_lookup, user_email_enc, user_name_enc, user_contact_num_enc)
+         VALUES ($1, $2, $3, $4, '99', 'active', NULL, NULL, $5, $6, $7, $8)
          RETURNING user_email, user_name, user_contact_num, user_role, status, created_at`,
-        [email, input.user_name.trim(), input.user_contact_num || null, hashed]
+        [email, input.user_name.trim(), input.user_contact_num || null, hashed,
+         pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc]
     );
     await audit(client, requester, 'super_admin.created', 'user', email);
     return { user: result.rows[0], temporaryPassword: password };

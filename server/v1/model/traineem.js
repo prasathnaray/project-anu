@@ -1,4 +1,5 @@
 const client = require('../utils/conn.js');
+const { encryptedUserFields } = require('../utils/userEmailCrypto');
 // const {HashedPassword} = require('../utils/hash.js');
 const hasCenterScope = (requester) => Boolean(requester?.centre_id);
 
@@ -46,6 +47,7 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
 
             const dob = (user_dob && String(user_dob).trim()) ? user_dob : null;
 
+            const pii = encryptedUserFields(user_email, user_name, user_contact_num);
             client.query(
                 `INSERT INTO public.user_data(
                     user_profile_photo,
@@ -59,18 +61,24 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                     status,
                     description,
                     centre_id,
-                    center_name
-                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
-                [user_profile_photo, user_name, user_email, user_contact_num, dob, user_gender, user_password, user_role, status, description, requester.centre_id, requester.center_name],
+                    center_name,
+                    user_email_lookup,
+                    user_email_enc,
+                    user_name_enc,
+                    user_contact_num_enc
+                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+                [user_profile_photo, user_name, pii.user_email, user_contact_num, dob, user_gender, user_password,
+                 user_role, status, description, requester.centre_id, requester.center_name,
+                 pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc],
                 (err, result) => {
                   if(err){
                     return reject(err);
                   }  
                   else
                   {
-                            client.query('SELECT 1 FROM public.batch_people_data WHERE user_id = $1', [user_email], (errCheck, resCheck) => {
+                            client.query('SELECT 1 FROM public.batch_people_data WHERE user_id = $1', [pii.user_email], (errCheck, resCheck) => {
                                 if (errCheck) {
-                                    client.query('DELETE FROM public.user_data WHERE user_email = $1', [user_email], () => {});
+                                    client.query('DELETE FROM public.user_data WHERE user_email = $1', [pii.user_email], () => {});
                                     return reject(errCheck);
                                 }
 
@@ -78,9 +86,9 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                                     ? 'UPDATE public.batch_people_data SET batch_id = $1 WHERE user_id = $2'
                                     : 'INSERT INTO public.batch_people_data(batch_id, user_id) VALUES($1, $2)';
 
-                                client.query(bpdQuery, [batchIdArray, user_email], (err2, result2) => {
+                                client.query(bpdQuery, [batchIdArray, pii.user_email], (err2, result2) => {
                                     if (err2) {
-                                        client.query('DELETE FROM public.user_data WHERE user_email = $1', [user_email], () => {});
+                                        client.query('DELETE FROM public.user_data WHERE user_email = $1', [pii.user_email], () => {});
                                         return reject(err2);
                                     }
 
@@ -89,7 +97,7 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                                         code: 200,
                                         message: 'Profile Created Successfully',
                                         data: {
-                                            user_email
+                                            user_email: pii.user_email
                                         }
                                     });
                                 });

@@ -1,15 +1,20 @@
 const client = require('../utils/conn');
 const jwt = require('jsonwebtoken');
 const { comparePasswords } = require('../utils/hash');
+const { normalizeEmail, emailLookup, decryptPii } = require('../utils/userEmailCrypto');
 const path = require('path');
 const LoginAttemptModel = require('./LoginAttemptModel');
 const { createSession } = require('./sessionStore');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
+  const normalizedEmail = normalizeEmail(user_mail);
   const result = await client.query(
-    'SELECT * FROM public.user_data WHERE user_email = $1 AND status = $2',
-    [user_mail, 'active']
+    `SELECT user_email_enc, user_name_enc, user_password, user_role, people_id,
+            centre_id, center_name
+     FROM public.user_data
+     WHERE user_email_lookup = $1 AND status = $2`,
+    [emailLookup(normalizedEmail), 'active']
   );
   if (!result.rows.length) {
     return { status: 'User Not Found or Account Disabled', code: 404 };
@@ -20,9 +25,17 @@ const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
     return { status: 'Invalid_Password', code: 401 };
   }
 
+  // The lookup identifies the row; authenticated decryption recovers the
+  // email needed by the current session and token schemas.
+  user.user_email = decryptPii(user.user_email_enc, 'user_email');
+  if (normalizeEmail(user.user_email) !== normalizedEmail) {
+    throw new Error('Encrypted email does not match its lookup value');
+  }
+  user.user_name = decryptPii(user.user_name_enc, 'user_name');
+
   const session = await createSession(user, deviceInfo, ipAddress);
   try {
-    await LoginAttemptModel(user_mail);
+    await LoginAttemptModel(user.user_email);
   } catch (attemptErr) {
     console.error('Failed to log login attempt:', attemptErr);
   }
