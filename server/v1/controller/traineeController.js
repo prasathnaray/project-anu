@@ -3,6 +3,7 @@ const {HashPassword} = require('../utils/hash.js');
 const path = require('path');
 const { uploadAsset, signAsset } = require('../utils/storageAdapter');
 const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
+const { issueAccountVerificationOtp } = require('../utils/accountVerification');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const TraineeController = async(req, res) => {
         const requester = req.user;
@@ -75,9 +76,19 @@ const CreateTraineeController = async (req, res) => {
                 if (result.code && result.code !== 200) {
                         return res.status(result.code).json(result);
                 }
+                let verificationSent = false;
+                try {
+                        await issueAccountVerificationOtp(result.data.user_email, 'activation');
+                        verificationSent = true;
+                } catch (verificationError) {
+                        console.error('Failed to send account activation OTP:', verificationError);
+                }
                 res.status(200).json({
                         status: 'Success',
-                        message: 'Profile image uploaded.',
+                        message: verificationSent
+                                ? 'Profile created. Verification OTP sent to the registered phone.'
+                                : 'Profile created as pending verification. OTP could not be sent; use resend verification.',
+                        verificationSent,
                         filePath: uploaded.reference,
                         fileUrl: await signAsset(uploaded.reference),
                         result: result,
@@ -108,9 +119,20 @@ const DisableTrainee = async(req, res) => {
                 }
                 else
                 {
+                        let verificationSent = false;
+                        if (result.verificationRequired) {
+                                try {
+                                        await issueAccountVerificationOtp(result.user_email, 'reactivation');
+                                        verificationSent = true;
+                                } catch (verificationError) {
+                                        console.error('Failed to send reactivation OTP:', verificationError);
+                                }
+                        }
                         res.status(200).send({
                                 result: 'Updated Successfully',
-                                statusCode: 200
+                                statusCode: 200,
+                                verificationRequired: result.verificationRequired,
+                                verificationSent
                         })
                 }
         }

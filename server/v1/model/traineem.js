@@ -62,13 +62,14 @@ const traineem = (user_profile_photo, user_name, user_email, user_contact_num, u
                     description,
                     centre_id,
                     center_name,
+                    verification_required,
                     user_email_lookup,
                     user_email_enc,
                     user_name_enc,
                     user_contact_num_enc
-                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+                ) VALUES($1, $2, $3, $4, $5, $6, $7, $8, 'pending_verification', $9, $10, $11, true, $12, $13, $14, $15)`,
                 [user_profile_photo, user_name, pii.user_email, user_contact_num, dob, user_gender, user_password,
-                 user_role, status, description, requester.centre_id, requester.center_name,
+                 user_role, description, requester.centre_id, requester.center_name,
                  pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc],
                 (err, result) => {
                   if(err){
@@ -275,14 +276,36 @@ const disableTraineem = (requester , user_mail, status) => {
                 message: 'Your account is not linked to a scan center.'
             });
         }
-        client.query('UPDATE public.user_data SET status=$1 WHERE user_email=$2 AND user_role=$3 AND centre_id=$4', [status, user_mail, '103', requester.centre_id], (err, result) => {
+        const requestedStatus = String(status || '').toLowerCase();
+        const isEnableRequest = ['active', 'enable', 'enabled'].includes(requestedStatus);
+        const nextStatus = isEnableRequest ? 'pending_reverification' : 'disabled';
+        client.query(
+            `UPDATE public.user_data
+                SET status = $1,
+                    verification_required = $2
+              WHERE user_email = $3 AND user_role IN ('102', '103') AND centre_id = $4
+              RETURNING user_email`,
+            [nextStatus, isEnableRequest, user_mail, requester.centre_id],
+            async (err, result) => {
             if(err)
             {
                 return reject(err.message)
             }
             else
             {
-                return resolve(result);
+                if (result.rowCount && !isEnableRequest) {
+                    try {
+                        const { revokeAllSessions } = require('../Auth/sessionStore');
+                        await revokeAllSessions(user_mail);
+                    } catch (sessionError) {
+                        console.error('Failed to revoke disabled user sessions:', sessionError);
+                    }
+                }
+                return resolve({
+                    ...result,
+                    verificationRequired: Boolean(result.rowCount && isEnableRequest),
+                    user_email: result.rows[0]?.user_email || user_mail
+                });
             }
         })
     })

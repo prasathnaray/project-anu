@@ -175,6 +175,13 @@ function Login() {
               {loading ? <><span>Signing you in</span><ClipLoader color="#ffffff" size={17} cssOverride={{ borderWidth: "3px" }} /></> : <><span>Sign in to LMS</span><ArrowRight size={17} /></>}
             </button>
           </form>
+          <button
+            type="button"
+            onClick={() => navigate('/verify-account')}
+            className="mt-4 w-full text-center text-xs font-semibold text-[#719f2c] transition hover:text-[#527a1f]"
+          >
+            Verify account / resend OTP
+          </button>
           <p className="mt-8 text-center text-xs text-slate-400">By continuing, you are accessing a secure learning workspace.</p>
         </div>
       </section>

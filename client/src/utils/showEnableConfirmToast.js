@@ -18,7 +18,7 @@ const showEnableConfirmToast = (email, onSuccess, token, statusUpdate) => {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                toast.success("Trainee enabled successfully");
+                toast.success("Verification OTP sent. The trainee will be enabled after verification.");
                 onSuccess?.();
               } catch (err) {
                 toast.error("Failed to enable trainee");

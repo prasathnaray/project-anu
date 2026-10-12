@@ -580,12 +580,18 @@ function TraineeList() {
                           <td className="px-3 py-3 font-normal sm:px-4">
                             <div
                               className={`inline-block px-3 py-1 rounded text-sm ${
-                                trainee.status === "inactive"
+                                ["inactive", "disabled"].includes(String(trainee.status).toLowerCase())
                                   ? "bg-rose-50 text-rose-600 font-semibold rounded-full border border-rose-100"
                                   : "text-[#5f9222] bg-[#eff8e5] font-semibold rounded-full border border-[#d9edc2]"
                               }`}
                             >
-                              {trainee.status === "inactive" ? "Disabled" : "Active"}
+                              {String(trainee.status).toLowerCase() === "pending_verification"
+                                ? "Pending verification"
+                                : String(trainee.status).toLowerCase() === "pending_reverification"
+                                  ? "Awaiting re-verification"
+                                  : ["inactive", "disabled"].includes(String(trainee.status).toLowerCase())
+                                    ? "Disabled"
+                                    : "Active"}
                             </div>
                           </td>
 
@@ -628,7 +634,7 @@ function TraineeList() {
                               >
                                 Edit
                               </MenuItem>
-                              {trainee.status === "inactive" ? (
+                              {["inactive", "disabled"].includes(String(trainee.status).toLowerCase()) ? (
                                 <MenuItem
                                   value="enable"
                                   onClick={() =>

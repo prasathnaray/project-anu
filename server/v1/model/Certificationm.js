@@ -15,6 +15,23 @@ const getCertByCurm = async (curiculum_id, requester) => {
         } catch (e) {}
     }
 
+    // Batch creation stores certificate IDs from certification_data. The
+    // content-access listing can be empty when legacy publication/ownership
+    // metadata is incomplete, so keep the admin certificate dropdown usable.
+    if ((!courses || courses.length === 0) && [99, 101].includes(Number(requester.role))) {
+        try {
+            const certificateRes = await client.query(
+                `SELECT certificate_id, certificate_name, curiculum_id,
+                        curiculum_id AS curiculum_name
+                   FROM public.certification_data
+                  WHERE ($1 = 'all' OR LOWER(TRIM(COALESCE(curiculum_id, ''))) = LOWER(TRIM($1)))
+                  ORDER BY certificate_name`,
+                [String(curiculum_id || 'all')]
+            );
+            courses = certificateRes.rows || [];
+        } catch (e) {}
+    }
+
     if (curiculum_id && curiculum_id !== 'all') {
         let filtered = courses.filter((course) => String(course.curiculum_id || '') === String(curiculum_id));
         if (filtered.length === 0) {

@@ -5,6 +5,7 @@ import SideBar from '../components/sideBar';
 import GoogleAnalytics from '../components/GoogleAnalytics';
 
 import Login from '../Auth/login';
+import AccountVerification from '../Auth/AccountVerification';
 import PrivateRoute from './ProtectedRoutes';
 import Dashboard from '../pages/dashboard';
 // import Profile from '../pages/Profile';
@@ -46,6 +47,7 @@ function RoutesPath() {
 
             <Routes>
                     <Route path="/" element={<Login />}/>
+                    <Route path="/verify-account" element={<AccountVerification />} />
                     <Route element={<PrivateRoute />}>
                             <Route path="/dashboard" element={<Dashboard />} />
                             {/* <Route path="/profile" element={<Profile />} /> */}

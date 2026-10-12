@@ -257,17 +257,24 @@ function Batch() {
                 if (name === "certification_data") {
                         setBatchData({
                                 ...batchData,
-                                // [name]: typeof value === "string" ? value.split(",") : value,
-                                [name]: Array.isArray(value) ? value.map(String) : value.split(",").map(String),
+                                [name]: Array.isArray(value)
+                                        ? value.map(String)
+                                        : String(value).split(",").filter(Boolean).map(String),
                         });
                 }
                 else {
-                        setBatchData({
-                                ...batchData,
-                                [name]: value,
-                        });
                         if (name === "curiculum_name" && value) {
+                                setBatchData(prev => ({
+                                        ...prev,
+                                        [name]: value,
+                                        certification_data: [],
+                                }));
                                 getCourseByCurData(value);
+                        } else {
+                                setBatchData(prev => ({
+                                        ...prev,
+                                        [name]: value,
+                                }));
                         }
                 }
         };
@@ -394,7 +401,7 @@ function Batch() {
                 e.preventDefault();
                 const token = localStorage.getItem("user_token");
                 try {
-                        if (!batchData.batch_name || !batchData.batch_start_date || !batchData.batch_end_date || !batchData.curiculum_name || !batchData.certification_data) {
+                        if (!batchData.batch_name || !batchData.batch_start_date || !batchData.batch_end_date || !batchData.curiculum_name || !Array.isArray(batchData.certification_data) || batchData.certification_data.length === 0) {
                                 toast.error("please fill all the fields", {
                                         autoClose: 3000,
                                         toastId: 'input-missing',
@@ -463,6 +470,16 @@ function Batch() {
                                 } catch (e) {}
                         }
                         if (!courses || courses.length === 0) {
+                                const allCertificateRes = await GetCertificateByCurAPI(token, "all");
+                                courses = Array.isArray(allCertificateRes?.data?.result)
+                                        ? allCertificateRes.data.result
+                                        : Array.isArray(allCertificateRes?.data?.rows)
+                                        ? allCertificateRes.data.rows
+                                        : Array.isArray(allCertificateRes?.data)
+                                        ? allCertificateRes.data
+                                        : [];
+                        }
+                        if (!courses || courses.length === 0) {
                                 const allRes = await GetCoursesAPI(token);
                                 courses = Array.isArray(allRes?.data?.result)
                                         ? allRes.data.result
@@ -472,7 +489,9 @@ function Batch() {
                                         ? allRes.data
                                         : [];
                         }
-                        setCorList(courses);
+                        setCorList((courses || []).filter((course) =>
+                                course?.certificate_id != null || course?.course_id != null
+                        ));
                 }
                 catch (err) {
                         console.log(err);
@@ -1555,11 +1574,11 @@ function Batch() {
                                                 size="small"
                                                 sx={{ minHeight: "35px" }}
                                         >
-                                                <InputLabel id="chip-select-label">Select Course</InputLabel>
+                                                <InputLabel id="chip-select-label">Select Certificate</InputLabel>
                                                 <Select
                                                         multiple
                                                         labelId="chip-select-label"
-                                                        label="Select Course"
+                                                        label="Select Certificate"
                                                         className=""
                                                         onChange={handleChange}
                                                         name="certification_data"
@@ -1584,11 +1603,11 @@ function Batch() {
                                                                 Array.isArray(selectedIds) ? (
                                                                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                                                                                 {selectedIds.map((id) => {
-                                                                                        const course = corList.find((c) => c.certificate_id === id);
+                                                                                        const certificate = corList.find((c) => String(c?.certificate_id ?? c?.course_id) === String(id));
                                                                                         return (
                                                                                                 <Chip
                                                                                                         key={id}
-                                                                                                        label={course ? course.certificate_name : id}
+                                                                                                        label={certificate?.certificate_name ?? certificate?.course_name ?? id}
                                                                                                         sx={{ borderRadius: "4px" }}
                                                                                                 />
                                                                                         );
@@ -1598,11 +1617,15 @@ function Batch() {
                                                         )}
                                                 >
                                                         {Array.isArray(corList) && corList.length > 0 ? (
-                                                                corList.map((data, index) => (
-                                                                        <MenuItem key={index} value={data?.certificate_id}>
-                                                                                {data?.certificate_name}
+                                                                        corList.map((data, index) => {
+                                                                                const certificateId = data?.certificate_id ?? data?.course_id;
+                                                                                const certificateName = data?.certificate_name ?? data?.course_name;
+                                                                                return (
+                                                                                <MenuItem key={String(certificateId ?? index)} value={String(certificateId)}>
+                                                                                        {certificateName}
                                                                         </MenuItem>
-                                                                ))
+                                                                                );
+                                                                        })
                                                         ) : (
                                                                 <MenuItem disabled>No data found</MenuItem>
                                                         )}
