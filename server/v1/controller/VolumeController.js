@@ -32,6 +32,72 @@ const sendDownloadError = (res, error) => {
     console.error('Volume download failed:', error);
     return res.status(502).json({ message: 'Unable to prepare download.' });
 };
+
+const isTextBuffer = (buf) => {
+    if (!buf || buf.length === 0) return true;
+    let nullCount = 0;
+    let textCount = 0;
+    for (let i = 0; i < buf.length; i++) {
+        const byte = buf[i];
+        if (byte === 0x00) nullCount++;
+        else if ((byte >= 0x20 && byte <= 0x7E) || byte === 0x09 || byte === 0x0A || byte === 0x0D) {
+            textCount++;
+        }
+    }
+    return nullCount === 0 && (textCount / buf.length) > 0.85;
+};
+
+const isValidVolBuffer = (buffer) => {
+    if (!buffer || buffer.length === 0) return false;
+
+    // Reject known non-vol magic bytes even if renamed to .vol
+    // PDF: %PDF
+    if (buffer.length >= 4 && buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
+        return false;
+    }
+    // ZIP: PK\x03\x04
+    if (buffer.length >= 4 && buffer[0] === 0x50 && buffer[1] === 0x4B && buffer[2] === 0x03 && buffer[3] === 0x04) {
+        return false;
+    }
+    // RIFF (WAV, AVI)
+    if (buffer.length >= 4 && buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
+        return false;
+    }
+    // PNG
+    if (buffer.length >= 4 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+        return false;
+    }
+    // JPEG
+    if (buffer.length >= 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+        return false;
+    }
+    // GIF
+    if (buffer.length >= 4 && buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38) {
+        return false;
+    }
+    // Windows executable (MZ)
+    if (buffer.length >= 2 && buffer[0] === 0x4D && buffer[1] === 0x5A) {
+        return false;
+    }
+    // ELF
+    if (buffer.length >= 4 && buffer[0] === 0x7F && buffer[1] === 0x45 && buffer[2] === 0x4C && buffer[3] === 0x46) {
+        return false;
+    }
+
+    // GE Kretzfile header
+    if (buffer.length >= 9 && buffer.subarray(0, 9).toString('ascii') === 'KRETZFILE') {
+        return true;
+    }
+
+    // Check if plain text renamed to .vol
+    const sample = buffer.subarray(0, Math.min(buffer.length, 512));
+    if (isTextBuffer(sample)) {
+        return false;
+    }
+
+    return true;
+};
+
 const VolumeController = async(req, res) => {
     const requester = req.user;
     try
@@ -43,6 +109,14 @@ const VolumeController = async(req, res) => {
                 })
         }
         const file = req.file;
+        const originalName = String(file.originalname || '').trim();
+        const extension = path.extname(originalName).toLowerCase();
+        if (extension !== '.vol' || !isValidVolBuffer(file.buffer)) {
+            return res.status(400).json({
+                error: 'Only .vol files are allowed.',
+                message: 'Only .vol files are allowed.'
+            });
+        }
         const {
             volume_type,
             volume_name,

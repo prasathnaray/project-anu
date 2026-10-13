@@ -36,15 +36,29 @@ function VolumeList() {
 
   const handleClick = () => fileInputRef.current.click();
 
+  const isVolFile = (file) => {
+    if (!file || !file.name) return false;
+    return file.name.toLowerCase().endsWith('.vol');
+  };
+
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!isVolFile(file)) {
+        toast.error('Only .vol files are allowed.');
+        e.target.value = '';
+        setFormData((prev) => ({ ...prev, file: null }));
+        setFileName('');
+        return;
+      }
       if (file.size > MAX_VOLUME_UPLOAD_SIZE_BYTES) {
         toast.error(`File is too large. Maximum allowed size is ${MAX_VOLUME_UPLOAD_SIZE_MB}MB.`);
         e.target.value = '';
+        setFormData((prev) => ({ ...prev, file: null }));
+        setFileName('');
         return;
       }
-      setFormData({ ...formData, file });
+      setFormData((prev) => ({ ...prev, file }));
       setFileName(file.name);
     }
   };
@@ -268,7 +282,18 @@ function VolumeList() {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === 'file') {
-      setFormData({ ...formData, file: files[0] });
+      const selectedFile = files?.[0];
+      if (selectedFile) {
+        if (!isVolFile(selectedFile)) {
+          toast.error('Only .vol files are allowed.');
+          e.target.value = '';
+          setFormData((prev) => ({ ...prev, file: null }));
+          setFileName('');
+          return;
+        }
+        setFormData((prev) => ({ ...prev, file: selectedFile }));
+        setFileName(selectedFile.name);
+      }
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -288,6 +313,10 @@ function VolumeList() {
     } = formData;
     if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description || !file) {
       toast.error('Please fill all fields and select a file.');
+      return;
+    }
+    if (!isVolFile(file)) {
+      toast.error('Only .vol files are allowed.');
       return;
     }
     if (file.size > MAX_VOLUME_UPLOAD_SIZE_BYTES) {
@@ -759,6 +788,7 @@ function VolumeList() {
                 type="file"
                 ref={fileInputRef}
                 onChange={handleFileSelect}
+                accept=".vol"
                 style={{ display: 'none' }}
                 name="file"
               />
