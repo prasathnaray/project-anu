@@ -7,14 +7,20 @@ const LOOKUP_INFO = 'project-anu/user-data/email-lookup';
 
 function masterKey() {
   const encoded = process.env.USER_DATA_ENCRYPTION_KEY || process.env.BASE64_KEY;
-  if (!encoded || !/^[A-Za-z0-9+/_-]+={0,2}$/.test(encoded)) {
-    throw new Error('USER_DATA_ENCRYPTION_KEY or BASE64_KEY must be base64');
+  if (encoded) {
+    if (!/^[A-Za-z0-9+/_-]+={0,2}$/.test(encoded)) {
+      throw new Error('USER_DATA_ENCRYPTION_KEY or BASE64_KEY must be base64');
+    }
+    const key = Buffer.from(encoded, 'base64url');
+    if (key.length !== 32) {
+      throw new Error('USER_DATA_ENCRYPTION_KEY or BASE64_KEY must decode to 32 bytes');
+    }
+    return key;
   }
-  const key = Buffer.from(encoded, 'base64url');
-  if (key.length !== 32) {
-    throw new Error('USER_DATA_ENCRYPTION_KEY or BASE64_KEY must decode to 32 bytes');
+  if (process.env.SECRET_KEY) {
+    return crypto.createHash('sha256').update(process.env.SECRET_KEY, 'utf8').digest();
   }
-  return key;
+  throw new Error('USER_DATA_ENCRYPTION_KEY or BASE64_KEY must be base64');
 }
 
 function deriveKey(info) {
