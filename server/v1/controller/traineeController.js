@@ -3,7 +3,7 @@ const {HashPassword} = require('../utils/hash.js');
 const path = require('path');
 const { uploadAsset, signAsset } = require('../utils/storageAdapter');
 const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
-const { issueAccountVerificationOtp } = require('../utils/accountVerification');
+const { issueAccountVerificationOtp, validPhoneNumber } = require('../utils/accountVerification');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const TraineeController = async(req, res) => {
         const requester = req.user;
@@ -37,6 +37,11 @@ const CreateTraineeController = async (req, res) => {
                         return res.status(501).json({
                                 error: `${'Missing Fields'}`
                         })
+                }
+                if (!validPhoneNumber(user_contact_num)) {
+                        return res.status(422).json({
+                                error: 'A valid E.164 phone number is required for OTP verification.'
+                        });
                 }
 
                 const rawBatch = req.body.user_batch ?? req.body['user_batch[]'] ?? [];

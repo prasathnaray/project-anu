@@ -2,12 +2,16 @@
 const client = require('../utils/conn');
 const { HashPassword } = require('../utils/hash.js'); // Adjust path if needed
 const { encryptedUserFields } = require('../utils/userEmailCrypto');
+const { validPhoneNumber } = require('../utils/accountVerification');
 
 const createScancentrem = async (requester, data) => {
     if (Number(requester.role) !== 99) {
         return { status: 'Forbidden', code: 403, message: 'Only Super Admin can create institutions.' };
     }
     if (!requester.user_mail) throw new Error('Admin user email is required. User session may be invalid.');
+    if (!validPhoneNumber(data.center_phone)) {
+        return { status: 'Validation Error', code: 422, message: 'A valid E.164 phone number is required for OTP verification.' };
+    }
     const pii = encryptedUserFields(data.center_email, data.center_name, data.center_phone);
     const transactionClient = await client.connect();
     try {
@@ -28,8 +32,8 @@ const createScancentrem = async (requester, data) => {
         const userResult = await transactionClient.query(
             `INSERT INTO user_data
                 (user_email, user_name, user_contact_num, user_password, user_role, status, centre_id, center_name,
-                 user_email_lookup, user_email_enc, user_name_enc, user_contact_num_enc)
-             VALUES($1, $2, $3, $4, '101', 'active', $5, $6, $7, $8, $9, $10)
+                 verification_required, user_email_lookup, user_email_enc, user_name_enc, user_contact_num_enc)
+             VALUES($1, $2, $3, $4, '101', 'pending_verification', $5, $6, true, $7, $8, $9, $10)
              RETURNING user_email, user_name, user_role, status, centre_id`,
             [pii.user_email, data.center_name, data.center_phone, hashedPassword, createdCenter.center_id, data.center_name,
              pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc]
@@ -106,6 +110,9 @@ const addInstitutionAdmin = async (requester, centreId, data) => {
     if (!data.user_email?.trim() || !data.user_name?.trim()) {
         return { status: 'Validation Error', code: 400, message: 'user_email and user_name are required.' };
     }
+    if (!validPhoneNumber(data.user_contact_num)) {
+        return { status: 'Validation Error', code: 422, message: 'A valid E.164 phone number is required for OTP verification.' };
+    }
     const pii = encryptedUserFields(data.user_email, data.user_name.trim(), data.user_contact_num || null);
     const email = pii.user_email;
     const transactionClient = await client.connect();
@@ -130,8 +137,8 @@ const addInstitutionAdmin = async (requester, centreId, data) => {
         const result = await transactionClient.query(
             `INSERT INTO user_data
                 (user_email, user_name, user_contact_num, user_password, user_role, status, centre_id, center_name,
-                 user_email_lookup, user_email_enc, user_name_enc, user_contact_num_enc)
-             VALUES ($1, $2, $3, $4, '101', 'active', $5, $6, $7, $8, $9, $10)
+                 verification_required, user_email_lookup, user_email_enc, user_name_enc, user_contact_num_enc)
+             VALUES ($1, $2, $3, $4, '101', 'pending_verification', $5, $6, true, $7, $8, $9, $10)
              RETURNING user_email, user_name, user_role, status, centre_id, center_name`,
             [email, data.user_name.trim(), data.user_contact_num || null, hashedPassword, centreId, center.center_name,
              pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc]

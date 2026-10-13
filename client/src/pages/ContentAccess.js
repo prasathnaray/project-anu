@@ -196,7 +196,9 @@ function ContentAccess() {
       });
       setCreatedCredential(response.data.data);
       setAdminForm({ institutionId: '', user_name: '', user_email: '', user_contact_num: '' });
-      toast.success('Institution administrator created.');
+      toast.success(response.data.verificationSent
+        ? 'Institution administrator created. OTP sent to the registered phone.'
+        : 'Institution administrator created as pending verification. OTP can be resent from Verify account.');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to add institution administrator.');
     }
@@ -208,7 +210,9 @@ function ContentAccess() {
       const response = await addSuperAdmin(superAdminForm);
       setCreatedCredential(response.data.data);
       setSuperAdminForm({ user_name: '', user_email: '', user_contact_num: '' });
-      toast.success('Super Admin created.');
+      toast.success(response.data.verificationSent
+        ? 'Super Admin created. OTP sent to the registered phone.'
+        : 'Super Admin created as pending verification. OTP can be resent from Verify account.');
       await load();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to add Super Admin.');
@@ -274,7 +278,7 @@ function ContentAccess() {
               <select required className="border rounded px-3 py-2" value={adminForm.institutionId} onChange={(event) => setAdminForm({ ...adminForm, institutionId: event.target.value })}><option value="">Institution…</option>{institutions.map((institution) => <option key={institution.center_id} value={institution.center_id}>{institution.center_name}</option>)}</select>
               <input required className="border rounded px-3 py-2" placeholder="Administrator name" value={adminForm.user_name} onChange={(event) => setAdminForm({ ...adminForm, user_name: event.target.value })} />
               <input required type="email" className="border rounded px-3 py-2" placeholder="Administrator email" value={adminForm.user_email} onChange={(event) => setAdminForm({ ...adminForm, user_email: event.target.value })} />
-              <div className="flex gap-2"><input className="border rounded px-3 py-2 min-w-0" placeholder="Phone (optional)" value={adminForm.user_contact_num} onChange={(event) => setAdminForm({ ...adminForm, user_contact_num: event.target.value })} /><button className="bg-[#8DC63F] text-white px-3 rounded">Add</button></div>
+              <div className="flex gap-2"><input required type="tel" className="border rounded px-3 py-2 min-w-0" placeholder="Phone for OTP" value={adminForm.user_contact_num} onChange={(event) => setAdminForm({ ...adminForm, user_contact_num: event.target.value })} /><button className="bg-[#8DC63F] text-white px-3 rounded">Add</button></div>
             </form>
             {createdCredential && <div className="mt-3 bg-amber-50 border border-amber-200 rounded p-3 text-sm"><strong>Copy this one-time credential now:</strong> {createdCredential.user.user_email} / <code>{createdCredential.temporaryPassword}</code><button className="ml-3 text-red-600" onClick={() => setCreatedCredential(null)}>Dismiss</button></div>}
           </section>}
@@ -285,7 +289,7 @@ function ContentAccess() {
             <form onSubmit={submitSuperAdmin} className="grid md:grid-cols-4 gap-3 mt-3">
               <input required className="border rounded px-3 py-2" placeholder="Name" value={superAdminForm.user_name} onChange={(event) => setSuperAdminForm({ ...superAdminForm, user_name: event.target.value })} />
               <input required type="email" className="border rounded px-3 py-2" placeholder="Email" value={superAdminForm.user_email} onChange={(event) => setSuperAdminForm({ ...superAdminForm, user_email: event.target.value })} />
-              <input className="border rounded px-3 py-2" placeholder="Phone (optional)" value={superAdminForm.user_contact_num} onChange={(event) => setSuperAdminForm({ ...superAdminForm, user_contact_num: event.target.value })} />
+              <input required type="tel" className="border rounded px-3 py-2" placeholder="Phone for OTP" value={superAdminForm.user_contact_num} onChange={(event) => setSuperAdminForm({ ...superAdminForm, user_contact_num: event.target.value })} />
               <button className="bg-[#8DC63F] text-white rounded px-3 py-2">Add Super Admin</button>
             </form>
           </section>}

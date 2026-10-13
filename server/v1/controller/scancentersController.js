@@ -1,6 +1,7 @@
 // controllers/scanCenterController.js
 const { createScancentrem, getscancenterm, addInstitutionAdmin } = require("../model/scancentrem");
 const { mindsparkm } = require('../model/resourcem');
+const { issueAccountVerificationOtp } = require('../utils/accountVerification');
 const createScanCenterC = async (req, res) => {
     try {
         if (!req.user) {
@@ -24,9 +25,20 @@ const createScanCenterC = async (req, res) => {
             return res.status(result.code).json(result);
         }
 
+        let verificationSent = false;
+        try {
+            await issueAccountVerificationOtp(result.data.user.user_email, 'activation');
+            verificationSent = true;
+        } catch (verificationError) {
+            console.error('Failed to send institution admin activation OTP:', verificationError);
+        }
+
         res.status(201).json({
             status: 'success',
-            message: 'Scan center created successfully',
+            message: verificationSent
+                ? 'Scan center created. Verification OTP sent to the administrator phone.'
+                : 'Scan center created as pending verification. OTP could not be sent; use resend verification.',
+            verificationSent,
             data: result.data
         });
     } catch (err) {
@@ -83,6 +95,15 @@ const mindsparkController = async (request, res) => {
 const addInstitutionAdminC = async (req, res) => {
     try {
         const result = await addInstitutionAdmin(req.user, req.params.institutionId, req.body);
+        if (result.code === 201 && result.data?.user?.user_email) {
+            try {
+                await issueAccountVerificationOtp(result.data.user.user_email, 'activation');
+                result.verificationSent = true;
+            } catch (verificationError) {
+                console.error('Failed to send institution admin activation OTP:', verificationError);
+                result.verificationSent = false;
+            }
+        }
         return res.status(result.code || 201).json(result);
     } catch (error) {
         console.error('Error adding institution admin:', error);

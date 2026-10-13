@@ -184,4 +184,4 @@ const verifyAccountOtp = async (email, otp, purpose = 'activation') => {
   }
 };
 
-module.exports = { issueAccountVerificationOtp, verifyAccountOtp };
+module.exports = { issueAccountVerificationOtp, verifyAccountOtp, validPhoneNumber };
