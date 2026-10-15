@@ -100,8 +100,10 @@ const PrivateRoute = ({ allowedRoles }) => {
       setToken(null);
       return;
     }
-    if (decoded.exp * 1000 > Date.now()) {
+    const isTokenValid = !decoded.exp || (Number(decoded.exp) * 1000 > Date.now());
+    if (isTokenValid) {
       setToken(stored);
+      setRenewing(false);
       return;
     }
 
@@ -126,7 +128,8 @@ const PrivateRoute = ({ allowedRoles }) => {
 
   try {
     const decoded = jwtDecode(token);
-    if (!decoded.sid || decoded.exp * 1000 <= Date.now()) {
+    const isExpired = Boolean(decoded.exp && Number(decoded.exp) * 1000 <= Date.now());
+    if (!decoded.sid || (isExpired && renewing)) {
       return <SessionLoading />;
     }
     if (allowedRoles && !allowedRoles.map(Number).includes(Number(decoded.role))) {
@@ -136,7 +139,7 @@ const PrivateRoute = ({ allowedRoles }) => {
       { prefixes: ['/academics', '/course-mapping', '/reatt-data', '/curriculum'], roles: [99] },
       { prefixes: ['/instructors'], roles: [99, 101] },
       { prefixes: ['/trainees'], roles: [99, 101, 102] },
-      { prefixes: ['/volume-management'], roles: [99, 101, 102] },
+      { prefixes: ['/volume-management', '/cluster'], roles: [99, 101, 102] },
       { prefixes: ['/custom-course'], roles: [99, 101] },
       { prefixes: ['/vrspace'], roles: [101, 103] },
       { prefixes: ['/my-learning', '/my-progress'], roles: [103] }

@@ -310,9 +310,10 @@ const getVolumeDownloadModel = async (requester, volumeId) => {
     const scope = volumeAccessScope(requester, 'v', 2);
     if (!scope) return null;
     const result = await client.query(
-        `SELECT v.volume_id, v.volume_file, vcl.output_file, vcl.conversion_completion
+        `SELECT v.volume_id, v.volume_file, vcl.output_file, vcl.conversion_completion, vp.placed_url
          FROM public.volumes v
          LEFT JOIN public.volume_conv_logs vcl ON v.volume_id = vcl.volume_id
+         LEFT JOIN public.volume_placements vp ON v.volume_id = vp.volume_id
          WHERE v.volume_id = $1 AND ${scope.clause}
            AND v.ownership_review_required = false
          ORDER BY vcl.completed_at DESC NULLS LAST LIMIT 1`,

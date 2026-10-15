@@ -40,6 +40,7 @@ import CustomCourse from '../pages/CustomCourse';
 import ReattData from '../pages/ReattData';
 import ContentAccess from '../pages/ContentAccess';
 import Sessions from '../pages/Sessions';
+import Cluster from '../pages/Cluster';
 function RoutesPath() {
   return (
     <BrowserRouter>
@@ -72,6 +73,7 @@ function RoutesPath() {
                             <Route path="/trainee/:people_id" element={<TraineeDashboard />} />
                             <Route path="/instructor/:people_id" element={<IndividualInstructors />} />
                             <Route path="/volume-management" element={<VolumeList />} />
+                            <Route path="/cluster" element={<Cluster />} />
                             <Route path="/request-raised" element={<RequestRaised />} />
                             <Route path="/demo-video" element={<VideoMedica />} />
                             <Route path="/cert-course/:certificate_id" element={<InsideCertifications />} />

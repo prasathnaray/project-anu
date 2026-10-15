@@ -219,16 +219,19 @@ const getVolumeDownloadController = async (req, res) => {
     if (!isUuid(volumeId)) {
         return res.status(400).json({ message: 'Invalid volume ID.' });
     }
-    if (!['source', 'converted'].includes(fileType)) {
-        return res.status(400).json({ message: 'Choose a source or converted file.' });
+    if (!['source', 'converted', 'json', 'placement'].includes(fileType)) {
+        return res.status(400).json({ message: 'Choose a source, converted, or json file.' });
     }
     try {
         const volume = await getVolumeDownloadModel(req.user, volumeId);
         if (!volume) return res.status(404).json({ message: 'Volume not found.' });
         const reference = fileType === 'source'
             ? volume.volume_file
-            : (volume.conversion_completion ? volume.output_file : null);
-        return sendDownloadLink(res, reference, fileType, `${volumeId}.bin`);
+            : fileType === 'converted'
+                ? (volume.conversion_completion ? volume.output_file : null)
+                : volume.placed_url;
+        const isJson = fileType === 'json' || fileType === 'placement';
+        return sendDownloadLink(res, reference, fileType, `${volumeId}.${isJson ? 'json' : 'bin'}`);
     } catch (error) {
         return sendDownloadError(res, error);
     }

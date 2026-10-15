@@ -966,6 +966,7 @@ function NavBar() {
     if (path === "/certificate" || path === "/course" || path.startsWith("/course/") || path.startsWith("/chapters/") || path.startsWith("/module/") || path.startsWith("/resource/") || path.startsWith("/cert-course/") || path.startsWith("/cert_course/")) return "Certification";
     if (path === "/curriculum") return "Curriculum";
     if (path === "/volume-management") return "Volume Management";
+    if (path === "/cluster") return "Cluster";
     if (path === "/request-raised" || path === "/all-requests") return "Requests";
     if (path === "/course-mapping") return "Course Mapping";
     if (path === "/reatt-data") return "Reattempts";

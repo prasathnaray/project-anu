@@ -46,7 +46,9 @@ const refreshToken = async (req, res) => {
       isVR: isVR,
       loginSource: decoded.loginSource || session.login_source || (isVR ? 'VR Device' : 'Normal Browser'),
       device: decoded.device || session.device || (isVR ? 'VR Headset' : 'browser')
-    }, process.env.ACCESS_TOKEN_SECRET);
+    }, process.env.ACCESS_TOKEN_SECRET, {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '24h'
+    });
     return res.json({
       accessToken,
       isVr: isVR,

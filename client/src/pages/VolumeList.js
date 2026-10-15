@@ -3,7 +3,7 @@ import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { jwtDecode } from 'jwt-decode';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { MoreVertical, X } from 'lucide-react';
+import { MoreVertical, Upload, X } from 'lucide-react';
 import UploadVol from '../components/Instructors/UploadVol';
 import { TextField, Menu, MenuItem } from '@mui/material';
 import { toast } from 'react-toastify';
@@ -17,6 +17,7 @@ import CustomCloseButton from '../utils/CustomCloseButton';
 import UpdateVolumeAPI from '../API/UpdateVolumeAPI';
 import volumeDownloadAPI from '../API/volumeDownloadAPI';
 import VolumeRecordingDownloads from '../components/Instructors/VolumeRecordingDownloads';
+import { uploadVolumePlacementAPI, getVolumePlacementsAPI } from '../API/VolumePlacementAPI';
 
 const MAX_VOLUME_UPLOAD_SIZE_MB = 100;
 const MAX_VOLUME_UPLOAD_SIZE_BYTES = MAX_VOLUME_UPLOAD_SIZE_MB * 1024 * 1024;
@@ -27,40 +28,56 @@ function VolumeList() {
   const decoded = jwtDecode(token);
   const userRole = Number(decoded.role);
   const fileInputRef = React.useRef(null);
-  const [fileName, setFileName] = useState("");
+  const [volumeFiles, setVolumeFiles] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedVolume, setSelectedVolume] = useState(null);
   const [converting, setConverting] = useState(false);
   const [downloadingKey, setDownloadingKey] = useState(null);
   const [recordingsVolume, setRecordingsVolume] = useState(null);
 
-  const handleClick = () => fileInputRef.current.click();
-
   const isVolFile = (file) => {
     if (!file || !file.name) return false;
     return file.name.toLowerCase().endsWith('.vol');
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+  const handleFilesSelect = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    const validFiles = [];
+    for (const file of selectedFiles) {
       if (!isVolFile(file)) {
-        toast.error('Only .vol files are allowed.');
-        e.target.value = '';
-        setFormData((prev) => ({ ...prev, file: null }));
-        setFileName('');
-        return;
+        toast.error(`${file.name}: Only .vol files are allowed.`);
+        continue;
       }
       if (file.size > MAX_VOLUME_UPLOAD_SIZE_BYTES) {
-        toast.error(`File is too large. Maximum allowed size is ${MAX_VOLUME_UPLOAD_SIZE_MB}MB.`);
-        e.target.value = '';
-        setFormData((prev) => ({ ...prev, file: null }));
-        setFileName('');
-        return;
+        toast.error(`${file.name} is too large. Maximum allowed size is ${MAX_VOLUME_UPLOAD_SIZE_MB}MB.`);
+        continue;
       }
-      setFormData((prev) => ({ ...prev, file }));
-      setFileName(file.name);
+      validFiles.push(file);
     }
+
+    if (validFiles.length === 0) {
+      e.target.value = '';
+      return;
+    }
+
+    setVolumeFiles((prev) => {
+      const existingKeys = new Set(prev.map((f) => `${f.name}_${f.size}`));
+      const newFiles = validFiles.filter((f) => !existingKeys.has(`${f.name}_${f.size}`));
+      const combined = [...prev, ...newFiles];
+      if (combined.length > 10) {
+        toast.warn('You can upload up to 10 volume files. Only the first 10 files were kept.');
+        return combined.slice(0, 10);
+      }
+      return combined;
+    });
+
+    e.target.value = '';
+  };
+
+  const handleRemoveFile = (indexToRemove) => {
+    setVolumeFiles((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const [buttonOpen, setButtonOpen] = useState(true);
@@ -82,6 +99,8 @@ function VolumeList() {
   });
   const [volumesDatumm, setVolumesDatumm] = useState([]);
   const [volumeRecordingCounts, setVolumeRecordingCounts] = useState({});
+  const [volumePlacements, setVolumePlacements] = useState({});
+  const [uploadingJsonVolumeId, setUploadingJsonVolumeId] = useState(null);
 
   const [openEditVol, setOpenEditVol] = useState(false);
   const [editingVolume, setEditingVolume] = useState(null);
@@ -152,9 +171,10 @@ function VolumeList() {
       setListLoading(true);
     }
     try {
-      const [volumeResult, shadowCountResult] = await Promise.allSettled([
+      const [volumeResult, shadowCountResult, placementsResult] = await Promise.allSettled([
         GetVolInsAPI(),
-        GetShadowRecordingCountsAPI()
+        GetShadowRecordingCountsAPI(),
+        getVolumePlacementsAPI()
       ]);
 
       if (volumeResult.status === 'rejected') {
@@ -165,6 +185,9 @@ function VolumeList() {
       const volumes = Array.isArray(result?.data) ? result.data : [];
       const counts = shadowCountResult.status === 'fulfilled' && Array.isArray(shadowCountResult.value?.data)
         ? shadowCountResult.value.data
+        : [];
+      const placements = placementsResult.status === 'fulfilled' && Array.isArray(placementsResult.value?.data)
+        ? placementsResult.value.data
         : [];
 
       if (shadowCountResult.status === 'rejected') {
@@ -181,6 +204,12 @@ function VolumeList() {
               ? item.step_recording_images
               : (Array.isArray(item.step_recording_files) ? item.step_recording_files : [])
           }
+        }), {})
+      );
+      setVolumePlacements(
+        placements.reduce((acc, item) => ({
+          ...acc,
+          [item.volume_id]: item
         }), {})
       );
     } catch (err) {
@@ -215,6 +244,63 @@ function VolumeList() {
     /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(fileUrl || '')
   ), []);
 
+  const handleJsonFileUpload = async (volumeId, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      toast.error('Only .json files are allowed.');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      JSON.parse(content);
+    } catch {
+      toast.error('Invalid JSON content. File contains malformed JSON.');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setUploadingJsonVolumeId(volumeId);
+      const data = new FormData();
+      data.append('volume_id', volumeId);
+      data.append('placed_file', file);
+
+      const response = await uploadVolumePlacementAPI(data);
+      if (response.status === 200 || response.status === 201) {
+        toast.success('JSON file added successfully!');
+        const assetUrl = response.data?.assetUrl || response.data?.fileUrl;
+        if (assetUrl) {
+          setVolumePlacements((prev) => ({
+            ...prev,
+            [volumeId]: {
+              ...(prev[volumeId] || {}),
+              volume_id: volumeId,
+              placed_url: assetUrl,
+            },
+          }));
+        } else {
+          handleAPICall({ showLoading: false });
+        }
+      } else {
+        toast.error(response.data?.message || 'Failed to add JSON file.');
+      }
+    } catch (err) {
+      console.error('JSON Upload Error:', err);
+      const errorMsg =
+        typeof err.response?.data === 'string'
+          ? err.response.data
+          : err.response?.data?.message || err.response?.data?.error || 'Something went wrong while adding JSON file.';
+      toast.error(errorMsg);
+    } finally {
+      setUploadingJsonVolumeId(null);
+      event.target.value = '';
+    }
+  };
+
   React.useEffect(() => {
     if (!hasActiveConversion) return undefined;
 
@@ -244,6 +330,7 @@ function VolumeList() {
       normalizedQuery === '' ||
       volume.volume_name?.toLowerCase().includes(normalizedQuery) ||
       volume.volume_id?.toLowerCase().includes(normalizedQuery) ||
+      volume.volume_fetal_presentation?.toLowerCase().includes(normalizedQuery) ||
       volume.volume_type?.toLowerCase().includes(normalizedQuery);
 
     const matchesApproval =
@@ -276,27 +363,12 @@ function VolumeList() {
       description: '',
       file: null,
     });
-    setFileName("");
+    setVolumeFiles([]);
   };
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'file') {
-      const selectedFile = files?.[0];
-      if (selectedFile) {
-        if (!isVolFile(selectedFile)) {
-          toast.error('Only .vol files are allowed.');
-          e.target.value = '';
-          setFormData((prev) => ({ ...prev, file: null }));
-          setFileName('');
-          return;
-        }
-        setFormData((prev) => ({ ...prev, file: selectedFile }));
-        setFileName(selectedFile.name);
-      }
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -309,33 +381,57 @@ function VolumeList() {
       trimester,
       volume_ga,
       description,
-      file
     } = formData;
-    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description || !file) {
-      toast.error('Please fill all fields and select a file.');
+
+    const validFiles = volumeFiles.filter(Boolean);
+
+    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description) {
+      toast.error('Please fill all required fields.');
       return;
     }
-    if (!isVolFile(file)) {
-      toast.error('Only .vol files are allowed.');
+
+    if (validFiles.length === 0) {
+      toast.error('Please upload at least one volume file.');
       return;
     }
-    if (file.size > MAX_VOLUME_UPLOAD_SIZE_BYTES) {
-      toast.error(`File is too large. Maximum allowed size is ${MAX_VOLUME_UPLOAD_SIZE_MB}MB.`);
-      return;
-    }
+
     try {
       setLoading(true);
-      const data = new FormData();
-      data.append('volume_name', volume_name);
-      data.append('volume_type', volume_type);
-      data.append('volume_fetal_presentation', volume_fetal_presentation);
-      data.append('trimester', trimester);
-      data.append('volume_ga', volume_ga);
-      data.append('description', description);
-      data.append('file', file);
-      const response = await VolumeUploadAPI(token, data);
-      if (response.status === 200 || response.status === 201) {
-        toast.success('Volume uploaded successfully!');
+
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (let i = 0; i < validFiles.length; i++) {
+        const file = validFiles[i];
+        const data = new FormData();
+        const currentName = validFiles.length === 1 ? volume_name : `${volume_name} (${i + 1})`;
+        data.append('volume_name', currentName);
+        data.append('volume_type', volume_type);
+        data.append('volume_fetal_presentation', volume_fetal_presentation);
+        data.append('trimester', trimester);
+        data.append('volume_ga', volume_ga);
+        data.append('description', description);
+        data.append('file', file);
+
+        try {
+          const response = await VolumeUploadAPI(token, data);
+          if (response.status === 200 || response.status === 201) {
+            successCount++;
+          } else {
+            failureCount++;
+          }
+        } catch (uploadErr) {
+          console.error(`Error uploading volume ${i + 1}:`, uploadErr);
+          failureCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(
+          validFiles.length === 1
+            ? 'Volume uploaded successfully!'
+            : `${successCount} volume(s) uploaded successfully!${failureCount > 0 ? ` (${failureCount} failed)` : ''}`
+        );
         setOpenUploadVol(false);
         setFormData({
           volume_name: '',
@@ -346,10 +442,10 @@ function VolumeList() {
           description: '',
           file: null,
         });
-        setFileName("");
-        handleAPICall(); // Refresh the list
+        setVolumeFiles([]);
+        handleAPICall();
       } else {
-        toast.error(response.data?.error || 'Upload failed. Please try again.');
+        toast.error('Failed to upload volume(s). Please try again.');
       }
     } catch (err) {
       console.error('Upload Error:', err);
@@ -383,6 +479,50 @@ function VolumeList() {
       link.remove();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Unable to download volume file.');
+    } finally {
+      setDownloadingKey(null);
+    }
+  };
+
+  const handleDownloadJson = async (volume) => {
+    const key = `${volume.volume_id}:json`;
+    setDownloadingKey(key);
+    try {
+      const response = await volumeDownloadAPI(volume.volume_id, 'json');
+      const { url, filename } = response.data;
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename || `${volume.volume_name || 'placement'}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch {
+      const fallbackUrl = volumePlacements[volume.volume_id]?.placed_url;
+      if (fallbackUrl) {
+        try {
+          const res = await fetch(fallbackUrl);
+          if (!res.ok) throw new Error('Fetch failed');
+          const blob = await res.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = blobUrl;
+          link.download = `${(volume.volume_name || 'placement').replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(blobUrl);
+        } catch {
+          const link = document.createElement('a');
+          link.href = fallbackUrl;
+          link.target = '_blank';
+          link.download = `${volume.volume_name || 'placement'}.json`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+        }
+      } else {
+        toast.error('Unable to download JSON file.');
+      }
     } finally {
       setDownloadingKey(null);
     }
@@ -516,12 +656,12 @@ function VolumeList() {
                   <tr>
                     <th className="py-2 px-4 font-semibold">Volume ID</th>
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
+                    <th className="py-2 px-4 font-semibold">Fetal Presentation</th>
                     {userRole !== 99 && (
                       <th className="py-2 px-4 font-semibold">Approval Status</th>
                     )}
                     <th className="py-2 px-4 font-semibold">Conversion Status</th>
-                    <th className="py-2 px-4 font-semibold">Shadow Recordings</th>
-                    <th className="py-2 px-4 font-semibold">Step Recording Image</th>
+                    <th className="py-2 px-4 font-semibold">JSON File</th>
                     <th className="py-2 px-4 font-semibold">Download</th>
                     <th className="py-2 px-4 font-semibold"></th>
                   </tr>
@@ -553,6 +693,15 @@ function VolumeList() {
                           {volume.volume_id.slice(0, 8).toUpperCase()}
                         </td>
                         <td className="py-2 px-4 font-medium">{volume.volume_name}</td>
+                        <td className="py-2 px-4">
+                          {volume.volume_fetal_presentation || volume.fetal_presentation ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                              {volume.volume_fetal_presentation || volume.fetal_presentation}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 text-xs">—</span>
+                          )}
+                        </td>
                         {userRole !== 99 && (
                           <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
@@ -589,45 +738,42 @@ function VolumeList() {
                           </span>
                         </td>
                         <td className="py-2 px-4">
-                          <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
-                            {volumeRecordingCounts[volume.volume_id]?.shadow || 0}
-                          </span>
-                        </td>
-                        <td className="py-2 px-4">
-                          {(volumeRecordingCounts[volume.volume_id]?.stepFiles || []).length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {volumeRecordingCounts[volume.volume_id].stepFiles.map((fileUrl, index) => (
-                                isImageFile(fileUrl) ? (
-                                  <a
-                                    key={`${volume.volume_id}-step-${index}`}
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    <img
-                                      src={fileUrl}
-                                      alt={`Step recording ${index + 1}`}
-                                      className="h-10 w-10 rounded object-cover border"
-                                    />
-                                  </a>
-                                ) : (
-                                  <a
-                                    key={`${volume.volume_id}-step-${index}`}
-                                    href={fileUrl}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 hover:bg-blue-100"
-                                  >
-                                    View {index + 1}
-                                  </a>
-                                )
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-500">
-                              No image
-                            </span>
-                          )}
+                          <div className="flex flex-wrap items-center gap-2">
+                            {volumePlacements[volume.volume_id]?.placed_url && (
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadJson(volume)}
+                                disabled={downloadingKey === `${volume.volume_id}:json`}
+                                className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 disabled:opacity-50"
+                                title="Download JSON file"
+                              >
+                                {downloadingKey === `${volume.volume_id}:json` ? 'Downloading…' : 'Download JSON'}
+                              </button>
+                            )}
+                            <label className={`cursor-pointer px-2 py-1 rounded text-xs inline-flex items-center gap-1.5 transition-colors ${
+                              uploadingJsonVolumeId === volume.volume_id
+                                ? 'opacity-60 cursor-not-allowed bg-gray-100 text-gray-500'
+                                : volumePlacements[volume.volume_id]?.placed_url
+                                  ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-300'
+                                  : 'bg-[#8DC63F] text-white hover:bg-[#7cb336]'
+                            }`}>
+                              <input
+                                type="file"
+                                accept=".json,application/json"
+                                className="hidden"
+                                disabled={uploadingJsonVolumeId === volume.volume_id}
+                                onChange={(e) => handleJsonFileUpload(volume.volume_id, e)}
+                              />
+                              {uploadingJsonVolumeId === volume.volume_id ? (
+                                <>
+                                  <ClipLoader color="#6B7280" size={10} cssOverride={{ borderWidth: '2px' }} />
+                                  <span>Uploading...</span>
+                                </>
+                              ) : (
+                                <span>{volumePlacements[volume.volume_id]?.placed_url ? 'Replace JSON' : '+ Add JSON'}</span>
+                              )}
+                            </label>
+                          </div>
                         </td>
                         <td className="py-2 px-4">
                           <div className="flex flex-wrap gap-2">
@@ -707,7 +853,7 @@ function VolumeList() {
               <X size={20} />
             </button>
           </div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto pr-1">
             <div className="grid grid-cols-2 gap-5 mt-3">
               <TextField
                 fullWidth
@@ -728,6 +874,7 @@ function VolumeList() {
                 onChange={handleChange}
               />
               <TextField
+                select
                 fullWidth
                 variant="outlined"
                 size="small"
@@ -735,7 +882,13 @@ function VolumeList() {
                 name="volume_fetal_presentation"
                 value={formData.volume_fetal_presentation}
                 onChange={handleChange}
-              />
+              >
+                <MenuItem value="">Select Fetal Presentation</MenuItem>
+                <MenuItem value="Cephalic_left">Cephalic_left</MenuItem>
+                <MenuItem value="Cephalic_right">Cephalic_right</MenuItem>
+                <MenuItem value="Breech_left">Breech_left</MenuItem>
+                <MenuItem value="Breech_right">Breech_right</MenuItem>
+              </TextField>
               <TextField
                 select
                 fullWidth
@@ -787,24 +940,50 @@ function VolumeList() {
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={handleFileSelect}
+                onChange={handleFilesSelect}
                 accept=".vol"
+                multiple
                 style={{ display: 'none' }}
-                name="file"
               />
-              <TextField
-                label="Upload File"
-                variant="outlined"
-                value={fileName}
-                fullWidth
-                size="small"
-                sx={{ minHeight: '35px' }}
-                onClick={handleClick}
-                InputProps={{
-                  readOnly: true,
-                  style: { cursor: "pointer" }
-                }}
-              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-[#8DC63F] bg-[#8DC63F]/10 hover:bg-[#8DC63F]/15 text-[#527a1f] py-3 px-4 rounded-lg transition-colors cursor-pointer"
+              >
+                <Upload size={18} />
+                <span className="text-sm font-semibold">
+                  {volumeFiles.length === 0
+                    ? 'Upload Volume (Add up to 10 .vol files)'
+                    : `Add More Volume Files (${volumeFiles.length}/10 selected)`}
+                </span>
+              </button>
+
+              {volumeFiles.length > 0 && (
+                <div className="mt-2.5 max-h-[140px] overflow-y-auto space-y-1.5 pr-1">
+                  {volumeFiles.map((file, idx) => (
+                    <div
+                      key={`${file.name}-${idx}`}
+                      className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded px-2.5 py-1 text-xs text-gray-700"
+                    >
+                      <div className="flex items-center gap-2 truncate">
+                        <span className="font-semibold text-gray-500">{idx + 1}.</span>
+                        <span className="truncate" title={file.name}>{file.name}</span>
+                        <span className="text-gray-400 text-[10px] shrink-0">
+                          ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(idx)}
+                        className="text-gray-400 hover:text-red-500 p-0.5 ml-2 transition-colors cursor-pointer"
+                        title="Remove file"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="mt-4 flex justify-end items-center">
@@ -853,6 +1032,7 @@ function VolumeList() {
                 onChange={handleEditChange}
               />
               <TextField
+                select
                 fullWidth
                 variant="outlined"
                 size="small"
@@ -860,7 +1040,13 @@ function VolumeList() {
                 name="volume_fetal_presentation"
                 value={editFormData.volume_fetal_presentation}
                 onChange={handleEditChange}
-              />
+              >
+                <MenuItem value="">Select Fetal Presentation</MenuItem>
+                <MenuItem value="Cephalic_left">Cephalic_left</MenuItem>
+                <MenuItem value="Cephalic_right">Cephalic_right</MenuItem>
+                <MenuItem value="Breech_left">Breech_left</MenuItem>
+                <MenuItem value="Breech_right">Breech_right</MenuItem>
+              </TextField>
               <TextField
                 select
                 fullWidth
