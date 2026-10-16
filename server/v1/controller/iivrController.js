@@ -11,7 +11,7 @@ const VALID_TYPES = ['type1', 'type2', 'annotation1', 'annotation2', 'measuremen
 const getMissingFields = (questionType, body, file) => {
   const missing = [];
   if (questionType === 'type1') {
-    if (body.optionChosen === undefined) missing.push('optionChosen');
+    if (Number(body.questionNo) < 6 && body.optionChosen === undefined) missing.push('optionChosen');
   }
   if (['type2', 'annotation1', 'annotation2', 'measurement'].includes(questionType)) {
     if (!file) missing.push('userImage');
@@ -73,7 +73,12 @@ const createSubmission = async (req, res, next) => {
       : JSON.parse(String(isCorrect).toLowerCase());
     let result;
     if (questionType === 'type1') {
-      result = await submitType1(requester, Number(qNo), Number(optionChosen), isCorrectBool);
+      result = await submitType1(
+        requester,
+        Number(qNo),
+        optionChosen !== undefined && optionChosen !== '' ? Number(optionChosen) : null,
+        isCorrectBool
+      );
     } else if (questionType === 'type2') {
       result = await submitType2(requester, Number(qNo), isCorrectBool, req.file);
     } else if (questionType === 'annotation1') {

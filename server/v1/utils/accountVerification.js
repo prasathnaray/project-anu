@@ -25,7 +25,10 @@ const sendOtpSms = async (phoneNumber, otp, purpose) => {
   const secretAccessKey = process.env.AWS_SNS_SECRET_ACCESS_KEY
     || process.env.AWS_SECRET_ACCESS_KEY
     || process.env.AWS_IVS_SECRET_KEY;
-  const snsConfig = { region: process.env.AWS_REGION || 'ap-south-1' };
+  const snsConfig = {
+    region: process.env.AWS_REGION || 'ap-south-1',
+    maxAttempts: 1
+  };
   if (accessKeyId && secretAccessKey) {
     snsConfig.credentials = { accessKeyId, secretAccessKey };
   }
@@ -44,11 +47,25 @@ const sendOtpSms = async (phoneNumber, otp, purpose) => {
   }
 
   const action = purpose === 'reactivation' ? 'reactivate your account' : 'activate your account';
-  const result = await sns.send(new PublishCommand({
+  const timeoutMs = Number(process.env.SNS_TIMEOUT_MS) || 2500;
+  const publishPromise = sns.send(new PublishCommand({
     PhoneNumber: phoneNumber,
     Message: `Project Anu OTP: ${otp}. Use this code to ${action}. It expires in ${OTP_TTL_MINUTES} minutes.`,
     MessageAttributes: attributes
   }));
+
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error(`SNS SMS delivery timed out after ${timeoutMs}ms`);
+      err.name = 'TimeoutError';
+      reject(err);
+    }, timeoutMs);
+  });
+
+  const result = await Promise.race([publishPromise, timeoutPromise]).finally(() => {
+    clearTimeout(timer);
+  });
   return result.MessageId;
 };
 

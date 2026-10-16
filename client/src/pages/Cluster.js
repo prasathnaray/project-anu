@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
@@ -47,7 +47,10 @@ function Cluster() {
     setButtonOpen((prev) => !prev);
   };
 
+  const isFetchingRef = useRef(false);
   const fetchData = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
     try {
       const [volumeResult, countsResult] = await Promise.allSettled([
@@ -101,6 +104,7 @@ function Cluster() {
       console.error('Failed to load cluster data:', err);
       toast.error('Failed to load volumes.');
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
   }, []);

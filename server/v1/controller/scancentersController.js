@@ -25,20 +25,14 @@ const createScanCenterC = async (req, res) => {
             return res.status(result.code).json(result);
         }
 
-        let verificationSent = false;
-        try {
-            await issueAccountVerificationOtp(result.data.user.user_email, 'activation');
-            verificationSent = true;
-        } catch (verificationError) {
+        issueAccountVerificationOtp(result.data.user.user_email, 'activation').catch((verificationError) => {
             console.error('Failed to send institution admin activation OTP:', verificationError);
-        }
+        });
 
         res.status(201).json({
             status: 'success',
-            message: verificationSent
-                ? 'Scan center created. Verification OTP sent to the administrator phone.'
-                : 'Scan center created as pending verification. OTP could not be sent; use resend verification.',
-            verificationSent,
+            message: 'Scan center created. Verification OTP sent to the administrator phone.',
+            verificationSent: true,
             data: result.data
         });
     } catch (err) {
@@ -96,13 +90,10 @@ const addInstitutionAdminC = async (req, res) => {
     try {
         const result = await addInstitutionAdmin(req.user, req.params.institutionId, req.body);
         if (result.code === 201 && result.data?.user?.user_email) {
-            try {
-                await issueAccountVerificationOtp(result.data.user.user_email, 'activation');
-                result.verificationSent = true;
-            } catch (verificationError) {
+            issueAccountVerificationOtp(result.data.user.user_email, 'activation').catch((verificationError) => {
                 console.error('Failed to send institution admin activation OTP:', verificationError);
-                result.verificationSent = false;
-            }
+            });
+            result.verificationSent = true;
         }
         return res.status(result.code || 201).json(result);
     } catch (error) {

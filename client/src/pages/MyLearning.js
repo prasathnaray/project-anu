@@ -5801,6 +5801,51 @@ const BPD_HC_FIND_THE_IMAGE_QUESTIONS = {
     feedback_correct: 'Correct! You identified the appropriate image for HC measurement - a symmetrical transthalamic plane with the midline falx, arrow sign, thalami and CSP in view.',
     feedback_wrong: 'Incorrect. The chosen image is not suitable for HC measurement.',
   },
+  6: {
+    question_no: 6,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  7: {
+    question_no: 7,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  8: {
+    question_no: 8,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  9: {
+    question_no: 9,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  10: {
+    question_no: 10,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane',
+    options: [],
+    correct_answer: { answer: 'Transthalamic plane frame', timeframe: 'Transthalamic plane', expected_timeframe: 'Transthalamic plane' },
+    feedback_correct: 'Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
 };
 
 // ─── BPD/HC FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10 & Q11-Q15) ──
@@ -6499,6 +6544,51 @@ const AC_FIND_THE_IMAGE_QUESTIONS = {
     feedback_correct: 'Great work! You selected D — the correct plane for AC measurement that includes the stomach bubble and spine in a circular section.',
     feedback_wrong: 'The chosen plane is not correct.',
   },
+  6: {
+    question_no: 6,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  7: {
+    question_no: 7,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  8: {
+    question_no: 8,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  9: {
+    question_no: 9,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  10: {
+    question_no: 10,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal abdomen and find the correct timeframe revealing the transabdominal plane',
+    options: [],
+    correct_answer: { answer: 'Transabdominal plane frame', timeframe: 'Transabdominal plane', expected_timeframe: 'Transabdominal plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the stomach bubble, ribs, portal vein, and spine.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
 };
 
 // ─── AC FREEZE THE PLANE DEFAULT/CONFIGURED QUESTIONS (Q6-Q10) ───────────────
@@ -7126,6 +7216,51 @@ const FL_FIND_THE_IMAGE_QUESTIONS = {
     feedback_correct: 'You accurately identified the correct FL plane with full femur visualization.',
     feedback_wrong: 'Incorrect choice! The selected image does not represent the proper femur orientation.',
   },
+  6: {
+    question_no: 6,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  7: {
+    question_no: 7,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  8: {
+    question_no: 8,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  9: {
+    question_no: 9,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
+  10: {
+    question_no: 10,
+    question_type: 'type1',
+    prompt: 'Watch the ultrasound video of the angulation of the probe over the fetal femur and find the correct timeframe revealing the femur plane',
+    options: [],
+    correct_answer: { answer: 'Femur plane frame', timeframe: 'Femur plane', expected_timeframe: 'Femur plane' },
+    feedback_correct: 'Perfect freeze! The image shows all the key landmarks: the diaphysis and metaphysis.',
+    feedback_wrong: 'Incorrect freeze! The frozen frame lacks one or more key landmarks',
+  },
 };
 
 function getFlFindImageWrongFeedback(submission, qNoStr, fallbackWrong) {
@@ -7554,7 +7689,7 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
   const rawQuestions = (Array.isArray(questions) ? [...questions] : []).filter(
     q => {
       const qNo = Number(q?.question_no);
-      if (isFindImageResource) return qNo >= 1 && qNo <= 5;
+      if (isFindImageResource) return qNo >= 1 && qNo <= 10;
       if (isFreezePlaneResource) return (qNo >= 6 && qNo <= 10) || (qNo >= 11 && qNo <= 15);
       if (isFlResource && isMeasurementResource) return qNo >= 1 && qNo <= 5;
       if (isAcResource && isMeasurementResource) return qNo >= 1 && qNo <= 10;
@@ -7648,7 +7783,7 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
   }
   rawQuestions.forEach(q => {
     const qNoStr = String(q.question_no ?? '');
-    if (isFindImageResource && (Number(qNoStr) < 1 || Number(qNoStr) > 5)) return;
+    if (isFindImageResource && (Number(qNoStr) < 1 || Number(qNoStr) > 10)) return;
     if (isFreezePlaneResource && (Number(qNoStr) < 6 || Number(qNoStr) > 15)) return;
     if (isFlResource && isMeasurementResource && (Number(qNoStr) < 1 || Number(qNoStr) > 5)) return;
     if (isAcResource && isMeasurementResource && (Number(qNoStr) < 1 || Number(qNoStr) > 10)) return;
@@ -7723,7 +7858,7 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
   const submissionsBySession = {};
   (Array.isArray(submissions) ? submissions : []).forEach((submission) => {
     const rawQNo = Number(submission?.question_no);
-    if (isFindImageResource && (rawQNo < 1 || rawQNo > 5)) return;
+    if (isFindImageResource && (rawQNo < 1 || rawQNo > 10)) return;
     if (isFreezePlaneResource && (rawQNo < 6 || rawQNo > 15)) return;
     if (isFlResource && isMeasurementResource && (rawQNo < 1 || rawQNo > 5)) return;
     if (isAcResource && isMeasurementResource && (rawQNo < 1 || rawQNo > 10)) return;
@@ -7731,7 +7866,7 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
       ? { ...submission, question_no: rawQNo - 5 }
       : submission;
     if (!isMeasurementResource && !isFreezePlaneResource && Number(normalizedSubmission?.question_no) >= 11 && Number(normalizedSubmission?.question_no) <= 15) return;
-    if (isFindImageResource && (Number(normalizedSubmission?.question_no) < 1 || Number(normalizedSubmission?.question_no) > 5)) return;
+    if (isFindImageResource && (Number(normalizedSubmission?.question_no) < 1 || Number(normalizedSubmission?.question_no) > 10)) return;
     if (isFreezePlaneResource && (Number(normalizedSubmission?.question_no) < 6 || Number(normalizedSubmission?.question_no) > 10)) return;
     const sessionId = normalizedSubmission.session_id || 'unknown';
     if (!submissionsBySession[sessionId]) {
@@ -7759,7 +7894,7 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
       ])).filter(qNo => {
         if (!qNo) return false;
         const n = Number(qNo);
-        if (isFindImageResource) return n >= 1 && n <= 5;
+        if (isFindImageResource) return n >= 1 && n <= 10;
         if (isFreezePlaneResource) return n >= 6 && n <= 10;
         if (isFlResource && isMeasurementResource) return n >= 1 && n <= 5;
         if (isAcResource && isMeasurementResource) return n >= 1 && n <= 10;

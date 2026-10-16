@@ -85,6 +85,9 @@ const client = new Pool({
     rejectUnauthorized: false,
   },
 });
+client.on('error', (err) => {
+  console.error('Unexpected error on idle database client', err?.message || err);
+});
 client.connect((err, connection, release) => {
   if (err) {
     console.error('Connection error', err.stack);

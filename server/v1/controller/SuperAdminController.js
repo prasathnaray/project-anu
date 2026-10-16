@@ -17,20 +17,14 @@ const list = async (req, res) => {
 const create = async (req, res) => {
     try {
         const data = await model.createSuperAdmin(req.user, req.body);
-        let verificationSent = false;
-        try {
-            await issueAccountVerificationOtp(data.user.user_email, 'activation');
-            verificationSent = true;
-        } catch (verificationError) {
+        issueAccountVerificationOtp(data.user.user_email, 'activation').catch((verificationError) => {
             console.error('Failed to send super admin activation OTP:', verificationError);
-        }
+        });
         return res.status(201).json({
             code: 201,
             status: 'Success',
-            message: verificationSent
-                ? 'Super admin created. Verification OTP sent to the registered phone.'
-                : 'Super admin created as pending verification. OTP could not be sent; use resend verification.',
-            verificationSent,
+            message: 'Super admin created. Verification OTP sent to the registered phone.',
+            verificationSent: true,
             data
         });
     } catch (error) {

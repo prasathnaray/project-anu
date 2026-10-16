@@ -58,71 +58,65 @@ const getQueriesm = (requester, page, limit) => {
     const offset = (page - 1) * limit;
     const limitParameter = scope.params.length + 1;
     const offsetParameter = limitParameter + 1;
-    return new Promise((resolve, reject) => {
-        client.query(
+
+    const runQuery = (sql, params) => new Promise((resolve, reject) => {
+        client.query(sql, params, (err, res) => {
+            if (err) reject(err);
+            else resolve(res);
+        });
+    });
+
+    return Promise.all([
+        runQuery(
             `SELECT qd.*, ud.user_name 
              FROM queries_data qd 
              JOIN user_data ud ON qd.created_by = ud.user_email
              WHERE ${scope.clause}
              ORDER BY qd.created_at DESC 
              LIMIT $${limitParameter} OFFSET $${offsetParameter}`,
-            [...scope.params, limit, offset],
-            (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    client.query(
-                        `SELECT COUNT(*)
-                         FROM queries_data qd
-                         JOIN user_data ud ON qd.created_by = ud.user_email
-                         WHERE ${scope.clause}`,
-                        scope.params,
-                        (countErr, countResult) => {
-                        if (countErr) {
-                            reject(countErr);
-                        } else {
-                            resolve({
-                                rows: result.rows,
-                                total: parseInt(countResult.rows[0].count)
-                            });
-                        }
-                        }
-                    );
-                }
-            }
-        );
-    });
+            [...scope.params, limit, offset]
+        ),
+        runQuery(
+            `SELECT COUNT(*)
+             FROM queries_data qd
+             JOIN user_data ud ON qd.created_by = ud.user_email
+             WHERE ${scope.clause}`,
+            scope.params
+        )
+    ]).then(([dataRes, countRes]) => ({
+        rows: dataRes.rows,
+        total: parseInt(countRes.rows[0].count)
+    }));
 };
 
 const getQueriesByUserm = (requester, page, limit) => {
     const offset = (page - 1) * limit;
-    return new Promise((resolve, reject) => {
-        client.query(
+
+    const runQuery = (sql, params) => new Promise((resolve, reject) => {
+        client.query(sql, params, (err, res) => {
+            if (err) reject(err);
+            else resolve(res);
+        });
+    });
+
+    return Promise.all([
+        runQuery(
             `SELECT qd.*, ud.user_name 
              FROM queries_data qd 
              LEFT JOIN user_data ud ON qd.created_by = ud.user_email 
              WHERE qd.created_by = $1 
              ORDER BY qd.created_at DESC 
              LIMIT $2 OFFSET $3`,
-            [requester.user_mail, limit, offset],
-            (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    client.query('SELECT COUNT(*) FROM queries_data WHERE created_by = $1', [requester.user_mail], (countErr, countResult) => {
-                        if (countErr) {
-                            reject(countErr);
-                        } else {
-                            resolve({
-                                rows: result.rows,
-                                total: parseInt(countResult.rows[0].count)
-                            });
-                        }
-                    });
-                }
-            }
-        );
-    });
+            [requester.user_mail, limit, offset]
+        ),
+        runQuery(
+            'SELECT COUNT(*) FROM queries_data WHERE created_by = $1',
+            [requester.user_mail]
+        )
+    ]).then(([dataRes, countRes]) => ({
+        rows: dataRes.rows,
+        total: parseInt(countRes.rows[0].count)
+    }));
 };
 
 const updateQueryStatusm = (requester, query_id, status) => {

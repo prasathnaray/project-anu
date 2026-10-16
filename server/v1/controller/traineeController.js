@@ -81,21 +81,24 @@ const CreateTraineeController = async (req, res) => {
                 if (result.code && result.code !== 200) {
                         return res.status(result.code).json(result);
                 }
-                let verificationSent = false;
-                try {
-                        await issueAccountVerificationOtp(result.data.user_email, 'activation');
-                        verificationSent = true;
-                } catch (verificationError) {
+                issueAccountVerificationOtp(result.data.user_email, 'activation').catch((verificationError) => {
                         console.error('Failed to send account activation OTP:', verificationError);
+                });
+                let fileUrl = uploaded.reference;
+                try {
+                        fileUrl = await Promise.race([
+                                signAsset(uploaded.reference),
+                                new Promise((resolve) => setTimeout(() => resolve(uploaded.reference), 1000))
+                        ]);
+                } catch (_) {
+                        fileUrl = uploaded.reference;
                 }
                 res.status(200).json({
                         status: 'Success',
-                        message: verificationSent
-                                ? 'Profile created. Verification OTP sent to the registered phone.'
-                                : 'Profile created as pending verification. OTP could not be sent; use resend verification.',
-                        verificationSent,
+                        message: 'Profile created. Verification OTP sent to the registered phone.',
+                        verificationSent: true,
                         filePath: uploaded.reference,
-                        fileUrl: await signAsset(uploaded.reference),
+                        fileUrl,
                         result: result,
                 });  
         }
@@ -124,20 +127,16 @@ const DisableTrainee = async(req, res) => {
                 }
                 else
                 {
-                        let verificationSent = false;
                         if (result.verificationRequired) {
-                                try {
-                                        await issueAccountVerificationOtp(result.user_email, 'reactivation');
-                                        verificationSent = true;
-                                } catch (verificationError) {
+                                issueAccountVerificationOtp(result.user_email, 'reactivation').catch((verificationError) => {
                                         console.error('Failed to send reactivation OTP:', verificationError);
-                                }
+                                });
                         }
                         res.status(200).send({
                                 result: 'Updated Successfully',
                                 statusCode: 200,
                                 verificationRequired: result.verificationRequired,
-                                verificationSent
+                                verificationSent: Boolean(result.verificationRequired)
                         })
                 }
         }

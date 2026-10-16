@@ -34,6 +34,7 @@ const getS3Client = () => {
         const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_IVS_SECRET_KEY;
         s3Client = new S3Client({
             region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'ap-south-1',
+            maxAttempts: 1,
             ...(accessKeyId && secretAccessKey ? { credentials: { accessKeyId, secretAccessKey } } : {})
         });
     }
@@ -102,12 +103,18 @@ const uploadAsset = async ({ sourceBucket = DEFAULT_SOURCE_BUCKET, objectKey, bo
     const client = getS3Client();
     if (!upsert) {
         try {
-            await client.send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key }));
+            await Promise.race([
+                client.send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key })),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('S3 Head timeout')), 1500))
+            ]);
             const error = new Error(`Storage object already exists: ${parsed.s3Key}`);
             error.code = 'OBJECT_EXISTS';
             throw error;
         } catch (error) {
-            if (!isNotFound(error)) throw error;
+            if (error.code === 'OBJECT_EXISTS') throw error;
+            if (!isNotFound(error)) {
+                // Non-fatal if head check timed out or errored
+            }
         }
     }
 
@@ -119,12 +126,27 @@ const uploadAsset = async ({ sourceBucket = DEFAULT_SOURCE_BUCKET, objectKey, bo
         Metadata: Object.fromEntries(Object.entries(metadata).map(([key, value]) => [key, String(value)]))
     };
     const size = Buffer.isBuffer(body) ? body.length : null;
-    if (size !== null && size < 5 * 1024 * 1024) {
-        await client.send(new PutObjectCommand(params));
-    } else {
-        await new Upload({ client, params }).done();
+    try {
+        const putPromise = (size !== null && size < 5 * 1024 * 1024)
+            ? client.send(new PutObjectCommand(params))
+            : new Upload({ client, params }).done();
+        await Promise.race([
+            putPromise,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('S3 PutObject timeout')), 3000))
+        ]);
+        return { reference: parsed.s3Key, sourceBucket: parsed.sourceBucket, objectKey: parsed.objectKey };
+    } catch (uploadError) {
+        if (fallbackEnabled()) {
+            console.warn('S3 upload timed out or failed, falling back to Supabase:', uploadError.message);
+            const { error: supaError } = await supabase.storage.from(parsed.sourceBucket).upload(parsed.objectKey, body, {
+                contentType,
+                upsert
+            });
+            if (supaError) throw supaError;
+            return { reference: parsed.s3Key, sourceBucket: parsed.sourceBucket, objectKey: parsed.objectKey };
+        }
+        throw uploadError;
     }
-    return { reference: parsed.s3Key, sourceBucket: parsed.sourceBucket, objectKey: parsed.objectKey };
 };
 
 const signSupabaseFallback = async (parsed, expiresIn, downloadName) => {
@@ -135,14 +157,43 @@ const signSupabaseFallback = async (parsed, expiresIn, downloadName) => {
     return data.signedUrl;
 };
 
+const signedUrlCache = new Map();
+
+const getCacheKey = (value, downloadName) => `${value}::${downloadName || ''}`;
+
 const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, expiresIn = SIGNED_URL_TTL_SECONDS, downloadName = null } = {}) => {
     const parsed = parseReference(value, defaultSourceBucket);
     if (!parsed) return null;
-    if (provider() !== 's3') return signSupabaseFallback(parsed, expiresIn, downloadName);
+
+    const cacheKey = getCacheKey(value, downloadName);
+    const cached = signedUrlCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+        return cached.url;
+    }
+
+    const setCache = (url) => {
+        if (url && typeof url === 'string') {
+            const safetyMarginMs = 60 * 1000;
+            const ttlMs = Math.max((expiresIn * 1000) - safetyMarginMs, 60 * 1000);
+            if (signedUrlCache.size > 5000) signedUrlCache.clear();
+            signedUrlCache.set(cacheKey, { url, expiresAt: Date.now() + ttlMs });
+        }
+        return url;
+    };
+
+    if (provider() !== 's3') {
+        const url = await signSupabaseFallback(parsed, expiresIn, downloadName);
+        return setCache(url);
+    }
 
     try {
-        await getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key }));
-        return getSignedUrl(
+        if (fallbackEnabled()) {
+            await Promise.race([
+                getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key })),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('S3 Head timeout')), 1000))
+            ]);
+        }
+        const url = await getSignedUrl(
             getS3Client(),
             new GetObjectCommand({
                 Bucket: targetBucket(), Key: parsed.s3Key,
@@ -150,12 +201,13 @@ const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, e
             }),
             { expiresIn }
         );
+        return setCache(url);
     } catch (error) {
         if (fallbackEnabled()) {
             try {
                 const fallbackUrl = await signSupabaseFallback(parsed, expiresIn, downloadName);
                 console.warn(`S3 storage fallback used for ${parsed.s3Key}`);
-                return fallbackUrl;
+                return setCache(fallbackUrl);
             } catch (fallbackErr) {
                 console.warn(`Fallback to Supabase also failed for ${parsed.s3Key}:`, fallbackErr.message);
                 return value;

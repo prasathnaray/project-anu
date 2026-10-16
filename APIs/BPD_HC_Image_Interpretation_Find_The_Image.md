@@ -198,6 +198,171 @@ resource_id=<resource_uuid>
 
 ---
 
+## Question 6
+
+**Question:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (Find the Image / Freeze Timeframe)
+- **Question Number:** `6`
+
+### Options:
+- Video freeze timeframe (no multiple choice options)
+
+**Correct Answer:** Transthalamic plane frame
+
+### Feedback:
+- **If correct:**  
+  Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **If wrong:**  
+  Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+### Submit Payload (`multipart/form-data`):
+```http
+POST /api/v1/submit-ii
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+
+questionType=type1
+questionNo=6
+isCorrect=true
+session_id=<session_uuid>
+resource_id=<resource_uuid>
+```
+
+---
+
+## Question 7
+
+**Question:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (Find the Image / Freeze Timeframe)
+- **Question Number:** `7`
+
+### Options:
+- Video freeze timeframe (no multiple choice options)
+
+**Correct Answer:** Transthalamic plane frame
+
+### Feedback:
+- **If correct:**  
+  Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **If wrong:**  
+  Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+### Submit Payload (`multipart/form-data`):
+```http
+POST /api/v1/submit-ii
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+
+questionType=type1
+questionNo=7
+isCorrect=true
+session_id=<session_uuid>
+resource_id=<resource_uuid>
+```
+
+---
+
+## Question 8
+
+**Question:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (Find the Image / Freeze Timeframe)
+- **Question Number:** `8`
+
+### Options:
+- Video freeze timeframe (no multiple choice options)
+
+**Correct Answer:** Transthalamic plane frame
+
+### Feedback:
+- **If correct:**  
+  Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **If wrong:**  
+  Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+### Submit Payload (`multipart/form-data`):
+```http
+POST /api/v1/submit-ii
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+
+questionType=type1
+questionNo=8
+isCorrect=true
+session_id=<session_uuid>
+resource_id=<resource_uuid>
+```
+
+---
+
+## Question 9
+
+**Question:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (Find the Image / Freeze Timeframe)
+- **Question Number:** `9`
+
+### Options:
+- Video freeze timeframe (no multiple choice options)
+
+**Correct Answer:** Transthalamic plane frame
+
+### Feedback:
+- **If correct:**  
+  Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **If wrong:**  
+  Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+### Submit Payload (`multipart/form-data`):
+```http
+POST /api/v1/submit-ii
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+
+questionType=type1
+questionNo=9
+isCorrect=true
+session_id=<session_uuid>
+resource_id=<resource_uuid>
+```
+
+---
+
+## Question 10
+
+**Question:** Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane
+
+- **Question Type:** `type1` (Find the Image / Freeze Timeframe)
+- **Question Number:** `10`
+
+### Options:
+- Video freeze timeframe (no multiple choice options)
+
+**Correct Answer:** Transthalamic plane frame
+
+### Feedback:
+- **If correct:**  
+  Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.
+- **If wrong:**  
+  Incorrect freeze! The frozen frame lacks one or more key landmarks
+
+### Submit Payload (`multipart/form-data`):
+```http
+POST /api/v1/submit-ii
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+
+questionType=type1
+questionNo=10
+isCorrect=true
+session_id=<session_uuid>
+resource_id=<resource_uuid>
+```
+
+---
+
 ## MindSpark / Image Interpretation Question Configuration Payload (`POST /api/v1/mind-spark-questions`)
 
 To configure these questions in the database for the BPD/HC Image Interpretation resource:
@@ -276,6 +441,51 @@ To configure these questions in the database for the BPD/HC Image Interpretation
       "correct_answer": { "key": "C", "text": "C" },
       "feedback_correct": "Correct! You identified the appropriate image for HC measurement - a symmetrical transthalamic plane with the midline falx, arrow sign, thalami and CSP in view.",
       "feedback_wrong": "Incorrect. The chosen image is not suitable for HC measurement."
+    },
+    {
+      "question_no": 6,
+      "question_type": "type1",
+      "prompt": "Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane",
+      "options": [],
+      "correct_answer": { "answer": "Transthalamic plane frame", "timeframe": "Transthalamic plane", "expected_timeframe": "Transthalamic plane" },
+      "feedback_correct": "Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.",
+      "feedback_wrong": "Incorrect freeze! The frozen frame lacks one or more key landmarks"
+    },
+    {
+      "question_no": 7,
+      "question_type": "type1",
+      "prompt": "Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane",
+      "options": [],
+      "correct_answer": { "answer": "Transthalamic plane frame", "timeframe": "Transthalamic plane", "expected_timeframe": "Transthalamic plane" },
+      "feedback_correct": "Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.",
+      "feedback_wrong": "Incorrect freeze! The frozen frame lacks one or more key landmarks"
+    },
+    {
+      "question_no": 8,
+      "question_type": "type1",
+      "prompt": "Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane",
+      "options": [],
+      "correct_answer": { "answer": "Transthalamic plane frame", "timeframe": "Transthalamic plane", "expected_timeframe": "Transthalamic plane" },
+      "feedback_correct": "Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.",
+      "feedback_wrong": "Incorrect freeze! The frozen frame lacks one or more key landmarks"
+    },
+    {
+      "question_no": 9,
+      "question_type": "type1",
+      "prompt": "Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane",
+      "options": [],
+      "correct_answer": { "answer": "Transthalamic plane frame", "timeframe": "Transthalamic plane", "expected_timeframe": "Transthalamic plane" },
+      "feedback_correct": "Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.",
+      "feedback_wrong": "Incorrect freeze! The frozen frame lacks one or more key landmarks"
+    },
+    {
+      "question_no": 10,
+      "question_type": "type1",
+      "prompt": "Watch the ultrasound video of the angulation of the probe over the fetal head and find the correct timeframe revealing the transthalamic plane",
+      "options": [],
+      "correct_answer": { "answer": "Transthalamic plane frame", "timeframe": "Transthalamic plane", "expected_timeframe": "Transthalamic plane" },
+      "feedback_correct": "Perfect freeze! The image consists of all the key landmarks: midline falx, box-shaped CSP, and symmetric thalami.",
+      "feedback_wrong": "Incorrect freeze! The frozen frame lacks one or more key landmarks"
     }
   ]
 }

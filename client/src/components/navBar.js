@@ -1032,7 +1032,10 @@ function NavBar() {
   };
 
   // ── Fetch notifications ───────────────────────────────────────────────────
+  const isFetchingCountRef = useRef(false);
   const fetchCount = async () => {
+    if (isFetchingCountRef.current) return;
+    isFetchingCountRef.current = true;
     try {
       const mail = tokenRes?.user_mail || "";
       const role = Number(tokenRes?.role);
@@ -1092,6 +1095,8 @@ function NavBar() {
       );
     } catch (err) {
       console.error("Error fetching notifications:", err);
+    } finally {
+      isFetchingCountRef.current = false;
     }
   };
 
