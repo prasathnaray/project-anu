@@ -96,6 +96,7 @@ function Cluster() {
           volume_id: v.volume_id,
           volume_name: v.volume_name,
           fetal_presentation: v.volume_fetal_presentation || v.fetal_presentation || '',
+          is_initial: true,
         }));
         setClusters(initial);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
@@ -217,6 +218,7 @@ function Cluster() {
       volume_id: clusterForm.selected_volume_ids[0] || '',
       volume_name: matchedNames.join(', '),
       fetal_presentation: clusterForm.fetal_presentation || '',
+      is_new: true,
     };
 
     const updated = [newCluster, ...clusters];
@@ -273,6 +275,7 @@ function Cluster() {
           volume_id: editClusterForm.selected_volume_ids[0] || '',
           volume_name: matchedNames.join(', '),
           fetal_presentation: editClusterForm.fetal_presentation || '',
+          is_new: true,
         };
       }
       return c;
@@ -372,8 +375,12 @@ function Cluster() {
                       const volumeIds = Array.isArray(cluster.volume_ids)
                         ? cluster.volume_ids
                         : (cluster.volume_id ? [cluster.volume_id] : []);
-                      const stepFiles = volumeIds.flatMap((vId) => recordingCounts[vId]?.stepFiles || []);
-                      const shadowCount = volumeIds.reduce((sum, vId) => sum + (recordingCounts[vId]?.shadow || 0), 0);
+                      const stepFiles = Array.isArray(cluster.step_recordings)
+                        ? cluster.step_recordings
+                        : (Array.isArray(cluster.step_files) ? cluster.step_files : []);
+                      const shadowCount = Number(cluster.shadow_recording_count)
+                        || Number(cluster.shadow_count)
+                        || (Array.isArray(cluster.shadow_recordings) ? cluster.shadow_recordings.length : 0);
                       const matchedVol = volumes.find((v) => volumeIds.includes(v.volume_id));
                       const displayFetalPresentation = cluster.fetal_presentation
                         || matchedVol?.volume_fetal_presentation
