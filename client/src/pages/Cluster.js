@@ -10,6 +10,7 @@ import GetVolInsAPI from '../API/GetVolInsAPI';
 import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
 import volumeDownloadAPI from '../API/volumeDownloadAPI';
 import VolumeRecordingDownloads from '../components/Instructors/VolumeRecordingDownloads';
+import { getVolumePlacementsAPI } from '../API/VolumePlacementAPI';
 
 const STORAGE_KEY = 'project_anu_cluster_list';
 
@@ -19,6 +20,7 @@ function Cluster() {
   const [loading, setLoading] = useState(false);
   const [volumes, setVolumes] = useState([]);
   const [recordingCounts, setRecordingCounts] = useState({});
+  const [volumePlacements, setVolumePlacements] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
@@ -53,9 +55,10 @@ function Cluster() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      const [volumeResult, countsResult] = await Promise.allSettled([
+      const [volumeResult, countsResult, placementsResult] = await Promise.allSettled([
         GetVolInsAPI(),
         GetShadowRecordingCountsAPI(),
+        getVolumePlacementsAPI(),
       ]);
 
       if (volumeResult.status === 'rejected') {
@@ -66,8 +69,15 @@ function Cluster() {
       const counts = countsResult.status === 'fulfilled' && Array.isArray(countsResult.value?.data)
         ? countsResult.value.data
         : [];
+      const placements = placementsResult.status === 'fulfilled' && Array.isArray(placementsResult.value?.data)
+        ? placementsResult.value.data
+        : [];
 
       setVolumes(allVolumes);
+      setVolumePlacements(placements.reduce((acc, placement) => ({
+        ...acc,
+        [placement.volume_id]: placement,
+      }), {}));
       const countsMap = counts.reduce((acc, item) => ({
         ...acc,
         [item.volume_id]: {
@@ -114,10 +124,19 @@ function Cluster() {
     fetchData();
   }, [fetchData]);
 
-  // Only converted volumes are available for selection
+  // Clusters use converted volumes. Recordings are gated separately below by
+  // the presence of the volume's transform.json/placement JSON.
   const convertedVolumes = useMemo(() => {
     return volumes.filter((vol) => Boolean(vol.conversion_completion));
   }, [volumes]);
+
+  const isTransformJsonAvailable = useCallback((volumeId) => (
+    Boolean(volumePlacements[volumeId]?.placed_url)
+  ), [volumePlacements]);
+
+  const clusterRecordingsReady = useCallback((volumeIds) => (
+    volumeIds.length > 0 && volumeIds.every(isTransformJsonAvailable)
+  ), [isTransformJsonAvailable]);
 
   // Filtered clusters based on search
   const filteredClusters = useMemo(() => {
@@ -381,6 +400,7 @@ function Cluster() {
                       const shadowCount = Number(cluster.shadow_recording_count)
                         || Number(cluster.shadow_count)
                         || (Array.isArray(cluster.shadow_recordings) ? cluster.shadow_recordings.length : 0);
+                      const recordingsReady = clusterRecordingsReady(volumeIds);
                       const matchedVol = volumes.find((v) => volumeIds.includes(v.volume_id));
                       const displayFetalPresentation = cluster.fetal_presentation
                         || matchedVol?.volume_fetal_presentation
@@ -438,7 +458,9 @@ function Cluster() {
 
                           {/* 4. Step Recording */}
                           <td className="py-3 px-4">
-                            {stepFiles.length > 0 ? (
+                            {!recordingsReady ? (
+                              <span className="text-gray-400 text-[11px]">Available after transform.json</span>
+                            ) : stepFiles.length > 0 ? (
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {stepFiles.map((fileUrl, idx) => (
                                   isImageFile(fileUrl) ? (
@@ -476,7 +498,9 @@ function Cluster() {
 
                           {/* 5. Shadow Recording */}
                           <td className="py-3 px-4">
-                            <div className="flex items-center gap-2">
+                            {!recordingsReady ? (
+                              <span className="text-gray-400 text-[11px]">Available after transform.json</span>
+                            ) : <div className="flex items-center gap-2">
                               <span className="px-2 py-0.5 rounded text-[11px] bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
                                 {shadowCount}
                               </span>
@@ -491,7 +515,7 @@ function Cluster() {
                                   Recording files
                                 </button>
                               )}
-                            </div>
+                            </div>}
                           </td>
 
                           {/* Action (Edit & Delete) */}
@@ -619,14 +643,20 @@ function Cluster() {
                 <div className="font-semibold text-gray-700">
                   Linked Volume Recordings ({(clusterForm.selected_volume_ids || []).length} volume(s) selected):
                 </div>
-                <div className="text-gray-600">
-                  • <strong>Step Recordings:</strong>{' '}
-                  {(clusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.stepFiles?.length || 0), 0)} file(s)
-                </div>
-                <div className="text-gray-600">
-                  • <strong>Shadow Recordings:</strong>{' '}
-                  {(clusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.shadow || 0), 0)} recording(s)
-                </div>
+                {(clusterForm.selected_volume_ids || []).every(isTransformJsonAvailable) ? (
+                  <>
+                    <div className="text-gray-600">
+                      • <strong>Step Recordings:</strong>{' '}
+                      {(clusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.stepFiles?.length || 0), 0)} file(s)
+                    </div>
+                    <div className="text-gray-600">
+                      • <strong>Shadow Recordings:</strong>{' '}
+                      {(clusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.shadow || 0), 0)} recording(s)
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-gray-500">Recording details appear after transform.json is uploaded.</div>
+                )}
               </div>
             )}
           </DialogContent>
@@ -740,14 +770,20 @@ function Cluster() {
                 <div className="font-semibold text-gray-700">
                   Linked Volume Recordings ({(editClusterForm.selected_volume_ids || []).length} volume(s) selected):
                 </div>
-                <div className="text-gray-600">
-                  • <strong>Step Recordings:</strong>{' '}
-                  {(editClusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.stepFiles?.length || 0), 0)} file(s)
-                </div>
-                <div className="text-gray-600">
-                  • <strong>Shadow Recordings:</strong>{' '}
-                  {(editClusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.shadow || 0), 0)} recording(s)
-                </div>
+                {(editClusterForm.selected_volume_ids || []).every(isTransformJsonAvailable) ? (
+                  <>
+                    <div className="text-gray-600">
+                      • <strong>Step Recordings:</strong>{' '}
+                      {(editClusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.stepFiles?.length || 0), 0)} file(s)
+                    </div>
+                    <div className="text-gray-600">
+                      • <strong>Shadow Recordings:</strong>{' '}
+                      {(editClusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.shadow || 0), 0)} recording(s)
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-gray-500">Recording details appear after transform.json is uploaded.</div>
+                )}
               </div>
             )}
           </DialogContent>
