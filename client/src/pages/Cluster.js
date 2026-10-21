@@ -2,15 +2,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { Download, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox } from '@mui/material';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
 import GetVolInsAPI from '../API/GetVolInsAPI';
-import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
-import volumeDownloadAPI from '../API/volumeDownloadAPI';
-import VolumeRecordingDownloads from '../components/Instructors/VolumeRecordingDownloads';
-import { getVolumePlacementsAPI } from '../API/VolumePlacementAPI';
 
 const STORAGE_KEY = 'project_anu_cluster_list';
 
@@ -19,13 +15,9 @@ function Cluster() {
   const [buttonOpen, setButtonOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [volumes, setVolumes] = useState([]);
-  const [recordingCounts, setRecordingCounts] = useState({});
-  const [volumePlacements, setVolumePlacements] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [downloadingKey, setDownloadingKey] = useState(null);
-  const [recordingsVolume, setRecordingsVolume] = useState(null);
 
   // Clusters state
   const [clusters, setClusters] = useState([]);
@@ -55,10 +47,8 @@ function Cluster() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      const [volumeResult, countsResult, placementsResult] = await Promise.allSettled([
+      const [volumeResult] = await Promise.allSettled([
         GetVolInsAPI(),
-        GetShadowRecordingCountsAPI(),
-        getVolumePlacementsAPI(),
       ]);
 
       if (volumeResult.status === 'rejected') {
@@ -66,28 +56,8 @@ function Cluster() {
       }
 
       const allVolumes = Array.isArray(volumeResult.value?.data) ? volumeResult.value.data : [];
-      const counts = countsResult.status === 'fulfilled' && Array.isArray(countsResult.value?.data)
-        ? countsResult.value.data
-        : [];
-      const placements = placementsResult.status === 'fulfilled' && Array.isArray(placementsResult.value?.data)
-        ? placementsResult.value.data
-        : [];
 
       setVolumes(allVolumes);
-      setVolumePlacements(placements.reduce((acc, placement) => ({
-        ...acc,
-        [placement.volume_id]: placement,
-      }), {}));
-      const countsMap = counts.reduce((acc, item) => ({
-        ...acc,
-        [item.volume_id]: {
-          shadow: Number(item.shadow_recording_count) || 0,
-          stepFiles: Array.isArray(item.step_recording_images)
-            ? item.step_recording_images
-            : (Array.isArray(item.step_recording_files) ? item.step_recording_files : []),
-        },
-      }), {});
-      setRecordingCounts(countsMap);
 
       // Load clusters from localStorage or initialize from converted volumes
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -124,19 +94,10 @@ function Cluster() {
     fetchData();
   }, [fetchData]);
 
-  // Clusters use converted volumes. Recordings are gated separately below by
-  // the presence of the volume's transform.json/placement JSON.
+  // Clusters use converted volumes independently from volume recordings.
   const convertedVolumes = useMemo(() => {
     return volumes.filter((vol) => Boolean(vol.conversion_completion));
   }, [volumes]);
-
-  const isTransformJsonAvailable = useCallback((volumeId) => (
-    Boolean(volumePlacements[volumeId]?.placed_url)
-  ), [volumePlacements]);
-
-  const clusterRecordingsReady = useCallback((volumeIds) => (
-    volumeIds.length > 0 && volumeIds.every(isTransformJsonAvailable)
-  ), [isTransformJsonAvailable]);
 
   // Filtered clusters based on search
   const filteredClusters = useMemo(() => {
@@ -149,60 +110,6 @@ function Cluster() {
       (c.volume_name || '').toLowerCase().includes(q)
     );
   }, [clusters, searchQuery]);
-
-  const isImageFile = (url) => {
-    if (!url || typeof url !== 'string') return false;
-    const cleanUrl = url.split('?')[0].toLowerCase();
-    return /\.(jpg|jpeg|png|webp|gif|svg)$/.test(cleanUrl);
-  };
-
-  const handleDownloadConverted = async (volumeId, fallbackName) => {
-    const key = `${volumeId}:converted`;
-    setDownloadingKey(key);
-    try {
-      const response = await volumeDownloadAPI(volumeId, 'converted');
-      const { url, filename } = response.data;
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename || `${fallbackName || volumeId}.bin`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast.success('Converted file download started.');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Unable to download converted volume file.');
-    } finally {
-      setDownloadingKey(null);
-    }
-  };
-
-  const handleDownloadFileUrl = async (url, defaultName) => {
-    const key = `url:${url}`;
-    setDownloadingKey(key);
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Fetch failed');
-      const blob = await res.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = defaultName || 'step_recording.jpg';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(blobUrl);
-    } catch {
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.download = defaultName || 'step_recording.jpg';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } finally {
-      setDownloadingKey(null);
-    }
-  };
 
   const handleOpenAddModal = () => {
     setClusterForm({
@@ -378,14 +285,14 @@ function Cluster() {
                 <tbody className="divide-y divide-gray-100 text-gray-700">
                   {loading ? (
                     <tr>
-                      <td colSpan={7} className="py-10 text-center text-gray-500">
+                        <td colSpan={7} className="py-10 text-center text-gray-500">
                         <ClipLoader color="#8DC63F" size={24} />
                         <p className="mt-2 text-xs text-gray-400">Loading clusters…</p>
                       </td>
                     </tr>
                   ) : filteredClusters.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-10 text-center text-gray-400">
+                        <td colSpan={7} className="py-10 text-center text-gray-400">
                         No clusters found. Click &quot;Add Cluster&quot; to create one.
                       </td>
                     </tr>
@@ -394,13 +301,6 @@ function Cluster() {
                       const volumeIds = Array.isArray(cluster.volume_ids)
                         ? cluster.volume_ids
                         : (cluster.volume_id ? [cluster.volume_id] : []);
-                      const stepFiles = Array.isArray(cluster.step_recordings)
-                        ? cluster.step_recordings
-                        : (Array.isArray(cluster.step_files) ? cluster.step_files : []);
-                      const shadowCount = Number(cluster.shadow_recording_count)
-                        || Number(cluster.shadow_count)
-                        || (Array.isArray(cluster.shadow_recordings) ? cluster.shadow_recordings.length : 0);
-                      const recordingsReady = clusterRecordingsReady(volumeIds);
                       const matchedVol = volumes.find((v) => volumeIds.includes(v.volume_id));
                       const displayFetalPresentation = cluster.fetal_presentation
                         || matchedVol?.volume_fetal_presentation
@@ -456,66 +356,16 @@ function Cluster() {
                             </div>
                           </td>
 
-                          {/* 4. Step Recording */}
+                          {/* Recordings are intentionally isolated from Cluster. */}
                           <td className="py-3 px-4">
-                            {!recordingsReady ? (
-                              <span className="text-gray-400 text-[11px]">Available after transform.json</span>
-                            ) : stepFiles.length > 0 ? (
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                {stepFiles.map((fileUrl, idx) => (
-                                  isImageFile(fileUrl) ? (
-                                    <a
-                                      key={idx}
-                                      href={fileUrl}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      title={`Step image ${idx + 1}`}
-                                      className="block"
-                                    >
-                                      <img
-                                        src={fileUrl}
-                                        alt={`Step ${idx + 1}`}
-                                        className="h-8 w-8 rounded object-cover border border-blue-200 hover:scale-105 transition-transform"
-                                      />
-                                    </a>
-                                  ) : (
-                                    <button
-                                      key={idx}
-                                      type="button"
-                                      onClick={() => handleDownloadFileUrl(fileUrl, `step_${idx + 1}`)}
-                                      className="px-2 py-0.5 rounded text-[11px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 inline-flex items-center gap-1 cursor-pointer"
-                                    >
-                                      <Download size={11} />
-                                      Step {idx + 1}
-                                    </button>
-                                  )
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400 text-[11px]">No step recording</span>
-                            )}
+                            <span className="px-2 py-0.5 rounded text-[11px] bg-gray-50 text-gray-500 border border-gray-200 font-semibold">
+                              0
+                            </span>
                           </td>
-
-                          {/* 5. Shadow Recording */}
                           <td className="py-3 px-4">
-                            {!recordingsReady ? (
-                              <span className="text-gray-400 text-[11px]">Available after transform.json</span>
-                            ) : <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded text-[11px] bg-purple-50 text-purple-700 border border-purple-200 font-semibold">
-                                {shadowCount}
-                              </span>
-                              {matchedVol && (
-                                <button
-                                  type="button"
-                                  onClick={() => setRecordingsVolume(matchedVol)}
-                                  className="px-2 py-1 rounded text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 font-medium inline-flex items-center gap-1 cursor-pointer"
-                                  title="Download recording files"
-                                >
-                                  <Download size={11} />
-                                  Recording files
-                                </button>
-                              )}
-                            </div>}
+                            <span className="px-2 py-0.5 rounded text-[11px] bg-gray-50 text-gray-500 border border-gray-200 font-semibold">
+                              0
+                            </span>
                           </td>
 
                           {/* Action (Edit & Delete) */}
@@ -637,28 +487,6 @@ function Cluster() {
               </TextField>
             </div>
 
-            {/* Preview of recordings linked to selected volumes */}
-            {(clusterForm.selected_volume_ids || []).length > 0 && (
-              <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs space-y-1.5">
-                <div className="font-semibold text-gray-700">
-                  Linked Volume Recordings ({(clusterForm.selected_volume_ids || []).length} volume(s) selected):
-                </div>
-                {(clusterForm.selected_volume_ids || []).every(isTransformJsonAvailable) ? (
-                  <>
-                    <div className="text-gray-600">
-                      • <strong>Step Recordings:</strong>{' '}
-                      {(clusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.stepFiles?.length || 0), 0)} file(s)
-                    </div>
-                    <div className="text-gray-600">
-                      • <strong>Shadow Recordings:</strong>{' '}
-                      {(clusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.shadow || 0), 0)} recording(s)
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-gray-500">Recording details appear after transform.json is uploaded.</div>
-                )}
-              </div>
-            )}
           </DialogContent>
           <DialogActions className="border-t p-3 px-5">
             <button
@@ -764,28 +592,6 @@ function Cluster() {
               </TextField>
             </div>
 
-            {/* Preview of recordings linked to selected volumes */}
-            {(editClusterForm.selected_volume_ids || []).length > 0 && (
-              <div className="bg-gray-50 border border-gray-200 rounded p-3 text-xs space-y-1.5">
-                <div className="font-semibold text-gray-700">
-                  Linked Volume Recordings ({(editClusterForm.selected_volume_ids || []).length} volume(s) selected):
-                </div>
-                {(editClusterForm.selected_volume_ids || []).every(isTransformJsonAvailable) ? (
-                  <>
-                    <div className="text-gray-600">
-                      • <strong>Step Recordings:</strong>{' '}
-                      {(editClusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.stepFiles?.length || 0), 0)} file(s)
-                    </div>
-                    <div className="text-gray-600">
-                      • <strong>Shadow Recordings:</strong>{' '}
-                      {(editClusterForm.selected_volume_ids || []).reduce((sum, id) => sum + (recordingCounts[id]?.shadow || 0), 0)} recording(s)
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-gray-500">Recording details appear after transform.json is uploaded.</div>
-                )}
-              </div>
-            )}
           </DialogContent>
           <DialogActions className="border-t p-3 px-5">
             <button
@@ -805,11 +611,6 @@ function Cluster() {
         </form>
       </Dialog>
 
-      {/* Recording Files Download Modal */}
-      <VolumeRecordingDownloads
-        volume={recordingsVolume}
-        onClose={() => setRecordingsVolume(null)}
-      />
     </div>
   );
 }
