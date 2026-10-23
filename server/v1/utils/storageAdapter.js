@@ -158,6 +158,7 @@ const signSupabaseFallback = async (parsed, expiresIn, downloadName) => {
 };
 
 const signedUrlCache = new Map();
+const inflightPromises = new Map();
 
 const getCacheKey = (value, downloadName) => `${value}::${downloadName || ''}`;
 
@@ -171,6 +172,10 @@ const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, e
         return cached.url;
     }
 
+    if (inflightPromises.has(cacheKey)) {
+        return inflightPromises.get(cacheKey);
+    }
+
     const setCache = (url) => {
         if (url && typeof url === 'string') {
             const safetyMarginMs = 60 * 1000;
@@ -181,41 +186,50 @@ const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, e
         return url;
     };
 
-    if (provider() !== 's3') {
-        const url = await signSupabaseFallback(parsed, expiresIn, downloadName);
-        return setCache(url);
-    }
-
-    try {
-        if (fallbackEnabled()) {
-            await Promise.race([
-                getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key })),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('S3 Head timeout')), 1000))
-            ]);
-        }
-        const url = await getSignedUrl(
-            getS3Client(),
-            new GetObjectCommand({
-                Bucket: targetBucket(), Key: parsed.s3Key,
-                ...(downloadName ? { ResponseContentDisposition: `attachment; filename="${downloadName}"` } : {})
-            }),
-            { expiresIn }
-        );
-        return setCache(url);
-    } catch (error) {
-        if (fallbackEnabled()) {
-            try {
-                const fallbackUrl = await signSupabaseFallback(parsed, expiresIn, downloadName);
-                console.warn(`S3 storage fallback used for ${parsed.s3Key}`);
-                return setCache(fallbackUrl);
-            } catch (fallbackErr) {
-                console.warn(`Fallback to Supabase also failed for ${parsed.s3Key}:`, fallbackErr.message);
-                return value;
+    const promise = (async () => {
+        try {
+            if (provider() !== 's3') {
+                const url = await signSupabaseFallback(parsed, expiresIn, downloadName);
+                return setCache(url);
             }
+
+            try {
+                if (fallbackEnabled()) {
+                    await Promise.race([
+                        getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key })),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('S3 Head timeout')), 1000))
+                    ]);
+                }
+                const url = await getSignedUrl(
+                    getS3Client(),
+                    new GetObjectCommand({
+                        Bucket: targetBucket(), Key: parsed.s3Key,
+                        ...(downloadName ? { ResponseContentDisposition: `attachment; filename="${downloadName}"` } : {})
+                    }),
+                    { expiresIn }
+                );
+                return setCache(url);
+            } catch (error) {
+                if (fallbackEnabled()) {
+                    try {
+                        const fallbackUrl = await signSupabaseFallback(parsed, expiresIn, downloadName);
+                        console.warn(`S3 storage fallback used for ${parsed.s3Key}`);
+                        return setCache(fallbackUrl);
+                    } catch (fallbackErr) {
+                        console.warn(`Fallback to Supabase also failed for ${parsed.s3Key}:`, fallbackErr.message);
+                        return value;
+                    }
+                }
+                if (!isNotFound(error)) throw error;
+                return null;
+            }
+        } finally {
+            inflightPromises.delete(cacheKey);
         }
-        if (!isNotFound(error)) throw error;
-        return null;
-    }
+    })();
+
+    inflightPromises.set(cacheKey, promise);
+    return promise;
 };
 
 const signAssets = async (values, options) => Promise.all((values || []).map((value) => signAsset(value, options)));

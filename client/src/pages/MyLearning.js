@@ -4227,7 +4227,7 @@ import APP_URL from '../API/config';
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
-const BASE_URL       = APP_URL || '';
+const BASE_URL = APP_URL || '';
 const BATCH_API_BASE = `${BASE_URL}/api/v1/batch-individual`;
 const CERT_LABEL_MAP = {
   '8264bc83-1d80-47ac-aa6b-ca021ffb4ace': 'BTC',
@@ -4687,27 +4687,27 @@ const NON_RESOURCE_ORDER = {
 };
 
 const TYPE_FILTERS = [
-  { id: 'all',       label: 'All' },
-  { id: 'resource',  label: 'Learning Resource' },
-  { id: 'practice',  label: 'Practice' },
+  { id: 'all', label: 'All' },
+  { id: 'resource', label: 'Learning Resource' },
+  { id: 'practice', label: 'Practice' },
   { id: 'interpret', label: 'Image Interpretation' },
-  { id: 'test',      label: 'Test' },
+  { id: 'test', label: 'Test' },
 ];
 
 const UFC_TYPE_FILTERS = [
-  { id: 'all',       label: 'All' },
-  { id: 'resource',  label: 'Learning Resource' },
+  { id: 'all', label: 'All' },
+  { id: 'resource', label: 'Learning Resource' },
   { id: 'challenge', label: 'Challenges' },
 ];
 
 const RESOURCE_TYPE_MAP = {
-  'Learning Resource':    'resource',
-  'Practice':             'practice',
+  'Learning Resource': 'resource',
+  'Practice': 'practice',
   'Image Interpretation': 'interpret',
-  'Test':                 'test',
-  'Challenge':            'challenge',
-  'Challenges':           'challenge',
-  'CHALLENGE':            'challenge',
+  'Test': 'test',
+  'Challenge': 'challenge',
+  'Challenges': 'challenge',
+  'CHALLENGE': 'challenge',
 };
 
 const getResourceTypeKey = resourceType => {
@@ -4722,11 +4722,11 @@ const getResourceTypeKey = resourceType => {
 };
 
 const TYPE_META = {
-  resource:  { label: 'Learning Resource',    icon: BookOpen,       color: 'text-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200'   },
-  practice:  { label: 'Practice',             icon: Dumbbell,       color: 'text-green-600',  bg: 'bg-green-50',  border: 'border-green-200'  },
-  interpret: { label: 'Image Interpretation', icon: Eye,            color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
-  test:      { label: 'Test',                 icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
-  challenge: { label: 'Challenges',           icon: Trophy,         color: 'text-rose-500',   bg: 'bg-rose-50',   border: 'border-rose-200'   },
+  resource: { label: 'Learning Resource', icon: BookOpen, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-200' },
+  practice: { label: 'Practice', icon: Dumbbell, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+  interpret: { label: 'Image Interpretation', icon: Eye, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-200' },
+  test: { label: 'Test', icon: ClipboardCheck, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200' },
+  challenge: { label: 'Challenges', icon: Trophy, color: 'text-rose-500', bg: 'bg-rose-50', border: 'border-rose-200' },
 };
 
 const TOPIC_ORDER = [
@@ -5250,12 +5250,12 @@ const TOPIC_ICONS = Object.fromEntries(
 );
 
 const QUESTION_TYPE_META = {
-  type1:       { label: 'Find the Image',          color: 'bg-blue-50 text-blue-600 border-blue-200'       },
-  type2:       { label: 'Find the Image (Upload)', color: 'bg-indigo-50 text-indigo-600 border-indigo-200' },
-  annotation1: { label: 'Annotation 1',            color: 'bg-purple-50 text-purple-600 border-purple-200' },
-  annotation2: { label: 'Annotation 2',            color: 'bg-pink-50 text-pink-600 border-pink-200'       },
-  measurement: { label: 'Measurement',             color: 'bg-amber-50 text-amber-600 border-amber-200'    },
-  freeze:      { label: 'Freeze the Plane',        color: 'bg-cyan-50 text-cyan-600 border-cyan-200'       },
+  type1: { label: 'Find the Image', color: 'bg-blue-50 text-blue-600 border-blue-200' },
+  type2: { label: 'Find the Image (Upload)', color: 'bg-indigo-50 text-indigo-600 border-indigo-200' },
+  annotation1: { label: 'Annotation 1', color: 'bg-purple-50 text-purple-600 border-purple-200' },
+  annotation2: { label: 'Annotation 2', color: 'bg-pink-50 text-pink-600 border-pink-200' },
+  measurement: { label: 'Measurement', color: 'bg-amber-50 text-amber-600 border-amber-200' },
+  freeze: { label: 'Freeze the Plane', color: 'bg-cyan-50 text-cyan-600 border-cyan-200' },
 };
 
 const SECTION_ORDER = ['resource', 'challenge', 'practice', 'interpret', 'test'];
@@ -5282,7 +5282,7 @@ const getPracticeNumber = (name = '') => {
   return m ? parseInt(m[1], 10) : null;
 };
 
-const practiceShowsLog      = name => { const n = getPracticeNumber(name); return n !== null && n >= 1 && n <= 4; };
+const practiceShowsLog = name => { const n = getPracticeNumber(name); return n !== null && n >= 1 && n <= 4; };
 const practiceShowsFeedback = name => { const n = getPracticeNumber(name); return n !== null && n >= 3 && n <= 4; };
 
 const parseValidDate = value => {
@@ -5320,8 +5320,8 @@ const formatDateTime = value => {
 
 const scoreMeta = pct => {
   if (pct >= 80) return { hex: '#8DC63F', cls: 'text-[#8DC63F]' };
-  if (pct >= 50) return { hex: '#F59E0B', cls: 'text-amber-500'  };
-  return           { hex: '#EF4444', cls: 'text-red-500'    };
+  if (pct >= 50) return { hex: '#F59E0B', cls: 'text-amber-500' };
+  return { hex: '#EF4444', cls: 'text-red-500' };
 };
 
 const normalizeCertTabLabel = (label = '', certificateId = '') => {
@@ -5472,9 +5472,9 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
   // ── Filter to batch certificate only ─────────────────────────────────────
   const data = allowedCertificateIds.size > 0
     ? rawData.filter(item =>
-        allowedCertificateIds.has(item.certificate_id) &&
-        item.is_hidden !== true
-      )
+      allowedCertificateIds.has(item.certificate_id) &&
+      item.is_hidden !== true
+    )
     : [];
 
   // ── Re-attempt lookup ─────────────────────────────────────────────────────
@@ -5493,7 +5493,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
 
   // ── Unique certificates ───────────────────────────────────────────────────
   const certOrder = [];
-  const certSeen  = new Set();
+  const certSeen = new Set();
   data.forEach(item => {
     if (!item.certificate_id || certSeen.has(item.certificate_id)) return;
     certSeen.add(item.certificate_id);
@@ -5503,13 +5503,13 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
       item.course_name ??
       item.certificate_id;
     certOrder.push({
-      id:    item.certificate_id,
+      id: item.certificate_id,
       label: normalizeCertTabLabel(rawLabel, item.certificate_id),
     });
   });
 
   // ── Modules grouped by certificate ───────────────────────────────────────
-  const modulesByCert   = {};
+  const modulesByCert = {};
   const resourcesByLMID = {};
 
   data.forEach(item => {
@@ -5532,11 +5532,11 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     if (!resourcesByLMID[learning_module_id]) resourcesByLMID[learning_module_id] = [];
     if (resourcesByLMID[learning_module_id].some(r => r.id === item.resource_id)) return;
 
-    const typeKey          = getResourceTypeKey(item.resource_type);
-    const moduleLabel      = normalizeModuleSortLabel(unit_name || course_name || '');
-    const resourceName     = (item.resource_name || '').trim();
+    const typeKey = getResourceTypeKey(item.resource_type);
+    const moduleLabel = normalizeModuleSortLabel(unit_name || course_name || '');
+    const resourceName = (item.resource_name || '').trim();
     const displayResourceName = getDisplayResourceName(moduleLabel, resourceName, item.resource_topic || '');
-    const resourceTopic    = getDisplayResourceTopic(moduleLabel, item.resource_topic || '', resourceName);
+    const resourceTopic = getDisplayResourceTopic(moduleLabel, item.resource_topic || '', resourceName);
     const completionSource = typeKey === 'resource'
       ? deriveCompletionSource(displayResourceName, resourceTopic)
       : typeKey === 'challenge'
@@ -5547,43 +5547,43 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     const isMindSparkResource = isMindSpark(item.resource_name || '');
 
     const resourceRow = {
-      id:               item.resource_id,
-      certificateId:    certificate_id,
+      id: item.resource_id,
+      certificateId: certificate_id,
       learningModuleId: learning_module_id,
-      name:             displayResourceName,
-      type:             typeKey,
-      topic:            resourceTopic,
-      unit_name:        item.unit_name || item.course_name || '',
-      module_name:      item.module_name || item.unit_name || '',
-      course_name:      item.course_name || '',
+      name: displayResourceName,
+      type: typeKey,
+      topic: resourceTopic,
+      unit_name: item.unit_name || item.course_name || '',
+      module_name: item.module_name || item.unit_name || '',
+      course_name: item.course_name || '',
       moduleLabel,
-      displayOrder:     item.display_order ?? null,
+      displayOrder: item.display_order ?? null,
       completionSource,
-      done:             isDone,
-      updatedAt:        item.updated_at || null,
-      reAttempts:       reAttemptMap[item.resource_id] || [],
-      activityData:     completionSource === 'activity'
+      done: isDone,
+      updatedAt: item.updated_at || null,
+      reAttempts: reAttemptMap[item.resource_id] || [],
+      activityData: completionSource === 'activity'
         ? {
-            attempts: activityScore
-              ? Number(activityScore.attempt_count || 1)
-              : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
-            correct: activityScore
-              ? Number(activityScore.correct_answers || 0)
-              : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
-            wrong: activityScore ? Number(activityScore.wrong_answers || 0) : 0,
-            total: activityScore
-              ? Number(activityScore.total_questions || 0)
-              : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
-            scorePercentage: activityScore?.score_percentage !== null && activityScore?.score_percentage !== undefined
-              ? Number(activityScore.score_percentage)
-              : (isMindSparkResource ? null : (isDone ? 100 : null)),
-            sessionDate: activityScore?.session_date || null,
-            sessionId: activityScore?.session_id || null,
-            resourceId: activityScore?.resource_id || item.resource_id,
-            resourceType: activityScore?.resource_type || item.resource_type || null,
-            resourceTopic: activityScore?.resource_topic || item.resource_topic || '',
-            configuredQuestionCount: Number(activityScore?.configured_question_count || 0),
-          }
+          attempts: activityScore
+            ? Number(activityScore.attempt_count || 1)
+            : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
+          correct: activityScore
+            ? Number(activityScore.correct_answers || 0)
+            : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
+          wrong: activityScore ? Number(activityScore.wrong_answers || 0) : 0,
+          total: activityScore
+            ? Number(activityScore.total_questions || 0)
+            : (isMindSparkResource ? 0 : (isDone ? 1 : 0)),
+          scorePercentage: activityScore?.score_percentage !== null && activityScore?.score_percentage !== undefined
+            ? Number(activityScore.score_percentage)
+            : (isMindSparkResource ? null : (isDone ? 100 : null)),
+          sessionDate: activityScore?.session_date || null,
+          sessionId: activityScore?.session_id || null,
+          resourceId: activityScore?.resource_id || item.resource_id,
+          resourceType: activityScore?.resource_type || item.resource_type || null,
+          resourceTopic: activityScore?.resource_topic || item.resource_topic || '',
+          configuredQuestionCount: Number(activityScore?.configured_question_count || 0),
+        }
         : undefined,
     };
 
@@ -5658,7 +5658,7 @@ function transformApiData(apiResponse, batchCert = null, batchCertificateIds = [
     mods.forEach(mod => {
       const res = sortedResources[mod.id] || [];
       mod.total = res.length;
-      mod.done  = res.filter(isResourceDone).length;
+      mod.done = res.filter(isResourceDone).length;
     });
   });
 
@@ -7651,10 +7651,10 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
     resName.includes('find image') ||
     resName === 'find' ||
     (!resName.includes('measure') && !resTopic.includes('measure') &&
-     !resName.includes('drag') && !resName.includes('annotation') && !resName.includes('label') &&
-     !resName.includes('freeze') && (
-       !resource || resource?.type === 'interpret' || resName === ''
-     ))
+      !resName.includes('drag') && !resName.includes('annotation') && !resName.includes('label') &&
+      !resName.includes('freeze') && (
+        !resource || resource?.type === 'interpret' || resName === ''
+      ))
   );
 
   const isMeasurementResource = !isExplicitFindImage && Boolean(
@@ -7797,8 +7797,8 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
           : (isFreezePlaneResource ? BPD_HC_FREEZE_THE_PLANE_QUESTIONS[Number(qNoStr)] : BPD_HC_FIND_THE_IMAGE_QUESTIONS[Number(qNoStr)])));
     const fallback = questionMap[qNoStr] || (
       isFlResource ? (isMeasurementResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? FL_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? FL_ANNOTATION1_QUESTIONS[Number(qNoStr)] : FL_ALL_QUESTIONS[Number(qNoStr)]))) :
-      isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
-      bpdFallback
+        isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
+          bpdFallback
     );
     if (fallback) {
       if (isFindImageResource) {
@@ -7913,8 +7913,8 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
               : (isFreezePlaneResource ? BPD_HC_FREEZE_THE_PLANE_QUESTIONS[Number(qNoStr)] : BPD_HC_FIND_THE_IMAGE_QUESTIONS[Number(qNoStr)])));
         const fallback = (
           isFlResource ? (isMeasurementResource ? FL_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? FL_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? FL_ANNOTATION1_QUESTIONS[Number(qNoStr)] : FL_ALL_QUESTIONS[Number(qNoStr)]))) :
-          isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
-          bpdFallback
+            isAcResource ? (isMeasurementResource ? AC_MEASUREMENT_QUESTIONS[Number(qNoStr)] : (isAnnotation2Resource ? AC_ANNOTATION2_QUESTIONS[Number(qNoStr)] : (isAnnotation1Resource ? AC_ANNOTATION1_QUESTIONS[Number(qNoStr)] : AC_ALL_QUESTIONS[Number(qNoStr)]))) :
+              bpdFallback
         ) || {};
 
         if (isFindImageResource) {
@@ -7929,10 +7929,10 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
               getConfiguredOptionDetails(options, correctKey),
               selectedKey
             ) || selectedKey.trim().toUpperCase() === correctKey.trim().toUpperCase() ||
-            (correctKey === 'A' && (selectedKey === '1' || selectedKey.toUpperCase() === 'A')) ||
-            (correctKey === 'B' && (selectedKey === '2' || selectedKey.toUpperCase() === 'B')) ||
-            (correctKey === 'C' && (selectedKey === '3' || selectedKey.toUpperCase() === 'C')) ||
-            (correctKey === 'D' && (selectedKey === '4' || selectedKey.toUpperCase() === 'D'));
+              (correctKey === 'A' && (selectedKey === '1' || selectedKey.toUpperCase() === 'A')) ||
+              (correctKey === 'B' && (selectedKey === '2' || selectedKey.toUpperCase() === 'B')) ||
+              (correctKey === 'C' && (selectedKey === '3' || selectedKey.toUpperCase() === 'C')) ||
+              (correctKey === 'D' && (selectedKey === '4' || selectedKey.toUpperCase() === 'D'));
             isCorrect = selectedMatchesCorrect;
           } else if (submission.is_correct !== undefined && submission.is_correct !== null) {
             isCorrect = submission.is_correct === true || String(submission.is_correct).toLowerCase() === 'true' || submission.is_correct === 1;
@@ -8029,10 +8029,10 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
             getConfiguredOptionDetails(options, correctKey),
             selectedKey
           ) || selectedKey.trim().toUpperCase() === correctKey.trim().toUpperCase() ||
-          (correctKey === 'A' && (selectedKey === '1' || selectedKey.toUpperCase() === 'A')) ||
-          (correctKey === 'B' && (selectedKey === '2' || selectedKey.toUpperCase() === 'B')) ||
-          (correctKey === 'C' && (selectedKey === '3' || selectedKey.toUpperCase() === 'C')) ||
-          (correctKey === 'D' && (selectedKey === '4' || selectedKey.toUpperCase() === 'D'));
+            (correctKey === 'A' && (selectedKey === '1' || selectedKey.toUpperCase() === 'A')) ||
+            (correctKey === 'B' && (selectedKey === '2' || selectedKey.toUpperCase() === 'B')) ||
+            (correctKey === 'C' && (selectedKey === '3' || selectedKey.toUpperCase() === 'C')) ||
+            (correctKey === 'D' && (selectedKey === '4' || selectedKey.toUpperCase() === 'D'));
           if (selectedMatchesCorrect) {
             isCorrect = true;
           } else if (isCorrect === true && !selectedMatchesCorrect) {
@@ -8058,20 +8058,20 @@ function buildImageInterpretationSessions(submissions, questions, resource = nul
         const isFlMeasurementType = isMeasurement && isFlResource;
         const feedbackWrong = isMeasurement
           ? (isCorrect === false
-              ? (isFlMeasurementType
-                  ? getFlMeasurementWrongFeedback(submission)
-                  : (isAcMeasurementType
-                    ? getAcMeasurementWrongFeedback(submission, qNoStr, fallback.prompt || question.prompt)
-                    : getBpdHcMeasurementWrongFeedback(submission, qNoStr, fallback.prompt || question.prompt)))
-              : (fallback.feedback_wrong || question.feedback_wrong || null))
+            ? (isFlMeasurementType
+              ? getFlMeasurementWrongFeedback(submission)
+              : (isAcMeasurementType
+                ? getAcMeasurementWrongFeedback(submission, qNoStr, fallback.prompt || question.prompt)
+                : getBpdHcMeasurementWrongFeedback(submission, qNoStr, fallback.prompt || question.prompt)))
+            : (fallback.feedback_wrong || question.feedback_wrong || null))
           : (isAnnotation2
             ? (isCorrect === false
-                ? (isFlAnnotation2Type ? getFlAnnotation2WrongFeedback(submission) : (isAcAnnotation2Type ? getAcAnnotation2WrongFeedback(submission) : getBpdAnnotation2WrongFeedback(submission)))
-                : (fallback.feedback_wrong || question.feedback_wrong || null))
+              ? (isFlAnnotation2Type ? getFlAnnotation2WrongFeedback(submission) : (isAcAnnotation2Type ? getAcAnnotation2WrongFeedback(submission) : getBpdAnnotation2WrongFeedback(submission)))
+              : (fallback.feedback_wrong || question.feedback_wrong || null))
             : (isAnnotation1
               ? (isCorrect === false
-                  ? (isFlAnnotation ? getFlAnnotation1WrongFeedback(submission) : (isAcAnnotation ? getAcAnnotation1WrongFeedback(submission) : getBpdAnnotation1WrongFeedback(submission)))
-                  : (fallback.feedback_wrong || question.feedback_wrong || null))
+                ? (isFlAnnotation ? getFlAnnotation1WrongFeedback(submission) : (isAcAnnotation ? getAcAnnotation1WrongFeedback(submission) : getBpdAnnotation1WrongFeedback(submission)))
+                : (fallback.feedback_wrong || question.feedback_wrong || null))
               : (isFlResource || isAcResource)
                 ? (fallback.feedback_wrong || question.feedback_wrong || null)
                 : (isQuestion4
@@ -8128,7 +8128,7 @@ function sessionSummary(session) {
 // ─── TOPIC GROUPS ─────────────────────────────────────────────────────────────
 
 function buildTopicGroups(items, orderScope = '') {
-  const topicMap   = {};
+  const topicMap = {};
   const directRows = [];
   const scopedTopicOrder = TOPIC_ORDER_BY_MODULE[normalizeSortKey(orderScope)] || TOPIC_ORDER_INDEX;
   const useDisplayOrder = !isMappedOrderScope(orderScope);
@@ -8165,7 +8165,7 @@ function QuestionRow({ q }) {
   const isFindImage = questionType === 'type1';
   const isFreeze = questionType === 'freeze' || /freeze/i.test(questionType) || (Number(q.question_no) >= 6 && Number(q.question_no) <= 10);
   const isImageUpload = questionType === 'type2';
-  const isAnnotation  = q.question_type === 'annotation1' || q.question_type === 'annotation2';
+  const isAnnotation = q.question_type === 'annotation1' || q.question_type === 'annotation2';
   const isMeasurement = q.question_type === 'measurement';
   const options = Array.isArray(q.options) ? q.options : [];
   const correctKey = getConfiguredAnswerKey(q.correct_answer);
@@ -8180,20 +8180,17 @@ function QuestionRow({ q }) {
     : (Array.isArray(q.correct_answer?.expected_landmarks) ? q.correct_answer.expected_landmarks : []);
 
   return (
-    <div className={`rounded-xl border bg-white p-3 ${
-      right ? 'border-[#8DC63F]/40' : answered ? 'border-red-200' : 'border-gray-200'
-    }`}>
+    <div className={`rounded-xl border bg-white p-3 ${right ? 'border-[#8DC63F]/40' : answered ? 'border-red-200' : 'border-gray-200'
+      }`}>
       <div className="flex items-start gap-3">
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-          right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
-        }`}>
+        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+          }`}>
           {right ? <CheckCircle2 size={15} /> : answered ? <X size={15} /> : q.question_no}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-              right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
-            }`}>
+            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+              }`}>
               {right ? 'Right' : answered ? 'Wrong' : 'Not answered'}
             </span>
             <span className="text-[10px] text-gray-400">Question {q.question_no}</span>
@@ -8236,15 +8233,14 @@ function QuestionRow({ q }) {
                 return (
                   <div
                     key={`${q.question_id || q.question_no}-${optionKey}-${optionIndex}`}
-                    className={`rounded-lg border px-3 py-2 text-xs transition-all ${
-                      isOptionSelected
+                    className={`rounded-lg border px-3 py-2 text-xs transition-all ${isOptionSelected
                         ? right
                           ? 'border-[#8DC63F]/50 bg-[#8DC63F]/5'
                           : 'border-red-200 bg-red-50'
                         : isCorrectOption
                           ? 'border-[#8DC63F]/30 bg-[#8DC63F]/5'
                           : 'border-gray-100 bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-gray-700">
@@ -8373,7 +8369,7 @@ function QuestionRow({ q }) {
 
 function SessionCard({ session, attemptNo, isLatest }) {
   const { total, correct, pct } = sessionSummary(session);
-  const sm    = scoreMeta(pct);
+  const sm = scoreMeta(pct);
   const [open, setOpen] = React.useState(isLatest);
   const types = Object.keys(session.byType);
   const configuredOnly = session.isConfiguredOnly === true;
@@ -8425,9 +8421,9 @@ function SessionCard({ session, attemptNo, isLatest }) {
       {open && (
         <div className="px-4 pb-4 pt-2 space-y-4 bg-white border-t border-gray-100">
           {types.map(type => {
-            const qs          = session.byType[type].slice().sort((a, b) => a.question_no - b.question_no);
+            const qs = session.byType[type].slice().sort((a, b) => a.question_no - b.question_no);
             const typeCorrect = qs.filter(q => q.is_correct).length;
-            const tm          = QUESTION_TYPE_META[type] || { label: type, color: 'bg-gray-100 text-gray-600 border-gray-200' };
+            const tm = QUESTION_TYPE_META[type] || { label: type, color: 'bg-gray-100 text-gray-600 border-gray-200' };
             return (
               <div key={type}>
                 <div className="flex items-center gap-2 mb-2">
@@ -8449,8 +8445,8 @@ function SessionCard({ session, attemptNo, isLatest }) {
 }
 
 function ImageInterpretModal({ r, token, onClose }) {
-  const [loading,  setLoading]  = React.useState(true);
-  const [error,    setError]    = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
   const [sessions, setSessions] = React.useState([]);
 
   React.useEffect(() => {
@@ -8482,9 +8478,9 @@ function ImageInterpretModal({ r, token, onClose }) {
   const configuredQuestionCount = sessions
     .filter(session => session.isConfiguredOnly)
     .reduce((sum, sess) => sum + Object.values(sess.byType).flat().length, 0);
-  const latest    = attemptSessions[attemptSessions.length - 1] || null;
+  const latest = attemptSessions[attemptSessions.length - 1] || null;
   const latestSum = latest ? sessionSummary(latest) : null;
-  const latestSm  = latestSum ? scoreMeta(latestSum.pct) : null;
+  const latestSm = latestSum ? scoreMeta(latestSum.pct) : null;
   const totalSubs = attemptSessions.reduce((s, sess) => s + Object.values(sess.byType).flat().length, 0);
 
   return (
@@ -8727,12 +8723,12 @@ function SubmittedAttemptCard({ attempt, isLatest }) {
   const scoreText = score !== null ? `${formatAttemptValue(score)}%` : '—';
   const imageMetrics = payload?.imageOptimization
     ? [
-        ['Gain', payload.imageOptimization.gain],
-        ['Depth', payload.imageOptimization.depth],
-        ['Zoom', payload.imageOptimization.zoom],
-        ['Focus', payload.imageOptimization.focus],
-        ['Dynamic Range', payload.imageOptimization.dynamicRange],
-      ]
+      ['Gain', payload.imageOptimization.gain],
+      ['Depth', payload.imageOptimization.depth],
+      ['Zoom', payload.imageOptimization.zoom],
+      ['Focus', payload.imageOptimization.focus],
+      ['Dynamic Range', payload.imageOptimization.dynamicRange],
+    ]
     : [];
 
   return (
@@ -9128,16 +9124,14 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
             className={`rounded-xl border bg-white p-3 ${right ? 'border-[#8DC63F]/40' : answered ? 'border-red-200' : 'border-gray-200'}`}
           >
             <div className="flex items-start gap-3">
-              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
-              }`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+                }`}>
                 {right ? <CheckCircle2 size={15} /> : answered ? <X size={15} /> : item.question_no || index + 1}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
-                  }`}>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${right ? 'bg-[#8DC63F]/10 text-[#8DC63F]' : answered ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-400'
+                    }`}>
                     {right ? 'Right' : answered ? 'Wrong' : 'Not answered'}
                   </span>
                   <span className="text-[10px] text-gray-400">Question {item.question_no || index + 1}</span>
@@ -9168,15 +9162,14 @@ function MindSparkAttemptDetailsPanel({ r, token }) {
                       return (
                         <div
                           key={`${item.question_id || item.question_no}-${optionKey}`}
-                          className={`rounded-lg border px-3 py-2 text-xs ${
-                            selected
+                          className={`rounded-lg border px-3 py-2 text-xs ${selected
                               ? right
                                 ? 'border-[#8DC63F]/50 bg-[#8DC63F]/5'
                                 : 'border-red-200 bg-red-50'
                               : correctOption
                                 ? 'border-[#8DC63F]/30 bg-[#8DC63F]/5'
                                 : 'border-gray-100 bg-gray-50'
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-medium text-gray-700">
@@ -9511,10 +9504,10 @@ function ReattemptLog({ reAttempts, updatedAt }) {
   return (
     <div className="space-y-1.5">
       {attempts.map((attempt, idx) => {
-        const attemptNo   = attempt.attempt_number ?? (attempts.length - idx);
+        const attemptNo = attempt.attempt_number ?? (attempts.length - idx);
         const isReattempt = attemptNo > 1;
-        const score       = attempt.score ?? attempt.percentage ?? null;
-        const passed      = attempt.is_completed === true || attempt.passed === true;
+        const score = attempt.score ?? attempt.percentage ?? null;
+        const passed = attempt.is_completed === true || attempt.passed === true;
         return (
           <div key={idx} className={`flex items-center gap-3 px-3 py-2 rounded-lg border text-xs
             ${isReattempt ? 'border-amber-200 bg-amber-50/60' : 'border-gray-100 bg-gray-50'}`}>
@@ -9556,25 +9549,25 @@ function FeedbackPanel({ reAttempts }) {
       list.push({
         type: 'text',
         text: ra.feedback || ra.instructor_feedback || ra.expert_feedback,
-        by:   ra.feedback_by || ra.instructor_name || 'Instructor',
+        by: ra.feedback_by || ra.instructor_name || 'Instructor',
         date: ra.feedback_at || ra.attempted_at,
       });
     }
     if (ra.user_measurement !== undefined || ra.expert_measurement !== undefined) {
       list.push({
-        type:        'measurement',
-        userValue:   ra.user_measurement,
+        type: 'measurement',
+        userValue: ra.user_measurement,
         expertValue: ra.expert_measurement,
-        offset:      ra.offset,
-        unit:        ra.unit || 'mm',
-        date:        ra.attempted_at,
+        offset: ra.offset,
+        unit: ra.unit || 'mm',
+        date: ra.attempted_at,
       });
     }
     if (ra.guidance_notes) {
       list.push({
-        type:  'guidance',
+        type: 'guidance',
         notes: Array.isArray(ra.guidance_notes) ? ra.guidance_notes : [ra.guidance_notes],
-        date:  ra.feedback_at || ra.attempted_at,
+        date: ra.feedback_at || ra.attempted_at,
       });
     }
     return list;
@@ -9593,7 +9586,7 @@ function FeedbackPanel({ reAttempts }) {
       {entries.map((entry, idx) => {
         if (entry.type === 'measurement') {
           const off = parseFloat(entry.offset);
-          const ok  = !isNaN(off) && Math.abs(off) <= 2;
+          const ok = !isNaN(off) && Math.abs(off) <= 2;
           return (
             <div key={idx} className="border border-purple-100 bg-purple-50/40 rounded-lg p-3">
               <div className="flex items-center gap-1.5 mb-2">
@@ -9665,12 +9658,12 @@ function PracticeExpandedPanel({ r, showFeedback, showSubmission = false, token,
   const showVisualization = r.type === 'practice' && (practiceNumber === 1 || practiceNumber === 2);
   const [activeTab, setActiveTab] = React.useState(showVisualization ? 'visualization' : 'log');
   const tabs = [
-    { id: 'log',      label: 'Attempt Log', icon: History       },
+    { id: 'log', label: 'Attempt Log', icon: History },
     ...(showVisualization ? [{ id: 'visualization', label: 'Visualization', icon: Target }] : []),
     ...(showFeedback ? [{ id: 'feedback', label: 'Feedback', icon: MessageSquare }] : []),
     ...(showSubmission ? [{ id: 'submission', label: 'Submitted Content', icon: FileText }] : []),
   ];
-  const totalAttempts  = r.reAttempts.length || (r.done ? 1 : 0);
+  const totalAttempts = r.reAttempts.length || (r.done ? 1 : 0);
   const reattemptCount = Math.max(0, totalAttempts - 1);
 
   return (
@@ -9715,7 +9708,7 @@ function PracticeExpandedPanel({ r, showFeedback, showSubmission = false, token,
       )}
 
       <div className="p-3">
-        {activeTab === 'log'      && <ReattemptLog reAttempts={r.reAttempts} updatedAt={r.updatedAt} />}
+        {activeTab === 'log' && <ReattemptLog reAttempts={r.reAttempts} updatedAt={r.updatedAt} />}
         {activeTab === 'visualization' && <Practice12VisualizationPanel r={r} token={token} />}
         {activeTab === 'feedback' && <FeedbackPanel reAttempts={r.reAttempts} />}
         {activeTab === 'submission' && <SubmittedContentPanel r={r} token={token} />}
@@ -9893,19 +9886,19 @@ function ResourceTypeBadge({ r }) {
 
 //working good
 function ResourceRow({ r, token, onOpenInterpretModal, onOpenAttemptModal, onOpenMindSparkQuiz }) {
-  const done           = isResourceDone(r);
-  const isPractice     = r.type === 'practice';
-  const isInterpret    = r.type === 'interpret';
-  const isTest         = r.type === 'test';
-  const isActivity     = r.completionSource === 'activity';
+  const done = isResourceDone(r);
+  const isPractice = r.type === 'practice';
+  const isInterpret = r.type === 'interpret';
+  const isTest = r.type === 'test';
+  const isActivity = r.completionSource === 'activity';
   const isMindSparkResource = isMindSpark(r.name);
 
-  const showLog      = (isPractice && practiceShowsLog(r.name))      || (isTest && testShowsLog(r.name));
-  const showFeedback = (isPractice && practiceShowsFeedback(r.name))  || (isTest && testShowsFeedback(r.name));
+  const showLog = (isPractice && practiceShowsLog(r.name)) || (isTest && testShowsLog(r.name));
+  const showFeedback = (isPractice && practiceShowsFeedback(r.name)) || (isTest && testShowsFeedback(r.name));
   const showSubmission = (isPractice && practiceShowsFeedback(r.name)) || isTest;
   const showActivityView = isActivity && !isMindSparkResource;
 
-  const isClickable    = isInterpret || isMindSparkResource;
+  const isClickable = isInterpret || isMindSparkResource;
   const reattemptCount = r.reAttempts?.length > 1 ? r.reAttempts.length - 1 : 0;
 
   const handleClick = () => {
@@ -9995,12 +9988,12 @@ const getTestNumber = (name = '') => {
   return m ? parseInt(m[1], 10) : null;
 };
 
-const testShowsLog      = name => { const n = getTestNumber(name); return n !== null; };
+const testShowsLog = name => { const n = getTestNumber(name); return n !== null; };
 const testShowsFeedback = name => { const n = getTestNumber(name); return n !== null; };
 function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpretModal, onOpenAttemptModal, onOpenMindSparkQuiz }) {
   const TopicIcon = TOPIC_ICONS[normalizeSortKey(topic)] || BookOpen;
   const topicDone = items.filter(isResourceDone).length;
-  const pct       = items.length ? Math.round((topicDone / items.length) * 100) : 0;
+  const pct = items.length ? Math.round((topicDone / items.length) * 100) : 0;
 
   return (
     <div className="mb-3">
@@ -10023,8 +10016,8 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
           <div className="h-1.5 rounded-full bg-[#8DC63F] transition-all duration-500" style={{ width: `${pct}%` }} />
         </div>
         {isOpen
-          ? <ChevronDown  size={16} className="text-[#8DC63F] flex-shrink-0" />
-          : <ChevronRight size={16} className="text-gray-300 flex-shrink-0"  />
+          ? <ChevronDown size={16} className="text-[#8DC63F] flex-shrink-0" />
+          : <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
         }
       </button>
       {isOpen && (
@@ -10041,8 +10034,8 @@ function TopicAccordion({ topic, items, isOpen, onToggle, token, onOpenInterpret
 // ─── TYPE SECTION ─────────────────────────────────────────────────────────────
 
 function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, onToggleTopic, token, onOpenInterpretModal, onOpenAttemptModal, onOpenMindSparkQuiz }) {
-  const meta  = TYPE_META[typeKey] || TYPE_META.resource;
-  const Icon  = meta.icon;
+  const meta = TYPE_META[typeKey] || TYPE_META.resource;
+  const Icon = meta.icon;
   const total = accordions.reduce((s, g) => s + g.items.length, 0) + directRows.length;
 
   return (
@@ -10090,25 +10083,25 @@ function TypeSection({ typeKey, accordions, directRows, flatList, openTopics, on
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
 function MyLearning() {
-  const [buttonOpen,     setButtonOpen]     = React.useState(true);
-  const [loading,        setLoading]        = React.useState(true);
-  const [error,          setError]          = React.useState(null);
-  const [certs,          setCerts]          = React.useState([]);
-  const [modules,        setModules]        = React.useState({});
-  const [resources,      setResources]      = React.useState({});
-  const [activeCert,     setActiveCert]     = React.useState('');
-  const [activeModule,   setActiveModule]   = React.useState('');
-  const [activeFilter,   setActiveFilter]   = React.useState('all');
-  const [search,         setSearch]         = React.useState('');
-  const [openTopics,     setOpenTopics]     = React.useState({});
+  const [buttonOpen, setButtonOpen] = React.useState(true);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [certs, setCerts] = React.useState([]);
+  const [modules, setModules] = React.useState({});
+  const [resources, setResources] = React.useState({});
+  const [activeCert, setActiveCert] = React.useState('');
+  const [activeModule, setActiveModule] = React.useState('');
+  const [activeFilter, setActiveFilter] = React.useState('all');
+  const [search, setSearch] = React.useState('');
+  const [openTopics, setOpenTopics] = React.useState({});
   const [interpretModal, setInterpretModal] = React.useState(null);
-  const [attemptModal,   setAttemptModal]   = React.useState(null);
+  const [attemptModal, setAttemptModal] = React.useState(null);
   const [mindSparkQuizModal, setMindSparkQuizModal] = React.useState(null);
 
   // ── Auth ─────────────────────────────────────────────────────────────────
   const token = localStorage.getItem('user_token');
   let decoded = null;
-  try { decoded = token ? jwtDecode(token) : null; } catch (_) {}
+  try { decoded = token ? jwtDecode(token) : null; } catch (_) { }
   const traineeId = decoded?.id || decoded?.sub || decoded?.userId || localStorage.getItem('people_id');
 
   // ── Fetch batch cert + trainee data in parallel ───────────────────────────
@@ -10142,7 +10135,7 @@ function MyLearning() {
         const first = t.certs[0];
         if (first) {
           setActiveCert(first.id);
-          const mods     = t.modules[first.id] || [];
+          const mods = t.modules[first.id] || [];
           const unlocked = mods.find(m => !m.locked);
           setActiveModule(unlocked?.id || mods[0]?.id || '');
         } else {
@@ -10164,7 +10157,7 @@ function MyLearning() {
 
   const handleCertChange = certId => {
     setActiveCert(certId);
-    const mods     = modules[certId] || [];
+    const mods = modules[certId] || [];
     const unlocked = mods.find(m => !m.locked);
     setActiveModule(unlocked?.id || mods[0]?.id || '');
     setActiveFilter('all');
@@ -10182,20 +10175,20 @@ function MyLearning() {
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const currentModules = modules[activeCert] || [];
-  const activeModMeta  = currentModules.find(m => m.id === activeModule);
+  const activeModMeta = currentModules.find(m => m.id === activeModule);
   const activeCertMeta = certs.find(cert => cert.id === activeCert);
   const isUfcContext = activeCertMeta?.label === 'UFC' ||
     normalizeModuleSortLabel(activeModMeta?.label) === 'Principles of ultrasound';
   const visibleTypeFilters = isUfcContext ? UFC_TYPE_FILTERS : TYPE_FILTERS;
-  const allRes         = (resources[activeModule] || []).filter(resource =>
+  const allRes = (resources[activeModule] || []).filter(resource =>
     resource.learningModuleId === activeModule && resource.certificateId === activeCert
   );
-  const doneCount      = activeModMeta?.done  ?? 0;
-  const totalCount     = activeModMeta?.total ?? 0;
-  const pct            = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
+  const doneCount = activeModMeta?.done ?? 0;
+  const totalCount = activeModMeta?.total ?? 0;
+  const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
   const filtered = allRes.filter(r => {
-    const matchType   = activeFilter === 'all' || r.type === activeFilter;
+    const matchType = activeFilter === 'all' || r.type === activeFilter;
     const matchSearch = r.name.toLowerCase().includes(search.toLowerCase());
     return matchType && matchSearch;
   });
@@ -10305,7 +10298,7 @@ function MyLearning() {
                     <div className="flex flex-col gap-2">
                       {currentModules.map(mod => {
                         const isActive = activeModule === mod.id;
-                        const modPct   = mod.total ? Math.round((mod.done / mod.total) * 100) : 0;
+                        const modPct = mod.total ? Math.round((mod.done / mod.total) * 100) : 0;
                         return (
                           <button
                             key={mod.id}

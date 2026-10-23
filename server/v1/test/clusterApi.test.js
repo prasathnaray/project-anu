@@ -8,6 +8,9 @@ const mockClient = {
         if (/GROUP BY c\.cluster_id/.test(sql)) {
             return { rows: [{ cluster_id: 'cluster-a', volumes: [] }] };
         }
+        if (/FROM public\.vol_recordings vr/.test(sql)) {
+            return { rows: [{ recording_id: 'rec-1', cluster_id: 'cluster-a' }] };
+        }
         return { rows: [] };
     }
 };
@@ -20,7 +23,12 @@ require.cache[connectionPath] = {
     exports: mockClient
 };
 
-const { getClustersModel, getClusterByIdModel } = require('../model/ClusterModel');
+const {
+    getClustersModel,
+    getClusterByIdModel,
+    getClusterRecordingsModel,
+    getClusterRecordingCountsModel
+} = require('../model/ClusterModel');
 
 test('role 101 can read institution-scoped clusters', async () => {
     queries.length = 0;
@@ -60,4 +68,33 @@ test('role 101 cluster detail is scoped by id and centre', async () => {
         'cluster-a',
         '11111111-1111-1111-1111-111111111111'
     ]);
+});
+
+test('role 101 can fetch isolated recordings for a cluster', async () => {
+    queries.length = 0;
+    const result = await getClusterRecordingsModel({
+        role: 101,
+        user_mail: 'admin@example.test',
+        centre_id: '11111111-1111-1111-1111-111111111111'
+    }, 'cluster-a');
+
+    assert.equal(result.code, 200);
+    const select = queries.find(({ sql }) => /c\.cluster_id = \$1/.test(sql));
+    assert.deepEqual(select.params, [
+        'cluster-a',
+        '11111111-1111-1111-1111-111111111111'
+    ]);
+});
+
+test('role 101 can fetch isolated recording counts for clusters', async () => {
+    queries.length = 0;
+    const result = await getClusterRecordingCountsModel({
+        role: 101,
+        user_mail: 'admin@example.test',
+        centre_id: '11111111-1111-1111-1111-111111111111'
+    });
+
+    assert.equal(result.code, 200);
+    const select = queries.find(({ sql }) => /c\.owner_centre_id = \$1/.test(sql));
+    assert.deepEqual(select.params, ['11111111-1111-1111-1111-111111111111']);
 });
