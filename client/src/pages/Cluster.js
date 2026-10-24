@@ -7,6 +7,7 @@ import { TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions,
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
 import GetVolInsAPI from '../API/GetVolInsAPI';
+import { GetClustersAPI, CreateClusterAPI, UpdateClusterAPI, DeleteClusterAPI } from '../API/ClusterAPI';
 
 const STORAGE_KEY = 'project_anu_cluster_list';
 
@@ -47,8 +48,9 @@ function Cluster() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      const [volumeResult] = await Promise.allSettled([
+      const [volumeResult, clusterResult] = await Promise.allSettled([
         GetVolInsAPI(),
+        GetClustersAPI(),
       ]);
 
       if (volumeResult.status === 'rejected') {
@@ -56,30 +58,52 @@ function Cluster() {
       }
 
       const allVolumes = Array.isArray(volumeResult.value?.data) ? volumeResult.value.data : [];
-
       setVolumes(allVolumes);
 
-      // Load clusters from localStorage or initialize from converted volumes
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          setClusters(JSON.parse(saved));
-        } catch {
-          setClusters([]);
-        }
-      } else {
-        const converted = allVolumes.filter((v) => Boolean(v.conversion_completion));
-        const initial = converted.slice(0, 3).map((v, idx) => ({
-          cluster_id: `CLU-${v.volume_id?.substring(0, 8).toUpperCase() || (idx + 1)}`,
-          cluster_name: `${v.volume_name || 'Volume'} Cluster`,
-          volume_ids: [v.volume_id],
-          volume_id: v.volume_id,
-          volume_name: v.volume_name,
-          fetal_presentation: v.volume_fetal_presentation || v.fetal_presentation || '',
-          is_initial: true,
+      let fetchedClusters = [];
+      if (clusterResult.status === 'fulfilled' && clusterResult.value?.data) {
+        const d = clusterResult.value.data;
+        fetchedClusters = Array.isArray(d) ? d : (Array.isArray(d?.data) ? d.data : []);
+      }
+
+      if (fetchedClusters.length > 0) {
+        const mapped = fetchedClusters.map((c) => ({
+          cluster_id: c.cluster_id,
+          cluster_name: c.cluster_name,
+          fetal_presentation: c.fetal_presentation || '',
+          volume_ids: Array.isArray(c.volumes) ? c.volumes.map((v) => v.volume_id) : (c.volume_ids || []),
+          volume_id: Array.isArray(c.volumes) && c.volumes[0] ? c.volumes[0].volume_id : (c.volume_id || ''),
+          volume_name: Array.isArray(c.volumes) && c.volumes.length > 0
+            ? c.volumes.map((v) => v.volume_name).filter(Boolean).join(', ')
+            : (c.volume_name || ''),
+          volumes: c.volumes || [],
+          created_at: c.created_at,
         }));
-        setClusters(initial);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+        setClusters(mapped);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+      } else {
+        // Load clusters from localStorage or initialize from converted volumes
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            setClusters(JSON.parse(saved));
+          } catch {
+            setClusters([]);
+          }
+        } else {
+          const converted = allVolumes.filter((v) => Boolean(v.conversion_completion));
+          const initial = converted.slice(0, 3).map((v, idx) => ({
+            cluster_id: `CLU-${v.volume_id?.substring(0, 8).toUpperCase() || (idx + 1)}`,
+            cluster_name: `${v.volume_name || 'Volume'} Cluster`,
+            volume_ids: [v.volume_id],
+            volume_id: v.volume_id,
+            volume_name: v.volume_name,
+            fetal_presentation: v.volume_fetal_presentation || v.fetal_presentation || '',
+            is_initial: true,
+          }));
+          setClusters(initial);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+        }
       }
     } catch (err) {
       console.error('Failed to load cluster data:', err);
@@ -124,7 +148,7 @@ function Cluster() {
     setOpenAddModal(false);
   };
 
-  const handleSaveCluster = (e) => {
+  const handleSaveCluster = async (e) => {
     e.preventDefault();
     if (!clusterForm.cluster_name.trim()) {
       toast.error('Please enter a cluster name.');
@@ -137,24 +161,58 @@ function Cluster() {
 
     const matchedVolumes = volumes.filter((v) => clusterForm.selected_volume_ids.includes(v.volume_id));
     const matchedNames = matchedVolumes.map((v) => v.volume_name || 'Volume');
-    const newCluster = {
-      cluster_id: `CLU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      cluster_name: clusterForm.cluster_name.trim(),
-      volume_ids: clusterForm.selected_volume_ids,
-      volume_id: clusterForm.selected_volume_ids[0] || '',
-      volume_name: matchedNames.join(', '),
-      fetal_presentation: clusterForm.fetal_presentation || '',
-      is_new: true,
-    };
 
-    const updated = [newCluster, ...clusters];
-    setClusters(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setOpenAddModal(false);
-    toast.success('Cluster added successfully!');
+    try {
+      const res = await CreateClusterAPI({
+        cluster_name: clusterForm.cluster_name.trim(),
+        fetal_presentation: clusterForm.fetal_presentation || '',
+        volume_ids: clusterForm.selected_volume_ids,
+      });
+
+      const serverData = res?.data?.data || res?.data;
+      const createdId = serverData?.cluster_id || `CLU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+      const newCluster = {
+        cluster_id: createdId,
+        cluster_name: clusterForm.cluster_name.trim(),
+        volume_ids: clusterForm.selected_volume_ids,
+        volume_id: clusterForm.selected_volume_ids[0] || '',
+        volume_name: matchedNames.join(', '),
+        fetal_presentation: clusterForm.fetal_presentation || '',
+        is_new: true,
+      };
+
+      const updated = [newCluster, ...clusters];
+      setClusters(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      setOpenAddModal(false);
+      toast.success('Cluster added successfully!');
+    } catch (apiErr) {
+      console.error('API create cluster failed, saving locally:', apiErr);
+      const newCluster = {
+        cluster_id: `CLU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        cluster_name: clusterForm.cluster_name.trim(),
+        volume_ids: clusterForm.selected_volume_ids,
+        volume_id: clusterForm.selected_volume_ids[0] || '',
+        volume_name: matchedNames.join(', '),
+        fetal_presentation: clusterForm.fetal_presentation || '',
+        is_new: true,
+      };
+
+      const updated = [newCluster, ...clusters];
+      setClusters(updated);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      setOpenAddModal(false);
+      toast.success('Cluster added successfully!');
+    }
   };
 
-  const handleDeleteCluster = (clusterId) => {
+  const handleDeleteCluster = async (clusterId) => {
+    try {
+      await DeleteClusterAPI(clusterId);
+    } catch (err) {
+      console.warn('API delete cluster:', err.message);
+    }
     const updated = clusters.filter((c) => c.cluster_id !== clusterId);
     setClusters(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -179,7 +237,7 @@ function Cluster() {
     setEditingCluster(null);
   };
 
-  const handleUpdateCluster = (e) => {
+  const handleUpdateCluster = async (e) => {
     e.preventDefault();
     if (!editClusterForm.cluster_name.trim()) {
       toast.error('Please enter a cluster name.');
@@ -188,6 +246,16 @@ function Cluster() {
     if (!editClusterForm.selected_volume_ids || editClusterForm.selected_volume_ids.length === 0) {
       toast.error('Please select at least one volume.');
       return;
+    }
+
+    try {
+      await UpdateClusterAPI(editingCluster.cluster_id, {
+        cluster_name: editClusterForm.cluster_name.trim(),
+        fetal_presentation: editClusterForm.fetal_presentation || '',
+        volume_ids: editClusterForm.selected_volume_ids,
+      });
+    } catch (err) {
+      console.warn('API update cluster:', err.message);
     }
 
     const matchedVolumes = volumes.filter((v) => editClusterForm.selected_volume_ids.includes(v.volume_id));

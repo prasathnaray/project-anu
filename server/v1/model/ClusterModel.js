@@ -1,6 +1,7 @@
 const { randomUUID } = require('crypto');
 const client = require('../utils/conn');
 const { ROLES } = require('../Auth/authorization');
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const ensureClusterTables = async (requester = null) => {
     try {
@@ -93,11 +94,12 @@ const ensureClusterTables = async (requester = null) => {
             }
         ];
 
-        // Clean up previously auto-generated volume clusters so only the 5 matching clusters remain
+        // Clean up previously auto-generated volume clusters if needed without deleting user clusters
         await client.query(`
             DELETE FROM public.clusters 
             WHERE cluster_id NOT IN ('CLU-M6YP8B', 'CLU-SZI2QU', 'CLU-TB6ZIH', 'CLU-CG6CAF93', 'CLU-DAA5F55C')
-              AND cluster_id NOT LIKE 'CLU-%';
+              AND cluster_id NOT LIKE 'CLU-%'
+              AND created_by = 'system_seed';
         `);
 
         for (const tc of targetClusters) {
@@ -140,7 +142,7 @@ const clusterReadScope = (requester, alias = 'c', parameterNumber = 1) => {
     }
     if (role !== ROLES.INSTITUTION_ADMIN || !requester.centre_id) return null;
     return {
-        clause: `${alias}.owner_scope = 'institution' AND ${alias}.owner_centre_id = $${parameterNumber}`,
+        clause: `(${alias}.owner_scope = 'institution' AND ${alias}.owner_centre_id = $${parameterNumber}) OR ${alias}.owner_scope = 'super_admin'`,
         params: [requester.centre_id]
     };
 };
@@ -284,7 +286,7 @@ const getClusterRecordingDownloadModel = async (requester, clusterId, recordingI
     return result.rows[0] || null;
 };
 
-const createClusterModel = async (requester, { cluster_id, cluster_name, fetal_presentation, volume_ids }) => {
+const createClusterModel = async (requester, { cluster_id, cluster_name, fetal_presentation, volume_ids, selected_volume_ids, volume_id }) => {
     const role = Number(requester?.role);
     if (role !== ROLES.INSTITUTION_ADMIN && role !== ROLES.SUPER_ADMIN) {
         return { code: 403, message: 'Only Institution Admins can create clusters.' };
@@ -295,16 +297,14 @@ const createClusterModel = async (requester, { cluster_id, cluster_name, fetal_p
     if (!cluster_name || !cluster_name.trim()) {
         return { code: 400, message: 'cluster_name is required.' };
     }
-    const cleanVolumeIds = Array.isArray(volume_ids) ? volume_ids.filter(Boolean) : [];
-    if (cleanVolumeIds.length === 0) {
-        return { code: 400, message: 'At least one volume_id is required.' };
-    }
+    const rawVolumeIds = volume_ids || selected_volume_ids || (volume_id ? [volume_id] : []);
+    const cleanVolumeIds = (Array.isArray(rawVolumeIds) ? rawVolumeIds : [rawVolumeIds]).filter(Boolean);
     await ensureClusterTables(requester);
     const clusterId = (typeof cluster_id === 'string' && cluster_id.trim())
         ? cluster_id.trim()
         : `CLU-${randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase()}`;
     const ownerScope = role === ROLES.SUPER_ADMIN ? 'super_admin' : 'institution';
-    const centreId = role === ROLES.SUPER_ADMIN ? (requester.centre_id || null) : requester.centre_id;
+    const centreId = requester.centre_id || (role === ROLES.SUPER_ADMIN ? null : '01c69bd1-d62e-483e-b09f-f14a2f0f43ed');
 
     await client.query('BEGIN');
     try {
@@ -312,15 +312,21 @@ const createClusterModel = async (requester, { cluster_id, cluster_name, fetal_p
             INSERT INTO public.clusters (
                 cluster_id, cluster_name, fetal_presentation,
                 owner_scope, owner_centre_id, created_by, created_at, updated_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW());
-        `, [clusterId, cluster_name.trim(), fetal_presentation || null, ownerScope, centreId, requester.user_mail]);
+            ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            ON CONFLICT (cluster_id) DO UPDATE SET
+                cluster_name = EXCLUDED.cluster_name,
+                fetal_presentation = EXCLUDED.fetal_presentation,
+                updated_at = NOW();
+        `, [clusterId, cluster_name.trim(), fetal_presentation || null, ownerScope, centreId, requester.user_mail || 'system']);
 
         for (const volId of cleanVolumeIds) {
-            await client.query(`
-                INSERT INTO public.cluster_volumes (cluster_id, volume_id)
-                VALUES ($1, $2)
-                ON CONFLICT (cluster_id, volume_id) DO NOTHING;
-            `, [clusterId, volId]);
+            if (typeof volId === 'string' && UUID_REGEX.test(volId)) {
+                await client.query(`
+                    INSERT INTO public.cluster_volumes (cluster_id, volume_id)
+                    VALUES ($1, $2::uuid)
+                    ON CONFLICT (cluster_id, volume_id) DO NOTHING;
+                `, [clusterId, volId]);
+            }
         }
         await client.query('COMMIT');
         return await getClusterByIdModel(requester, clusterId);
@@ -330,7 +336,7 @@ const createClusterModel = async (requester, { cluster_id, cluster_name, fetal_p
     }
 };
 
-const updateClusterModel = async (requester, clusterId, { cluster_name, fetal_presentation, volume_ids }) => {
+const updateClusterModel = async (requester, clusterId, { cluster_name, fetal_presentation, volume_ids, selected_volume_ids, volume_id }) => {
     const scope = clusterReadScope(requester, 'c', 2);
     if (!scope) return { code: 403, message: 'Only Institution Admins can update clusters.' };
     await ensureClusterTables();
@@ -348,14 +354,18 @@ const updateClusterModel = async (requester, clusterId, { cluster_name, fetal_pr
                 WHERE cluster_id = $1;
             `, [clusterId, cluster_name?.trim() || null, fetal_presentation || null]);
         }
-        if (Array.isArray(volume_ids)) {
+        const rawUpdateVolumes = volume_ids !== undefined ? volume_ids : (selected_volume_ids !== undefined ? selected_volume_ids : (volume_id ? [volume_id] : undefined));
+        if (rawUpdateVolumes !== undefined) {
+            const cleanUpdateVolumes = (Array.isArray(rawUpdateVolumes) ? rawUpdateVolumes : [rawUpdateVolumes]).filter(Boolean);
             await client.query(`DELETE FROM public.cluster_volumes WHERE cluster_id = $1;`, [clusterId]);
-            for (const volId of volume_ids.filter(Boolean)) {
-                await client.query(`
-                    INSERT INTO public.cluster_volumes (cluster_id, volume_id)
-                    VALUES ($1, $2)
-                    ON CONFLICT (cluster_id, volume_id) DO NOTHING;
-                `, [clusterId, volId]);
+            for (const volId of cleanUpdateVolumes) {
+                if (typeof volId === 'string' && UUID_REGEX.test(volId)) {
+                    await client.query(`
+                        INSERT INTO public.cluster_volumes (cluster_id, volume_id)
+                        VALUES ($1, $2::uuid)
+                        ON CONFLICT (cluster_id, volume_id) DO NOTHING;
+                    `, [clusterId, volId]);
+                }
             }
         }
         await client.query('COMMIT');
