@@ -76,11 +76,12 @@
 
 // module.exports = client;
 
+const path = require('path');
 const { Pool } = require('pg');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const client = new Pool({
-  connectionString: 'postgresql://postgres.rnrnzmqtvcyqhpakynls:182Ovp53rfeA1Rbf@aws-0-ap-south-1.pooler.supabase.com:6543/postgres',
-  //connectionString: 'postgresql://postgres.nlunlavfaynlnpeyxpxp:182Ovp53rfeA1Rbf@aws-0-ap-south-1.pooler.supabase.com:5432/postgres',
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres.rnrnzmqtvcyqhpakynls:182Ovp53rfeA1Rbf@aws-0-ap-south-1.pooler.supabase.com:6543/postgres',
   ssl: {
     rejectUnauthorized: false,
   },

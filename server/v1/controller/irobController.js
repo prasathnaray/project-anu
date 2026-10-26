@@ -1,5 +1,5 @@
 const { submitActivity } = require('../model/irobm');
-const { v4: uuidv4 } = require('uuid');
+const { randomUUID } = require('crypto');
 const buildPayload = (resourceType, body) => {
     switch (resourceType) {
         case 'TYPE1':
@@ -80,7 +80,7 @@ const irobsubmit = async (req, res) => {
         //         message: 'sessionId is required',
         //     });
         // }
-        const resolvedSessionId = sessionId || uuidv4();
+        const resolvedSessionId = sessionId || randomUUID();
         const payload = buildPayload(resourceType.toUpperCase(), { ...rest, resourceId, sessionId: resolvedSessionId });
 
         if (!payload) {
