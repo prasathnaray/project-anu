@@ -2,14 +2,51 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import { Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import { Pencil, Plus, RotateCcw, Search, Trash2, Upload, X } from 'lucide-react';
 import { TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox } from '@mui/material';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
 import GetVolInsAPI from '../API/GetVolInsAPI';
-import { GetClustersAPI, CreateClusterAPI, UpdateClusterAPI, DeleteClusterAPI } from '../API/ClusterAPI';
+import {
+  GetClustersAPI,
+  CreateClusterAPI,
+  UpdateClusterAPI,
+  DeleteClusterAPI,
+  GetClusterRecordingCountsAPI,
+  GetClusterRecordingsAPI,
+  UploadClusterRecordingAPI,
+  UploadRecordingAPI,
+  ReplaceClusterRecordingAPI,
+} from '../API/ClusterAPI';
 
 const STORAGE_KEY = 'project_anu_cluster_list';
+const COUNTS_STORAGE_KEY = 'project_anu_cluster_rec_counts';
+
+const extractFileName = (ref, fallback = 'file') => {
+  if (!ref || typeof ref !== 'string') return fallback;
+  try {
+    const withoutQuery = ref.split('?')[0];
+    const parts = withoutQuery.split('/');
+    const last = parts[parts.length - 1];
+    return decodeURIComponent(last) || fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+const safeParseFileList = (files) => {
+  if (!files) return [];
+  if (Array.isArray(files)) return files;
+  if (typeof files === 'string') {
+    try {
+      const parsed = JSON.parse(files);
+      if (Array.isArray(parsed)) return parsed;
+    } catch {
+      return [files];
+    }
+  }
+  return [];
+};
 
 function Cluster() {
   const navigate = useNavigate();
@@ -38,9 +75,60 @@ function Cluster() {
     fetal_presentation: '',
   });
 
+  // Recording counts per cluster: { [cluster_id]: { step: number, shadow: number } }
+  const [recordingCounts, setRecordingCounts] = useState(() => {
+    try {
+      const saved = localStorage.getItem(COUNTS_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Upload Recording Modal state
+  const [openUploadModal, setOpenUploadModal] = useState(false);
+  const [uploadType, setUploadType] = useState('step'); // 'step' | 'shadow'
+  const [modalMode, setModalMode] = useState('add'); // 'add' | 'replace'
+  const [clusterRecordings, setClusterRecordings] = useState([]);
+  const [selectedRecordingId, setSelectedRecordingId] = useState('');
+  const [loadingRecordings, setLoadingRecordings] = useState(false);
+  const [selectedUploadCluster, setSelectedUploadCluster] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    recording_name: '',
+    volume_id: '',
+    recording_files: [],
+    audio_files: [],
+    image_files: [],
+    manifest_file: null,
+  });
+
   const handleButtonOpen = () => {
     setButtonOpen((prev) => !prev);
   };
+
+  const fetchRecordingCounts = useCallback(async () => {
+    try {
+      const res = await GetClusterRecordingCountsAPI();
+      const d = res?.data?.data || res?.data;
+      const countList = Array.isArray(d) ? d : [];
+      setRecordingCounts((prev) => {
+        const updated = { ...prev };
+        countList.forEach((item) => {
+          if (item?.cluster_id) {
+            updated[item.cluster_id] = {
+              step: Number(item.step_recording_count) || 0,
+              shadow: Number(item.shadow_recording_count) || 0,
+            };
+          }
+        });
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      });
+    } catch (err) {
+      console.warn('Could not load cluster recording counts from API:', err?.message);
+    }
+  }, []);
 
   const isFetchingRef = useRef(false);
   const fetchData = useCallback(async () => {
@@ -48,10 +136,29 @@ function Cluster() {
     isFetchingRef.current = true;
     setLoading(true);
     try {
-      const [volumeResult, clusterResult] = await Promise.allSettled([
+      const [volumeResult, clusterResult, countsResult] = await Promise.allSettled([
         GetVolInsAPI(),
         GetClustersAPI(),
+        GetClusterRecordingCountsAPI(),
       ]);
+
+      if (countsResult.status === 'fulfilled' && countsResult.value?.data) {
+        const d = countsResult.value.data?.data || countsResult.value.data;
+        const countList = Array.isArray(d) ? d : [];
+        setRecordingCounts((prev) => {
+          const updated = { ...prev };
+          countList.forEach((item) => {
+            if (item?.cluster_id) {
+              updated[item.cluster_id] = {
+                step: Number(item.step_recording_count) || 0,
+                shadow: Number(item.shadow_recording_count) || 0,
+              };
+            }
+          });
+          localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+          return updated;
+        });
+      }
 
       if (volumeResult.status === 'rejected') {
         throw volumeResult.reason;
@@ -185,6 +292,14 @@ function Cluster() {
       const updated = [newCluster, ...clusters];
       setClusters(updated);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      setRecordingCounts((prev) => {
+        const updatedCounts = {
+          ...prev,
+          [createdId]: { step: 0, shadow: 0 },
+        };
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
+        return updatedCounts;
+      });
       setOpenAddModal(false);
       toast.success('Cluster added successfully!');
     } catch (apiErr) {
@@ -202,6 +317,14 @@ function Cluster() {
       const updated = [newCluster, ...clusters];
       setClusters(updated);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      setRecordingCounts((prev) => {
+        const updatedCounts = {
+          ...prev,
+          [newCluster.cluster_id]: { step: 0, shadow: 0 },
+        };
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
+        return updatedCounts;
+      });
       setOpenAddModal(false);
       toast.success('Cluster added successfully!');
     }
@@ -216,6 +339,12 @@ function Cluster() {
     const updated = clusters.filter((c) => c.cluster_id !== clusterId);
     setClusters(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setRecordingCounts((prev) => {
+      const nextCounts = { ...prev };
+      delete nextCounts[clusterId];
+      localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(nextCounts));
+      return nextCounts;
+    });
     toast.info('Cluster removed.');
   };
 
@@ -280,6 +409,332 @@ function Cluster() {
     setOpenEditModal(false);
     setEditingCluster(null);
     toast.success('Cluster updated successfully!');
+  };
+
+  const clusterVolumesForUpload = useMemo(() => {
+    if (!selectedUploadCluster) return [];
+    const ids = Array.isArray(selectedUploadCluster.volume_ids)
+      ? selectedUploadCluster.volume_ids
+      : (selectedUploadCluster.volume_id ? [selectedUploadCluster.volume_id] : []);
+    return ids.map((id) => {
+      const vol = volumes.find((v) => v.volume_id === id);
+      return vol || { volume_id: id, volume_name: id, volume_type: '' };
+    });
+  }, [selectedUploadCluster, volumes]);
+
+  const activeExistingRecording = useMemo(() => {
+    if (modalMode !== 'replace') return null;
+    return (
+      clusterRecordings.find((r) => r.recording_id === selectedRecordingId) ||
+      clusterRecordings[0] ||
+      null
+    );
+  }, [modalMode, clusterRecordings, selectedRecordingId]);
+
+  const existingJsonFiles = useMemo(() => {
+    return safeParseFileList(activeExistingRecording?.rec_files);
+  }, [activeExistingRecording]);
+
+  const existingAudioFiles = useMemo(() => {
+    return safeParseFileList(activeExistingRecording?.audio_files);
+  }, [activeExistingRecording]);
+
+  const existingImageFiles = useMemo(() => {
+    return safeParseFileList(activeExistingRecording?.image_files);
+  }, [activeExistingRecording]);
+
+  const existingManifestFile = useMemo(() => {
+    const m = activeExistingRecording?.manifest_file;
+    if (!m || m === '-') return null;
+    if (Array.isArray(m)) return m[0] || null;
+    return m;
+  }, [activeExistingRecording]);
+
+  const handleOpenUploadModal = async (cluster, type, initialMode = 'add') => {
+    const ids = Array.isArray(cluster.volume_ids)
+      ? cluster.volume_ids
+      : (cluster.volume_id ? [cluster.volume_id] : []);
+    const defaultVolId = ids[0] || cluster.volume_id || '';
+    const typeLabel = type === 'step' ? 'Step' : 'Shadow';
+
+    setSelectedUploadCluster(cluster);
+    setUploadType(type);
+    setModalMode(initialMode);
+    setSelectedRecordingId('');
+    setClusterRecordings([]);
+    setUploadForm({
+      recording_name: `${cluster.cluster_name || 'Cluster'} ${typeLabel} Recording`,
+      volume_id: defaultVolId,
+      recording_files: [],
+      audio_files: [],
+      image_files: [],
+      manifest_file: null,
+    });
+    setOpenUploadModal(true);
+
+    setLoadingRecordings(true);
+    try {
+      const res = await GetClusterRecordingsAPI(cluster.cluster_id);
+      const d = res?.data?.data || res?.data?.recordings || res?.data;
+      const list = Array.isArray(d) ? d : [];
+      const matching = list.filter((r) => {
+        const t = (r.recording_type || '').toLowerCase().trim();
+        return t === type || t.includes(type);
+      });
+      setClusterRecordings(matching);
+      if (matching.length > 0) {
+        setSelectedRecordingId(matching[0].recording_id);
+        if (initialMode === 'replace') {
+          setUploadForm((prev) => ({
+            ...prev,
+            recording_name: matching[0].recording_name || prev.recording_name,
+            volume_id: matching[0].volume_id || prev.volume_id,
+          }));
+        }
+      } else if (initialMode === 'replace') {
+        setModalMode('add');
+      }
+    } catch (err) {
+      console.warn('Could not fetch cluster recordings:', err?.message);
+    } finally {
+      setLoadingRecordings(false);
+    }
+  };
+
+  const handleCloseUploadModal = () => {
+    if (uploading) return;
+    setOpenUploadModal(false);
+    setSelectedUploadCluster(null);
+    setClusterRecordings([]);
+    setSelectedRecordingId('');
+    setModalMode('add');
+    setUploadForm({
+      recording_name: '',
+      volume_id: '',
+      recording_files: [],
+      audio_files: [],
+      image_files: [],
+      manifest_file: null,
+    });
+  };
+
+  const handleSwitchModalMode = (mode) => {
+    setModalMode(mode);
+    if (mode === 'replace' && clusterRecordings.length > 0) {
+      const current = clusterRecordings.find((r) => r.recording_id === selectedRecordingId) || clusterRecordings[0];
+      if (current) {
+        setSelectedRecordingId(current.recording_id);
+        setUploadForm((prev) => ({
+          ...prev,
+          recording_name: current.recording_name || prev.recording_name,
+          volume_id: current.volume_id || prev.volume_id,
+        }));
+      }
+    }
+  };
+
+  const handleSelectRecordingToReplace = (recId) => {
+    setSelectedRecordingId(recId);
+    const rec = clusterRecordings.find((r) => r.recording_id === recId);
+    if (rec) {
+      setUploadForm((prev) => ({
+        ...prev,
+        recording_name: rec.recording_name || prev.recording_name,
+        volume_id: rec.volume_id || prev.volume_id,
+      }));
+    }
+  };
+
+  const handleJsonFilesChange = (e) => {
+    const selected = Array.from(e.target.files || []);
+    const valid = selected.filter((file) => file.name.toLowerCase().endsWith('.json'));
+    if (valid.length !== selected.length) {
+      toast.warn('Only .json files are accepted for JSON recordings.');
+    }
+    setUploadForm((prev) => ({ ...prev, recording_files: valid }));
+  };
+
+  const handleAudioFilesChange = (e) => {
+    const selected = Array.from(e.target.files || []);
+    const valid = selected.filter((file) => file.name.toLowerCase().endsWith('.wav'));
+    if (valid.length !== selected.length) {
+      toast.warn('Only .wav files are accepted for audio recordings.');
+    }
+    setUploadForm((prev) => ({ ...prev, audio_files: valid }));
+  };
+
+  const handleImageFilesChange = (e) => {
+    const selected = Array.from(e.target.files || []);
+    const allowed = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'];
+    const valid = selected.filter((file) => {
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      return allowed.includes(ext);
+    });
+    if (valid.length !== selected.length) {
+      toast.warn('Only image files (PNG, JPG, JPEG, WEBP, GIF, BMP) are accepted.');
+    }
+    setUploadForm((prev) => ({ ...prev, image_files: valid }));
+  };
+
+  const handleManifestFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setUploadForm((prev) => ({ ...prev, manifest_file: null }));
+      return;
+    }
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'json' && ext !== 'manifest') {
+      toast.warn('Manifest file must be a .json or .manifest file.');
+      e.target.value = '';
+      return;
+    }
+    setUploadForm((prev) => ({ ...prev, manifest_file: file }));
+  };
+
+  const handleUploadRecordingSubmit = async (e) => {
+    e.preventDefault();
+    if (!uploadForm.volume_id) {
+      toast.error('Please select a volume.');
+      return;
+    }
+
+    if (modalMode === 'replace') {
+      const hasReplacementFile = uploadForm.recording_files.length > 0
+        || uploadForm.audio_files.length > 0
+        || uploadForm.image_files.length > 0
+        || Boolean(uploadForm.manifest_file)
+        || Boolean(uploadForm.recording_name.trim());
+
+      if (!hasReplacementFile) {
+        toast.error('Please select at least 1 file to replace (JSON, Audio, Image, or Manifest).');
+        return;
+      }
+
+      setUploading(true);
+      try {
+        const data = new FormData();
+        data.append('volume_id', uploadForm.volume_id);
+        data.append('cluster_id', selectedUploadCluster.cluster_id);
+        data.append('recording_type', uploadType);
+        if (selectedRecordingId) {
+          data.append('recording_id', selectedRecordingId);
+        }
+        if (uploadForm.recording_name.trim()) {
+          data.append('recording_name', uploadForm.recording_name.trim());
+        }
+
+        uploadForm.recording_files.forEach((file) => {
+          data.append('recording_file', file);
+        });
+        uploadForm.audio_files.forEach((file) => {
+          data.append('audio_file', file);
+        });
+        uploadForm.image_files.forEach((file) => {
+          data.append('images', file);
+        });
+        if (uploadForm.manifest_file) {
+          data.append('manifest_file', uploadForm.manifest_file);
+        }
+
+        await ReplaceClusterRecordingAPI(
+          selectedUploadCluster.cluster_id,
+          selectedRecordingId,
+          data
+        );
+
+        toast.success(
+          `${uploadType === 'step' ? 'Step' : 'Shadow'} recording file(s) replaced successfully!`
+        );
+
+        handleCloseUploadModal();
+        fetchRecordingCounts();
+      } catch (err) {
+        console.error('Failed to replace recording files:', err);
+        const errMsg = err.response?.data?.error
+          || err.response?.data?.message
+          || 'Failed to replace recording files. Please check file formats and try again.';
+        toast.error(errMsg);
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
+
+    // Modal mode === 'add' (requires all 4 files)
+    if (!uploadForm.recording_name.trim()) {
+      toast.error('Please enter a recording name.');
+      return;
+    }
+    if (uploadForm.recording_files.length === 0) {
+      toast.error('Please upload at least 1 JSON file (.json).');
+      return;
+    }
+    if (uploadForm.audio_files.length === 0) {
+      toast.error('Please upload at least 1 audio file (.wav).');
+      return;
+    }
+    if (uploadForm.image_files.length === 0) {
+      toast.error('Please upload at least 1 image file.');
+      return;
+    }
+    if (!uploadForm.manifest_file) {
+      toast.error('Please upload 1 manifest file (.json or .manifest).');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const data = new FormData();
+      data.append('volume_id', uploadForm.volume_id);
+      data.append('cluster_id', selectedUploadCluster.cluster_id);
+      data.append('recording_name', uploadForm.recording_name.trim());
+      data.append('recording_type', uploadType);
+
+      uploadForm.recording_files.forEach((file) => {
+        data.append('recording_file', file);
+      });
+      uploadForm.audio_files.forEach((file) => {
+        data.append('audio_file', file);
+      });
+      uploadForm.image_files.forEach((file) => {
+        data.append('images', file);
+      });
+      data.append('manifest_file', uploadForm.manifest_file);
+
+      try {
+        await UploadClusterRecordingAPI(selectedUploadCluster.cluster_id, data);
+      } catch (clusterApiErr) {
+        // Fallback to uploadvolumerecording endpoint
+        await UploadRecordingAPI(data);
+      }
+
+      toast.success(`${uploadType === 'step' ? 'Step' : 'Shadow'} recording uploaded successfully!`);
+
+      // Update local count immediately
+      setRecordingCounts((prev) => {
+        const cur = prev[selectedUploadCluster.cluster_id] || { step: 0, shadow: 0 };
+        const updated = {
+          ...prev,
+          [selectedUploadCluster.cluster_id]: {
+            ...cur,
+            [uploadType]: (cur[uploadType] || 0) + 1,
+          },
+        };
+        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updated));
+        return updated;
+      });
+
+      handleCloseUploadModal();
+      fetchRecordingCounts();
+    } catch (err) {
+      console.error('Failed to upload recording:', err);
+      const errMsg = err.response?.data?.error
+        || err.response?.data?.message
+        || 'Failed to upload recording files. Please check file formats and try again.';
+      toast.error(errMsg);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -424,16 +879,96 @@ function Cluster() {
                             </div>
                           </td>
 
-                          {/* Recordings are intentionally isolated from Cluster. */}
+                          {/* Step Recording */}
                           <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded text-[11px] bg-gray-50 text-gray-500 border border-gray-200 font-semibold">
-                              0
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                                  (recordingCounts[cluster.cluster_id]?.step || 0) > 0
+                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                    : 'bg-gray-50 text-gray-500 border-gray-200'
+                                }`}
+                              >
+                                {recordingCounts[cluster.cluster_id]?.step || 0}
+                              </span>
+                              {(recordingCounts[cluster.cluster_id]?.step || 0) > 0 ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenUploadModal(cluster, 'step', 'replace')}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors cursor-pointer shadow-xs"
+                                    title="Replace Step Recording files (JSON, etc.)"
+                                  >
+                                    <RotateCcw size={11} />
+                                    <span>Replace</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenUploadModal(cluster, 'step', 'add')}
+                                    className="inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors cursor-pointer"
+                                    title="Add another Step Recording"
+                                  >
+                                    <Plus size={11} />
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenUploadModal(cluster, 'step', 'add')}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-white bg-[#8DC63F] hover:bg-[#7cb336] transition-colors cursor-pointer shadow-xs"
+                                  title="Upload Step Recording"
+                                >
+                                  <Plus size={11} />
+                                  <span>Add</span>
+                                </button>
+                              )}
+                            </div>
                           </td>
+
+                          {/* Shadow Recording */}
                           <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded text-[11px] bg-gray-50 text-gray-500 border border-gray-200 font-semibold">
-                              0
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                                  (recordingCounts[cluster.cluster_id]?.shadow || 0) > 0
+                                    ? 'bg-green-50 text-green-700 border-green-200'
+                                    : 'bg-gray-50 text-gray-500 border-gray-200'
+                                }`}
+                              >
+                                {recordingCounts[cluster.cluster_id]?.shadow || 0}
+                              </span>
+                              {(recordingCounts[cluster.cluster_id]?.shadow || 0) > 0 ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenUploadModal(cluster, 'shadow', 'replace')}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors cursor-pointer shadow-xs"
+                                    title="Replace Shadow Recording files (JSON, etc.)"
+                                  >
+                                    <RotateCcw size={11} />
+                                    <span>Replace</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenUploadModal(cluster, 'shadow', 'add')}
+                                    className="inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors cursor-pointer"
+                                    title="Add another Shadow Recording"
+                                  >
+                                    <Plus size={11} />
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenUploadModal(cluster, 'shadow', 'add')}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-white bg-[#8DC63F] hover:bg-[#7cb336] transition-colors cursor-pointer shadow-xs"
+                                  title="Upload Shadow Recording"
+                                >
+                                  <Plus size={11} />
+                                  <span>Add</span>
+                                </button>
+                              )}
+                            </div>
                           </td>
 
                           {/* Action (Edit & Delete) */}
@@ -674,6 +1209,389 @@ function Cluster() {
               className="px-4 py-1.5 text-xs font-semibold text-white bg-[#8DC63F] hover:bg-[#7cb336] rounded shadow-sm cursor-pointer"
             >
               Save Changes
+            </button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      {/* Upload / Replace Recording Modal */}
+      <Dialog
+        open={openUploadModal}
+        onClose={handleCloseUploadModal}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle className="flex justify-between items-center border-b pb-3">
+          <div>
+            <span className="font-bold text-gray-800 text-base">
+              {modalMode === 'replace' ? 'Replace' : 'Upload'} {uploadType === 'step' ? 'Step' : 'Shadow'} Recording
+            </span>
+            {selectedUploadCluster && (
+              <p className="text-xs text-gray-500 font-normal mt-0.5">
+                Cluster: <span className="font-medium text-gray-700">{selectedUploadCluster.cluster_name}</span> ({selectedUploadCluster.cluster_id})
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleCloseUploadModal}
+            className="text-gray-400 hover:text-gray-600 p-1 rounded cursor-pointer"
+          >
+            <X size={18} />
+          </button>
+        </DialogTitle>
+
+        <form onSubmit={handleUploadRecordingSubmit}>
+          <DialogContent className="pt-4 space-y-4 text-xs">
+            {/* Mode switch tabs if cluster has existing recordings */}
+            {clusterRecordings.length > 0 && (
+              <div className="flex border-b border-gray-200 -mt-1 mb-2">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchModalMode('replace')}
+                  className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
+                    modalMode === 'replace'
+                      ? 'border-[#8DC63F] text-[#8DC63F]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <RotateCcw size={13} />
+                  <span>Replace Existing Recording</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchModalMode('add')}
+                  className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
+                    modalMode === 'add'
+                      ? 'border-[#8DC63F] text-[#8DC63F]'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Plus size={13} />
+                  <span>Add New Recording</span>
+                </button>
+              </div>
+            )}
+
+            {/* Instruction banner */}
+            {modalMode === 'replace' ? (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded text-emerald-900 text-[11px] leading-relaxed">
+                <strong>Replace Mode:</strong> Every type of file can be replaced (JSON recordings, Audio .wav, Images, Manifest). Already existing files are shown under each section below. Choose new file(s) for any section you wish to replace; unselected sections will keep their existing files intact.
+              </div>
+            ) : (
+              <div className="p-2.5 bg-blue-50 border border-blue-200 rounded text-blue-800 text-[11px] leading-relaxed">
+                Please upload all required files: <strong>at least 1 JSON file</strong>, <strong>1 WAV audio file</strong>, <strong>1 image file</strong>, and <strong>1 manifest file</strong>.
+              </div>
+            )}
+
+            {/* If multiple recordings exist in replace mode, choose which recording to replace */}
+            {modalMode === 'replace' && clusterRecordings.length > 1 && (
+              <div>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Select Recording to Replace"
+                  value={selectedRecordingId}
+                  onChange={(e) => handleSelectRecordingToReplace(e.target.value)}
+                  helperText="Choose the recording whose files you want to replace"
+                >
+                  {clusterRecordings.map((rec) => (
+                    <MenuItem key={rec.recording_id} value={rec.recording_id}>
+                      <span className="font-medium text-gray-800">{rec.recording_name || 'Recording'}</span>
+                      <span className="text-xs text-gray-400 ml-2 font-mono">({rec.recording_id})</span>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+            )}
+
+            {/* Recording Name */}
+            <div>
+              <TextField
+                fullWidth
+                size="small"
+                label="Recording Name"
+                placeholder="e.g. Fetal Heart Step Recording"
+                value={uploadForm.recording_name}
+                onChange={(e) => setUploadForm((prev) => ({ ...prev, recording_name: e.target.value }))}
+                required={modalMode === 'add'}
+              />
+            </div>
+
+            {/* Select Volume (if cluster has multiple volumes, let user pick) */}
+            {clusterVolumesForUpload.length > 1 && (
+              <div>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Select Volume"
+                  value={uploadForm.volume_id}
+                  onChange={(e) => setUploadForm((prev) => ({ ...prev, volume_id: e.target.value }))}
+                  required
+                >
+                  {clusterVolumesForUpload.map((vol) => (
+                    <MenuItem key={vol.volume_id} value={vol.volume_id}>
+                      <span className="font-medium text-gray-800">{vol.volume_name}</span>
+                      <span className="text-xs text-gray-400 ml-2">({vol.volume_type || 'Volume'})</span>
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+            )}
+
+            {/* 1. JSON Files */}
+            <div className={`border rounded-md p-3 ${modalMode === 'replace' ? 'border-gray-200 bg-white' : 'border-gray-200 bg-gray-50/50'}`}>
+              <label className="block text-gray-700 font-semibold mb-1">
+                JSON Recording Files (.json){' '}
+                {modalMode === 'replace' ? (
+                  <span className="text-gray-500 font-normal">(Select new file to replace)</span>
+                ) : (
+                  <span className="text-red-500">*</span>
+                )}
+              </label>
+
+              {/* Already existing JSON files display */}
+              {modalMode === 'replace' && (
+                <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-[11px] font-semibold text-gray-700 block mb-1">
+                    Already existing JSON file(s):
+                  </span>
+                  {existingJsonFiles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {existingJsonFiles.map((fileRef, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 bg-white border border-gray-300 text-gray-800 px-2 py-0.5 rounded text-[11px] font-mono shadow-xs"
+                          title={fileRef}
+                        >
+                          <span className="text-gray-400">📄</span>
+                          <span>{extractFileName(fileRef, `recording_${idx + 1}.json`)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-gray-400 italic">No existing JSON files found</span>
+                  )}
+                </div>
+              )}
+
+              <input
+                type="file"
+                multiple
+                accept=".json,application/json"
+                onChange={handleJsonFilesChange}
+                className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#8DC63F] file:text-white hover:file:bg-[#7cb336] cursor-pointer"
+              />
+              {uploadForm.recording_files.length > 0 ? (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] text-emerald-700">
+                  <span className="font-semibold">{modalMode === 'replace' ? 'Will replace with:' : 'Selected:'}</span>
+                  {uploadForm.recording_files.map((f, i) => (
+                    <span key={i} className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                      {f.name}
+                    </span>
+                  ))}
+                </div>
+              ) : modalMode === 'replace' && existingJsonFiles.length > 0 ? (
+                <div className="mt-1 text-[10px] text-gray-400 italic">
+                  (No new file selected &mdash; existing JSON file will be kept)
+                </div>
+              ) : null}
+            </div>
+
+            {/* 2. Audio Files */}
+            <div className={`border rounded-md p-3 ${modalMode === 'replace' ? 'border-gray-200 bg-white' : 'border-gray-200 bg-gray-50/50'}`}>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Audio Files (.wav){' '}
+                {modalMode === 'replace' ? (
+                  <span className="text-gray-500 font-normal">(Select new file to replace)</span>
+                ) : (
+                  <span className="text-red-500">*</span>
+                )}
+              </label>
+
+              {/* Already existing Audio files display */}
+              {modalMode === 'replace' && (
+                <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-[11px] font-semibold text-gray-700 block mb-1">
+                    Already existing audio file(s):
+                  </span>
+                  {existingAudioFiles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {existingAudioFiles.map((fileRef, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 bg-white border border-gray-300 text-gray-800 px-2 py-0.5 rounded text-[11px] font-mono shadow-xs"
+                          title={fileRef}
+                        >
+                          <span className="text-gray-400">🎵</span>
+                          <span>{extractFileName(fileRef, `audio_${idx + 1}.wav`)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-gray-400 italic">No existing audio files found</span>
+                  )}
+                </div>
+              )}
+
+              <input
+                type="file"
+                multiple
+                accept=".wav,audio/wav,audio/*"
+                onChange={handleAudioFilesChange}
+                className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#8DC63F] file:text-white hover:file:bg-[#7cb336] cursor-pointer"
+              />
+              {uploadForm.audio_files.length > 0 ? (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] text-emerald-700">
+                  <span className="font-semibold">{modalMode === 'replace' ? 'Will replace with:' : 'Selected:'}</span>
+                  {uploadForm.audio_files.map((f, i) => (
+                    <span key={i} className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                      {f.name}
+                    </span>
+                  ))}
+                </div>
+              ) : modalMode === 'replace' && existingAudioFiles.length > 0 ? (
+                <div className="mt-1 text-[10px] text-gray-400 italic">
+                  (No new file selected &mdash; existing audio file will be kept)
+                </div>
+              ) : null}
+            </div>
+
+            {/* 3. Image Files */}
+            <div className={`border rounded-md p-3 ${modalMode === 'replace' ? 'border-gray-200 bg-white' : 'border-gray-200 bg-gray-50/50'}`}>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Image Files (PNG, JPG, JPEG, WEBP){' '}
+                {modalMode === 'replace' ? (
+                  <span className="text-gray-500 font-normal">(Select new file to replace)</span>
+                ) : (
+                  <span className="text-red-500">*</span>
+                )}
+              </label>
+
+              {/* Already existing Image files display */}
+              {modalMode === 'replace' && (
+                <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-[11px] font-semibold text-gray-700 block mb-1">
+                    Already existing image file(s):
+                  </span>
+                  {existingImageFiles.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {existingImageFiles.map((fileRef, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-1 bg-white border border-gray-300 text-gray-800 px-2 py-0.5 rounded text-[11px] font-mono shadow-xs"
+                          title={fileRef}
+                        >
+                          <span className="text-gray-400">🖼️</span>
+                          <span>{extractFileName(fileRef, `image_${idx + 1}.png`)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-gray-400 italic">No existing image files found</span>
+                  )}
+                </div>
+              )}
+
+              <input
+                type="file"
+                multiple
+                accept=".png,.jpg,.jpeg,.webp,.gif,.bmp,image/*"
+                onChange={handleImageFilesChange}
+                className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#8DC63F] file:text-white hover:file:bg-[#7cb336] cursor-pointer"
+              />
+              {uploadForm.image_files.length > 0 ? (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] text-emerald-700">
+                  <span className="font-semibold">{modalMode === 'replace' ? 'Will replace with:' : 'Selected:'}</span>
+                  {uploadForm.image_files.map((f, i) => (
+                    <span key={i} className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                      {f.name}
+                    </span>
+                  ))}
+                </div>
+              ) : modalMode === 'replace' && existingImageFiles.length > 0 ? (
+                <div className="mt-1 text-[10px] text-gray-400 italic">
+                  (No new file selected &mdash; existing images will be kept)
+                </div>
+              ) : null}
+            </div>
+
+            {/* 4. Manifest File */}
+            <div className={`border rounded-md p-3 ${modalMode === 'replace' ? 'border-gray-200 bg-white' : 'border-gray-200 bg-gray-50/50'}`}>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Manifest File (.json or .manifest){' '}
+                {modalMode === 'replace' ? (
+                  <span className="text-gray-500 font-normal">(Select new file to replace)</span>
+                ) : (
+                  <span className="text-red-500">*</span>
+                )}
+              </label>
+
+              {/* Already existing Manifest file display */}
+              {modalMode === 'replace' && (
+                <div className="mb-2 p-2 bg-gray-50 rounded border border-gray-200">
+                  <span className="text-[11px] font-semibold text-gray-700 block mb-1">
+                    Already existing manifest file:
+                  </span>
+                  {existingManifestFile ? (
+                    <span
+                      className="inline-flex items-center gap-1 bg-white border border-gray-300 text-gray-800 px-2 py-0.5 rounded text-[11px] font-mono shadow-xs"
+                      title={existingManifestFile}
+                    >
+                      <span className="text-gray-400">📋</span>
+                      <span>{extractFileName(existingManifestFile, 'manifest.json')}</span>
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-gray-400 italic">No existing manifest file found</span>
+                  )}
+                </div>
+              )}
+
+              <input
+                type="file"
+                accept=".json,.manifest,text/plain,application/json"
+                onChange={handleManifestFileChange}
+                className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-[#8DC63F] file:text-white hover:file:bg-[#7cb336] cursor-pointer"
+              />
+              {uploadForm.manifest_file ? (
+                <div className="mt-1.5 flex items-center gap-1 text-[11px] text-emerald-700">
+                  <span className="font-semibold">{modalMode === 'replace' ? 'Will replace with:' : 'Selected:'}</span>
+                  <span className="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                    {uploadForm.manifest_file.name}
+                  </span>
+                </div>
+              ) : modalMode === 'replace' && existingManifestFile ? (
+                <div className="mt-1 text-[10px] text-gray-400 italic">
+                  (No new file selected &mdash; existing manifest will be kept)
+                </div>
+              ) : null}
+            </div>
+          </DialogContent>
+
+          <DialogActions className="border-t p-3 px-5">
+            <button
+              type="button"
+              onClick={handleCloseUploadModal}
+              disabled={uploading}
+              className="px-4 py-1.5 text-xs font-semibold text-gray-600 hover:text-gray-800 rounded border border-gray-300 hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={uploading}
+              className="px-4 py-1.5 text-xs font-semibold text-white bg-[#8DC63F] hover:bg-[#7cb336] rounded shadow-sm cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              {uploading ? (
+                <>
+                  <ClipLoader color="#ffffff" size={12} />
+                  <span>{modalMode === 'replace' ? 'Replacing...' : 'Uploading...'}</span>
+                </>
+              ) : (
+                <span>{modalMode === 'replace' ? 'Replace Recording Files' : 'Upload Recording'}</span>
+              )}
             </button>
           </DialogActions>
         </form>

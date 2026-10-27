@@ -48,8 +48,16 @@ const ensureClusterTables = async (requester = null) => {
                 volume_id uuid NOT NULL REFERENCES public.volumes(volume_id) ON DELETE CASCADE,
                 PRIMARY KEY (cluster_id, volume_id)
             );
+            CREATE TABLE IF NOT EXISTS public.cluster_recordings (
+                cluster_id varchar(100) NOT NULL REFERENCES public.clusters(cluster_id) ON DELETE CASCADE,
+                recording_id uuid NOT NULL REFERENCES public.vol_recordings(recording_id) ON DELETE CASCADE,
+                created_at timestamp without time zone NOT NULL DEFAULT now(),
+                PRIMARY KEY (cluster_id, recording_id)
+            );
             CREATE INDEX IF NOT EXISTS idx_clusters_owner ON public.clusters(owner_scope, owner_centre_id);
             CREATE INDEX IF NOT EXISTS idx_cluster_volumes_volume ON public.cluster_volumes(volume_id);
+            CREATE INDEX IF NOT EXISTS idx_cluster_recordings_cluster ON public.cluster_recordings(cluster_id);
+            CREATE INDEX IF NOT EXISTS idx_cluster_recordings_recording ON public.cluster_recordings(recording_id);
         `);
 
         const centreId = requester?.centre_id || '01c69bd1-d62e-483e-b09f-f14a2f0f43ed';
@@ -209,12 +217,11 @@ const getClusterRecordingsModel = async (requester, clusterId) => {
                (vr.manifest_file IS NOT NULL AND vr.manifest_file <> '') AS has_manifest,
                vr.rec_files, vr.audio_files, vr.image_files, vr.manifest_file,
                vr.created_at, vr.created_by
-        FROM public.vol_recordings vr
-        JOIN public.cluster_volumes cv ON cv.volume_id = vr.volume_id
-        JOIN public.volumes v ON v.volume_id = cv.volume_id
-        JOIN public.clusters c ON c.cluster_id = cv.cluster_id
+        FROM public.cluster_recordings cr
+        JOIN public.vol_recordings vr ON vr.recording_id = cr.recording_id
+        JOIN public.clusters c ON c.cluster_id = cr.cluster_id
+        LEFT JOIN public.volumes v ON v.volume_id = vr.volume_id
         WHERE c.cluster_id = $1 AND ${scope.clause}
-          AND COALESCE(v.ownership_review_required, false) = false
         ORDER BY vr.created_at DESC NULLS LAST, vr.recording_id;
     `;
     const result = await client.query(query, [clusterId, ...scope.params]);
@@ -248,9 +255,8 @@ const getClusterRecordingCountsModel = async (requester) => {
                 '[]'::jsonb
             ) AS step_recording_images
         FROM public.clusters c
-        LEFT JOIN public.cluster_volumes cv ON cv.cluster_id = c.cluster_id
-        LEFT JOIN public.volumes v ON v.volume_id = cv.volume_id AND COALESCE(v.ownership_review_required, false) = false
-        LEFT JOIN public.vol_recordings vr ON vr.volume_id = cv.volume_id
+        LEFT JOIN public.cluster_recordings cr ON cr.cluster_id = c.cluster_id
+        LEFT JOIN public.vol_recordings vr ON vr.recording_id = cr.recording_id
         LEFT JOIN LATERAL jsonb_array_elements_text(
             CASE WHEN jsonb_typeof(vr.rec_files) = 'array' THEN vr.rec_files ELSE '[]'::jsonb END
         ) AS step_files(file_url)
@@ -274,12 +280,10 @@ const getClusterRecordingDownloadModel = async (requester, clusterId, recordingI
     const query = `
         SELECT vr.recording_id, vr.rec_files, vr.audio_files,
                vr.image_files, vr.manifest_file, vr.volume_id
-        FROM public.vol_recordings vr
-        JOIN public.cluster_volumes cv ON cv.volume_id = vr.volume_id
-        JOIN public.clusters c ON c.cluster_id = cv.cluster_id
-        JOIN public.volumes v ON v.volume_id = cv.volume_id
+        FROM public.cluster_recordings cr
+        JOIN public.vol_recordings vr ON vr.recording_id = cr.recording_id
+        JOIN public.clusters c ON c.cluster_id = cr.cluster_id
         WHERE c.cluster_id = $1 AND vr.recording_id = $2 AND ${scope.clause}
-          AND COALESCE(v.ownership_review_required, false) = false
         LIMIT 1;
     `;
     const result = await client.query(query, [clusterId, recordingId, ...scope.params]);
