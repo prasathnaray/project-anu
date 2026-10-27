@@ -1,0 +1,464 @@
+# Project ANU: Comprehensive System Flowcharts & Architecture Guide
+
+This document provides complete, flowchart-driven technical documentation for **Project ANU** (an Obstetrical Ultrasound Virtual Reality Simulation & Learning Management System developed by HTIC / IIT Madras).
+
+---
+
+## Table of Contents
+
+1. [High-Level System Architecture](#1-high-level-system-architecture)
+2. [User Roles & RBAC Matrix](#2-user-roles--rbac-matrix)
+3. [Authentication, Device Detection & Session Flow](#3-authentication-device-detection--session-flow)
+4. [Academic & Curriculum Management Lifecycle](#4-academic--curriculum-management-lifecycle)
+5. [3D Ultrasound Volume & Recording Pipeline](#5-3d-ultrasound-volume--recording-pipeline)
+6. [Trainee Learning & Hands-On Simulation Journey](#6-trainee-learning--hands-on-simulation-journey)
+7. [Live Tele-Mentoring & Streaming Workflow (AWS IVS)](#7-live-tele-mentoring--streaming-workflow-aws-ivs)
+8. [Evaluation, Analytics & "Action Engine" Flow](#8-evaluation-analytics--action-engine-flow)
+9. [Database Entity Relationship & Data Flow](#9-database-entity-relationship--data-flow)
+
+---
+
+## 1. High-Level System Architecture
+
+Project ANU consists of a React Web Portal, a Node.js/Express REST & WebSocket Backend, a Python Volume Conversion Worker, a PostgreSQL Database with PII Encryption, Object Storage, AWS IVS Realtime Streaming, and VR Headsets/Ultrasound Simulator Probes.
+
+```mermaid
+flowchart TB
+    subgraph ClientLayer["Client & Device Layer"]
+        WebClient["Web Browser Client (React.js SPA)<br/>Port 3000 / Nginx"]
+        VRHeadset["VR Headset / Simulator Device<br/>(Oculus / Pico / Custom Probe)"]
+    end
+
+    subgraph GatewayLayer["API & Communication Gateway"]
+        APIGateway["Express.js Server (Port 4004)<br/>REST API & Auth"]
+        SocketIO["Socket.IO Service<br/>Realtime Activity Broadcasts"]
+        IVSService["AWS IVS Real-Time Streaming<br/>Live Video & WebRTC Stages"]
+    end
+
+    subgraph ServiceLayer["Application Logic & Processing"]
+        AuthService["Auth & Session Store<br/>(JWT, PII Decryption, Blind Index)"]
+        ActivityTracker["Activity Tracking Middleware<br/>Central Event Logger"]
+        CourseManager["Course & Batch Manager<br/>(Curriculum, Modules, Resources)"]
+        IIVREngine["IIVR & MindSpark Engine<br/>(Type1, Type2, Annotations, Measurement)"]
+        AnalyticsEngine["Analytics & Benchmarking Engine<br/>(Scores, Accuracy, Cohort Benchmarking)"]
+        VolWorker["Python Vol-Conversion Worker<br/>(ConvertVolToNifti.py: .vol -> .nii)"]
+    end
+
+    subgraph DataLayer["Persistence & Storage Layer"]
+        PostgresDB[("PostgreSQL Database (Supabase Pooler)<br/>Users, Batches, Sessions, Logs")]
+        ObjectStorage[("Object Storage (Supabase / AWS S3)<br/>Volumes, NIfTI, Images, Recordings")]
+    end
+
+    WebClient -->|"HTTP / REST API"| APIGateway
+    WebClient <-->|"WebSocket Events"| SocketIO
+    VRHeadset -->|"HTTP / REST API"| APIGateway
+    VRHeadset -->|"WebRTC Video Feed"| IVSService
+    WebClient -->|"Monitor Trainee Stream"| IVSService
+
+    APIGateway --> AuthService
+    APIGateway --> ActivityTracker
+    APIGateway --> CourseManager
+    APIGateway --> IIVREngine
+    APIGateway --> AnalyticsEngine
+
+    APIGateway -->|"Trigger Conversion"| VolWorker
+    VolWorker -->|"Read .vol / Write .nii"| ObjectStorage
+    VolWorker -->|"Update Conversion Status"| PostgresDB
+
+    AuthService --> PostgresDB
+    ActivityTracker --> PostgresDB
+    ActivityTracker -.->|"Broadcast Activity"| SocketIO
+    CourseManager --> PostgresDB
+    IIVREngine --> PostgresDB
+    IIVREngine --> ObjectStorage
+    AnalyticsEngine --> PostgresDB
+```
+
+---
+
+## 2. User Roles & RBAC Matrix
+
+The system implements strict Role-Based Access Control (RBAC) enforced through the `Authenticate` middleware and controller models:
+
+| Role Code | Role Name | Scope & Capabilities |
+| :--- | :--- | :--- |
+| **`99`** | **Super Admin** | System-wide authority, platform-wide course mappings, institutional oversight, global volume management |
+| **`101`** | **Institution Admin** | Institutional batch creation, instructor/trainee onboarding, volume review & approval for institution |
+| **`102`** | **Instructor** | Batch-specific oversight, volume upload (requires approval), live trainee supervision, performance reviews |
+| **`103`** | **Trainee / Learner** | Course progression, interactive MindSpark modules, VR ultrasound simulations (P1-P4, T1-T2), dashboard |
+
+```mermaid
+flowchart TD
+    SuperAdmin["Role 99: Super Admin"]
+    InstAdmin["Role 101: Institution Admin"]
+    Instructor["Role 102: Instructor"]
+    Trainee["Role 103: Trainee"]
+
+    SuperAdmin -->|"Manages Institutions, Global Settings & Global Mappings"| InstAdmin
+    InstAdmin -->|"Creates Batches & Assigns Instructors"| Instructor
+    InstAdmin -->|"Enrolls Trainees into Batches"| Trainee
+    Instructor -->|"Supervises Sessions & Reviews Performance"| Trainee
+
+    subgraph VolumeGovernance["Volume Governance Workflow"]
+        InstructorUpload["Instructor Uploads Volume"] -->|"status: pending"| InstApproval{"Institution Admin Approval"}
+        InstApproval -->|"Approved"| ReadyConvert["Ready for Conversion"]
+        InstApproval -->|"Rejected"| RejectVolume["Rejected / Archived"]
+        AdminUpload["Admin / Super Admin Upload"] -->|"status: approved (Auto)"| ReadyConvert
+    end
+```
+
+---
+
+## 3. Authentication, Device Detection & Session Flow
+
+The platform secures user data using blind-index lookups with PII encryption (`user_email_enc`, `user_name_enc`), detects client device types (Normal Browser vs VR Headset), maintains active server-side sessions, and issues signed JWT access and refresh tokens.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Trainee / Instructor / Admin
+    participant Client as Client App (Web / VR)
+    participant Middleware as Device & Tracking Middleware
+    participant AuthRouter as Auth Controller (/login)
+    participant DB as PostgreSQL (user_data)
+    participant SessionStore as Session Store & Crypto
+
+    User->>Client: Enter Email & Password
+    Client->>Middleware: POST /api/v1/login (with Headers & Body)
+    Middleware->>Middleware: Detect Device (Headers / User-Agent: VR vs Browser)
+    Middleware->>AuthRouter: Forward Request + deviceInfo
+    AuthRouter->>AuthRouter: Normalize Email & Compute blind index (emailLookup)
+    AuthRouter->>DB: SELECT user_email_enc, user_name_enc, user_password, user_role, status WHERE user_email_lookup = $1
+    DB-->>AuthRouter: Return Encrypted User Row
+    
+    alt User not found or Inactive
+        AuthRouter-->>Client: 404 Not Found / Account Disabled
+    else User Found
+        AuthRouter->>AuthRouter: Compare Passwords (bcrypt / argon2)
+        alt Password Mismatch
+            AuthRouter-->>Client: 401 Invalid Password
+        else Password Valid
+            AuthRouter->>SessionStore: Decrypt PII (decryptPii for email & name)
+            AuthRouter->>SessionStore: createSession(user, deviceInfo, ip)
+            SessionStore->>DB: INSERT INTO user_sessions (session_id, user_email, device, login_source)
+            AuthRouter->>AuthRouter: Generate JWT accessToken & refreshToken (includes sid, role, isVR)
+            AuthRouter->>DB: Log Login Attempt (LoginAttemptModel)
+            AuthRouter-->>Client: 200 OK + Tokens + User Profile + HttpOnly Cookie
+        end
+    end
+```
+
+---
+
+## 4. Academic & Curriculum Management Lifecycle
+
+Curriculum administrators define learning structures that map from certifications down to interactive and simulation exercises.
+
+```mermaid
+flowchart TD
+    subgraph AcademicHierarchy["Curriculum Hierarchy"]
+        Curriculum["Curriculum (e.g. Basic Fetal Ultrasound Biometry)"]
+        Course["Course (e.g. Second Trimester Biometry Certification)"]
+        Chapter["Chapter (e.g. Standard Biometry Planes)"]
+        Module["Module (e.g. BPD & HC / AC / FL)"]
+        Resource["Resource / Activity Types"]
+    end
+
+    Curriculum --> Course
+    Course --> Chapter
+    Chapter --> Module
+    Module --> Resource
+
+    subgraph ResourceTypes["Resource Types Breakdown"]
+        Resource --> Didactic["Theory & Video Guides (Medica)"]
+        Resource --> MindSpark["MindSpark Interactive Modules (MCQ, Matching, Crossword)"]
+        Resource --> OBBooster["OB Booster Interactive Exercises"]
+        Resource --> PracticeVR["VR Practice Sessions (P1 Free Scan, P2 Guided Scan, P3 Plane Acquisition, P4 Measurement)"]
+        Resource --> TestVR["VR Test Sessions (T1 Test, T2 Test)"]
+    end
+
+    subgraph CohortAllocation["Batch & User Assignment"]
+        Batch["Batch Creation (e.g. Batch Fall 2026)"]
+        Batch --> Course
+        Batch --> AssignInstructor["Assign Instructors (Role 102)"]
+        Batch --> AssignTrainees["Assign Trainees (Role 103)"]
+    end
+```
+
+---
+
+## 5. 3D Ultrasound Volume & Recording Pipeline
+
+Project ANU utilizes real clinical 3D ultrasound volumes (GE Kretz `.vol`). These files undergo a multi-stage validation, approval, Python volumetric conversion, and calibration process before being mapped into VR training sessions.
+
+```mermaid
+flowchart TD
+    StartUpload([1. Instructor / Admin Uploads .vol File]) --> UploadEndpoint["POST /api/v1/sv-upload<br/>(Multipart Form: file, GA, Trimester, Presentation)"]
+    UploadEndpoint --> StoreRaw["Store in Supabase/S3 Storage: volumes/{filename}"]
+    
+    StoreRaw --> RoleCheck{"Uploader Role?"}
+    RoleCheck -->|"Role 99 / 101 (Admin)"| AutoApprove["Auto-Approve (status: true)"]
+    RoleCheck -->|"Role 102 (Instructor)"| PendingApprove["Status: Pending Review (status: false)"]
+    
+    PendingApprove --> ReviewStep["PATCH /api/v1/approve-volume/:status/:volume_id"]
+    ReviewStep --> ApprovalCheck{"Institution Admin Approval?"}
+    ApprovalCheck -->|"Approved"| AutoApprove
+    ApprovalCheck -->|"Rejected"| RejectedEnd([Volume Rejected])
+
+    AutoApprove --> ConvertTrigger["2. Trigger Conversion: PUT /api/v1/convert-vol/:volume_id"]
+    ConvertTrigger --> PyWorker["3. Python Vol-Conversion Worker<br/>(ConvertVolToNifti.py)"]
+    
+    subgraph PyConversionEngine["Python Conversion Process"]
+        ReadVol["Parse GE Kretz Ultrasound Volume Header"] --> ExtractVoxel["Extract 3D Cartesian Voxel Array"]
+        ExtractVoxel --> Resample["Voxel Resampling & Coordinate Transformation"]
+        Resample --> WriteNii["Write NIfTI File (.nii / compressed .nii.gz)"]
+    end
+    
+    PyWorker --> PyConversionEngine
+    PyConversionEngine --> UploadNii["Upload NIfTI to Object Storage"]
+    UploadNii --> UpdateDB["Update DB: conversion_status = 'completed'"]
+
+    UpdateDB --> PlacementUpload["4. Volume Placement Calibration<br/>POST /api/v1/volume-placement (JSON Coordinate Space)"]
+    PlacementUpload --> RecordingUpload["5. Expert Reference Upload<br/>POST /api/v1/uploadvolumerecording"]
+    
+    subgraph ExpertRecordings["Reference Assets"]
+        ShadowRec["Shadow Recording (Expert Probe Trajectory & Plane Sweep)"]
+        StepRec["Step Recording (Key Guidance Waypoints & Audio Prompts)"]
+    end
+    RecordingUpload --> ExpertRecordings
+
+    ExpertRecordings --> CourseMapping["6. Course Mapping Form<br/>POST /api/v1/course-mappings"]
+    CourseMapping --> MappingTuple["Link Volume + Trimester + Module + Unit (BPD/HC, AC, FL) + Course Type (P1-P4, T1-T2)"]
+    MappingTuple --> ReadyForSimulation([Simulation Scenario Ready for VR Trainees])
+```
+
+---
+
+## 6. Trainee Learning & Hands-On Simulation Journey
+
+The trainee's pedagogical path bridges interactive theory with hands-on VR ultrasound simulation.
+
+```mermaid
+flowchart TD
+    TraineeLogin([Trainee Logs in to Platform]) --> ViewDashboard["View Trainee Dashboard & Assigned Batch Modules"]
+    ViewDashboard --> SelectModule{"Choose Learning Activity"}
+
+    subgraph DidacticFlow["Mode A: Didactic & MindSpark Learning"]
+        SelectModule --> MindSparkAct["Launch MindSpark Activity"]
+        MindSparkAct --> ActivityTypeSelection{"Activity Type"}
+        ActivityTypeSelection -->|"TYPE1"| MCQ["Multiple Choice Question"]
+        ActivityTypeSelection -->|"MATCHING"| Matching["Anatomy Matching Pairs"]
+        ActivityTypeSelection -->|"CROSSWORD"| Crossword["Ultrasound Terminology Crossword"]
+        ActivityTypeSelection -->|"WORDSEARCH"| WordSearch["Anatomical Word Search"]
+        ActivityTypeSelection -->|"PROBEMOVEMENTS"| ProbeMovements["Probe Motion Recognition (Pitch/Roll/Yaw)"]
+
+        MCQ --> SubmitMSOB["POST /api/v1/submit-msob"]
+        Matching --> SubmitMSOB
+        Crossword --> SubmitMSOB
+        WordSearch --> SubmitMSOB
+        ProbeMovements --> SubmitMSOB
+        SubmitMSOB --> RecordMSOB["Record Answer, Timing & Session Score"]
+    end
+
+    subgraph VRSimulationFlow["Mode B: Hands-On VR Ultrasound Simulation"]
+        SelectModule --> LaunchVR["Launch VR Simulator Headset / App"]
+        LaunchVR --> StartVRTest["POST /api/v1/iivr-start-test (Create Test Session)"]
+        StartVRTest --> LoadVol["Fetch 3D NIfTI Volume & Placement Coordinates"]
+        LoadVol --> ProbeTracking["Trainee Manipulates Physical/Virtual Probe"]
+        
+        subgraph UltrasoundTaskStages["Simulation Tasks (e.g. BPD & HC, AC, FL)"]
+            Task1["1. Plane Acquisition: Scan & Sweep Volume"]
+            Task1 --> Task2["2. Freeze The Plane: Capture Standard Transventricular / Abdominal Plane"]
+            Task2 --> Task3["3. Drag & Drop Landmark Annotation (Falx, Thalamus, Stomach Bubble, etc.)"]
+            Task3 --> Task4["4. Landmark Labelling & Anatomical Verification"]
+            Task4 --> Task5["5. Caliper Placement & Biometric Measurement (mm)"]
+        end
+
+        ProbeTracking --> UltrasoundTaskStages
+        
+        UltrasoundTaskStages --> SubmitIIVR["POST /api/v1/iivr (Submit Task Results)"]
+        SubmitIIVR --> SubTypeCheck{"Submission Task Type"}
+        SubTypeCheck -->|"type1 / type2"| SubImage["Save Plane Image Interpretation"]
+        SubTypeCheck -->|"annotation1 / annotation2"| SubAnnot["Save Correct, Wrong & Unused Label Counts"]
+        SubTypeCheck -->|"measurement"| SubMeasure["Save Measurement Value, Partial Score (0, 0.5, 1) & Offset"]
+
+        SubImage --> EndVRTest["POST /api/v1/iivr-end-test"]
+        SubAnnot --> EndVRTest
+        SubMeasure --> EndVRTest
+    end
+
+    RecordMSOB --> ProgressUpdate["Update Learning Progress & Trigger Analytics Engine"]
+    EndVRTest --> ProgressUpdate
+    ProgressUpdate --> RefreshDashboard([Updated Competency & Action Recommendations])
+```
+
+---
+
+## 7. Live Tele-Mentoring & Streaming Workflow (AWS IVS)
+
+When a trainee is conducting an ultrasound scan in the VR headset, an instructor can join in real-time to watch the plane acquisition sweep, probe orientation, and provide tele-mentoring guidance.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Trainee as Trainee (VR Headset)
+    participant Server as Express Backend (streamingService.js)
+    participant AWS_IVS as AWS IVS Real-Time (Stages)
+    actor Instructor as Instructor (Web Dashboard)
+
+    Trainee->>Server: POST /api/v1/streaming/sessions (Start Session, Role: Trainee)
+    Server->>AWS_IVS: CreateStageCommand(StageName)
+    AWS_IVS-->>Server: Return Stage ARN
+    Server->>AWS_IVS: CreateParticipantTokenCommand (Publisher Capabilities)
+    AWS_IVS-->>Server: Return Publisher Token
+    Server-->>Trainee: Return Stage ARN + Publisher Token
+
+    Trainee->>AWS_IVS: Join Stage as WebRTC Publisher (Ultrasound Video Stream)
+
+    Instructor->>Server: GET /api/v1/streaming/sessions/active (List Active Sessions)
+    Server-->>Instructor: Active Trainee Sessions in Instructor's Batch
+    Instructor->>Server: POST /api/v1/streaming/sessions/:id/join (Role: Instructor)
+    Server->>AWS_IVS: CreateParticipantTokenCommand (Viewer / Subscriber Capabilities)
+    AWS_IVS-->>Server: Return Viewer Token
+    Server-->>Instructor: Return Viewer Token
+
+    Instructor->>AWS_IVS: Join Stage as Viewer (Receive Ultrasound Video Stream)
+    Note over Trainee,Instructor: Live Realtime Ultrasound Feed & Tele-Mentoring Guidance
+
+    Trainee->>Server: DELETE /api/v1/streaming/sessions/:id (End Scan)
+    Server->>AWS_IVS: DeleteStageCommand
+    Server-->>Trainee: Session Ended
+    Server-->>Instructor: Notification: Stream Closed
+```
+
+---
+
+## 8. Evaluation, Analytics & "Action Engine" Flow
+
+The platform's analytics architecture follows a three-tier design philosophy:
+1. **Top → Insight** (Current state & readiness score)
+2. **Middle → Diagnosis** (Competency breakdown, error rate, benchmark gap)
+3. **Bottom → Action** (Prescribed remediation, abnormal cases, guided practice)
+
+```mermaid
+flowchart TD
+    RawData[("Raw Telemetry & Attempt Data<br/>test_attempts_logs, sessions, iivr_submissions")] --> AnalyticsEngine["Analytics Engine (AnalyticsModel.js)"]
+
+    subgraph MetricsComputation["Metric Aggregation & Computation"]
+        AnalyticsEngine --> CalcStreak["Practice Streak & Total Training Hours"]
+        AnalyticsEngine --> CalcAccuracy["Accuracy Trend (Across Attempts 1..N)"]
+        AnalyticsEngine --> CalcProbe["Probe Stability & Handling Benchmark Gap"]
+        AnalyticsEngine --> CalcPlane["Plane Acquisition Accuracy (% Correct Planes)"]
+        AnalyticsEngine --> CalcBiometry["Measurement Error Offset (Delta in mm vs Ground Truth)"]
+        AnalyticsEngine --> CalcReattempts["Reattempt Count (P3, P4, T1, T2)"]
+    end
+
+    subgraph BenchmarkingCohort["Cohort & Expert Benchmarking"]
+        CalcAccuracy --> CohortComp["Compare with Batch / Cohort Average"]
+        CalcProbe --> ExpertComp["Compare with Expert Gold Benchmark (e.g. 90%)"]
+        CalcBiometry --> PercentileRank["Compute Percentile Rank (e.g. Top 35%)"]
+    end
+
+    subgraph DashboardEngine["Trainee Dashboard Display Structure"]
+        TopLevel["TOP LAYER: Immediate Insights<br/>- Overall Readiness Score (e.g. 74%)<br/>- Cohort Rank (e.g. Top 32%)<br/>- Weekly Progress (+6%)<br/>- Total Hours (e.g. 12h)"]
+        
+        MidLevel["MIDDLE LAYER: Diagnostic Breakdown<br/>- Skill Competencies: Probe Handling (🟡), Plane Acquisition (🟢), Biometry (🟡), Anatomy (🔴)<br/>- Accuracy vs Time Curve (4.2 min/task)<br/>- Error Rate (18%)<br/>- Last Session Offset (+2.3 mm)"]
+        
+        BottomLevel["BOTTOM LAYER: Prescriptive Action Engine<br/>- Identified Skill Gaps (e.g. Anatomy Identification @ 52%)<br/>- Recommended Action: Repeat Module 2 + Practice 3 Abnormal Cases<br/>- Probe Adjustment Cue: 'Adjust probe tilt slightly inferiorly'"]
+    end
+
+    CohortComp --> TopLevel
+    ExpertComp --> MidLevel
+    PercentileRank --> MidLevel
+    MidLevel --> BottomLevel
+```
+
+---
+
+## 9. Database Entity Relationship & Data Flow
+
+Below is the relational mapping of the core PostgreSQL entities driving Project ANU:
+
+```mermaid
+erDiagram
+    USER_DATA ||--o{ USER_SESSIONS : "opens"
+    USER_DATA ||--o{ ACTIVITY_LOGS : "generates"
+    USER_DATA ||--o{ BATCH_ENROLLMENTS : "belongs to"
+    
+    BATCHES ||--o{ BATCH_ENROLLMENTS : "contains"
+    BATCHES ||--o{ COURSE_MAPPINGS : "associates"
+    
+    CURRICULUM ||--o{ COURSES : "comprises"
+    COURSES ||--o{ CHAPTERS : "divided into"
+    CHAPTERS ||--o{ MODULES : "contains"
+    MODULES ||--o{ RESOURCES : "provides"
+    
+    RESOURCES ||--o{ MIND_SPARK_QUESTIONS : "has questions"
+    RESOURCES ||--o{ PROGRESS_DATA : "tracks"
+    
+    VOLUMES ||--o{ VOLUME_PLACEMENTS : "calibrated by"
+    VOLUMES ||--o{ VOLUME_RECORDINGS : "recorded with"
+    VOLUMES ||--o{ COURSE_MAPPINGS : "mapped to"
+    
+    USER_DATA ||--o{ TEST_SESSIONS : "initiates"
+    TEST_SESSIONS ||--o{ IIVR_SUBMISSIONS : "records"
+    TEST_SESSIONS ||--o{ TEST_ATTEMPTS_LOGS : "logs"
+
+    USER_DATA {
+        uuid people_id PK
+        string user_email_lookup Index
+        string user_email_enc
+        string user_name_enc
+        string user_role "99, 101, 102, 103"
+        uuid centre_id FK
+        string status "active, disabled"
+    }
+
+    VOLUMES {
+        uuid volume_id PK
+        string volume_name
+        string volume_type
+        string volume_ga
+        string trimester
+        boolean status "approved / pending"
+        string conversion_status "pending, completed"
+        string storage_path
+    }
+
+    COURSE_MAPPINGS {
+        uuid mapping_id PK
+        uuid volume_id FK
+        string trimester
+        string module
+        string unit "BPD & HC, AC, FL"
+        string course_type "p1, p2, p3, p4, t1, t2"
+        uuid shadow_recording_id FK
+        uuid step_recording_id FK
+    }
+
+    IIVR_SUBMISSIONS {
+        uuid submission_id PK
+        uuid session_id FK
+        uuid resource_id FK
+        string question_type "type1, type2, annotation1, annotation2, measurement"
+        integer question_no
+        boolean is_correct
+        decimal partial_score "0, 0.5, 1.0"
+        decimal measured_value
+        string image_url
+    }
+```
+
+---
+
+## Summary of Key Endpoints & Modules
+
+| Module / Area | Key Routes | Description |
+| :--- | :--- | :--- |
+| **Authentication** | `POST /api/v1/login`<br/>`POST /api/v1/refreshToken`<br/>`POST /api/v1/sessions` | Multi-device auth with PII decryption & blind lookup |
+| **Volumetric Pipeline** | `POST /api/v1/sv-upload`<br/>`PUT /api/v1/convert-vol/:id`<br/>`POST /api/v1/volume-placement` | Raw 3D volume upload, approval, NIfTI conversion & calibration |
+| **Recordings & Mapping** | `POST /api/v1/uploadvolumerecording`<br/>`POST /api/v1/course-mappings` | Expert trajectory recording upload & curriculum association |
+| **Didactic (MindSpark)** | `POST /api/v1/submit-msob`<br/>`GET /api/v1/mindspark-questions` | Interactive didactic Q&A (MCQ, Matching, Crossword, etc.) |
+| **VR Ultrasound (IIVR)**| `POST /api/v1/iivr-start-test`<br/>`POST /api/v1/iivr`<br/>`POST /api/v1/iivr-end-test` | Hands-on plane freeze, annotation, caliper biometry measurement |
+| **Live Tele-Mentoring** | `POST /api/v1/streaming/sessions`<br/>`POST /api/v1/streaming/sessions/:id/join` | WebRTC ultrasound stream sharing between Trainee and Instructor |
+| **Analytics Engine** | `GET /api/v1/user-stats`<br/>`GET /api/v1/skill-competency`<br/>`GET /api/v1/performance-metrics` | Multi-tier reporting: Accuracy, Probe Stability, Benchmarks |
