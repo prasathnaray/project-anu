@@ -36,7 +36,7 @@ require.cache[storeModule] = {
 
 process.env.ACCESS_TOKEN_SECRET = 'session-test-access-secret';
 process.env.REFRESH_TOKEN_SECRET = 'session-test-refresh-secret';
-const Authenticate = require('../Auth/Authenticate');
+const Authenticate = require('../Auth/authenticate');
 const refreshToken = require('../Auth/refreshToken');
 const payload = { user_mail: 'tutor@example.com', role: '102', sid: 'session-one' };
 const response = () => ({

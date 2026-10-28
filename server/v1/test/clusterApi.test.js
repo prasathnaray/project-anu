@@ -28,7 +28,7 @@ const {
     getClusterByIdModel,
     getClusterRecordingsModel,
     getClusterRecordingCountsModel
-} = require('../model/ClusterModel');
+} = require('../model/clusterModel');
 
 test('role 101 can read institution-scoped clusters', async () => {
     queries.length = 0;
