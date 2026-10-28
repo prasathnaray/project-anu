@@ -109,7 +109,7 @@ const challengeRouter = require('./routes/challengeRoute.js');
 //questions
 const questionsRouter = require('./routes/questionsRoute.js');
 //Auth middleware
-const Authenticate = require('./Auth/Authenticate');
+const Authenticate = require('./Auth/authenticate.js');
 const deviceMiddleware = require('./utils/deviceMiddleware');
 //enabling cors
 const cors = require('cors');
