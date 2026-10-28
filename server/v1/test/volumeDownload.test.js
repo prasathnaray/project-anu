@@ -30,7 +30,7 @@ require.cache[storagePath] = {
 };
 
 const { getVolumeDownloadController, getVolumeRecordingDownloadListController,
-  getVolumeRecordingDownloadController, getRecordingsController } = require('../controller/VolumeController');
+  getVolumeRecordingDownloadController, getRecordingsController } = require('../controller/volumeController');
 const volumeId = 'c66caf93-83f7-47b9-8edb-2f6ca6f17b9b';
 const recordingId = '8df34342-521f-4cbc-ab4d-5406e1b603cc';
 const response = () => ({

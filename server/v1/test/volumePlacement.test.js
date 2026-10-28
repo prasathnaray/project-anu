@@ -50,7 +50,7 @@ require.cache[hydratePath] = {
     exports: { hydrateStorageFields: async (value) => value }
 };
 
-const { volumePlacementController } = require('../controller/VolumeController');
+const { volumePlacementController } = require('../controller/volumeController');
 
 const response = () => ({
     statusCode: null,
