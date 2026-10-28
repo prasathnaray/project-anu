@@ -1,4 +1,4 @@
-const contentAccess = require('../model/ContentAccessm');
+const contentAccess = require('../model/contentAccessm');
 const { HttpError } = require('../Auth/authorization');
 
 const sendError = (res, error) => {

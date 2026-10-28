@@ -227,7 +227,14 @@ function Cluster() {
 
   // Clusters use converted volumes independently from volume recordings.
   const convertedVolumes = useMemo(() => {
-    return volumes.filter((vol) => Boolean(vol.conversion_completion));
+    return volumes
+      .filter((vol) => Boolean(vol.conversion_completion))
+      .sort((a, b) =>
+        (a.volume_name || '').localeCompare(b.volume_name || '', undefined, {
+          sensitivity: 'base',
+          numeric: true,
+        })
+      );
   }, [volumes]);
 
   // Filtered clusters based on search

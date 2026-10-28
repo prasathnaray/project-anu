@@ -1,10 +1,10 @@
 const express = require('express');
 const volumeRecordingRouter = express.Router();
-const {volRecordingC, getRecordingsController} = require('../controller/VolumeController');
+const { volRecordingC, getRecordingsController } = require('../controller/volumeController');
 const multer = require('multer');
 
 // Configure multer for memory storage
-const upload = multer({ 
+const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
         fileSize: 50 * 1024 * 1024, // 50MB per file
@@ -16,7 +16,7 @@ volumeRecordingRouter.get('/recordings', getRecordingsController);
 
 // Route with multiple file upload middleware
 // Both recording types accept repeated recording/audio/image files and one manifest.
-volumeRecordingRouter.post('/uploadvolumerecording', 
+volumeRecordingRouter.post('/uploadvolumerecording',
     upload.fields([
         { name: 'recording_file', maxCount: 20 },
         { name: 'audio_file', maxCount: 20 },

@@ -11,7 +11,7 @@ const {
     createClusterController,
     updateClusterController,
     deleteClusterController
-} = require('../controller/ClusterController');
+} = require('../controller/clusterController');
 
 const clusterRouter = express.Router();
 

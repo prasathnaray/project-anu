@@ -1,5 +1,5 @@
 const express = require('express');
-const {getLearningByIdController} = require('../controller/LearningController.js');
+const { getLearningByIdController } = require('../controller/learningController.js');
 const GetLearningModuleByIdRouter = express.Router();
 GetLearningModuleByIdRouter.get('/get-lmid/:certificate_id', getLearningByIdController)
-module.exports =  GetLearningModuleByIdRouter;
+module.exports = GetLearningModuleByIdRouter;

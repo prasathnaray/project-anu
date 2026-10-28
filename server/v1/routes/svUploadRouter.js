@@ -1,5 +1,5 @@
 const express = require('express');
-const {VolumeController, updateVolumeC} = require('../controller/VolumeController')
+const { VolumeController, updateVolumeC } = require('../controller/volumeController')
 const multer = require('multer');
 
 const path = require('path');

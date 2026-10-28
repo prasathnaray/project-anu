@@ -1,5 +1,5 @@
 const express = require('express');
-const {getVolumeInstructorViewController, getVolumeDownloadController, getVolumeRecordingDownloadListController, getVolumeRecordingDownloadController} = require('../controller/VolumeController');
+const { getVolumeInstructorViewController, getVolumeDownloadController, getVolumeRecordingDownloadListController, getVolumeRecordingDownloadController } = require('../controller/volumeController');
 const getVolumeByInstructorRouter = express.Router();
 getVolumeByInstructorRouter.get('/get-volumes-by-instructor', getVolumeInstructorViewController);
 getVolumeByInstructorRouter.get('/volumes/:volume_id/download', getVolumeDownloadController);

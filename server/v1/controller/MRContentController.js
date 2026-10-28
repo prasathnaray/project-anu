@@ -1,5 +1,5 @@
 const model = require('../model/MRContentm');
-const { sendError } = require('./ContentAccessController');
+const { sendError } = require('./contentAccessController');
 
 const handle = (operation, status = 200) => async (req, res) => {
     try {

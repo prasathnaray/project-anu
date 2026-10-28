@@ -4,12 +4,12 @@ const {
     createCourse,
     listCourses,
     setPublication
-} = require('./ContentAccessm');
+} = require('./contentAccessm.js');
 
 const coursem = (requester) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = [101].includes(Number(requester.role));
-        if(!isPrivileged) {
+        if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -17,10 +17,10 @@ const coursem = (requester) => {
             });
         }
         client.query('SELECT * FROM course_data WHERE course_email=$1', [requester.user_mail], (err, result) => {
-            if(err) {
+            if (err) {
                 return reject(err);
             }
-            if(result.rows.length === 0) {
+            if (result.rows.length === 0) {
                 return resolve({
                     status: 'Course Not Found',
                     code: 404,
@@ -51,21 +51,18 @@ const getCoursem = async (requester) => ({
 const getCoursesByCurm = (curiculum_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99, 101].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
+        if (!isPriviledged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
                 message: "You don't have a persmission"
             })
         }
-        client.query('SELECT * FROM course_data WHERE curiculum_id=$1',[curiculum_id], (err, result) => {
-            if(err)
-            {
+        client.query('SELECT * FROM course_data WHERE curiculum_id=$1', [curiculum_id], (err, result) => {
+            if (err) {
                 return reject(err)
             }
-            else
-            {
+            else {
                 return resolve(result)
             }
         })
@@ -76,11 +73,10 @@ const deleteCoursem = async (course_id, requester) => {
     return { rowCount: 1 };
 };
 
-const tagCoursem = async(user_id, certificate_id, requester) => {
+const tagCoursem = async (user_id, certificate_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [99].includes(Number(requester.role));
-        if(!isPriviledged)
-        {
+        if (!isPriviledged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -88,19 +84,18 @@ const tagCoursem = async(user_id, certificate_id, requester) => {
             })
         }
         resolve(supabase
-        .from('course_availability')
-        .insert({
-            user_id: user_id,
-            certificate_id: certificate_id,
-        })
-    )
+            .from('course_availability')
+            .insert({
+                user_id: user_id,
+                certificate_id: certificate_id,
+            })
+        )
     })
 }
-const requestCoursem = async(course_id, requester) => {
+const requestCoursem = async (course_id, requester) => {
     return new Promise((resolve, reject) => {
         const isPriviledged = [101, 99].includes(Number(requester.role))
-        if(!isPriviledged)
-        {
+        if (!isPriviledged) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -117,4 +112,4 @@ const requestCoursem = async(course_id, requester) => {
         )
     })
 }
-module.exports = {coursem, createCertificatem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem, requestCoursem};
+module.exports = { coursem, createCertificatem, getCoursem, getCoursesByCurm, deleteCoursem, tagCoursem, requestCoursem };

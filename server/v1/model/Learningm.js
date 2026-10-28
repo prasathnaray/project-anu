@@ -1,5 +1,5 @@
 const client = require('../utils/conn');
-const { assertCourseReadable, getCourseById } = require('./ContentAccessm');
+const { assertCourseReadable, getCourseById } = require('./contentAccessm');
 const { canEditOwnedEntity, HttpError } = require('../Auth/authorization');
 const Learningm = async (certificate_id, course_name, module_name, unit_name, requester) => {
     const course = await getCourseById(client, certificate_id);
@@ -15,7 +15,7 @@ const Learningm = async (certificate_id, course_name, module_name, unit_name, re
 const getLearningByidm = async (certificate_id, requester) => {
     try {
         await assertCourseReadable(requester, certificate_id);
-    } catch (_) {}
+    } catch (_) { }
     let result = await client.query('SELECT * FROM learning_module WHERE certificate_id::text = $1::text ORDER BY created_at ASC', [certificate_id]);
     if (result.rows.length === 0) {
         result = await client.query(
@@ -97,4 +97,4 @@ const getResourceBylmandrt = async (requester, r_type, learning_module_id) => {
     );
     return result.rows;
 };
-module.exports = {Learningm, getLearningByidm, getResourceBylmandrt};
+module.exports = { Learningm, getLearningByidm, getResourceBylmandrt };

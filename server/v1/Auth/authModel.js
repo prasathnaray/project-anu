@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const { comparePasswords } = require('../utils/hash');
 const { normalizeEmail, emailLookup, decryptPii } = require('../utils/userEmailCrypto');
 const path = require('path');
-const LoginAttemptModel = require('./LoginAttemptModel');
+const LoginAttemptModel = require('./loginAttemptModel');
 const { createSession } = require('./sessionStore');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 

@@ -12,7 +12,7 @@ const {
     getCourseById,
     assertCourseEligibleForCentre,
     audit
-} = require('./ContentAccessm');
+} = require('./contentAccessm');
 const { signPrivateAsset, signPrivateAssets, signedUrlTtlSeconds } = require('../utils/privateAssetUrls');
 const { canManageVolume, volumeAccessScope } = require('../Auth/volumeAuthorization');
 

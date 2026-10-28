@@ -2,7 +2,7 @@ const client = require('../utils/conn');
 const { HashPassword } = require('../utils/hash');
 const { encryptedUserFields } = require('../utils/userEmailCrypto');
 const { ROLES, HttpError, requireRole } = require('../Auth/authorization');
-const { audit } = require('./ContentAccessm');
+const { audit } = require('./contentAccessm');
 const { validPhoneNumber } = require('../utils/accountVerification');
 
 const temporaryPassword = () => {
@@ -36,7 +36,7 @@ const createSuperAdmin = async (requester, input) => {
          VALUES ($1, $2, $3, $4, '99', 'pending_verification', NULL, NULL, true, $5, $6, $7, $8)
          RETURNING user_email, user_name, user_contact_num, user_role, status, created_at`,
         [email, input.user_name.trim(), input.user_contact_num || null, hashed,
-         pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc]
+            pii.user_email_lookup, pii.user_email_enc, pii.user_name_enc, pii.user_contact_num_enc]
     );
     await audit(client, requester, 'super_admin.created', 'user', email);
     return { user: result.rows[0], temporaryPassword: password };

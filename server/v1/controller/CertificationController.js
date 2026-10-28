@@ -1,4 +1,4 @@
-const {getCertByCurm, getCertDetailsByIdm} = require("../model/Certificationm.js");
+const {getCertByCurm, getCertDetailsByIdm} = require("../model/certificationm.js");
 const getCertificationByCurController = async(req, res) => {
     const requester = req.user;
     const curiculum_id = req.params.curiculum_id

@@ -1,4 +1,4 @@
-const { Learningm, getLearningByidm, getResourceBylmandrt } = require("../model/Learningm");
+const { Learningm, getLearningByidm, getResourceBylmandrt } = require("../model/learningm");
 
 const createLearningController = async (req, res) => {
     const requester = req.user;

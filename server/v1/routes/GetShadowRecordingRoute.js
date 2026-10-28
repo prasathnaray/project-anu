@@ -1,5 +1,5 @@
 const express = require('express');
-const {shadowRecordingDataController, volumeRecordingCountsController} = require('../controller/VolumeController.js');
+const { shadowRecordingDataController, volumeRecordingCountsController } = require('../controller/volumeController.js');
 const GetShadowRecordingRouter = express.Router();
 GetShadowRecordingRouter.get('/shadow-recordings', shadowRecordingDataController);
 GetShadowRecordingRouter.get('/shadow-recording-counts', volumeRecordingCountsController);

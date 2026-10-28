@@ -7,7 +7,7 @@ const {
     createClusterModel,
     updateClusterModel,
     deleteClusterModel
-} = require('../model/ClusterModel');
+} = require('../model/clusterModel');
 const { signAsset, uploadAsset } = require('../utils/storageAdapter');
 const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
 const path = require('path');
@@ -173,7 +173,7 @@ const deleteClusterController = async (req, res) => {
     }
 };
 
-const { volRecordingC } = require('./VolumeController');
+const { volRecordingC } = require('./volumeController');
 const client = require('../utils/conn');
 
 const uploadClusterRecordingController = async (req, res) => {
@@ -190,7 +190,7 @@ const uploadClusterRecordingController = async (req, res) => {
         }
 
         const originalJson = res.json.bind(res);
-        res.json = async function(body) {
+        res.json = async function (body) {
             try {
                 const recId = body?.data?.data?.recording_id || body?.data?.recording_id || body?.recording_id;
                 if (clusterId && recId) {

@@ -1,5 +1,5 @@
-const model = require('../model/SuperAdminm');
-const { sendError } = require('./ContentAccessController');
+const model = require('../model/superAdminm');
+const { sendError } = require('./contentAccessController');
 const { issueAccountVerificationOtp } = require('../utils/accountVerification');
 const {
     getActivityStatistics,
