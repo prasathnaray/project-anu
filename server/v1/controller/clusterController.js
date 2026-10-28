@@ -70,7 +70,15 @@ const getClusterRecordingsController = async (req, res) => {
         if (!clusterId || typeof clusterId !== 'string' || !clusterId.trim()) {
             return res.status(400).json({ code: 400, status: 'Error', message: 'cluster_id is required.' });
         }
-        const result = await getClusterRecordingsModel(req.user, clusterId.trim());
+        const recordingType = req.params.recording_type || req.query.recording_type;
+        if (recordingType && !['shadow', 'step'].includes(String(recordingType).trim().toLowerCase())) {
+            return res.status(400).json({ code: 400, status: 'Error', message: 'recording_type must be shadow or step.' });
+        }
+        const result = await getClusterRecordingsModel(
+            req.user,
+            clusterId.trim(),
+            recordingType ? String(recordingType).trim().toLowerCase() : null
+        );
         if (result.code !== 200) {
             return sendResult(res, result, result.code === 404);
         }
@@ -90,7 +98,8 @@ const getClusterRecordingsController = async (req, res) => {
 
 const getClusterRecordingCountsController = async (req, res) => {
     try {
-        const result = await getClusterRecordingCountsModel(req.user);
+        const clusterId = req.params.cluster_id || req.query.cluster_id || null;
+        const result = await getClusterRecordingCountsModel(req.user, clusterId);
         if (result.code !== 200) {
             return sendResult(res, result);
         }

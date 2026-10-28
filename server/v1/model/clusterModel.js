@@ -204,7 +204,7 @@ const getClusterByIdModel = async (requester, clusterId) => {
     return { code: 200, data: result.rows[0] };
 };
 
-const getClusterRecordingsModel = async (requester, clusterId) => {
+const getClusterRecordingsModel = async (requester, clusterId, recordingType = null) => {
     const scope = clusterReadScope(requester, 'c', 2);
     if (!scope) return { code: 403, message: 'Only Institution Admins can view cluster recordings.' };
     await ensureClusterTables(requester);
@@ -222,13 +222,16 @@ const getClusterRecordingsModel = async (requester, clusterId) => {
         JOIN public.clusters c ON c.cluster_id = cr.cluster_id
         LEFT JOIN public.volumes v ON v.volume_id = vr.volume_id
         WHERE c.cluster_id = $1 AND ${scope.clause}
+          ${recordingType ? `AND LOWER(TRIM(vr.recording_type)) LIKE $${scope.params.length + 2}` : ''}
         ORDER BY vr.created_at DESC NULLS LAST, vr.recording_id;
     `;
-    const result = await client.query(query, [clusterId, ...scope.params]);
+    const params = [clusterId, ...scope.params];
+    if (recordingType) params.push(`${recordingType}%`);
+    const result = await client.query(query, params);
     return { code: 200, data: result.rows };
 };
 
-const getClusterRecordingCountsModel = async (requester) => {
+const getClusterRecordingCountsModel = async (requester, clusterId = null) => {
     const scope = clusterReadScope(requester, 'c', 1);
     if (!scope) return { code: 403, message: 'Only Institution Admins can view cluster recording counts.' };
     await ensureClusterTables(requester);
@@ -266,10 +269,12 @@ const getClusterRecordingCountsModel = async (requester) => {
         ) AS step_images(image_url)
             ON LOWER(TRIM(vr.recording_type)) LIKE '%step%'
         WHERE ${scope.clause}
+          ${clusterId ? `AND c.cluster_id = $${scope.params.length + 1}` : ''}
         GROUP BY c.cluster_id, c.cluster_name, c.created_at
         ORDER BY c.created_at DESC;
     `;
-    const result = await client.query(query, scope.params);
+    const params = clusterId ? [...scope.params, clusterId] : scope.params;
+    const result = await client.query(query, params);
     return { code: 200, data: result.rows };
 };
 

@@ -34,6 +34,15 @@ clusterRouter.get('/cluster-recording-counts', getClusterRecordingCountsControll
 clusterRouter.get('/clusters/recordings', getClusterRecordingsController);
 clusterRouter.get('/cluster-recordings', getClusterRecordingsController);
 clusterRouter.get('/clusters/:cluster_id/recordings', getClusterRecordingsController);
+clusterRouter.get('/clusters/:cluster_id/shadow-recordings', (req, res) => {
+    req.query.recording_type = 'shadow';
+    return getClusterRecordingsController(req, res);
+});
+clusterRouter.get('/clusters/:cluster_id/step-recordings', (req, res) => {
+    req.query.recording_type = 'step';
+    return getClusterRecordingsController(req, res);
+});
+clusterRouter.get('/clusters/:cluster_id/recording-counts', getClusterRecordingCountsController);
 clusterRouter.get('/clusters/:cluster_id/recordings/:recording_id/download', getClusterRecordingDownloadController);
 
 const recordingUploadFields = upload.fields([
