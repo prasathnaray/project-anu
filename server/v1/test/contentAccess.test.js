@@ -9,7 +9,7 @@ const mockClient = {
 const connectionPath = require.resolve('../utils/conn');
 require.cache[connectionPath] = { id: connectionPath, filename: connectionPath, loaded: true, exports: mockClient };
 
-const contentAccess = require('../model/ContentAccessm');
+const contentAccess = require('../model/contentAccessm');
 
 test('trainee catalog query enforces institution eligibility and assignment', async () => {
     let captured;
