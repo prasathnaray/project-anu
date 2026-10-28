@@ -9,13 +9,16 @@ const server = http.createServer(app);
 
 initSocket(server);
 
-server.listen(port, (err) => {
-    if (err) {
-        console.error(err);
-        process.exitCode = 1;
-        return;
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${port} is already in use. Please stop the process using this port.`);
+    } else {
+        console.error('Server error:', err);
     }
+    process.exit(1);
+});
 
+server.listen(port, () => {
     console.log(`Server v1 listening on port ${port}`);
     initActivityTable().catch((error) => {
         console.error('Activity table initialization failed:', error.message);
