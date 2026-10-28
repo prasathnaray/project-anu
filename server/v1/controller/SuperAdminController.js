@@ -1,4 +1,4 @@
-const model = require('../model/superAdminm');
+const model = require('../model/SuperAdminm');
 const { sendError } = require('./ContentAccessController');
 const { issueAccountVerificationOtp } = require('../utils/accountVerification');
 const {

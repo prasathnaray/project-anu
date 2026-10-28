@@ -1,0 +1,101 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Project ANU server v1 HTTP API
+
+Parameters:
+  RuntimeSecretId:
+    Type: String
+    Default: project-anu/server-v1
+  AllowedOrigins:
+    Type: CommaDelimitedList
+    Default: https://project-anu.hticlab.org,https://project-anu.vercel.app,http://localhost:3000
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Architectures:
+      - arm64
+    Timeout: 60
+    MemorySize: 2048
+    Environment:
+      Variables:
+        NODE_ENV: production
+        LAMBDA_SECRET_ID: !Ref RuntimeSecretId
+        STORAGE_PROVIDER: s3
+        STORAGE_READ_FALLBACK: supabase
+        AWS_S3_BUCKET: project-anu-content-299822065337-ap-south-1
+        BUCKET_NAME: projectanu
+        MINDSPARK_ASSET_BUCKET: question-images
+        VOL_CONVERSION_JOB_QUEUE: vol-conversion-queue
+        VOL_CONVERSION_JOB_DEFINITION: vol-conversion-job
+        REQUEST_BODY_LIMIT: 8mb
+        MAX_VOLUME_UPLOAD_SIZE_MB: 8
+
+Resources:
+  ServerV1Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: project-anu-server-v1
+      CodeUri: .
+      Handler: lambda.handler
+      Policies:
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${RuntimeSecretId}*
+        - Statement:
+            - Effect: Allow
+              Action: batch:SubmitJob
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:AbortMultipartUpload
+                - s3:ListBucket
+              Resource:
+                - arn:aws:s3:::project-anu-content-299822065337-ap-south-1
+                - arn:aws:s3:::project-anu-content-299822065337-ap-south-1/*
+            - Effect: Allow
+              Action:
+                - ivs:CreateStage
+                - ivs:DeleteStage
+                - ivs:CreateParticipantToken
+                - ivs:DisconnectParticipant
+                - ivs:StopParticipantReplication
+                - ivs:StartParticipantReplication
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - sns:Publish
+              Resource: '*'
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServerV1HttpApi
+            Path: /{proxy+}
+            Method: ANY
+        Root:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServerV1HttpApi
+            Path: /
+            Method: ANY
+
+  ServerV1HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins: !Ref AllowedOrigins
+        AllowHeaders:
+          - '*'
+        AllowMethods:
+          - '*'
+        AllowCredentials: false
+
+Outputs:
+  ApiUrl:
+    Description: Server v1 HTTP API URL
+    Value: !Sub https://${ServerV1HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}
+  FunctionName:
+    Value: !Ref ServerV1Function

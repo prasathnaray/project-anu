@@ -1,12 +1,9 @@
 const express = require('express');
-const http = require('http');
 const app = express();
 //cookies
 const cookieParser = require('cookie-parser');
 //db
 const client = require('./utils/conn');
-const { initSocket } = require('./services/socketService');
-const { initActivityTable } = require('./services/activityTrackingService');
 const activityTrackerMiddleware = require('./utils/activityTrackerMiddleware');
 const activityTrackerRouter = require('./routes/activityTrackerRoute');
 //Auth
@@ -123,24 +120,15 @@ const multer = require('multer');
 const CreateLearningModuleRouter = require('./routes/CreateLearningModuleRoute.js');
 const GetLearningModuleByIdRouter = require('./routes/GetLearningModuleByIdRoute.js');
 const upload = multer({ storage: multer.memoryStorage() });
-
+app.listen('4004', (req, res) => {
+    console.log('Server is running on port 4004');
+});
 app.use(cors({
     origin: ["http://10.42.249.230:3000", "http://10.42.248.23:3000",
         "http://localhost:3001", "https://project-anu.hticlab.org", "http://project-anu.hticlab.org",  "http://13.204.201.73", "http://13.205.207.179", "http://10.42.249.88:3000", "https://project-anu.vercel.app", "http://13.201.19.169:3000", "http://localhost:3000", "http://localhost:54458", "http://localhost:3001", "http://10.42.9.129:4004", "http://localhost:8083", "http://10.42.248.106:3000", "http://35.154.36.145"],
     credentials: true
 }));
 app.use(cookieParser());
-const server = http.createServer(app);
-initSocket(server);
-server.listen('4004', (err) => {
-    if (err) {
-        console.log(err);
-    }
-    else {
-        console.log(`Working `);
-        initActivityTable();
-    }
-});
 app.get('/health', (req, res) => {
     res.status(200).json({
         status: 'Healthy',
@@ -326,3 +314,5 @@ app.use((err, req, res, next) => {
     }
     return next(err);
 });
+
+module.exports = app;
