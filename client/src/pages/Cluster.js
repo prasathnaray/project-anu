@@ -788,14 +788,6 @@ function Cluster() {
                   }}
                 />
               </div>
-              <button
-                type="button"
-                onClick={handleOpenAddModal}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 bg-[#8DC63F] hover:bg-[#7cb336] text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer shadow-sm"
-              >
-                <Plus size={16} />
-                Add Cluster
-              </button>
             </div>
 
             {/* Clusters Table */}
@@ -898,37 +890,6 @@ function Cluster() {
                               >
                                 {recordingCounts[cluster.cluster_id]?.step || 0}
                               </span>
-                              {(recordingCounts[cluster.cluster_id]?.step || 0) > 0 ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenUploadModal(cluster, 'step', 'replace')}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors cursor-pointer shadow-xs"
-                                    title="Replace Step Recording files (JSON, etc.)"
-                                  >
-                                    <RotateCcw size={11} />
-                                    <span>Replace</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenUploadModal(cluster, 'step', 'add')}
-                                    className="inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors cursor-pointer"
-                                    title="Add another Step Recording"
-                                  >
-                                    <Plus size={11} />
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenUploadModal(cluster, 'step', 'add')}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-white bg-[#8DC63F] hover:bg-[#7cb336] transition-colors cursor-pointer shadow-xs"
-                                  title="Upload Step Recording"
-                                >
-                                  <Plus size={11} />
-                                  <span>Add</span>
-                                </button>
-                              )}
                             </div>
                           </td>
 
@@ -944,37 +905,6 @@ function Cluster() {
                               >
                                 {recordingCounts[cluster.cluster_id]?.shadow || 0}
                               </span>
-                              {(recordingCounts[cluster.cluster_id]?.shadow || 0) > 0 ? (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenUploadModal(cluster, 'shadow', 'replace')}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 transition-colors cursor-pointer shadow-xs"
-                                    title="Replace Shadow Recording files (JSON, etc.)"
-                                  >
-                                    <RotateCcw size={11} />
-                                    <span>Replace</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenUploadModal(cluster, 'shadow', 'add')}
-                                    className="inline-flex items-center justify-center w-5 h-5 rounded text-[11px] font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 transition-colors cursor-pointer"
-                                    title="Add another Shadow Recording"
-                                  >
-                                    <Plus size={11} />
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenUploadModal(cluster, 'shadow', 'add')}
-                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-white bg-[#8DC63F] hover:bg-[#7cb336] transition-colors cursor-pointer shadow-xs"
-                                  title="Upload Shadow Recording"
-                                >
-                                  <Plus size={11} />
-                                  <span>Add</span>
-                                </button>
-                              )}
                             </div>
                           </td>
 
@@ -1264,18 +1194,6 @@ function Cluster() {
                 >
                   <RotateCcw size={13} />
                   <span>Replace Existing Recording</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchModalMode('add')}
-                  className={`pb-2 px-3 text-xs font-semibold border-b-2 transition-colors cursor-pointer inline-flex items-center gap-1.5 ${
-                    modalMode === 'add'
-                      ? 'border-[#8DC63F] text-[#8DC63F]'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Plus size={13} />
-                  <span>Add New Recording</span>
                 </button>
               </div>
             )}
