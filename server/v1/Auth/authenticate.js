@@ -3,6 +3,9 @@ const path = require('path');
 const client = require('../utils/conn');
 const { getActiveSession, touchSession } = require('./sessionStore');
 require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+// Only this module can mark a request as successfully authenticated.
+// WeakSet entries cannot leak across requests or keep completed requests alive.
+const authenticatedRequests = new WeakSet();
 
 const Authenticate = async (req, res, next) => {
   const token = /^Bearer (.+)$/i.exec(req.headers.authorization || '')?.[1];
@@ -50,10 +53,15 @@ const Authenticate = async (req, res, next) => {
       req.deviceInfo.device = req.user.device || 'VR Headset';
     }
     await touchSession(decoded.sid);
+    authenticatedRequests.add(req);
     next();
   } catch (queryErr) {
     next(queryErr);
   }
 };
 
-module.exports = Authenticate;
+const measuredAuthenticate = require('../utils/requestTiming').timeAuthentication(Authenticate);
+module.exports = (req, res, next) => {
+  if (authenticatedRequests.has(req)) return next();
+  return measuredAuthenticate(req, res, next);
+};

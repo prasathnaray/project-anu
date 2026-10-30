@@ -4,7 +4,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const { canonicalReference } = require('../utils/storageAdapter');
 const apply = process.argv.includes('--apply');
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const pool = new Pool(require('../utils/databaseConfig').databaseConfig());
 const changes = [];
 
 const hasColumn = async (db, table, column) => {

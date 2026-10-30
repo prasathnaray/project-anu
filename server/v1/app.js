@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+app.use(require('./utils/requestTiming').requestTiming);
 //cookies
 const cookieParser = require('cookie-parser');
 //db
