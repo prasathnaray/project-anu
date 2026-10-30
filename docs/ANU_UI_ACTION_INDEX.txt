@@ -1,0 +1,492 @@
+client/src/Auth/AccountVerification.js:53 | Please wait... /  | requestOtp
+client/src/Auth/AccountVerification.js:57 | Verify account | verify
+client/src/Auth/login.js:158 | Email address Password Forgot password?  /  | handleSubmit
+client/src/Auth/login.js:167 | Forgot password? | handleForgotPassword
+client/src/Auth/login.js:171 | Show password / Hide password | handleToggle
+client/src/Auth/login.js:174 |  /  | 
+client/src/Auth/login.js:178 | Verify account / resend OTP | () => navigate('/verify-account')
+client/src/Auth/login.js:205 | Reset password We’ll send reset instructions to your registered email. ✕ Email address Sending / Reset Password Cancel | () => setShowModal(false)
+client/src/Auth/login.js:206 | Close reset password dialog | () => setShowModal(false)
+client/src/Auth/login.js:219 | Sending / Reset Password | ResetPassword
+client/src/Auth/login.js:226 | Cancel | () => setShowModal(false)
+client/src/charts/InteractionDonut.js:76 | PieChart | setHighlightedItem
+client/src/charts/InteractionDonut.js:111 | x | () => setHighlightedItem({ seriesIndex: 0, dataIndex: idx }); () => setHighlightedItem(null)
+client/src/charts/OverallCompletion.js:141 | circle | () => setHovered(arc.key); () => setHovered(null)
+client/src/charts/StreaksChart.js:360 |  /  | (e) => { if (cell) e.currentTarget.style.transform = 'scale(1.3)'; }; (e) => { if (cell) e.currentTarget.style.transform = 'scale(1)'; }
+client/src/components/admin/AddCourse.js:21 | wrapper | handleWrapperClick
+client/src/components/admin/AddCourse.js:26 | div | (e) => e.stopPropagation()
+client/src/components/admin/addTrainee.js:175 | Navigate |  -> '/'+handleInputData.role+'s'
+client/src/components/admin/addTrainee.js:184 | Navigate |  -> /
+client/src/components/admin/addTrainee.js:188 | Navigate |  -> /dashboard
+client/src/components/admin/addTrainee.js:191 | Navigate |  -> /trainee/add
+client/src/components/admin/addTrainee.js:308 | Prev | () => setCurrentStep(currentStep - 1)
+client/src/components/admin/addTrainee.js:309 | Next | () => setCurrentStep(currentStep + 1)
+client/src/components/admin/addTrainee.js:310 | Submit | submitHandle
+client/src/components/admin/AdminDashboard.js:82 | Overview | () => setDashboardState("dashboard")
+client/src/components/admin/AdminDashboard.js:92 | Users | () => setDashboardState("users")
+client/src/components/admin/AdminDashboard.js:139 | Trainees | () => navigate('/trainees')
+client/src/components/admin/AdminDashboard.js:150 | Instructors | () => navigate('/instructors')
+client/src/components/admin/AdminDashboard.js:161 | Batches | () => navigate('/batch')
+client/src/components/admin/CreateBatch.js:11 | wrapper | handleWrapperClick
+client/src/components/admin/CreateBatch.js:16 | div | (e) => e.stopPropagation()
+client/src/components/admin/FilterBatch.js:17 | wrapper | handleWrapperClick
+client/src/components/admin/FilterBatch.js:22 | div | (e) => e.stopPropagation()
+client/src/components/admin/step/AddTraineeStep1.js:72 | Select Gender Male Female Prefer not to say Select Batch / Select Batches | (e) => { e && e.preventDefault && e.preventDefault(); }
+client/src/components/admin/step/AddTraineeStep1.js:105 | Email address | (e) => { handleChange(e); validationChange(e); }; handleEmailBlur
+client/src/components/admin/step/AddTraineeStep3.js:30 | Upload File | handleClick
+client/src/components/admin/TraineeCompletionTable.js:439 | / completed | onClick
+client/src/components/admin/TraineeCompletionTable.js:454 |  /  | () => setOpen(p => !p)
+client/src/components/admin/TraineeCompletionTable.js:520 | div | onClose
+client/src/components/admin/TraineeCompletionTable.js:524 | div | e => e.stopPropagation()
+client/src/components/admin/TraineeCompletionTable.js:535 | button | onClose
+client/src/components/admin/TraineeCompletionTable.js:681 | Clear filters | () => { setSelectedCourse(""); setSelectedModule(""); setSelectedUnit(""); }
+client/src/components/admin/TraineeCompletionTable.js:734 | Badge | () => openModal("lr", unit, unit.unit_name)
+client/src/components/admin/TraineeCompletionTable.js:742 | Badge | () => openModal("ii", unit, unit.unit_name)
+client/src/components/admin/TraineeCompletionTable.js:750 | Badge | () => openModal("practice", unit, unit.unit_name)
+client/src/components/admin/TraineeCompletionTable.js:758 | Badge | () => openModal("test", unit, unit.unit_name)
+client/src/components/admin/TraineeCompletionTable.js:777 | modal.title | closeModal
+client/src/components/admin/traineeList.js:500 | Add trainee |  -> /trainee/add
+client/src/components/admin/traineeList.js:558 | img | (e) => (e.currentTarget.src = "/default-profile.png")
+client/src/components/admin/traineeList.js:568 | button | () => navigate(`/trainee/${trainee.people_id}`)
+client/src/components/admin/traineeList.js:623 | View | () => navigate(`/trainee/${trainee.people_id}`)
+client/src/components/admin/traineeList.js:631 | Edit | () => handleEditClick(trainee)
+client/src/components/admin/traineeList.js:638 | Enable | () => showEnableConfirmToast( trainee.user_email, handleTraineeList, token, "active" )
+client/src/components/admin/traineeList.js:652 | Disable | () => showDisableConfirmToast( trainee.user_email, handleTraineeList, token, "inactive" )
+client/src/components/admin/traineeList.js:666 | Delete | () => DeleteTraineeToast( trainee.user_email, handleTraineeList, token )
+client/src/components/admin/traineeList.js:698 | TablePagination | handleChangePage; handleChangeRowsPerPage
+client/src/components/admin/traineeList.js:720 | Edit Trainee Select Trainee Select Batch Submit | handleCloseModal; (val) => setSelectedBatch(Array.isArray(val) ? val[val.length - 1] : val)
+client/src/components/admin/traineeList.js:733 | button | handleCloseModal
+client/src/components/admin/traineeList.js:792 | Submit | handleUpdateTrainee
+client/src/components/AttachVolume.js:18 | wrapper | handleWrapperClick
+client/src/components/AttachVolume.js:23 | div | (e) => e.stopPropagation()
+client/src/components/CourseTable.js:60 | sorted descending / sorted ascending /  | createSortHandler(headCell.id)
+client/src/components/CourseTable.js:120 | EnhancedTableHead | handleRequestSort
+client/src/components/CourseTable.js:146 | TablePagination | handleChangePage; handleChangeRowsPerPage
+client/src/components/CreateResources.js:58 | Create Resource Unit Name Resource Type Learning Resource Challenges Practice Image Interpretation Test Create | handleWrapperClick
+client/src/components/CreateResources.js:63 | Create Resource Unit Name Resource Type Learning Resource Challenges Practice Image Interpretation Test Create | (e) => e.stopPropagation()
+client/src/components/CreateResources.js:73 | button | onClose
+client/src/components/CreateResources.js:148 | Create | handleCreateResource
+client/src/components/CreateTargetedLearning.js:18 | wrapper | handleWrapperClick
+client/src/components/CreateTargetedLearning.js:23 | div | (e) => e.stopPropagation()
+client/src/components/EditBatchTime.js:16 | wrapper | handleWrapperClick
+client/src/components/EditBatchTime.js:21 | div | (e) => e.stopPropagation()
+client/src/components/Instructors/UploadVol.js:11 | wrapper | handleWrapperClick
+client/src/components/Instructors/UploadVol.js:16 | div | (e) => e.stopPropagation()
+client/src/components/Instructors/VolumeRecordingDownloads.js:54 | Preparing… /  | () => handleDownload(recording, fileType, index)
+client/src/components/Instructors/VolumeRecordingDownloads.js:63 | Recording files Loading recordings… /  | onClose
+client/src/components/Instructors/VolumeRecordingDownloads.js:65 | Volume recording downloads | (event) => event.stopPropagation()
+client/src/components/Instructors/VolumeRecordingDownloads.js:73 | Close recording files | onClose
+client/src/components/Instructors/VolumeRecordingDownloads.js:88 | Preparing… / Manifest | () => handleDownload(recording, 'manifest')
+client/src/components/MindSparkQuestionModal.js:258 | Add Question Saving... / Save Questions | (event) => event.stopPropagation()
+client/src/components/MindSparkQuestionModal.js:264 | IconButton | onClose
+client/src/components/MindSparkQuestionModal.js:287 | IconButton | () => removeQuestion(questionIndex)
+client/src/components/MindSparkQuestionModal.js:514 | IconButton | () => removeOptionRow(questionIndex, optionIndex)
+client/src/components/MindSparkQuestionModal.js:536 | Add Step / Add Option | () => addOptionRow(questionIndex)
+client/src/components/MindSparkQuestionModal.js:648 | Add Question | addQuestion
+client/src/components/MindSparkQuestionModal.js:651 | Saving... / Save Questions | saveQuestions
+client/src/components/navBar.js:1294 | Toggle fullscreen | toggleFullscreen
+client/src/components/navBar.js:1304 | Notifications | () => toggleDropdown("notifications")
+client/src/components/navBar.js:1341 | Mark all read | handleMarkAllRead
+client/src/components/navBar.js:1403 | View | () => { setOpenDropdownIndex(null); navigate(getNotificationRoute(n)); }
+client/src/components/navBar.js:1413 | Notification read / Mark as read | () => handleMarkRead(n)
+client/src/components/navBar.js:1454 | User menu | () => toggleDropdown("user-options"); (e) => ripple.create(e, "dark", "circle")
+client/src/components/navBar.js:1468 | Profile | () => { setOpenDropdownIndex(null); setIsProfileModalOpen(true); }
+client/src/components/navBar.js:1477 | Sessions | () => { setOpenDropdownIndex(null); navigate('/sessions'); }
+client/src/components/navBar.js:1492 | Logout | handleLogout
+client/src/components/navBar.js:1529 | Profile | () => setIsProfileModalOpen(false)
+client/src/components/sideBar.js:55 | Expand sidebar / Collapse sidebar | () => handleButtonOpen()
+client/src/components/sideBar.js:61 | ANU Learning Hub | () => navigate("/dashboard")
+client/src/components/sideBar.js:71 | ANU Learning Hub | () => navigate("/dashboard")
+client/src/components/sideBar.js:114 | Dashboard | (e) => ripple.create(e, "dark", "circle"); () => navigate("/dashboard")
+client/src/components/sideBar.js:128 | Curriculum | (e) => ripple.create(e, "dark", "circle"); () => navigate("/curriculum")
+client/src/components/sideBar.js:143 | Certifications | (e) => ripple.create(e, "dark", "circle"); () => navigate("/certificate")
+client/src/components/sideBar.js:157 | Volumes | (e) => ripple.create(e, "dark", "circle"); () => navigate("/volume-management")
+client/src/components/sideBar.js:171 | Cluster | (e) => ripple.create(e, "dark", "circle"); () => navigate("/cluster")
+client/src/components/sideBar.js:185 | Course Mapping | (e) => ripple.create(e, "dark", "circle"); () => navigate("/course-mapping")
+client/src/components/sideBar.js:199 | Reattempts | (e) => ripple.create(e, "dark", "circle"); () => navigate("/reatt-data")
+client/src/components/sideBar.js:213 | Academics | (e) => ripple.create(e, "dark", "circle"); () => navigate("/academics")
+client/src/components/sideBar.js:273 | button | (e) => ripple.create(e, "dark", "circle"); () => navigate(`/${route}`)
+client/src/components/sideBar.js:294 | Dashboard | (e) => ripple.create(e, "dark", "circle"); () => navigate("/dashboard")
+client/src/components/sideBar.js:308 | Batch | (e) => ripple.create(e, "dark", "circle"); () => navigate("/batch")
+client/src/components/sideBar.js:322 | Instructors | (e) => ripple.create(e, "dark", "circle"); () => navigate("/instructors")
+client/src/components/sideBar.js:336 | Trainees | (e) => ripple.create(e, "dark", "circle"); () => navigate("/trainees")
+client/src/components/sideBar.js:350 | Schedules | (e) => ripple.create(e, "dark", "circle"); () => navigate("/schedules")
+client/src/components/sideBar.js:364 | Certifications | (e) => ripple.create(e, "dark", "circle"); () => navigate("/certificate")
+client/src/components/sideBar.js:382 | Streams | (e) => ripple.create(e, "dark", "circle"); () => navigate("/vrspace")
+client/src/components/sideBar.js:411 | Volumes | (e) => ripple.create(e, "dark", "circle"); () => navigate("/volume-management")
+client/src/components/sideBar.js:422 | Cluster | (e) => ripple.create(e, "dark", "circle"); () => navigate("/cluster")
+client/src/components/sideBar.js:452 | Dashboard | (e) => ripple.create(e, "dark", "circle"); () => navigate("/dashboard")
+client/src/components/sideBar.js:467 | Batch | (e) => ripple.create(e, "dark", "circle"); () => navigate("/batch")
+client/src/components/sideBar.js:482 | Trainees | (e) => ripple.create(e, "dark", "circle"); () => navigate("/trainees")
+client/src/components/sideBar.js:497 | Certifications | (e) => ripple.create(e, "dark", "circle"); () => navigate("/certificate")
+client/src/components/sideBar.js:528 | Volumes | (e) => ripple.create(e, "dark", "circle"); () => navigate("/volume-management")
+client/src/components/sideBar.js:542 | Cluster | (e) => ripple.create(e, "dark", "circle"); () => navigate("/cluster")
+client/src/components/sideBar.js:559 | SVT Course | (e) => ripple.create(e, "dark", "circle"); () => navigate("/custom-course")
+client/src/components/sideBar.js:575 | Assigned Courses / Content Access | (e) => ripple.create(e, "dark", "circle"); () => navigate("/course-access")
+client/src/components/streaming/AdminStreamPanel.js:177 | LIVE | () => selectStream(stream.id)
+client/src/components/streaming/TraineeStreamPanel.js:170 | Enable audio / Mute audio | toggleAudio
+client/src/components/streaming/TraineeStreamPanel.js:179 | Reconnect preview | () => setConnectionAttempt((attempt) => attempt + 1)
+client/src/components/superadmin/CreateModule.js:11 | wrapper | handleWrapperClick
+client/src/components/superadmin/CreateModule.js:16 | div | (e) => e.stopPropagation()
+client/src/components/superadmin/CuriculumCreation.js:11 | wrapper | handleWrapperClick
+client/src/components/superadmin/CuriculumCreation.js:16 | div | (e) => e.stopPropagation()
+client/src/components/superadmin/LearningModule.js:12 | wrapper | handleWrapperClick
+client/src/components/superadmin/LearningModule.js:17 | div | (e) => e.stopPropagation()
+client/src/components/superadmin/SuperAdminDashboard.js:420 | Overview | () => setDashboardState('dashboard')
+client/src/components/superadmin/SuperAdminDashboard.js:432 | Global Activity Tracking | () => setDashboardState('activities')
+client/src/components/superadmin/SuperAdminDashboard.js:445 | Active Users (24h) | () => setDashboardState('users')
+client/src/components/superadmin/SuperAdminDashboard.js:464 | Refresh Activity Stats | () => fetchActivityData(true)
+client/src/components/superadmin/SuperAdminDashboard.js:494 | Total Institutions | () => navigate('/academics')
+client/src/components/superadmin/SuperAdminDashboard.js:510 | Total Students | () => navigate('/trainees')
+client/src/components/superadmin/SuperAdminDashboard.js:526 | Total Instructors | () => navigate('/instructors')
+client/src/components/superadmin/SuperAdminDashboard.js:542 | Total Courses | () => navigate('/certificate')
+client/src/components/superadmin/SuperAdminDashboard.js:558 | Active Users | () => setDashboardState('users')
+client/src/components/superadmin/SuperAdminDashboard.js:596 | Detailed Audit View | () => setDashboardState('activities')
+client/src/components/superadmin/SuperAdminDashboard.js:819 | View all modules → | () => setDashboardState('activities')
+client/src/components/superadmin/SuperAdminDashboard.js:893 | View Log ( ) | () => setDashboardState('activities')
+client/src/components/superadmin/SuperAdminDashboard.js:950 | View All | () => navigate('/academics')
+client/src/components/superadmin/SuperAdminDashboard.js:986 | View All | () => navigate('/certificate')
+client/src/components/superadmin/SuperAdminDashboard.js:1060 | View All | () => navigate('/academics')
+client/src/components/superadmin/SuperAdminDashboard.js:1090 | View All | () => navigate('/certificate')
+client/src/components/superadmin/SuperAdminDashboard.js:1126 | View All | () => { setDashboardState('activities'); navigate('/dashboard'); }
+client/src/components/superadmin/SuperAdminDashboard.js:1200 | Refresh Now | () => fetchActivityData(true)
+client/src/components/superadmin/TagCourse.js:11 | wrapper | handleWrapperClick
+client/src/components/superadmin/TagCourse.js:16 | div | (e) => e.stopPropagation()
+client/src/components/TagBatch.js:17 | wrapper | handleWrapperClick
+client/src/components/TagBatch.js:22 | div | (e) => e.stopPropagation()
+client/src/components/trainee/TraineeDashboard.js:6761 | div | () => navigate('/queries')
+client/src/pages/Academics.js:1563 | button | handleOpenFilterModal
+client/src/pages/Academics.js:1584 | + Onboard Scan Center | handleOpenCenterModal
+client/src/pages/Academics.js:1658 | button | () => toggleDropdown(index)
+client/src/pages/Academics.js:1672 | View Details | () => { console.log("View details", center); setOpenDropdownIndex(null); }
+client/src/pages/Academics.js:1682 | Edit | () => { handleOpenEditModal(center); setOpenDropdownIndex(null); }
+client/src/pages/Academics.js:1692 | Delete | () => { handleDelete(center.center_id); setOpenDropdownIndex(null); }
+client/src/pages/Academics.js:1720 | TablePagination | handleChangePage; handleChangeRowsPerPage
+client/src/pages/Academics.js:1738 | button | handleCloseCenterModal
+client/src/pages/Academics.js:1746 | Scan Center Information Auto-Generated Credentials: Upon submission, login credentials will be automatically generated and sent to the center's email address. Cancel Processing...  | handleSubmit
+client/src/pages/Academics.js:1815 | Cancel | handleCloseCenterModal
+client/src/pages/Academics.js:1822 | Processing... / Onboard Scan Center | 
+client/src/pages/Academics.js:1851 | button | handleCloseEditModal
+client/src/pages/Academics.js:1859 | Scan Center Information Status Active Pending Inactive Cancel Updating... / Update Scan Center | handleUpdateSubmit
+client/src/pages/Academics.js:1944 | Cancel | handleCloseEditModal
+client/src/pages/Academics.js:1951 | Updating... / Update Scan Center | 
+client/src/pages/Academics.js:1980 | button | handleCloseFilterModal
+client/src/pages/Academics.js:1988 | Status All Active Pending Inactive Clear Apply | handleFilterSubmit
+client/src/pages/Academics.js:2025 | Clear | handleClearFilter
+client/src/pages/Academics.js:2032 | Apply | 
+client/src/pages/Batch.js:49 |   | onClick
+client/src/pages/Batch.js:73 |   | onClick
+client/src/pages/Batch.js:722 | Navigate |  -> /
+client/src/pages/Batch.js:726 | Navigate |  -> /
+client/src/pages/Batch.js:753 | Batch List | () => setBatchCus(true)
+client/src/pages/Batch.js:766 | Targeted Learning | () => setBatchCus(false)
+client/src/pages/Batch.js:786 | button | () => setOpenFilter(true)
+client/src/pages/Batch.js:797 | Create Batch | () => setOpenBatch(true)
+client/src/pages/Batch.js:830 | a |  -> `/batch/${listBatch.batch_id}`
+client/src/pages/Batch.js:848 | button | () => toggleDropdown(index)
+client/src/pages/Batch.js:858 | Delete | () => deleteSubmit(listBatch.batch_id)
+client/src/pages/Batch.js:864 | Edit | () => { setSelectedBatchData(listBatch); setNewBatchEdit({ batch_id: listBatch.batch_id, new_batch_name: listBatch.batch_name, new_start_date: listBatch.batch_start_date, new_end_date: listBatch.batch_end_date }); setEditBatch(tru
+client/src/pages/Batch.js:931 | TablePagination | handleChangePage; handleChangeRowsPerPage
+client/src/pages/Batch.js:951 | button | () => setTargetedLearning(true)
+client/src/pages/Batch.js:971 | a |  -> `/batch/${tarList.target_learning_id}`
+client/src/pages/Batch.js:1002 | button | () => toggleDropdown(index)
+client/src/pages/Batch.js:1011 | View | () => navigate(`/batch/${tarList.target_learning_id}`)
+client/src/pages/Batch.js:1013 | Delete | () => deleteTargetedLearningCall(tarList.target_learning_id)
+client/src/pages/Batch.js:1039 | Create Targeted Learning Select Curiculum  / No data found Select Certificate  / No data found Select Learning Modules  / No data found Select Resource Type  / No data found Select | handleClose
+client/src/pages/Batch.js:1042 | button | handleClose
+client/src/pages/Batch.js:1505 | Initiate | postTargetedAPICall
+client/src/pages/Batch.js:1508 | Create Batch Select Curiculum  / No data found Select Certificate  / No data found Save | handleClose
+client/src/pages/Batch.js:1511 | button | handleClose
+client/src/pages/Batch.js:1686 | Save | handleSubmit
+client/src/pages/Batch.js:1689 | FilterBatch | handleCloseFilter
+client/src/pages/Batch.js:1693 | button | handleCloseFilter
+client/src/pages/Batch.js:1719 | Apply | filterBatchCall
+client/src/pages/Batch.js:1723 | Close Updating / Update | handleEditBatch
+client/src/pages/Batch.js:1725 | Close | handleEditBatch
+client/src/pages/Batch.js:1727 | Updating / Update | handleUpdateAPICall
+client/src/pages/BatchIndividual.js:192 | Navigate |  -> /
+client/src/pages/BatchIndividual.js:223 | Home | () => navigate('/dashboard')
+client/src/pages/Chapters.js:131 | Navigate |  -> /
+client/src/pages/Chapters.js:147 | Course |  -> `/course`
+client/src/pages/Chapters.js:147 | Chapters |  -> `${localStorage.getItem('last_page_visited')}`
+client/src/pages/Chapters.js:153 | IconButton | () => setOpenModule(true)
+client/src/pages/Chapters.js:199 | button | () => navigate(`/module/${data?.chapter_id}/${urlData.course_id}`)
+client/src/pages/Chapters.js:238 | Create Chapter Select Course  / No data found Save | handleClose
+client/src/pages/Chapters.js:242 | button | handleClose
+client/src/pages/Chapters.js:293 | Save | createModuleCall
+client/src/pages/Cluster.js:763 | Home | () => navigate('/dashboard')
+client/src/pages/Cluster.js:914 | Edit Cluster | () => handleOpenEditModal(cluster)
+client/src/pages/Cluster.js:922 | Delete Cluster | () => handleDeleteCluster(cluster.cluster_id)
+client/src/pages/Cluster.js:944 | Add Cluster Select Fetal Presentation Cephalic_left Cephalic_right Breech_left Breech_right No converted volumes available /  Cancel Add Cluster | handleCloseAddModal
+client/src/pages/Cluster.js:947 | button | handleCloseAddModal
+client/src/pages/Cluster.js:955 | Select Fetal Presentation Cephalic_left Cephalic_right Breech_left Breech_right No converted volumes available /  Cancel Add Cluster | handleSaveCluster
+client/src/pages/Cluster.js:1032 | Cancel | handleCloseAddModal
+client/src/pages/Cluster.js:1039 | Add Cluster | 
+client/src/pages/Cluster.js:1050 | Edit Cluster Select Fetal Presentation Cephalic_left Cephalic_right Breech_left Breech_right No converted volumes available /  Cancel Save Changes | handleCloseEditModal
+client/src/pages/Cluster.js:1053 | button | handleCloseEditModal
+client/src/pages/Cluster.js:1061 | Select Fetal Presentation Cephalic_left Cephalic_right Breech_left Breech_right No converted volumes available /  Cancel Save Changes | handleUpdateCluster
+client/src/pages/Cluster.js:1137 | Cancel | handleCloseEditModal
+client/src/pages/Cluster.js:1144 | Save Changes | 
+client/src/pages/Cluster.js:1155 | Replace / Upload Step / Shadow Recording Replace Mode: Every type of file can be replaced (JSON recordings, Audio .wav, Images, Manifest). Already existing files are shown under ea | handleCloseUploadModal
+client/src/pages/Cluster.js:1172 | button | handleCloseUploadModal
+client/src/pages/Cluster.js:1181 | Replace Mode: Every type of file can be replaced (JSON recordings, Audio .wav, Images, Manifest). Already existing files are shown under each section below. Choose new file(s) for  | handleUploadRecordingSubmit
+client/src/pages/Cluster.js:1186 | Replace Existing Recording | () => handleSwitchModalMode('replace')
+client/src/pages/Cluster.js:1499 | Cancel | handleCloseUploadModal
+client/src/pages/Cluster.js:1507 |  / Replace Recording Files / Upload Recording | 
+client/src/pages/ContentAccess.js:234 | Create course | () => setShowCreate(true)
+client/src/pages/ContentAccess.js:249 | Open | () => navigate(`/cert-course/${course.certificate_id}`)
+client/src/pages/ContentAccess.js:250 | Assignments | () => openAssignments(course)
+client/src/pages/ContentAccess.js:252 | Publish | () => changeState(course, 'publish')
+client/src/pages/ContentAccess.js:253 | Unpublish | () => changeState(course, 'draft')
+client/src/pages/ContentAccess.js:254 | Archive | () => changeState(course, 'archive')
+client/src/pages/ContentAccess.js:263 | Save visibility | () => saveDistribution(course)
+client/src/pages/ContentAccess.js:277 | Institution… Add | submitInstitutionAdmin
+client/src/pages/ContentAccess.js:283 | Dismiss | () => setCreatedCredential(null)
+client/src/pages/ContentAccess.js:289 | Add Super Admin | submitSuperAdmin
+client/src/pages/ContentAccess.js:301 | Global core | () => resolveReviewCourse(course.certificate_id, 'core')
+client/src/pages/ContentAccess.js:301 | Global specialized | () => resolveReviewCourse(course.certificate_id, 'specialized')
+client/src/pages/ContentAccess.js:301 | Set institution | () => resolveReviewCourse(course.certificate_id, 'institution', reviewInstitution[`course-${course.certificate_id}`])
+client/src/pages/ContentAccess.js:303 | Global | () => resolveReviewVolume(volume.volume_id, 'super_admin')
+client/src/pages/ContentAccess.js:303 | Set institution | () => resolveReviewVolume(volume.volume_id, 'institution', reviewInstitution[`volume-${volume.volume_id}`])
+client/src/pages/ContentAccess.js:305 | Migrate institution course | () => migrateLegacyMapping(mapping, 'institution')
+client/src/pages/ContentAccess.js:305 | Migrate core | () => migrateLegacyMapping(mapping, 'core')
+client/src/pages/ContentAccess.js:305 | Migrate specialized | () => migrateLegacyMapping(mapping, 'specialized')
+client/src/pages/ContentAccess.js:310 | Create course Create draft | createNewCourse
+client/src/pages/ContentAccess.js:310 | button | () => setShowCreate(false)
+client/src/pages/ContentAccess.js:312 | button | () => setAssignmentCourse(null)
+client/src/pages/ContentAccess.js:312 | Save assignments | saveAssignments
+client/src/pages/Course.js:1353 | Navigate |  -> /
+client/src/pages/Course.js:1402 | Add Course | () => setOpenCourse(true)
+client/src/pages/Course.js:1477 |  /  | () => toggleExpandRow(data.certificate_id)
+client/src/pages/Course.js:1490 | button | () => navigate(`/cert-course/${data?.certificate_id}`)
+client/src/pages/Course.js:1500 | span | () => toggleExpandRow(data.certificate_id)
+client/src/pages/Course.js:1522 | button | () => toggleDropdown(index)
+client/src/pages/Course.js:1535 | View | () => { setOpenDropdownIndex(null); navigate(`/cert-course/${data?.certificate_id}`); }
+client/src/pages/Course.js:1547 | Delete | () => handleDelete(data.certificate_id)
+client/src/pages/Course.js:1559 | Tag Course | () => setTagCourse(true)
+client/src/pages/Course.js:1618 | AddCourse | handleClose
+client/src/pages/Course.js:1623 | button | handleClose
+client/src/pages/Course.js:1668 | Save | CreatCertificate
+client/src/pages/Course.js:1677 | TagCourse | handleClose
+client/src/pages/Course.js:1682 | button | handleClose
+client/src/pages/Course.js:1737 | Save | tagCousesubmit
+client/src/pages/CourseMapping.js:151 | Navigate |  -> /dashboard
+client/src/pages/CourseMapping.js:252 | Select Volume Select Trimester Select Module Select Unit Select Course Type No Shadow Recording No Step Recording Clear Creating... / Create Mapping | handleSubmit
+client/src/pages/CourseMapping.js:383 | Clear | () => { setFormData(emptyForm); setRecordings([]); }
+client/src/pages/CourseMapping.js:393 | Creating... / Create Mapping | 
+client/src/pages/CourseMapping.js:411 | Refresh | () => fetchMappings(filters)
+client/src/pages/CourseMapping.js:495 | Apply | () => fetchMappings(filters)
+client/src/pages/CourseMapping.js:501 | Clear | handleClearFilters
+client/src/pages/Curiculum.js:129 | Navigate |  -> /
+client/src/pages/Curiculum.js:173 | + Create curriculum | () => setOpenCuriculum(true)
+client/src/pages/Curiculum.js:206 | `Actions for ${data?.curiculum_nam || 'curriculum'}` | () => toggleDropdown(index)
+client/src/pages/Curiculum.js:214 | View | () => { setOpenDropdownIndex(null); navigate('/certificate'); }
+client/src/pages/Curiculum.js:215 | Delete | () => { setOpenDropdownIndex(null); DeleteCuriculum(data?.curiculum_id); }
+client/src/pages/Curiculum.js:216 | Tag trainees | () => { setOpenDropdownIndex(null); navigate('/trainees'); }
+client/src/pages/Curiculum.js:217 | Add course | () => { setOpenDropdownIndex(null); navigate('/certificate'); }
+client/src/pages/Curiculum.js:218 | Tag instructors | () => { setOpenDropdownIndex(null); navigate('/instructors'); }
+client/src/pages/Curiculum.js:245 | Create curriculum Add a new learning path to your library. Save curriculum | handleClose
+client/src/pages/Curiculum.js:249 | Close | handleClose
+client/src/pages/Curiculum.js:265 | Save curriculum | createCuriculum
+client/src/pages/CustomCourse.js:131 | Navigate |  -> /dashboard
+client/src/pages/CustomCourse.js:233 | Back | () => navigate('/dashboard')
+client/src/pages/CustomCourse.js:240 | Add Course | () => setOpenCreateCourse(true)
+client/src/pages/CustomCourse.js:297 | AddCourse | handleClosePopup
+client/src/pages/CustomCourse.js:301 | button | handleClosePopup
+client/src/pages/CustomCourse.js:309 | Select Volume Select Course Type No Shadow Recording No Step Recording Clear Saving... / Create Course | handleSubmit
+client/src/pages/CustomCourse.js:426 | Clear | handleClear
+client/src/pages/CustomCourse.js:433 | Saving... / Create Course | 
+client/src/pages/dashboard.js:12 | Navigate |  -> /
+client/src/pages/IndividualInstructors.js:43 | Navigate |  -> /
+client/src/pages/IndividualInstructors.js:47 | Navigate |  -> /
+client/src/pages/IndividualInstructors.js:216 | a |  -> `/batch/${batch.batch_id}`
+client/src/pages/InsideCertifications.js:399 | Navigate |  -> /
+client/src/pages/InsideCertifications.js:420 | Learning Modules | () => navigate("/request-raised")
+client/src/pages/InsideCertifications.js:480 | button | () => setCreateLearningModule(true)
+client/src/pages/InsideCertifications.js:511 | button | () => toggleExpand(index, moduleId)
+client/src/pages/InsideCertifications.js:522 | button | () => { setSelectedModule({ learning_module_id: moduleId, course_name: row.course_name, module_name: row.module_name, unit_name: row.unit_name, }); setOpenRes(true); }
+client/src/pages/InsideCertifications.js:585 | button | () => { const key = `${moduleId}-${type}`; setExpandedResource(expandedResource === key ? null : key); }
+client/src/pages/InsideCertifications.js:622 | tr | () => handleResourceClick(item)
+client/src/pages/InsideCertifications.js:642 | Attach Volume | (e) => { e.stopPropagation(); handleAttachVolume(); setResourcesData({ resource_id: item.resource_id, resource_name: item.resource_name }); setAttachFormData(prev => ({ ...prev, resource_id: item.resource_id })); }
+client/src/pages/InsideCertifications.js:659 | button | (e) => { e.stopPropagation(); openMindSparkQuestions(item); }
+client/src/pages/InsideCertifications.js:717 | tr | () => handleResourceClick(item)
+client/src/pages/InsideCertifications.js:737 | Attach Volume | (e) => { e.stopPropagation(); handleAttachVolume(); setResourcesData({ resource_id: item.resource_id, resource_name: item.resource_name }); setAttachFormData(prev => ({ ...prev, resource_id: item.resource_id })); }
+client/src/pages/InsideCertifications.js:754 | button | (e) => { e.stopPropagation(); openMindSparkQuestions(item); }
+client/src/pages/InsideCertifications.js:786 | button | (e) => { e.stopPropagation(); setExpandedTopic( expandedTopic === topicKey ? null : topicKey ); }
+client/src/pages/InsideCertifications.js:820 | tr | () => handleResourceClick(item)
+client/src/pages/InsideCertifications.js:839 | button | (e) => { e.stopPropagation(); openMindSparkQuestions(item); }
+client/src/pages/InsideCertifications.js:898 | Create Learning Module Select Certification Create | handleCloseCreateModule
+client/src/pages/InsideCertifications.js:901 | button | handleCloseCreateModule
+client/src/pages/InsideCertifications.js:991 | Create | handleCreateLearning
+client/src/pages/InsideCertifications.js:1002 | CreateResources | () => { setOpenRes(false); setSelectedModule(null); }; () => { if (selectedModule?.learning_module_id) { fetchResourcesForModule(selectedModule.learning_module_id); } }
+client/src/pages/InsideCertifications.js:1016 | MindSparkQuestionModal | closeMindSparkQuestions
+client/src/pages/InsideCertifications.js:1023 | Attach Volume Volume Name Loading... /  Shadow Recording Loading... /  Step Recording Loading... /  Cancel Attaching... / Attach | () => setAttachVolume(false)
+client/src/pages/InsideCertifications.js:1026 | button | () => setAttachVolume(false)
+client/src/pages/InsideCertifications.js:1031 | Volume Name Loading... /  Shadow Recording Loading... /  Step Recording Loading... /  Cancel Attaching... / Attach | handleSubmitAttachVolume
+client/src/pages/InsideCertifications.js:1127 | Cancel | () => setAttachVolume(false)
+client/src/pages/InsideCertifications.js:1134 | Attaching... / Attach | 
+client/src/pages/InsideCertifications.js:1147 | Trainee Name Status Action | closeCompletionPopup
+client/src/pages/InsideCertifications.js:1151 | Trainee Name Status Action | (e) => e.stopPropagation()
+client/src/pages/InsideCertifications.js:1172 | button | closeCompletionPopup
+client/src/pages/InsideCertifications.js:1219 | View Profile | () => { // Redirect to user details page with people_id navigate(`/trainee/${peopleId}`); closeCompletionPopup(); }
+client/src/pages/Instructors.js:207 | Navigate |  -> /
+client/src/pages/Instructors.js:263 | Add Instructor |  -> /instructor/add
+client/src/pages/Instructors.js:339 | button | () => navigate(`/instructor/${instructor.people_id}`)
+client/src/pages/Instructors.js:360 |  /  | () => handleBatchOpen(index)
+client/src/pages/Instructors.js:413 | Edit | () => handleEditClick(instructor)
+client/src/pages/Instructors.js:419 | Delete | () => { DeleteInstructorToast( instructor.user_email, getData, token ); }
+client/src/pages/Instructors.js:451 | TablePagination | handleChangePage; handleChangeRowsPerPage
+client/src/pages/Instructors.js:466 | Edit Instructor Select Instructor Submit | handleCloseModal; setSelectedBatches
+client/src/pages/Instructors.js:476 | button | handleCloseModal
+client/src/pages/Instructors.js:531 | Submit | handleUpdateInstructorAPICall
+client/src/pages/Module.js:106 | Navigate |  -> /
+client/src/pages/Module.js:119 | Course |  -> `/course`
+client/src/pages/Module.js:119 | Chapters |  -> `${localStorage.getItem('last_page_visited')}`
+client/src/pages/Module.js:125 | IconButton | () => setOpenModule(true)
+client/src/pages/Module.js:164 | button | () => navigate(`/resource/${data?.module_id}`)
+client/src/pages/Module.js:209 | Create New Module Select Chapter  / No data found Save | handleClose
+client/src/pages/Module.js:212 | IconButton | handleClose
+client/src/pages/Module.js:259 | Save | () => {moduleApiCalls(moduleData); handleClose()}
+client/src/pages/MyLearning.js:8257 | img | (e) => { e.currentTarget.parentElement.style.display = 'none'; }
+client/src/pages/MyLearning.js:8348 | View submitted image |  -> q.public_url
+client/src/pages/MyLearning.js:8379 |  /  Configured Questions /   /  | () => setOpen(p => !p)
+client/src/pages/MyLearning.js:8487 | Image Interpretation ·  /  | e => e.target === e.currentTarget && onClose()
+client/src/pages/MyLearning.js:8514 | button | onClose
+client/src/pages/MyLearning.js:8559 | Close | onClose
+client/src/pages/MyLearning.js:8736 | First Attempt /   / Attempt details | () => setOpen(p => !p)
+client/src/pages/MyLearning.js:8885 | User image |  -> measurement.userImageUrl
+client/src/pages/MyLearning.js:8890 | Expert image |  -> measurement.expertImageUrl
+client/src/pages/MyLearning.js:9307 | Activity attempt details / Attempt history  /  | e => e.target === e.currentTarget && onClose()
+client/src/pages/MyLearning.js:9320 | button | onClose
+client/src/pages/MyLearning.js:9366 | Mindspark questions | e => e.target === e.currentTarget && onClose()
+client/src/pages/MyLearning.js:9379 | button | onClose
+client/src/pages/MyLearning.js:9477 | Close | onClose
+client/src/pages/MyLearning.js:9695 | button | () => setActiveTab(tab.id)
+client/src/pages/MyLearning.js:9914 | div | handleClick
+client/src/pages/MyLearning.js:9940 | View Questions | e => { e.stopPropagation(); onOpenMindSparkQuiz(r); }
+client/src/pages/MyLearning.js:9952 | Score | e => { e.stopPropagation(); onOpenAttemptModal({ resource: r, showFeedback: false, showSubmission: false }); }
+client/src/pages/MyLearning.js:9964 | View | e => { e.stopPropagation(); onOpenAttemptModal({ resource: r, showFeedback, showSubmission }); }
+client/src/pages/MyLearning.js:10000 | / completed  /  | onToggle
+client/src/pages/MyLearning.js:10026 | ResourceRow | onOpenInterpretModal; onOpenAttemptModal; onOpenMindSparkQuiz
+client/src/pages/MyLearning.js:10052 | ResourceRow | onOpenInterpretModal; onOpenAttemptModal; onOpenMindSparkQuiz
+client/src/pages/MyLearning.js:10060 | ResourceRow | onOpenInterpretModal; onOpenAttemptModal; onOpenMindSparkQuiz
+client/src/pages/MyLearning.js:10065 | TopicAccordion | () => onToggleTopic(`${typeKey}::${topic}`); onOpenInterpretModal; onOpenAttemptModal; onOpenMindSparkQuiz
+client/src/pages/MyLearning.js:10153 | Navigate |  -> /
+client/src/pages/MyLearning.js:10218 | ImageInterpretModal | () => setInterpretModal(null)
+client/src/pages/MyLearning.js:10226 | AttemptHistoryModal | () => setAttemptModal(null)
+client/src/pages/MyLearning.js:10236 | MindSparkQuizModal | () => setMindSparkQuizModal(null)
+client/src/pages/MyLearning.js:10280 | button | () => handleCertChange(cert.id)
+client/src/pages/MyLearning.js:10303 |  / / | () => handleModuleChange(mod)
+client/src/pages/MyLearning.js:10353 | button | () => setActiveFilter(f.id)
+client/src/pages/MyLearning.js:10386 | TypeSection | toggleTopic; setInterpretModal; setAttemptModal; setMindSparkQuizModal
+client/src/pages/MyProgress.js:221 | Navigate |  -> /
+client/src/pages/MyProgress.js:266 | button | () => handleCertChange(cert.id)
+client/src/pages/Profile.js:397 | div | onClose
+client/src/pages/Profile.js:404 |  / Name Email Institution Name Contact Number Date of Birth Gender Close | (e) => e.stopPropagation()
+client/src/pages/Profile.js:411 | button | onClose
+client/src/pages/Profile.js:598 | Close | onClose
+client/src/pages/Queries.js:246 | Create Query | () => setOpenCreateQuery(true)
+client/src/pages/Queries.js:323 | button | () => toggleDropdown(index)
+client/src/pages/Queries.js:332 | View | () => { setOpenDropdownIndex(null); }
+client/src/pages/Queries.js:338 | Mark as Resolved | () => handleResolveQuery(query.query_id)
+client/src/pages/Queries.js:344 | Delete | () => handleDeleteQuery(query.query_id)
+client/src/pages/Queries.js:366 | TablePagination | handleChangePage; handleChangeRowsPerPage
+client/src/pages/Queries.js:387 | button | handleClose
+client/src/pages/Queries.js:450 | Submit | handleSubmitQuery
+client/src/pages/ReattData.js:196 | Navigate |  -> /dashboard
+client/src/pages/ReattData.js:319 | Select Certificate Select Course Select Unit Select Resource Clear Saving... / Save | handleSubmit
+client/src/pages/ReattData.js:425 | Clear | handleClearForm
+client/src/pages/ReattData.js:432 | Saving... / Save | 
+client/src/pages/ReattData.js:453 | Refresh | () => fetchReattData(filters)
+client/src/pages/ReattData.js:529 | Clear Filters | handleClearFilters
+client/src/pages/ReattData.js:537 | Apply | () => fetchReattData(filters)
+client/src/pages/Reports.js:20 | Navigate |  -> /
+client/src/pages/RequestRaised.js:51 | Navigate |  -> /
+client/src/pages/RequestRaised.js:69 | Requests | () => navigate('/request-raised')
+client/src/pages/RequestRaised.js:95 | Reject | () => handleApproval(false, item.volume_id)
+client/src/pages/RequestRaised.js:96 | Approve | () => handleApproval(true, item.volume_id)
+client/src/pages/Resource.js:339 | Navigate |  -> /
+client/src/pages/Resource.js:356 | Course |  -> `/course`
+client/src/pages/Resource.js:356 | Chapters |  -> `${localStorage.getItem('last_page_visited')}`
+client/src/pages/Resource.js:375 | IconButton | () => setOpenResource(true)
+client/src/pages/Resource.js:423 | IconButton | () => openQuestionForm(r)
+client/src/pages/Resource.js:441 | Create New Resource Save | handleClose
+client/src/pages/Resource.js:444 | IconButton | handleClose
+client/src/pages/Resource.js:461 | Save | createResourceAPI
+client/src/pages/Resource.js:469 | Add Question Saving... / Save Questions | closeQuestionForm
+client/src/pages/Resource.js:475 | IconButton | closeQuestionForm
+client/src/pages/Resource.js:504 | IconButton | () => removeQuestion(questionIndex)
+client/src/pages/Resource.js:731 | IconButton | () => removeOptionRow(questionIndex, optionIndex)
+client/src/pages/Resource.js:753 | Add Step / Add Option | () => addOptionRow(questionIndex)
+client/src/pages/Resource.js:869 | Add Question | addQuestion
+client/src/pages/Resource.js:875 | Saving... / Save Questions | saveQuestions
+client/src/pages/Schedules.js:207 | Navigate |  -> /
+client/src/pages/Schedules.js:210 | Navigate |  -> /
+client/src/pages/Schedules.js:274 | Previous period | handlePrev
+client/src/pages/Schedules.js:274 | Today | handleToday
+client/src/pages/Schedules.js:274 | Next period | handleNext
+client/src/pages/Schedules.js:275 | Month | () => setView('month')
+client/src/pages/Schedules.js:275 | Week | () => setView('week')
+client/src/pages/Schedules.js:278 | Calendar | handleEventClick; handleEventClick
+client/src/pages/Schedules.js:284 | · Targeted learning | () => handleEventClick({ event })
+client/src/pages/Sessions.js:142 | Logout all sessions | handleEndAll
+client/src/pages/Sessions.js:171 | Logout | () => handleEndOne(session)
+client/src/pages/Sessions.js:171 | Previous sessions page | () => setSessionPage((page) => Math.max(1, page - 1))
+client/src/pages/Sessions.js:171 | button | () => setSessionPage(page)
+client/src/pages/Sessions.js:171 | Next sessions page | () => setSessionPage((page) => Math.min(totalSessionPages, page + 1))
+client/src/pages/Stream.js:16 | Navigate |  -> /
+client/src/pages/Stream.js:19 | Navigate |  -> /dashboard
+client/src/pages/Trainee.js:9 | Navigate |  -> /
+client/src/pages/Trainee.js:15 | Navigate |  -> /
+client/src/pages/TraineeIndividual.js:397 | Navigate |  -> /
+client/src/pages/TraineeIndividual.js:401 | Navigate |  -> /
+client/src/pages/TraineeIndividual.js:429 | Home | () => navigate("/dashboard")
+client/src/pages/TraineeIndividual.js:437 | Completed Modules | () => setProfile(!profile)
+client/src/pages/TutorDashboard.js:88 | Add Course | () => navigate('/custom-course')
+client/src/pages/VideoMedica.js:10 | Navigate |  -> /
+client/src/pages/VideoMedica.js:16 | Navigate |  -> /
+client/src/pages/VolumeList.js:324 | Navigate |  -> /
+client/src/pages/VolumeList.js:588 | Home | () => navigate('/dashboard')
+client/src/pages/VolumeList.js:646 | Upload Volume | () => setOpenUploadVol(true)
+client/src/pages/VolumeList.js:743 | Download JSON file | () => handleDownloadJson(volume)
+client/src/pages/VolumeList.js:781 | Preparing… / Source file | () => handleDownload(volume, 'source')
+client/src/pages/VolumeList.js:788 | Preparing… / Converted file | () => handleDownload(volume, 'converted')
+client/src/pages/VolumeList.js:794 | Recording files | () => setRecordingsVolume(volume)
+client/src/pages/VolumeList.js:801 | button | (e) => handleMenuOpen(e, volume)
+client/src/pages/VolumeList.js:820 | Converting... /  Edit | handleMenuClose
+client/src/pages/VolumeList.js:833 | Converting... /  | handleRequestConversion
+client/src/pages/VolumeList.js:840 | Edit | () => handleOpenEdit(selectedVolume)
+client/src/pages/VolumeList.js:844 | VolumeRecordingDownloads | () => setRecordingsVolume(null)
+client/src/pages/VolumeList.js:845 | UploadVol | handleClose
+client/src/pages/VolumeList.js:849 | button | handleClose
+client/src/pages/VolumeList.js:856 | Select Fetal Presentation Cephalic_left Cephalic_right Breech_left Breech_right Select Trimester First Trimester Second Trimester Third Trimester Upload Volume (Add up to 10 .vol f | handleSubmit
+client/src/pages/VolumeList.js:948 | Upload Volume (Add up to 10 .vol files) /  | () => fileInputRef.current?.click()
+client/src/pages/VolumeList.js:975 | Remove file | () => handleRemoveFile(idx)
+client/src/pages/VolumeList.js:990 | Uploading... / Upload | 
+client/src/pages/VolumeList.js:1003 | UploadVol | handleCloseEdit
+client/src/pages/VolumeList.js:1007 | button | handleCloseEdit
+client/src/pages/VolumeList.js:1014 | Select Fetal Presentation Cephalic_left Cephalic_right Breech_left Breech_right Select Trimester First Trimester Second Trimester Third Trimester Cancel Saving... / Save Changes | handleEditSubmit
+client/src/pages/VolumeList.js:1098 | Cancel | handleCloseEdit
+client/src/pages/VolumeList.js:1105 | Saving... / Save Changes | 
+client/src/routes/ProtectedRoutes.js:127 | Navigate |  -> /
+client/src/routes/ProtectedRoutes.js:136 | Navigate |  -> /dashboard
+client/src/routes/ProtectedRoutes.js:150 | Navigate |  -> /dashboard
+client/src/routes/ProtectedRoutes.js:155 | Navigate |  -> /
+client/src/utils/CustomCloseButton.js:6 | Close | closeToast
+client/src/utils/deleteCourseToast.js:11 | Okay | async () => { try { await DeleteCourseAPI(token, course_id) toast.success("Course deleted successfully"); onSuccess?.(); } catch (err) { toast.error("Failed to delete the Course"); } finally { toast.dismiss(toastId); } }
+client/src/utils/deleteCourseToast.js:27 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/deleteCuriculumtoast.js:13 | Okay | async () => { try { await DeleteCurAPI(token, curiculum_id) toast.success("Curiculum deleted successfully"); onSuccess?.(); } catch (err) { toast.error("Failed to delete the curiculum"); } finally { toast.dismiss(toastId); } }
+client/src/utils/deleteCuriculumtoast.js:29 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/deleteInstructorToast.js:13 | Okay | async () => { try { await DeleteInstructorAPI(token, user_mail) toast.success("Trainee deleted successfully"); onSuccess?.(); } catch (err) { toast.error("Failed to delete the trainee"); } finally { toast.dismiss(toastId); } }
+client/src/utils/deleteInstructorToast.js:29 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/deleteToast.js:13 | Okay | async () => { try { await axios.delete(`${APP_URL}/api/v1/delete-batch/${batch_id}`, { headers: { 'Authorization': `Bearer ${token}` } }); toast.success("Batch deleted successfully"); onSuccess?.(); } catch (err) { toast.error("Fa
+client/src/utils/deleteToast.js:33 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/deleteTraineeToast.js:14 | Okay | async () => { try { await DeleteTraineeAPI(token, user_mail) toast.success("Trainee deleted successfully"); onSuccess?.(); } catch (err) { toast.error("Failed to delete the trainee"); } finally { toast.dismiss(toastId); } }
+client/src/utils/deleteTraineeToast.js:30 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/ForgotPassword.js:9 | wrapper | handleClose
+client/src/utils/showDisableConfirmToast.js:13 | Okay | async () => { try { await axios.patch(`${APP_URL}/api/v1/disable-trainee/${email}/${statusUpdate}`, {}, { headers: { 'Authorization': `Bearer ${token}` } }); toast.success("Trainee disabled successfully"); onSuccess?.(); } catch (
+client/src/utils/showDisableConfirmToast.js:33 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/showEnableConfirmToast.js:13 | Okay | async () => { try { await axios.patch(`${APP_URL}/api/v1/disable-trainee/${email}/${statusUpdate}`, {}, { headers: { 'Authorization': `Bearer ${token}` } }); toast.success("Verification OTP sent. The trainee will be enabled after 
+client/src/utils/showEnableConfirmToast.js:33 | Cancel | () => toast.dismiss(toastId)
+client/src/utils/TLToast.js:13 | Okay | async () => { try { const res = await DeleteTargetedLearningAPI(token, targeted_learning_id) toast.success("Targeted Learning deleted successfully"); onSuccess?.(); } catch (err) { toast.error("Failed to delete the group"); } fina
+client/src/utils/TLToast.js:29 | Cancel | () => toast.dismiss(toastId)
