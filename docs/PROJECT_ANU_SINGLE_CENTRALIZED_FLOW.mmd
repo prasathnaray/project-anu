@@ -1,0 +1,148 @@
+%% Project ANU - Single centralized technical flowchart
+%% Roles -> secured API -> application services -> VR/cloud/data -> dashboards
+
+flowchart LR
+
+    %% ================================================================
+    %% A. USERS AND CLIENTS
+    %% ================================================================
+    subgraph USERS["A. USERS / CLIENTS"]
+        SA["Super Admin<br/>Role 99<br/><br/>Institutions, admins, curriculum,<br/>certifications, global volumes,<br/>mappings and audit"]
+        IA["Institution Admin<br/>Role 101<br/><br/>Batches, instructors, trainees,<br/>schedules, approvals, streams<br/>and institutional reports"]
+        IN["Instructor<br/>Role 102<br/><br/>Assigned batches, volume and<br/>recording upload, trainee review,<br/>supervision and feedback"]
+        TR["Trainee<br/>Role 103<br/><br/>Assigned courses, theory,<br/>MindSpark, VR practice/tests,<br/>results, queries and feedback"]
+    end
+
+    %% ================================================================
+    %% B. CLIENTS AND COMMUNICATION GATEWAY
+    %% ================================================================
+    subgraph CLIENTS["B. CLIENTS AND COMMUNICATION"]
+        WEB["React Web Portal<br/>Admin / Instructor / Trainee"]
+        HEADSET["VR Headset / Simulator Client<br/>Authenticated REST calls<br/>Probe movement and simulation input"]
+        REST["HTTPS REST API<br/>/api/v1/login<br/>Protected application routes"]
+        SOCKET["Socket.IO Realtime Events<br/>Activity, session and stream status"]
+        IVS["Amazon IVS Real-Time<br/>WebRTC video/audio stage"]
+    end
+
+    %% ================================================================
+    %% C. SECURITY AND APPLICATION SERVICES
+    %% ================================================================
+    subgraph SERVICES["C. ANU APPLICATION / API SERVICES"]
+        AUTH["1. Login and Security Gateway<br/><br/>Device detection -> protected email lookup<br/>-> password verification -> session creation<br/>-> JWT access/refresh tokens"]
+        RBAC["2. RBAC and Route Authorization<br/><br/>Validate JWT and session<br/>Check role 99 / 101 / 102 / 103<br/>Check account, institution and batch scope"]
+        LMS["3. LMS and Administration Services<br/><br/>Institutions -> batches -> enrollments<br/>-> curriculum -> certifications -> courses<br/>-> chapters -> modules -> resources -> schedules"]
+        ASSESS["4. Assessment and Progress Services<br/><br/>MindSpark, challenges, attempts, completion,<br/>scores, feedback, queries and dashboards"]
+        IIVR["5. IIVR Simulation and Scoring<br/><br/>Start/end test, task validation, plane acquisition,<br/>freeze, annotation, labelling, measurement,<br/>error counts, offsets and result submission"]
+        MEDIA["6. Media and Volume Services<br/><br/>Upload, approval, conversion trigger,<br/>placement calibration, recordings and mapping"]
+        ANALYTICS["7. Analytics Engine<br/><br/>Competency, accuracy, benchmark, readiness,<br/>remediation and reattempt recommendations"]
+    end
+
+    %% ================================================================
+    %% D. CLOUD, DATA AND OUTPUT
+    %% ================================================================
+    subgraph CLOUD["D. CLOUD, DATA AND OUTPUT"]
+        DB[("Supabase PostgreSQL<br/><br/>Users, roles, institutions,<br/>batches, enrollments, courses,<br/>sessions, attempts, scores,<br/>logs and queries")]
+        STORAGE[("Object Storage<br/>Supabase Storage or Amazon S3<br/><br/>Raw .vol, NIfTI, images,<br/>recordings, submitted media<br/>and reports")]
+        WORKER["Python Volume Conversion Worker<br/><br/>Read .vol -> parse voxel data<br/>-> resample -> write .nii / .nii.gz<br/>-> update conversion status"]
+        STREAM["Amazon IVS Real-Time<br/><br/>Publisher token for headset<br/>Viewer token for instructor/admin<br/>Live stream delivery"]
+        OUTPUT["Role-specific dashboards and output<br/><br/>Progress, review, reports,<br/>recommendations, feedback,<br/>audit trail and reattempts"]
+        COST["Cloud cost points<br/><br/>API compute, database, storage,<br/>conversion CPU, downloads,<br/>IVS minutes, realtime events,<br/>logs and data transfer"]
+    end
+
+    %% ================================================================
+    %% ROLE ENTRY AND AUTHENTICATION
+    %% ================================================================
+    SA -->|"HTTPS login"| WEB
+    IA -->|"HTTPS login"| WEB
+    IN -->|"HTTPS login"| WEB
+    TR -->|"HTTPS login or headset login"| WEB
+    TR -->|"VR login"| HEADSET
+
+    WEB -->|"POST /api/v1/login and protected REST"| REST
+    HEADSET -->|"POST /api/v1/login and simulation REST"| REST
+    REST --> AUTH
+    AUTH -->|"JWT + session"| RBAC
+    RBAC -->|"Authorized request"| LMS
+    RBAC -->|"Authorized request"| ASSESS
+    RBAC -->|"Authorized request"| IIVR
+    RBAC -->|"Authorized request"| MEDIA
+    RBAC -->|"Authorized request"| ANALYTICS
+
+    %% ================================================================
+    %% LMS, ADMIN AND LEARNING PATHS
+    %% ================================================================
+    LMS -->|"Curriculum, batch, enrollment and schedule data"| DB
+    ASSESS -->|"Attempts, scores, completion and feedback"| DB
+    ANALYTICS -->|"Read activity and calculate metrics"| DB
+    ANALYTICS --> OUTPUT
+    OUTPUT --> WEB
+
+    %% ================================================================
+    %% VR SIMULATION PATH
+    %% ================================================================
+    HEADSET -->|"Start test / load scenario"| IIVR
+    IIVR -->|"Request assigned volume and placement"| STORAGE
+    STORAGE -->|"NIfTI / scenario asset"| HEADSET
+    HEADSET -->|"Plane, annotation and measurement result"| IIVR
+    IIVR -->|"Save session, score, errors and offsets"| DB
+    IIVR -->|"Save submitted image or recording"| STORAGE
+    IIVR --> ANALYTICS
+
+    %% ================================================================
+    %% VOLUME PREPARATION PATH
+    %% ================================================================
+    IN -->|"Upload .vol and metadata"| MEDIA
+    IA -->|"Approve / reject uploaded volume"| MEDIA
+    SA -->|"Manage global volume and mapping"| MEDIA
+    MEDIA -->|"Raw file and metadata"| STORAGE
+    MEDIA -->|"Conversion job"| WORKER
+    WORKER -->|"Read raw .vol"| STORAGE
+    WORKER -->|"Write converted .nii / .nii.gz"| STORAGE
+    WORKER -->|"Conversion status"| DB
+    MEDIA -->|"Placement, recording and course mapping"| DB
+    MEDIA -->|"Reference recordings and mapped assets"| STORAGE
+
+    %% ================================================================
+    %% LIVE STREAM AND REALTIME PATH
+    %% ================================================================
+    HEADSET -->|"Request publisher token"| IVS
+    IVS -->|"Publish video/audio"| STREAM
+    IN -->|"Request viewer token"| IVS
+    IA -->|"Request viewer token"| IVS
+    STREAM -->|"Live stream to instructor/admin"| WEB
+    HEADSET <-->|"Activity and session status"| SOCKET
+    SOCKET -->|"Realtime dashboard updates"| WEB
+
+    %% ================================================================
+    %% CLOUD COST AND DATA FLOW
+    %% ================================================================
+    REST -.->|"API compute, request and transfer cost"| COST
+    DB -.->|"Database plan, queries and connections"| COST
+    STORAGE -.->|"Storage capacity, PUT/GET and downloads"| COST
+    WORKER -.->|"CPU, memory and conversion runtime"| COST
+    STREAM -.->|"IVS stage, stream minutes and viewers"| COST
+    SOCKET -.->|"Realtime events and logs"| COST
+    AUTH -.->|"Authentication and audit logs"| DB
+
+    %% ================================================================
+    %% VISUAL STYLES
+    %% ================================================================
+    classDef role fill:#EAE1F7,stroke:#684396,color:#17313B,stroke-width:2px;
+    classDef client fill:#DCEFF7,stroke:#17677C,color:#17313B,stroke-width:2px;
+    classDef security fill:#EAE1F7,stroke:#684396,color:#17313B,stroke-width:2px;
+    classDef service fill:#DFF2D0,stroke:#4B7D2E,color:#17313B,stroke-width:2px;
+    classDef simulation fill:#FFF0CE,stroke:#986300,color:#17313B,stroke-width:2px;
+    classDef data fill:#DCEFF7,stroke:#17677C,color:#17313B,stroke-width:2px;
+    classDef storage fill:#DFF2D0,stroke:#4B7D2E,color:#17313B,stroke-width:2px;
+    classDef cloud fill:#EAE1F7,stroke:#684396,color:#17313B,stroke-width:2px;
+    classDef output fill:#F8DEDE,stroke:#9A3030,color:#17313B,stroke-width:2px;
+
+    class SA,IA,IN,TR role;
+    class WEB,HEADSET,REST,SOCKET,IVS client;
+    class AUTH,RBAC security;
+    class LMS,ASSESS,MEDIA,ANALYTICS service;
+    class IIVR simulation;
+    class DB data;
+    class STORAGE,WORKER storage;
+    class STREAM cloud;
+    class OUTPUT,COST output;

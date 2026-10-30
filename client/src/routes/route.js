@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { lazy, Suspense }  from 'react'
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import SideBar from '../components/sideBar';
 
@@ -7,45 +7,46 @@ import GoogleAnalytics from '../components/GoogleAnalytics';
 import Login from '../Auth/login';
 import AccountVerification from '../Auth/AccountVerification';
 import PrivateRoute from './ProtectedRoutes';
-import Dashboard from '../pages/dashboard';
+const Dashboard = lazy(() => import('../pages/dashboard'));
 // import Profile from '../pages/Profile';
-import Trainee from '../pages/Trainee';
-import AddTrainee from '../components/admin/addTrainee';
-import Queries from '../pages/Queries';
-import Instructors from '../pages/Instructors';
-import Batch from '../pages/Batch';
-import Course from '../pages/Course';
-import AddCourse from '../components/admin/AddCourse';
-import Curiculum from '../pages/Curiculum';
-import BatchIndividual from '../pages/BatchIndividual';
-import Requests from '../pages/Requests';
-import Stream from '../pages/Stream';
-import Chapters from '../pages/Chapters';
-import Module from '../pages/Module';
-import Resource from '../pages/Resource';
-import Schedules from '../pages/Schedules';
-import TraineeIndividual from '../pages/TraineeIndividual';
-import IndividualInstructors from '../pages/IndividualInstructors';
-import VolumeList from '../pages/VolumeList';
-import RequestRaised from '../pages/RequestRaised';
-import VideoMedica from '../pages/VideoMedica';
-import InsideCertifications from '../pages/InsideCertifications';
-import Reports from '../pages/Reports';
-import Academics from '../pages/Academics';
-import MyLearning from '../pages/MyLearning';
-import MyProgress from '../pages/MyProgress';
-import TraineeDashboard from '../components/trainee/TraineeDashboard';
-import CourseMapping from '../pages/CourseMapping';
-import CustomCourse from '../pages/CustomCourse';
-import ReattData from '../pages/ReattData';
-import ContentAccess from '../pages/ContentAccess';
-import Sessions from '../pages/Sessions';
-import Cluster from '../pages/Cluster';
+const Trainee = lazy(() => import('../pages/Trainee'));
+const AddTrainee = lazy(() => import('../components/admin/addTrainee'));
+const Queries = lazy(() => import('../pages/Queries'));
+const Instructors = lazy(() => import('../pages/Instructors'));
+const Batch = lazy(() => import('../pages/Batch'));
+const Course = lazy(() => import('../pages/Course'));
+const AddCourse = lazy(() => import('../components/admin/AddCourse'));
+const Curiculum = lazy(() => import('../pages/Curiculum'));
+const BatchIndividual = lazy(() => import('../pages/BatchIndividual'));
+const Requests = lazy(() => import('../pages/Requests'));
+const Stream = lazy(() => import('../pages/Stream'));
+const Chapters = lazy(() => import('../pages/Chapters'));
+const Module = lazy(() => import('../pages/Module'));
+const Resource = lazy(() => import('../pages/Resource'));
+const Schedules = lazy(() => import('../pages/Schedules'));
+const TraineeIndividual = lazy(() => import('../pages/TraineeIndividual'));
+const IndividualInstructors = lazy(() => import('../pages/IndividualInstructors'));
+const VolumeList = lazy(() => import('../pages/VolumeList'));
+const RequestRaised = lazy(() => import('../pages/RequestRaised'));
+const VideoMedica = lazy(() => import('../pages/VideoMedica'));
+const InsideCertifications = lazy(() => import('../pages/InsideCertifications'));
+const Reports = lazy(() => import('../pages/Reports'));
+const Academics = lazy(() => import('../pages/Academics'));
+const MyLearning = lazy(() => import('../pages/MyLearning'));
+const MyProgress = lazy(() => import('../pages/MyProgress'));
+const TraineeDashboard = lazy(() => import('../components/trainee/TraineeDashboard'));
+const CourseMapping = lazy(() => import('../pages/CourseMapping'));
+const CustomCourse = lazy(() => import('../pages/CustomCourse'));
+const ReattData = lazy(() => import('../pages/ReattData'));
+const ContentAccess = lazy(() => import('../pages/ContentAccess'));
+const Sessions = lazy(() => import('../pages/Sessions'));
+const Cluster = lazy(() => import('../pages/Cluster'));
 function RoutesPath() {
   return (
     <BrowserRouter>
                                 <GoogleAnalytics />
 
+            <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading page...</div>}>
             <Routes>
                     <Route path="/" element={<Login />}/>
                     <Route path="/verify-account" element={<AccountVerification />} />
@@ -93,6 +94,7 @@ function RoutesPath() {
                      </Route>
                     <Route path="*" element={<Login />}/>
             </Routes>
+            </Suspense>
     </BrowserRouter>
   )
 }
