@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
 import { Pencil, Plus, RotateCcw, Search, Trash2, Upload, X } from 'lucide-react';
-import { TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox } from '@mui/material';
+import { TextField, MenuItem, Dialog, DialogTitle, DialogContent, DialogActions, Checkbox, Pagination } from '@mui/material';
 import ClipLoader from 'react-spinners/ClipLoader';
 import { toast } from 'react-toastify';
 import GetVolInsAPI from '../API/GetVolInsAPI';
@@ -54,6 +54,8 @@ function Cluster() {
   const [loading, setLoading] = useState(false);
   const [volumes, setVolumes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [openAddModal, setOpenAddModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
 
@@ -248,6 +250,16 @@ function Cluster() {
       (c.volume_name || '').toLowerCase().includes(q)
     );
   }, [clusters, searchQuery]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredClusters.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
+  const visibleClusters = filteredClusters.slice(pageStart, pageStart + pageSize);
+
+  // Keep the selected page valid after deleting or updating a matching cluster.
+  useEffect(() => {
+    setPage((previous) => Math.min(previous, pageCount));
+  }, [pageCount]);
 
   const handleOpenAddModal = () => {
     setClusterForm({
@@ -782,12 +794,23 @@ function Cluster() {
                   label="Search clusters"
                   placeholder="Search by ID, name, or volume"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1);
+                  }}
                   InputProps={{
                     startAdornment: <Search size={16} className="text-gray-400 mr-2" />,
                   }}
                 />
               </div>
+              <button
+                type="button"
+                onClick={handleOpenAddModal}
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-[#8DC63F] px-4 py-2.5 text-xs font-semibold text-gray-900 shadow-sm transition-colors hover:bg-[#7cb336] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8DC63F] focus-visible:ring-offset-2"
+              >
+                <Plus size={16} aria-hidden="true" />
+                Add Cluster
+              </button>
             </div>
 
             {/* Clusters Table */}
@@ -819,7 +842,7 @@ function Cluster() {
                       </td>
                     </tr>
                   ) : (
-                    filteredClusters.map((cluster) => {
+                    visibleClusters.map((cluster) => {
                       const volumeIds = Array.isArray(cluster.volume_ids)
                         ? cluster.volume_ids
                         : (cluster.volume_id ? [cluster.volume_id] : []);
@@ -936,6 +959,45 @@ function Cluster() {
                 </tbody>
               </table>
             </div>
+            {!loading && (
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 bg-gray-50/50 px-4 py-4 rounded-b-lg">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                  <p role="status" aria-live="polite">
+                    Showing <span className="font-semibold text-gray-800">{filteredClusters.length ? pageStart + 1 : 0}–{Math.min(pageStart + pageSize, filteredClusters.length)}</span> of{' '}
+                    <span className="font-semibold text-gray-800">{filteredClusters.length}</span> clusters
+                  </p>
+                  <label className="flex items-center gap-2">
+                    Rows per page
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#8DC63F]"
+                    >
+                      {[5, 10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <Pagination
+                  aria-label="Cluster list pagination"
+                  count={pageCount}
+                  page={currentPage}
+                  onChange={(_, nextPage) => setPage(nextPage)}
+                  disabled={filteredClusters.length === 0}
+                  shape="rounded"
+                  size="small"
+                  siblingCount={0}
+                  sx={{
+                    '& .MuiPaginationItem-root': { border: '1px solid #e5e7eb', backgroundColor: '#fff', fontWeight: 500, borderRadius: '8px' },
+                    '& .MuiPaginationItem-root.Mui-selected': { backgroundColor: '#8DC63F', color: '#1f340e', borderColor: '#8DC63F' },
+                    '& .MuiPaginationItem-root.Mui-selected:hover': { backgroundColor: '#7cb336' },
+                    '& .MuiPaginationItem-ellipsis': { border: 0, backgroundColor: 'transparent' },
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

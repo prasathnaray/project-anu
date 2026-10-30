@@ -44,8 +44,7 @@ const Cluster = lazy(() => import('../pages/Cluster'));
 function RoutesPath() {
   return (
     <BrowserRouter>
-                                <GoogleAnalytics />
-
+            <GoogleAnalytics />
             <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center' }}>Loading page...</div>}>
             <Routes>
                     <Route path="/" element={<Login />}/>
