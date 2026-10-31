@@ -20,6 +20,7 @@ Globals:
     Environment:
       Variables:
         NODE_ENV: production
+        DATABASE_CA_FILE: certs/supabase-ca.crt
         LAMBDA_SECRET_ID: !Ref RuntimeSecretId
         STORAGE_PROVIDER: s3
         STORAGE_READ_FALLBACK: supabase
