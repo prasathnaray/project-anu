@@ -1,0 +1,7424 @@
+{
+  "generated": "2026-10-30",
+  "endpoints": [
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/health",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/app.js",
+      "routeLine": 129,
+      "handlerExpression": "(req, res) => {\r\n    res.status(200).json({\r\n        status: 'Healthy',\r\n        code: 200\r\n    });\r\n}",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/app.js",
+          "line": 129
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/test",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/app.js",
+      "routeLine": 172,
+      "handlerExpression": "(req, res) => {\r\n    const requester = req.user;\r\n    res.status(200).json({\r\n        status: 'Test Route',\r\n        code: 200,\r\n        user: req.user\r\n    });\r\n}",
+      "middleware": [
+        "Authenticate"
+      ],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [
+        "authorization"
+      ],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        401
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/Auth/authenticate.js",
+          "line": 7
+        },
+        {
+          "file": "server/v1/app.js",
+          "line": 172
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/login",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/Auth.js",
+      "routeLine": 5,
+      "handlerExpression": "LoginRequest",
+      "middleware": [],
+      "body": [
+        "email",
+        "password",
+        "user_email",
+        "user_mail",
+        "user_password"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/Auth/authController.js",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/forgot-password",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/forgotpRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "forgotpController",
+      "middleware": [],
+      "body": [
+        "reset_password_mail"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [
+        "x-forwarded-for"
+      ],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/forgotpasswordcontroller.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/account-verification/request",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/accountVerificationRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "requestAccountVerification",
+      "middleware": [],
+      "body": [
+        "email",
+        "purpose"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        400
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/accountVerificationController.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/account-verification/verify",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/accountVerificationRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "verifyAccount",
+      "middleware": [],
+      "body": [
+        "email",
+        "otp",
+        "purpose"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/accountVerificationController.js",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/refresh-token",
+      "auth": "Refresh-token cookie / handler check",
+      "routeFile": "server/v1/routes/refreshTokenRouter.js",
+      "routeLine": 5,
+      "handlerExpression": "refreshToken",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/Auth/refreshToken.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/sessions/validate",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 13,
+      "handlerExpression": "(req, res) => {\r\n  res.json({ valid: true, sid: req.user.sid, user_mail: req.user.user_mail });\r\n}",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/sessions/me",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 37,
+      "handlerExpression": "handler(async (req, res) => {\r\n  req.params.email = req.user.user_mail;\r\n  const target = await targetFor(req, res);\r\n  if (!target) return;\r\n  const result = await client.query(\r\n    `SELECT id, device, os, login_source, logged_in_at, last_seen_at,\r\n            expires_at, revoked_at,\r\n            CASE WHEN revoked_at IS NOT NULL THEN 'ended'\r\n                 WHEN expires_at <= now() THEN 'expired' ELSE 'active' END AS status\r\n     FROM public.user_sessions\r\n     WHERE user_email = $1 AND (revoked_at IS NULL AND expires_at > now()\r\n       OR logged_in_at > now() - interval '30 days')\r\n     ORDER BY CASE WHEN revoked_at IS NULL AND expires_at > now() THEN 0 ELSE 1 END,\r\n              logged_in_at DESC LIMIT 200`,\r\n    [target.user_email]\r\n  );\r\n  res.json({ user: target, currentSessionId: req.user.sid, sessions: result.rows });\r\n})",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "email"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        403,
+        404
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/sessions/users",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 56,
+      "handlerExpression": "handler(async (req, res) => {\r\n  const role = Number(req.user.role);\r\n  if (![99, 101].includes(role)) return res.status(403).json({ message: 'Not permitted' });\r\n  const search = String(req.query.search || '').trim().slice(0, 100);\r\n  const escaped = search.replace(/[\\\\%_]/g, '\\\\$&');\r\n  const result = await client.query(\r\n    `SELECT user_email, user_name, user_role, centre_id FROM public.user_data\r\n     WHERE ($1::int = 99 OR centre_id = $2::uuid)\r\n       AND (user_email ILIKE $3 ESCAPE '\\\\' OR user_name ILIKE $3 ESCAPE '\\\\')\r\n     ORDER BY user_name, user_email LIMIT 50`,\r\n    [role, req.user.centre_id || null, `%${escaped}%`]\r\n  );\r\n  res.json({ users: result.rows });\r\n})",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "search"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        403
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/sessions/users/:email",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 71,
+      "handlerExpression": "handler(async (req, res) => {\r\n  const target = await targetFor(req, res);\r\n  if (!target) return;\r\n  const result = await client.query(\r\n    `SELECT id, device, os, login_source, logged_in_at, last_seen_at,\r\n            expires_at, revoked_at,\r\n            CASE WHEN revoked_at IS NOT NULL THEN 'ended'\r\n                 WHEN expires_at <= now() THEN 'expired' ELSE 'active' END AS status\r\n     FROM public.user_sessions\r\n     WHERE user_email = $1 AND (revoked_at IS NULL AND expires_at > now()\r\n       OR logged_in_at > now() - interval '30 days')\r\n     ORDER BY CASE WHEN revoked_at IS NULL AND expires_at > now() THEN 0 ELSE 1 END,\r\n              logged_in_at DESC LIMIT 200`,\r\n    [target.user_email]\r\n  );\r\n  res.json({ user: target, currentSessionId: req.user.sid, sessions: result.rows });\r\n})",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "email"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        403,
+        404
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 71
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/sessions/users/:email/:id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 89,
+      "handlerExpression": "handler(async (req, res) => {\r\n  if (!isUuid(req.params.id)) return res.status(400).json({ message: 'Invalid session ID' });\r\n  const target = await targetFor(req, res);\r\n  if (!target) return;\r\n  const ended = await revokeSession(req.params.id, target.user_email);\r\n  if (!ended) return res.status(404).json({ message: 'Active session not found' });\r\n  const currentSessionEnded = req.user.sid === req.params.id;\r\n  if (currentSessionEnded) clearRefreshCookie(res);\r\n\r\n  broadcastSessionRevoked({ sessionId: req.params.id, userEmail: target.user_email });\r\n\r\n  res.json({ ended: true, currentSessionEnded });\r\n})",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "email",
+        "id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        400,
+        403,
+        404
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 89
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/sessions/users/:email/logout-all",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 103,
+      "handlerExpression": "handler(async (req, res) => {\r\n  const target = await targetFor(req, res);\r\n  if (!target) return;\r\n  const ended = await revokeAllSessions(target.user_email);\r\n  const currentSessionEnded = req.user.user_mail === target.user_email;\r\n  if (currentSessionEnded) clearRefreshCookie(res);\r\n\r\n  broadcastSessionRevoked({ userEmail: target.user_email, all: true });\r\n\r\n  res.json({ ended, currentSessionEnded });\r\n})",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "email"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        403,
+        404
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 103
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/sessions/logout",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/sessionRoute.js",
+      "routeLine": 115,
+      "handlerExpression": "handler(async (req, res) => {\r\n  await revokeSession(req.user.sid, req.user.user_mail);\r\n  clearRefreshCookie(res);\r\n  broadcastSessionRevoked({ sessionId: req.user.sid, userEmail: req.user.user_mail });\r\n  res.json({ ended: true, currentSessionEnded: true });\r\n})",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/routes/sessionRoute.js",
+          "line": 115
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/send",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/notificationRoutes.js",
+      "routeLine": 4,
+      "handlerExpression": "sendNotification",
+      "middleware": [],
+      "body": [
+        "link",
+        "message",
+        "receiverId",
+        "senderId"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/notificationController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/tokenn",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/tokenIvsRoute.js",
+      "routeLine": 15,
+      "handlerExpression": "createLegacyPublisherSession",
+      "middleware": [
+        "tokenLimiter"
+      ],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/tokenIvsRoute.js",
+          "line": 6
+        },
+        {
+          "file": "server/v1/controller/streamingSessionController.js",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/streaming/publisher-session/:sessionId/activate",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/streamingSessionRoute.js",
+      "routeLine": 15,
+      "handlerExpression": "controller.activatePublisherSession",
+      "middleware": [
+        "tokenLimiter"
+      ],
+      "body": [],
+      "query": [],
+      "params": [
+        "sessionId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        204
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/streamingSessionRoute.js",
+          "line": 6
+        },
+        {
+          "file": "server/v1/controller/streamingSessionController.js",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/streaming/publisher-session/:sessionId",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/streamingSessionRoute.js",
+      "routeLine": 16,
+      "handlerExpression": "controller.stopPublisherSession",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "sessionId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        204
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/streamingSessionController.js",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/streaming/self-viewer-session",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/streamingSessionRoute.js",
+      "routeLine": 17,
+      "handlerExpression": "controller.createSelfViewerSession",
+      "middleware": [
+        "tokenLimiter"
+      ],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/streamingSessionRoute.js",
+          "line": 6
+        },
+        {
+          "file": "server/v1/controller/streamingSessionController.js",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/streaming/viewer-session",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/streamingSessionRoute.js",
+      "routeLine": 18,
+      "handlerExpression": "controller.createViewerSession",
+      "middleware": [
+        "tokenLimiter"
+      ],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/streamingSessionRoute.js",
+          "line": 6
+        },
+        {
+          "file": "server/v1/controller/streamingSessionController.js",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/user-completion",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/progressRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "progressUpdate",
+      "middleware": [],
+      "body": [
+        "course_id",
+        "isCompleted",
+        "module_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/progressController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-vr-data/:data_check",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getVrDataRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getVrData",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "data_check"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/vrDataC.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-batch/:batch_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/deleteBatchRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteBatchc",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "batch_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/profile",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/profileRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "profilecontroller",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/profilecontroller.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-trainees",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getTraineesRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "TraineeController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/traineeController.js",
+          "line": 8
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PATCH",
+      "endpoint": "/api/v1/disable-trainee/:user_mail/:status",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/disableTraineeRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "DisableTrainee",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "status",
+        "user_mail"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/traineeController.js",
+          "line": 111
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-batch",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/createBatchRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "batchCreation",
+      "middleware": [],
+      "body": [
+        "batch_end_date",
+        "batch_name",
+        "batch_start_date",
+        "certification_data",
+        "curiculum_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-batches",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getBatchesRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getBatchData",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/associate-batch",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/associateBatchRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "associateBatchc",
+      "middleware": [],
+      "body": [
+        "batch_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/batch-filter",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/filterBatchRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "filterBatchC",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "batch_name",
+        "instructor_name"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 149
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-instructors",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getInstructorRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getInstructorData",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/instructorController.js",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-dashboard-data",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/dashboardRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getDashboardC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/dashboardController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-cur/:curiculum_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/deleteCuriculumRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteCur",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "curiculum_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/curiculumController.js",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-trainee",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/createtraineeRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "CreateTraineeController",
+      "middleware": [
+        "upload.single('file')"
+      ],
+      "body": [
+        "description",
+        "institution_name",
+        "status",
+        "user_batch",
+        "user_batch[]",
+        "user_contact_num",
+        "user_dob",
+        "user_email",
+        "user_gender",
+        "user_name",
+        "user_password",
+        "user_role"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "file"
+      ],
+      "status": [
+        200,
+        404,
+        422,
+        500,
+        501
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/createtraineeRoute.js",
+          "line": 6
+        },
+        {
+          "file": "server/v1/controller/traineeController.js",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-trainee/:user_mail",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/deleteTraineeRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteTraineec",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "user_mail"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/traineeController.js",
+          "line": 148
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-ins/:user_mail",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/deleteInstructorRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "instructorController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "user_mail"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/instructorController.js",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-curiculum",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/curiculamRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "createCur",
+      "middleware": [],
+      "body": [
+        "curiculum_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/curiculumController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-curiculum",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getCuriculumRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCur",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/curiculumController.js",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-course",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/createCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "CourseController",
+      "middleware": [],
+      "body": [
+        "certificate_name",
+        "curiculum_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/courseController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-courses",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/GetCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCoursesC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/courseController.js",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-cours-cur/:curiculum_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getCoursesByCurRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCoursesByCurController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "curiculum_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/courseController.js",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-course/:course_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/deleteCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "courseDeletionController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "course_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/courseController.js",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-admins",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getAdminsRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getAdminC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/adminController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/tag-course",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/TagCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "tagCourseController",
+      "middleware": [],
+      "body": [
+        "certificate_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        403,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/courseController.js",
+          "line": 79
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-gender-ratio",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getGendersRoutes.js",
+      "routeLine": 5,
+      "handlerExpression": "GenderRatioC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/Analytics.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/request-course",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/RequestCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "requestCourseController",
+      "middleware": [],
+      "body": [
+        "course_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        403,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/courseController.js",
+          "line": 98
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-module",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/createModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "CreateModule",
+      "middleware": [],
+      "body": [
+        "chapter_name",
+        "course_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-module",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "GetModule",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "chapter_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-new-module",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/newModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "ModuleNewController",
+      "middleware": [],
+      "body": [
+        "chapter_id",
+        "module_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 82
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/sub-module",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/subModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "subModuleController",
+      "middleware": [],
+      "body": [
+        "module_id",
+        "submod_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/resource-completion",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/moduleCompleteUserRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "completeModule",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "is_completed",
+        "r_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-chapter",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getChapterRouter.js",
+      "routeLine": 4,
+      "handlerExpression": "getChapters",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "course_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/chapterController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-resource",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/createResourceRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "CreateResourceController",
+      "middleware": [],
+      "body": [
+        "learning_module_id",
+        "resource_name",
+        "resource_type",
+        "topic"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/resourceController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-resources",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getResourcesRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getResourcesController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "learning_module_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/resourceController.js",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/resources-mId",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getResourcesByModuleIdsRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getResourcesByModuleIdsController",
+      "middleware": [],
+      "body": [
+        "module_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/resourceController.js",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/user-stats",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/UserStatusRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "UserStatsC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/Analytics.js",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-targeted-learning",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/CreateTargetedLearningRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "createTargetedLearningC",
+      "middleware": [],
+      "body": [
+        "certificate_id",
+        "curiculum_id",
+        "end_date",
+        "learning_module_id",
+        "resource_type",
+        "resources_id",
+        "start_date",
+        "tar_name",
+        "trainee_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 70
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/tllist",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getTargetedLearningRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getTargetedLearningC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/tl-delete/:targeted_learning_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/deleteTargetedLearningRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteTargetedLearningC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "targeted_learning_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 112
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/tllist-ind",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getIndividualTLRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "InTLListC",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "email",
+        "user_mail"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 128
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/trainee/:people_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/induuidRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "induuidController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "isVr"
+      ],
+      "params": [
+        "people_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/traineeController.js",
+          "line": 176
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/trainee/update",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/updateTraineeRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "updateTraineeController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "batch_id",
+        "user_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/traineeController.js",
+          "line": 190
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/batch-individual/:batch_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/IndBatchProfileRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "individualBatchC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "batch_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 179
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/instructor/update",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/updateInstructorRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "updateInstructorController",
+      "middleware": [],
+      "body": [
+        "batch_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/instructorController.js",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/sv-upload",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/svUploadRouter.js",
+      "routeLine": 26,
+      "handlerExpression": "VolumeController",
+      "middleware": [
+        "upload.single('file')"
+      ],
+      "body": [
+        "description",
+        "trimester",
+        "volume_fetal_presentation",
+        "volume_ga",
+        "volume_name",
+        "volume_type"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "file"
+      ],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        406,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/svUploadRouter.js",
+          "line": 26
+        },
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 101
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/update-volume",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/svUploadRouter.js",
+      "routeLine": 27,
+      "handlerExpression": "updateVolumeC",
+      "middleware": [],
+      "body": [
+        "description",
+        "trimester",
+        "volume_fetal_presentation",
+        "volume_ga",
+        "volume_id",
+        "volume_name",
+        "volume_type"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        406,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1127
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-volumes",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getVolumeDataRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getVolumeDataC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 172
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PATCH",
+      "endpoint": "/api/v1/approve-volume/:status_approval/:volume_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/VolumeApprovalRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "volumeApprovalC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "status_approval",
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        404
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 186
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-cert/:curiculum_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getCertByCurRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCertificationByCurController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "curiculum_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/certificationController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-certdetails/:certification_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/GetCertificationDetailsByIdRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "GetCertificationDetailsByIds",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "certification_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/certificationController.js",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-learning-module",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/CreateLearningModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "createLearningController",
+      "middleware": [],
+      "body": [
+        "certificate_id",
+        "course_name",
+        "module_name",
+        "unit_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/learningController.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-lmid/:certificate_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/GetLearningModuleByIdRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getLearningByIdController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "certificate_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/learningController.js",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/update-batch-data",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/updateBatchRouter.js",
+      "routeLine": 4,
+      "handlerExpression": "updateBatchC",
+      "middleware": [],
+      "body": [
+        "batch_id",
+        "new_batch_name",
+        "new_end_date",
+        "new_start_date"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 195
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/mark-testscores",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/calTestScoreRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "calcTestScoreController",
+      "middleware": [],
+      "body": [
+        "diagnostic_interpretation",
+        "image_optimization",
+        "measurement",
+        "plane_identification",
+        "r_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 109
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-resource-lmandrt",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getResourceBylmandrtRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getResourceBylmandrtController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "learning_module_id",
+        "r_type"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/learningController.js",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/instructor-ind",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getInstructorDataAnalysisRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "insDataAnalysisController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "people_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/instructorController.js",
+          "line": 62
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/mark-testscores-re",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/attemptTestRouter.js",
+      "routeLine": 4,
+      "handlerExpression": "attemptTestCont",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "diagnostic_interpretation",
+        "image_optimization",
+        "measurement",
+        "plane_identification",
+        "r_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/moduleController.js",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-volumes-by-instructor",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getVolumeByInstructorRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getVolumeInstructorViewController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 203
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/volumes/:volume_id/download",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getVolumeByInstructorRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "getVolumeDownloadController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "file"
+      ],
+      "params": [
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        404,
+        502
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 216
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/volumes/:volume_id/recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getVolumeByInstructorRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "getVolumeRecordingDownloadListController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 239
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/volumes/:volume_id/recordings/:recording_id/download",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getVolumeByInstructorRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "getVolumeRecordingDownloadController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "file",
+        "index"
+      ],
+      "params": [
+        "recording_id",
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        404,
+        502
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 254
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/convert-vol/:volume_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/UpdateVolumeConRouter.js",
+      "routeLine": 5,
+      "handlerExpression": "updateVolumeConController",
+      "middleware": [
+        "convertVolumeLimiter"
+      ],
+      "body": [],
+      "query": [],
+      "params": [
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        404,
+        409,
+        429,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/utils/convertVolumeLimiter.js",
+          "line": 3
+        },
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 304
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/converted-volumes",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getConvVolumeListRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getConvVolumeListController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 353
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/volume-placements/:volume_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/volumePlacementRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "getVolumePlacementsByVolumeIdController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "volume_id"
+      ],
+      "params": [
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 475
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/volume-placements",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/volumePlacementRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "getVolumePlacementsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "volume_id"
+      ],
+      "params": [
+        "volume_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 454
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/volume-placement",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/volumePlacementRoute.js",
+      "routeLine": 8,
+      "handlerExpression": "volumePlacementController",
+      "middleware": [
+        "upload.single('placed_file')"
+      ],
+      "body": [
+        "volume_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "placed_file"
+      ],
+      "status": [
+        200,
+        400,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/volumePlacementRoute.js",
+          "line": 8
+        },
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 404
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/volumeRecordingRoute.js",
+      "routeLine": 15,
+      "handlerExpression": "getRecordingsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "volume_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1073
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/uploadvolumerecording",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/volumeRecordingRoute.js",
+      "routeLine": 19,
+      "handlerExpression": "volRecordingC",
+      "middleware": [
+        "upload.fields([ { name: 'recording_file', maxCount: 20 }, { name: 'audio_file', maxCount: 20 }, { name: 'images', maxCount: 20 }, { name: 'manifest_file', maxCount: 1 } ])"
+      ],
+      "body": [
+        "recording_name",
+        "recording_type",
+        "volume_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "images",
+        "manifest_file",
+        "recording_file"
+      ],
+      "upload": [
+        "audio_file",
+        "images",
+        "manifest_file",
+        "recording_file"
+      ],
+      "status": [
+        200,
+        400,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/volumeRecordingRoute.js",
+          "line": 20
+        },
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 812
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/associateVolume",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/associateVolumeRouter.js",
+      "routeLine": 4,
+      "handlerExpression": "assocVolumeController",
+      "middleware": [],
+      "body": [
+        "r_id",
+        "shadowrec_id",
+        "steprec_id",
+        "volume_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1044
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/course-mappings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/courseMappingRoute.js",
+      "routeLine": 10,
+      "handlerExpression": "createCourseMappingController",
+      "middleware": [],
+      "body": [
+        "anatomy_type",
+        "course_name",
+        "course_type",
+        "description",
+        "doctor_name",
+        "module_name",
+        "shadow_recording_id",
+        "step_recording_id",
+        "trimester",
+        "volume_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/CourseMappingController.js",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/course-mappings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/courseMappingRoute.js",
+      "routeLine": 11,
+      "handlerExpression": "getCourseMappingsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "anatomy_type",
+        "course_type",
+        "module_name",
+        "trimester",
+        "volume_name"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/CourseMappingController.js",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/course-mappings/with-recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/courseMappingRoute.js",
+      "routeLine": 12,
+      "handlerExpression": "getCourseMappingsWithRecordingsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "anatomy_type",
+        "course_type",
+        "module_name",
+        "trimester",
+        "volume_name"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/CourseMappingController.js",
+          "line": 125
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 27,
+      "handlerExpression": "getClustersController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-clusters",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 28,
+      "handlerExpression": "getClustersController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/cluster",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 29,
+      "handlerExpression": "getClustersController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/recording-counts",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 32,
+      "handlerExpression": "getClusterRecordingCountsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id"
+      ],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 99
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/cluster-recording-counts",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 33,
+      "handlerExpression": "getClusterRecordingCountsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id"
+      ],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 99
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 34,
+      "handlerExpression": "getClusterRecordingsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "params": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/cluster-recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 35,
+      "handlerExpression": "getClusterRecordingsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "params": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/:cluster_id/recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 36,
+      "handlerExpression": "getClusterRecordingsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "params": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/:cluster_id/shadow-recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 37,
+      "handlerExpression": "(req, res) => {\r\n    req.query.recording_type = 'shadow';\r\n    return getClusterRecordingsController(req, res);\r\n}",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "params": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/:cluster_id/step-recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 41,
+      "handlerExpression": "(req, res) => {\r\n    req.query.recording_type = 'step';\r\n    return getClusterRecordingsController(req, res);\r\n}",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "params": [
+        "cluster_id",
+        "recording_type"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/:cluster_id/recording-counts",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 45,
+      "handlerExpression": "getClusterRecordingCountsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "cluster_id"
+      ],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 99
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/:cluster_id/recordings/:recording_id/download",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 46,
+      "handlerExpression": "getClusterRecordingDownloadController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "file",
+        "index"
+      ],
+      "params": [
+        "cluster_id",
+        "recording_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 119
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/clusters/:cluster_id/recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 61,
+      "handlerExpression": "uploadClusterRecordingController",
+      "middleware": [
+        "recordingUploadFields"
+      ],
+      "body": [
+        "cluster_id",
+        "recording_name",
+        "recording_type",
+        "volume_id"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "images",
+        "manifest_file",
+        "recording_file"
+      ],
+      "upload": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "status": [
+        200,
+        400,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 48
+        },
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 188
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/clusters/:cluster_id/recordings/:recording_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 67,
+      "handlerExpression": "replaceClusterRecordingController",
+      "middleware": [
+        "recordingUploadFields"
+      ],
+      "body": [
+        "cluster_id",
+        "recording_id",
+        "recording_name",
+        "recording_type"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id",
+        "recording_id"
+      ],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "upload": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 48
+        },
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 225
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/clusters/:cluster_id/recordings/replace",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 72,
+      "handlerExpression": "replaceClusterRecordingController",
+      "middleware": [
+        "recordingUploadFields"
+      ],
+      "body": [
+        "cluster_id",
+        "recording_id",
+        "recording_name",
+        "recording_type"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id",
+        "recording_id"
+      ],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "upload": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 48
+        },
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 225
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/clusters/:cluster_id/recordings/replace",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 77,
+      "handlerExpression": "replaceClusterRecordingController",
+      "middleware": [
+        "recordingUploadFields"
+      ],
+      "body": [
+        "cluster_id",
+        "recording_id",
+        "recording_name",
+        "recording_type"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id",
+        "recording_id"
+      ],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "upload": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 48
+        },
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 225
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/clusters/recordings/replace",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 82,
+      "handlerExpression": "replaceClusterRecordingController",
+      "middleware": [
+        "recordingUploadFields"
+      ],
+      "body": [
+        "cluster_id",
+        "recording_id",
+        "recording_name",
+        "recording_type"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id",
+        "recording_id"
+      ],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "upload": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 48
+        },
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 225
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/clusters/recordings/replace",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 87,
+      "handlerExpression": "replaceClusterRecordingController",
+      "middleware": [
+        "recordingUploadFields"
+      ],
+      "body": [
+        "cluster_id",
+        "recording_id",
+        "recording_name",
+        "recording_type"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id",
+        "recording_id"
+      ],
+      "headers": [],
+      "files": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "upload": [
+        "audio_file",
+        "audio_files",
+        "image_files",
+        "images",
+        "manifest",
+        "manifest_file",
+        "rec_files",
+        "recording_file",
+        "recording_files"
+      ],
+      "status": [
+        200,
+        400,
+        403,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/clusterRoute.js",
+          "line": 48
+        },
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 225
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/clusters/:cluster_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 93,
+      "handlerExpression": "getClusterByIdController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/cluster/:cluster_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 94,
+      "handlerExpression": "getClusterByIdController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/clusters",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 95,
+      "handlerExpression": "createClusterController",
+      "middleware": [],
+      "body": [
+        "cluster_id",
+        "cluster_name",
+        "fetal_presentation",
+        "selected_volume_ids",
+        "volume_id",
+        "volume_ids"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 155
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/cluster",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 96,
+      "handlerExpression": "createClusterController",
+      "middleware": [],
+      "body": [
+        "cluster_id",
+        "cluster_name",
+        "fetal_presentation",
+        "selected_volume_ids",
+        "volume_id",
+        "volume_ids"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 155
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-cluster",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 97,
+      "handlerExpression": "createClusterController",
+      "middleware": [],
+      "body": [
+        "cluster_id",
+        "cluster_name",
+        "fetal_presentation",
+        "selected_volume_ids",
+        "volume_id",
+        "volume_ids"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 155
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/add-cluster",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 98,
+      "handlerExpression": "createClusterController",
+      "middleware": [],
+      "body": [
+        "cluster_id",
+        "cluster_name",
+        "fetal_presentation",
+        "selected_volume_ids",
+        "volume_id",
+        "volume_ids"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 155
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/clusters/:cluster_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 99,
+      "handlerExpression": "updateClusterController",
+      "middleware": [],
+      "body": [
+        "cluster_name",
+        "fetal_presentation",
+        "selected_volume_ids",
+        "volume_id",
+        "volume_ids"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 165
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/cluster/:cluster_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 100,
+      "handlerExpression": "updateClusterController",
+      "middleware": [],
+      "body": [
+        "cluster_name",
+        "fetal_presentation",
+        "selected_volume_ids",
+        "volume_id",
+        "volume_ids"
+      ],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 165
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/clusters/:cluster_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 101,
+      "handlerExpression": "deleteClusterController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 175
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/cluster/:cluster_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/clusterRoute.js",
+      "routeLine": 102,
+      "handlerExpression": "deleteClusterController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "cluster_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/clusterController.js",
+          "line": 175
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/courses",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "controller.listCourses",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "view"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/courses",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "controller.createCourse",
+      "middleware": [],
+      "body": [
+        "courseKind",
+        "curriculumId",
+        "name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 23
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PATCH",
+      "endpoint": "/api/v1/courses/:courseId",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 8,
+      "handlerExpression": "controller.updateCourse",
+      "middleware": [],
+      "body": [
+        "curriculumId",
+        "name"
+      ],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/courses/:courseId/publish",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 9,
+      "handlerExpression": "controller.publishCourse",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/courses/:courseId/archive",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 10,
+      "handlerExpression": "controller.archiveCourse",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/courses/:courseId/draft",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 11,
+      "handlerExpression": "controller.draftCourse",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/courses/:courseId/institution-access",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 12,
+      "handlerExpression": "controller.setInstitutionAccess",
+      "middleware": [],
+      "body": [
+        "institutionIds",
+        "mode"
+      ],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/courses/:courseId/assignments",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 13,
+      "handlerExpression": "controller.replaceAssignments",
+      "middleware": [],
+      "body": [
+        "assignedTraineeIds",
+        "batchIds",
+        "excludedTraineeIds"
+      ],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/courses/:courseId/assignments",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 14,
+      "handlerExpression": "controller.getAssignments",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/courses/:courseId/effective-access",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 15,
+      "handlerExpression": "controller.getEffectiveAccess",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "institutionId"
+      ],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/me/courses",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 16,
+      "handlerExpression": "controller.listMyCourses",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/migration-review",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 17,
+      "handlerExpression": "controller.listMigrationReview",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/migration-review/courses/:courseId",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 18,
+      "handlerExpression": "controller.resolveCourseOwnership",
+      "middleware": [],
+      "body": [
+        "courseKind",
+        "institutionId"
+      ],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 43
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/migration-review/volumes/:volumeId",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 19,
+      "handlerExpression": "controller.resolveVolumeOwnership",
+      "middleware": [],
+      "body": [
+        "institutionId",
+        "ownerScope"
+      ],
+      "query": [],
+      "params": [
+        "volumeId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/migration-review/course-mappings/:mappingId",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/contentAccessRoute.js",
+      "routeLine": 20,
+      "handlerExpression": "controller.migrateCourseMapping",
+      "middleware": [],
+      "body": [
+        "courseKind"
+      ],
+      "query": [],
+      "params": [
+        "mappingId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/contentAccessController.js",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/mr/workspace",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/mrContentRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "controller.getWorkspace",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/MRContentController.js",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/mr/courses",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/mrContentRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "controller.getMrCourses",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/MRContentController.js",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/mr/courses/:courseId/package",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/mrContentRoute.js",
+      "routeLine": 8,
+      "handlerExpression": "controller.getCoursePackage",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/MRContentController.js",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/recordings/:recordingId/validation",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/mrContentRoute.js",
+      "routeLine": 9,
+      "handlerExpression": "controller.validateRecording",
+      "middleware": [],
+      "body": [
+        "state"
+      ],
+      "query": [],
+      "params": [
+        "recordingId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/MRContentController.js",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/courses/:courseId/content",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/mrContentRoute.js",
+      "routeLine": 10,
+      "handlerExpression": "controller.attachContent",
+      "middleware": [],
+      "body": [
+        "resourceId",
+        "shadowRecordingId",
+        "stepRecordingId",
+        "volumeId"
+      ],
+      "query": [],
+      "params": [
+        "courseId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [],
+      "handlers": [
+        {
+          "file": "server/v1/controller/MRContentController.js",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/institutions",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/institutionRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "getScanCentersC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/scancentersController.js",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/institutions",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/institutionRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "createScanCenterC",
+      "middleware": [
+        "validateCreateScanCenter"
+      ],
+      "body": [
+        "center_address",
+        "center_email",
+        "center_name",
+        "center_phone",
+        "status"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/utils/scanCenterValidator.js",
+          "line": 2
+        },
+        {
+          "file": "server/v1/controller/scancentersController.js",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/institutions/:institutionId/admins",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/institutionRoute.js",
+      "routeLine": 8,
+      "handlerExpression": "addInstitutionAdminC",
+      "middleware": [],
+      "body": [
+        "user_contact_num",
+        "user_email",
+        "user_name"
+      ],
+      "query": [],
+      "params": [
+        "institutionId"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/scancentersController.js",
+          "line": 89
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/super-admins",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "controller.list",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/super-admins",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "controller.create",
+      "middleware": [],
+      "body": [
+        "user_contact_num",
+        "user_email",
+        "user_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 17
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/superadmin/stats",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "controller.getStats",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/superadmin-stats",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 8,
+      "handlerExpression": "controller.getStats",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/super-admin/statistics",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 11,
+      "handlerExpression": "controller.getGlobalStatistics",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/superadmin/statistics",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 12,
+      "handlerExpression": "controller.getGlobalStatistics",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 61
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/super-admin/activity-summary",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 14,
+      "handlerExpression": "controller.getActivitySummary",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 75
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/superadmin/activity-summary",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 15,
+      "handlerExpression": "controller.getActivitySummary",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 75
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/super-admin/recent-activities",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 17,
+      "handlerExpression": "controller.getRecentActivities",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "module",
+        "page",
+        "role",
+        "status"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/superadmin/recent-activities",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/superAdminRoute.js",
+      "routeLine": 18,
+      "handlerExpression": "controller.getRecentActivities",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "module",
+        "page",
+        "role",
+        "status"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/superAdminController.js",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/activity-logs/track",
+      "auth": "Optional decoded token",
+      "routeFile": "server/v1/routes/activityTrackerRoute.js",
+      "routeLine": 38,
+      "handlerExpression": "controller.trackClientActivity",
+      "middleware": [
+        "softAuth"
+      ],
+      "body": [
+        "action",
+        "isVR",
+        "isVr",
+        "isvr",
+        "metadata",
+        "module",
+        "role",
+        "status",
+        "targetId",
+        "targetType",
+        "userId"
+      ],
+      "query": [
+        "isVR",
+        "isVr",
+        "isvr"
+      ],
+      "params": [],
+      "headers": [
+        "authorization",
+        "x-client",
+        "x-device-type",
+        "x-vr",
+        "x-vr-device"
+      ],
+      "files": [],
+      "upload": [],
+      "status": [
+        201,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/activityTrackerRoute.js",
+          "line": 7
+        },
+        {
+          "file": "server/v1/controller/activityTrackerController.js",
+          "line": 7
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/activity-logs/statistics",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/activityTrackerRoute.js",
+      "routeLine": 39,
+      "handlerExpression": "controller.getStatistics",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/activityTrackerController.js",
+          "line": 77
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/activity-logs/recent",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/activityTrackerRoute.js",
+      "routeLine": 40,
+      "handlerExpression": "controller.getRecent",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "module",
+        "page",
+        "role",
+        "status"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/activityTrackerController.js",
+          "line": 97
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/activity-logs/summary",
+      "auth": "No shared bearer middleware",
+      "routeFile": "server/v1/routes/activityTrackerRoute.js",
+      "routeLine": 41,
+      "handlerExpression": "controller.getSummary",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/activityTrackerController.js",
+          "line": 118
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/shadow-recordings",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/GetShadowRecordingRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "shadowRecordingDataController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "volume_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1059
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/shadow-recording-counts",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/GetShadowRecordingRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "volumeRecordingCountsController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1096
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/volume-recording-counts",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/GetShadowRecordingRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "volumeRecordingCountsController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1096
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-assovol",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getAssoVolumeRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getAssociatedVolumeController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "r_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/volumeController.js",
+          "line": 1113
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-scan-center",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/createScanCentersRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "createScanCenterC",
+      "middleware": [
+        "validateCreateScanCenter"
+      ],
+      "body": [
+        "center_address",
+        "center_email",
+        "center_name",
+        "center_phone",
+        "status"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/utils/scanCenterValidator.js",
+          "line": 2
+        },
+        {
+          "file": "server/v1/controller/scancentersController.js",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-scan-centers",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getScanCenterRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getScanCentersC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/scancentersController.js",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/mind-spark-options",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/mindSparkRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "mindsparkController",
+      "middleware": [],
+      "body": [
+        "correct_opt",
+        "r_id",
+        "status",
+        "user_opt"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/scancentersController.js",
+          "line": 65
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/mind-spark-questions",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 18,
+      "handlerExpression": "createQuestionsController",
+      "middleware": [],
+      "body": [
+        "mindsparkNo",
+        "mindspark_no",
+        "questions",
+        "resource_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/mind-spark-question-assets",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 19,
+      "handlerExpression": "uploadAssetController",
+      "middleware": [
+        "upload.single('image')"
+      ],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "image"
+      ],
+      "status": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/questionsRoute.js",
+          "line": 19
+        },
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 71
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/mind-spark-questions",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 20,
+      "handlerExpression": "getQuestionsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "include_inactive",
+        "mindspark_no",
+        "resource_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 98
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/mind-spark-attempt-details",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 21,
+      "handlerExpression": "getAttemptDetailsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "resource_id",
+        "session_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 214
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/mind-spark-questions/:question_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 22,
+      "handlerExpression": "updateQuestionController",
+      "middleware": [],
+      "body": [
+        "answer",
+        "assets",
+        "correctAnswer",
+        "correct_answer",
+        "feedbackCorrect",
+        "feedbackWrong",
+        "feedback_correct",
+        "feedback_wrong",
+        "isActive",
+        "is_active",
+        "metadata",
+        "mindsparkNo",
+        "mindspark_no",
+        "options",
+        "options_available",
+        "prompt",
+        "question",
+        "questionNo",
+        "questionType",
+        "question_no",
+        "question_query",
+        "question_type"
+      ],
+      "query": [],
+      "params": [
+        "question_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 132
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/mind-spark-questions/:question_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 23,
+      "handlerExpression": "deleteQuestionController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "question_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 173
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/create-question",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/questionsRoute.js",
+      "routeLine": 25,
+      "handlerExpression": "createQuestionsController",
+      "middleware": [],
+      "body": [
+        "mindsparkNo",
+        "mindspark_no",
+        "questions",
+        "resource_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/mindSparkQuestionController.js",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/submit-ii",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/iivrRoutes.js",
+      "routeLine": 6,
+      "handlerExpression": "createSubmission",
+      "middleware": [
+        "upload.single(\"userImage\")"
+      ],
+      "body": [
+        "caliperPlacementInterpretation",
+        "correctLabelCount",
+        "interpretation",
+        "isCorrect",
+        "optionChosen",
+        "partial",
+        "questionNo",
+        "questionType",
+        "resource_id",
+        "session_id",
+        "unusedLabelCount",
+        "value",
+        "wrongLabelCount"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "userImage"
+      ],
+      "status": [
+        400
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/iivrRoutes.js",
+          "line": 6
+        },
+        {
+          "file": "server/v1/controller/iivrController.js",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/start-ii-prac",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/iivrStartTestRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "iivrStartTest",
+      "middleware": [],
+      "body": [
+        "resource_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/iivrController.js",
+          "line": 96
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/end-ii-prac",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/iivrEndTestRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "iivrEndTest",
+      "middleware": [],
+      "body": [
+        "test_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/iivrController.js",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/practice-i-ii",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/practiceRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getPracticesByUser",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "resource_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/practiceController.js",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/practice-i-ii",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/practiceRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "bulkCreatePracticeResultsController",
+      "middleware": [],
+      "body": [
+        "practice_id",
+        "practice_number",
+        "practiceresults",
+        "resource_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        201,
+        400,
+        401,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/practiceController.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/submit-prac-test",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/pracTestRoute.js",
+      "routeLine": 23,
+      "handlerExpression": "pracTestController",
+      "middleware": [
+        "upload.fields([ { name: 'userImage_1', maxCount: 1 }, { name: 'expertImage_1', maxCount: 1 }, { name: 'userImage_2', maxCount: 1 }, { name: 'expertImage_2', maxCount: 1 }, { name: 'userImages_1', maxCount: 1 }, { name: 'expertImages_1', maxCount: 1 }, { name: 'userImages_2', maxCount: 1 }, { name: 'expertImages_2', maxCount: 1 }, ])"
+      ],
+      "body": [
+        "payload",
+        "resource_id",
+        "sessionNumber",
+        "sessionType",
+        "session_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "expertImage_1",
+        "expertImage_2",
+        "expertImages_1",
+        "expertImages_2",
+        "userImage_1",
+        "userImage_2",
+        "userImages_1",
+        "userImages_2"
+      ],
+      "status": [
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/routes/pracTestRoute.js",
+          "line": 25
+        },
+        {
+          "file": "server/v1/controller/pracTestController.js",
+          "line": 108
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/prac-test-attempt-details/:resource_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/pracTestRoute.js",
+      "routeLine": 38,
+      "handlerExpression": "getPracTestAttemptDetailsController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "resource_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/pracTestController.js",
+          "line": 172
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/submit-msob",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/lrobRoute.js",
+      "routeLine": 14,
+      "handlerExpression": "irobsubmit",
+      "middleware": [],
+      "body": [
+        "resourceId",
+        "resourceType",
+        "sessionId"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/irobController.js",
+          "line": 56
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/instructor-as-per-batch",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getInstructorAsPerBatch.js",
+      "routeLine": 4,
+      "handlerExpression": "InstructorBatchC",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "people_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/createBatch.js",
+          "line": 214
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/get-submissions",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/getSubmissionsRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "getSubmissionsC",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "resource_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/submissionsController.js",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/queries",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/queriesRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "createQueryC",
+      "middleware": [],
+      "body": [
+        "instructor_id",
+        "message",
+        "subject"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/queriesController.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/queries",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/queriesRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "getQueriesC",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/queriesController.js",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "PUT",
+      "endpoint": "/api/v1/queries/:query_id/status",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/queriesRoute.js",
+      "routeLine": 7,
+      "handlerExpression": "updateQueryStatusC",
+      "middleware": [],
+      "body": [
+        "status"
+      ],
+      "query": [],
+      "params": [
+        "query_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/queriesController.js",
+          "line": 51
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "DELETE",
+      "endpoint": "/api/v1/queries/:query_id",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/queriesRoute.js",
+      "routeLine": 8,
+      "handlerExpression": "deleteQueryC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "query_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/queriesController.js",
+          "line": 76
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/interactions-attempt-stats",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/InteractionsAttemptStats.js",
+      "routeLine": 5,
+      "handlerExpression": "InteractionsAttemptStats",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/Analytics.js",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/activity-last-scores",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/activityLastScoresRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "ActivityLastScores",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/Analytics.js",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/skill-competency",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/skillCompetencyRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "SkillCompetency",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/Analytics.js",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/performance-metrics",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/performanceMetricsRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "PerformanceMetrics",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/Analytics.js",
+          "line": 57
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/reatt-data",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/reattRoute.js",
+      "routeLine": 9,
+      "handlerExpression": "createReattDataController",
+      "middleware": [],
+      "body": [
+        "certificate_id",
+        "course_id",
+        "max_reattempt_count",
+        "resource_id",
+        "resource_type",
+        "unit_name",
+        "uploaded_by"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/reattController.js",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/reatt-data",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/reattRoute.js",
+      "routeLine": 10,
+      "handlerExpression": "getReattDataController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "field"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/reattController.js",
+          "line": 87
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/challenges/questions",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/challengeRoute.js",
+      "routeLine": 10,
+      "handlerExpression": "getChallengeQuestionsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "all",
+        "challenge_name",
+        "challenge_number",
+        "module_name",
+        "resource_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/challengeController.js",
+          "line": 98
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "POST",
+      "endpoint": "/api/v1/challenges/submit",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/challengeRoute.js",
+      "routeLine": 11,
+      "handlerExpression": "submitChallengeController",
+      "middleware": [],
+      "body": [
+        "choose_option",
+        "isCorrect",
+        "question_number",
+        "resource_id",
+        "session_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/challengeController.js",
+          "line": 47
+        }
+      ]
+    },
+    {
+      "service": "Main LMS",
+      "method": "GET",
+      "endpoint": "/api/v1/challenges/attempt-details",
+      "auth": "Bearer token",
+      "routeFile": "server/v1/routes/challengeRoute.js",
+      "routeLine": 12,
+      "handlerExpression": "getChallengeAttemptDetailsController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "resource_id",
+        "session_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "server/v1/controller/challengeController.js",
+          "line": 74
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/test",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/app.js",
+      "routeLine": 100,
+      "handlerExpression": "(req, res) => {\r\n    const requester = req.user;\r\n    res.status(200).json({\r\n        status: 'Test Route',\r\n        code: 200,\r\n        user: req.user\r\n    });\r\n}",
+      "middleware": [
+        "Authenticate"
+      ],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [
+        "authorization"
+      ],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        401,
+        403
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/Auth/Authenticate.js",
+          "line": 5
+        },
+        {
+          "file": "Medica/v1/app.js",
+          "line": 100
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/login",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/Auth.js",
+      "routeLine": 5,
+      "handlerExpression": "LoginRequest",
+      "middleware": [],
+      "body": [
+        "user_mail",
+        "user_password"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/Auth/authController.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/forgot-password",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/forgotpRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "forgotpController",
+      "middleware": [],
+      "body": [
+        "reset_password_mail"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [
+        "x-forwarded-for"
+      ],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        404,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/forgotpasswordcontroller.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/token",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/refreshTokenRouter.js",
+      "routeLine": 5,
+      "handlerExpression": "refreshToken",
+      "middleware": [],
+      "body": [
+        "token"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        401,
+        403
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/Auth/refreshToken.js",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/ivs-ind",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/individualIvsRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "getIndividualStreamingData",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/streamingController.js",
+          "line": 5
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/send",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/notificationRoutes.js",
+      "routeLine": 4,
+      "handlerExpression": "sendNotification",
+      "middleware": [],
+      "body": [
+        "link",
+        "message",
+        "receiverId",
+        "senderId"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/notificationController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/tokenn",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/tokenIvsRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "tokenIvs",
+      "middleware": [],
+      "body": [
+        "attributes",
+        "capabilities",
+        "duration",
+        "stageArn",
+        "userId"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/streamingController.js",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/get-active-people-room",
+      "auth": "No shared bearer middleware",
+      "routeFile": "Medica/v1/routes/activePeopleRoomRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getActivePeopleC",
+      "middleware": [],
+      "body": [
+        "roomId"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/vrDataC.js",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/user-completion",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/progressRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "progressUpdate",
+      "middleware": [],
+      "body": [
+        "course_id",
+        "isCompleted",
+        "module_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/progressController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-vr-data/:data_check",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getVrDataRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getVrData",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "data_check"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/vrDataC.js",
+          "line": 4
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-batch/:batch_id",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/deleteBatchRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteBatchc",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "batch_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 43
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/profile",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/profileRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "profilecontroller",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/profilecontroller.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-trainees",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getTraineesRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "TraineeController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/traineeController.js",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "PATCH",
+      "endpoint": "/api/v1/disable-trainee/:user_mail/:status",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/disableTraineeRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "DisableTrainee",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "status",
+        "user_mail"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/traineeController.js",
+          "line": 63
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-batch",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/createBatchRoute.js",
+      "routeLine": 5,
+      "handlerExpression": "batchCreation",
+      "middleware": [],
+      "body": [
+        "batch_end_date",
+        "batch_name",
+        "batch_start_date",
+        "course_data",
+        "curiculum_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-batches",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getBatchesRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getBatchData",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/associate-batch",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/associateBatchRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "associateBatchc",
+      "middleware": [],
+      "body": [
+        "batch_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/batch-filter",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/filterBatchRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "filterBatchC",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "batch_name",
+        "instructor_name"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-instructors",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getInstructorRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getInstructorData",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "limit",
+        "page"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/instructorController.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-dashboard-data",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/dashboardRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getDashboardC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/dashboardController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-cur/:curiculum_id",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/deleteCuriculumRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteCur",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "curiculum_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/curiculumController.js",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-trainee",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/createtraineeRoute.js",
+      "routeLine": 6,
+      "handlerExpression": "CreateTraineeController",
+      "middleware": [
+        "upload.single('file')"
+      ],
+      "body": [
+        "description",
+        "status",
+        "user_batch",
+        "user_contact_num",
+        "user_dob",
+        "user_email",
+        "user_gender",
+        "user_name",
+        "user_password",
+        "user_role"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [
+        "file"
+      ],
+      "status": [
+        200,
+        404,
+        500,
+        501
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/routes/createtraineeRoute.js",
+          "line": 6
+        },
+        {
+          "file": "Medica/v1/controller/traineeController.js",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-trainee/:user_mail",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/deleteTraineeRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteTraineec",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "user_mail"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/traineeController.js",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-ins/:user_mail",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/deleteInstructorRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "instructorController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "user_mail"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/instructorController.js",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-curiculum",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/curiculamRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "createCur",
+      "middleware": [],
+      "body": [
+        "curiculum_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/curiculumController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-curiculum",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getCuriculumRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCur",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/curiculumController.js",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-course",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/createCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "CourseController",
+      "middleware": [],
+      "body": [
+        "course_name",
+        "curiculum_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/courseController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-courses",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/GetCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCoursesC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/courseController.js",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-cours-cur/:curiculum_id",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getCoursesByCurRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getCoursesByCurController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "curiculum_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/courseController.js",
+          "line": 35
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "DELETE",
+      "endpoint": "/api/v1/delete-course/:course_id",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/deleteCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "courseDeletionController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "course_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/courseController.js",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-admins",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getAdminsRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getAdminC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/adminController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/tag-course",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/TagCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "tagCourseController",
+      "middleware": [],
+      "body": [
+        "course_id",
+        "user_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        403,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/courseController.js",
+          "line": 75
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-gender-ratio",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getGendersRoutes.js",
+      "routeLine": 5,
+      "handlerExpression": "GenderRatioC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/Analytics.js",
+          "line": 3
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/request-course",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/RequestCourseRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "requestCourseController",
+      "middleware": [],
+      "body": [
+        "course_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        403,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/courseController.js",
+          "line": 94
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-module",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/createModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "CreateModule",
+      "middleware": [],
+      "body": [
+        "chapter_name",
+        "course_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/moduleController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-module",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "GetModule",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "chapter_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/moduleController.js",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-new-module",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/newModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "ModuleNewController",
+      "middleware": [],
+      "body": [
+        "chapter_id",
+        "module_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/moduleController.js",
+          "line": 81
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/sub-module",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/subModuleRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "subModuleController",
+      "middleware": [],
+      "body": [
+        "module_id",
+        "submod_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/moduleController.js",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/resource-completion",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/moduleCompleteUserRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "completeModule",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "is_completed",
+        "r_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/moduleController.js",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-chapter",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getChapterRouter.js",
+      "routeLine": 4,
+      "handlerExpression": "getChapters",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "course_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/chapterController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-resource",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/createResourceRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "CreateResourceController",
+      "middleware": [],
+      "body": [
+        "module_id",
+        "resource_name"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/resourceController.js",
+          "line": 2
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/get-resources",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getResourcesRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getResourcesController",
+      "middleware": [],
+      "body": [],
+      "query": [
+        "module_id"
+      ],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/resourceController.js",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/resources-mId",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getResourcesByModuleIdsRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getResourcesByModuleIdsController",
+      "middleware": [],
+      "body": [
+        "module_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/resourceController.js",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/user-stats",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/UserStatusRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "UserStatsC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/Analytics.js",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "POST",
+      "endpoint": "/api/v1/create-targeted-learning",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/CreateTargetedLearningRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "createTargetedLearningC",
+      "middleware": [],
+      "body": [
+        "chapter_id",
+        "course_id",
+        "curiculum_id",
+        "end_date",
+        "module_id",
+        "resources_id",
+        "start_date",
+        "tar_name",
+        "trainee_id"
+      ],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        400,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/tllist",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getTargetedLearningRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "getTargetedLearningC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 85
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "DELETE",
+      "endpoint": "/api/v1/tl-delete/:targeted_learning_id",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/deleteTargetedLearningRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "deleteTargetedLearningC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "targeted_learning_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 97
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/tllist-ind",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/getIndividualTLRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "InTLListC",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/createBatch.js",
+          "line": 113
+        }
+      ]
+    },
+    {
+      "service": "Medica companion",
+      "method": "GET",
+      "endpoint": "/api/v1/trainee/:people_id",
+      "auth": "Bearer token",
+      "routeFile": "Medica/v1/routes/induuidRoute.js",
+      "routeLine": 4,
+      "handlerExpression": "induuidController",
+      "middleware": [],
+      "body": [],
+      "query": [],
+      "params": [
+        "people_id"
+      ],
+      "headers": [],
+      "files": [],
+      "upload": [],
+      "status": [
+        200,
+        500
+      ],
+      "handlers": [
+        {
+          "file": "Medica/v1/controller/traineeController.js",
+          "line": 115
+        }
+      ]
+    }
+  ],
+  "unmounted": [
+    {
+      "service": "Main LMS",
+      "file": "server/v1/routes/GetPracticeResults.js",
+      "method": "GET",
+      "relativeRoute": "/",
+      "line": 6
+    }
+  ]
+}
