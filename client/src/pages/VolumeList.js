@@ -21,6 +21,52 @@ import { uploadVolumePlacementAPI, getVolumePlacementsAPI } from '../API/VolumeP
 
 const MAX_VOLUME_UPLOAD_SIZE_MB = 100;
 const MAX_VOLUME_UPLOAD_SIZE_BYTES = MAX_VOLUME_UPLOAD_SIZE_MB * 1024 * 1024;
+const OTHER_OPTION = '__other__';
+const ANATOMY_TYPE_OPTIONS = [
+  'Spine',
+  'Head',
+  'Thorax',
+  'Abdomen',
+  'Pelvis',
+  'Limbs',
+  'Face',
+  '6 - Step Approach',
+];
+const MEASUREMENT_OPTIONS = [
+  'LV',
+  'BPD',
+  'OFD',
+  'HC',
+  'TCD',
+  'NFT',
+  'AC',
+  'TAD',
+  'APAD',
+  'APD RP1 & 2',
+  'FL',
+];
+const PLANE_OPTIONS = [
+  'Sagittal complete spine with skin covering',
+  'Coronal complete spine',
+  'Coronal section of the body',
+  'Transthalamic plane',
+  'Transcerebellar plane',
+  'Lungs',
+  '4-chamber view of heart',
+  'Left ventricular outflow tract (LVOT)',
+  'Right ventricular outflow tract (RVOT) & crossover of LVOT',
+  '3-vessel trachea (3VT) view of heart',
+  'Transverse section of abdomen with stomach & umbilical vein',
+  'Transverse section of abdomen at cord insertion',
+  'Transverse section(s) of left kidney & pelvis, right kidney & pelvis',
+  'Transverse section of pelvis, bladder, and both umbilical arteries',
+  'Femur diaphysis length',
+  '3 bones of both legs, both feet & normal relationships to both legs',
+  '3 bones of both arms, both hands & normal relationships to both arms',
+  'Coronal view of upper lip, nose & nostrils',
+  'Both orbits, both lenses',
+  'Median facial profile',
+];
 
 function VolumeList() {
   const navigate = useNavigate();
@@ -91,11 +137,20 @@ function VolumeList() {
   const [formData, setFormData] = useState({
     volume_name: '',
     volume_type: '',
+    measurements: [],
+    plane: [],
     volume_fetal_presentation: '',
     trimester: '',
     volume_ga: '',
     description: '',
     file: null,
+  });
+  const [otherValues, setOtherValues] = useState({
+    volume_type: '',
+    measurements: '',
+    plane: '',
+    volume_fetal_presentation: '',
+    trimester: '',
   });
   const [volumesDatumm, setVolumesDatumm] = useState([]);
   const [volumeRecordingCounts, setVolumeRecordingCounts] = useState({});
@@ -357,11 +412,20 @@ function VolumeList() {
     setFormData({
       volume_name: '',
       volume_type: '',
+      measurements: [],
+      plane: [],
       volume_fetal_presentation: '',
       trimester: '',
       volume_ga: '',
       description: '',
       file: null,
+    });
+    setOtherValues({
+      volume_type: '',
+      measurements: '',
+      plane: '',
+      volume_fetal_presentation: '',
+      trimester: '',
     });
     setVolumeFiles([]);
   };
@@ -371,21 +435,39 @@ function VolumeList() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const renderMultiSelectValue = (field, values) => {
+    const selectedValues = Array.isArray(values) ? values : [];
+    return selectedValues
+      .map((value) => value === OTHER_OPTION ? (otherValues[field] || 'Others') : value)
+      .join(', ');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const {
       volume_name,
-      volume_type,
-      volume_fetal_presentation,
-      trimester,
       volume_ga,
       description,
     } = formData;
 
     const validFiles = volumeFiles.filter(Boolean);
+    const resolvedValue = (field) => {
+      if (Array.isArray(formData[field])) {
+        return formData[field]
+          .map((value) => value === OTHER_OPTION ? otherValues[field].trim() : value)
+          .filter(Boolean)
+          .join(', ');
+      }
+      return formData[field] === OTHER_OPTION ? otherValues[field].trim() : formData[field];
+    };
+    const resolvedVolumeType = resolvedValue('volume_type');
+    const resolvedMeasurements = resolvedValue('measurements');
+    const resolvedPlane = resolvedValue('plane');
+    const resolvedFetalPresentation = resolvedValue('volume_fetal_presentation');
+    const resolvedTrimester = resolvedValue('trimester');
 
-    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description) {
+    if (!volume_name || !resolvedVolumeType || !resolvedMeasurements || !resolvedPlane || !resolvedFetalPresentation || !resolvedTrimester || !volume_ga || !description) {
       toast.error('Please fill all required fields.');
       return;
     }
@@ -406,9 +488,11 @@ function VolumeList() {
         const data = new FormData();
         const currentName = validFiles.length === 1 ? volume_name : `${volume_name} (${i + 1})`;
         data.append('volume_name', currentName);
-        data.append('volume_type', volume_type);
-        data.append('volume_fetal_presentation', volume_fetal_presentation);
-        data.append('trimester', trimester);
+        data.append('volume_type', resolvedVolumeType);
+        data.append('measurements', resolvedMeasurements);
+        data.append('plane', resolvedPlane);
+        data.append('volume_fetal_presentation', resolvedFetalPresentation);
+        data.append('trimester', resolvedTrimester);
         data.append('volume_ga', volume_ga);
         data.append('description', description);
         data.append('file', file);
@@ -436,11 +520,20 @@ function VolumeList() {
         setFormData({
           volume_name: '',
           volume_type: '',
+          measurements: [],
+          plane: [],
           volume_fetal_presentation: '',
           trimester: '',
           volume_ga: '',
           description: '',
           file: null,
+        });
+        setOtherValues({
+          volume_type: '',
+          measurements: '',
+          plane: '',
+          volume_fetal_presentation: '',
+          trimester: '',
         });
         setVolumeFiles([]);
         handleAPICall();
@@ -865,6 +958,7 @@ function VolumeList() {
                 onChange={handleChange}
               />
               <TextField
+                select
                 fullWidth
                 variant="outlined"
                 size="small"
@@ -872,7 +966,87 @@ function VolumeList() {
                 name="volume_type"
                 value={formData.volume_type}
                 onChange={handleChange}
-              />
+              >
+                <MenuItem value="">Select Anatomy Type</MenuItem>
+                {[...new Set([...ANATOMY_TYPE_OPTIONS, ...anatomyOptions])].map((anatomyType) => (
+                  <MenuItem key={anatomyType} value={anatomyType}>{anatomyType}</MenuItem>
+                ))}
+                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
+              </TextField>
+              {formData.volume_type === OTHER_OPTION && (
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  label="Enter Anatomy Type"
+                  value={otherValues.volume_type}
+                  onChange={(e) => setOtherValues((prev) => ({ ...prev, volume_type: e.target.value }))}
+                />
+              )}
+              <TextField
+                select
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Measurements"
+                name="measurements"
+                value={formData.measurements}
+                onChange={handleChange}
+                SelectProps={{
+                  multiple: true,
+                  renderValue: (selected) => renderMultiSelectValue('measurements', selected),
+                }}
+              >
+                <MenuItem value="" disabled>Select Measurements</MenuItem>
+                {MEASUREMENT_OPTIONS.map((measurement) => (
+                  <MenuItem key={measurement} value={measurement}>{measurement}</MenuItem>
+                ))}
+                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
+              </TextField>
+              {formData.measurements.includes(OTHER_OPTION) && (
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  label="Other Measurement"
+                  helperText="Enter the custom measurement"
+                  autoFocus
+                  value={otherValues.measurements}
+                  onChange={(e) => setOtherValues((prev) => ({ ...prev, measurements: e.target.value }))}
+                />
+              )}
+              <TextField
+                select
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Plane"
+                name="plane"
+                value={formData.plane}
+                onChange={handleChange}
+                SelectProps={{
+                  multiple: true,
+                  renderValue: (selected) => renderMultiSelectValue('plane', selected),
+                }}
+              >
+                <MenuItem value="" disabled>Select Plane</MenuItem>
+                {PLANE_OPTIONS.map((planeOption) => (
+                  <MenuItem key={planeOption} value={planeOption}>{planeOption}</MenuItem>
+                ))}
+                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
+              </TextField>
+              {formData.plane.includes(OTHER_OPTION) && (
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  label="Other Plane"
+                  helperText="Enter the custom plane"
+                  autoFocus
+                  value={otherValues.plane}
+                  onChange={(e) => setOtherValues((prev) => ({ ...prev, plane: e.target.value }))}
+                />
+              )}
               <TextField
                 select
                 fullWidth
@@ -888,7 +1062,18 @@ function VolumeList() {
                 <MenuItem value="Cephalic_right">Cephalic_right</MenuItem>
                 <MenuItem value="Breech_left">Breech_left</MenuItem>
                 <MenuItem value="Breech_right">Breech_right</MenuItem>
+                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
               </TextField>
+              {formData.volume_fetal_presentation === OTHER_OPTION && (
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  label="Enter Fetal Presentation"
+                  value={otherValues.volume_fetal_presentation}
+                  onChange={(e) => setOtherValues((prev) => ({ ...prev, volume_fetal_presentation: e.target.value }))}
+                />
+              )}
               <TextField
                 select
                 fullWidth
@@ -903,7 +1088,18 @@ function VolumeList() {
                 <MenuItem value="First Trimester">First Trimester</MenuItem>
                 <MenuItem value="Second Trimester">Second Trimester</MenuItem>
                 <MenuItem value="Third Trimester">Third Trimester</MenuItem>
+                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
               </TextField>
+              {formData.trimester === OTHER_OPTION && (
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  size="small"
+                  label="Enter Trimester"
+                  value={otherValues.trimester}
+                  onChange={(e) => setOtherValues((prev) => ({ ...prev, trimester: e.target.value }))}
+                />
+              )}
               <TextField
                 fullWidth
                 variant="outlined"

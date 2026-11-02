@@ -22,6 +22,8 @@ const assertVolumeEditableModel = async (requester, volumeId) => {
 const svUploadModel = (
     requester,
     volume_type,
+    measurements,
+    plane,
     volume_name,
     volume_ga,
     volume_fetal_presentation,
@@ -51,6 +53,8 @@ const svUploadModel = (
         const query = `
             INSERT INTO volumes (
                 volume_type,
+                measurements,
+                plane,
                 volume_name,
                 volume_ga,
                 volume_fetal_presentation,
@@ -64,7 +68,7 @@ const svUploadModel = (
                 status${approverColumn},
                 ownership_review_required
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12${approverValue}, false)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14${approverValue}, false)
             RETURNING *;
         `;
 
@@ -72,6 +76,8 @@ const svUploadModel = (
             query,
             [
                 volume_type,
+                measurements,
+                plane,
                 volume_name,
                 volume_ga,
                 volume_fetal_presentation,

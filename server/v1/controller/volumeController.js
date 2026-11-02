@@ -119,13 +119,15 @@ const VolumeController = async(req, res) => {
         }
         const {
             volume_type,
+            measurements,
+            plane,
             volume_name,
             volume_ga,
             volume_fetal_presentation,
             trimester,
             description
         } = req.body;
-        if(!volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester || !description)
+        if(!volume_type || !measurements || !plane || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester || !description)
         {
           
             return res.status(406).json({
@@ -147,6 +149,8 @@ const VolumeController = async(req, res) => {
         const result = await svUploadModel(
             requester,
             volume_type,
+            measurements,
+            plane,
             volume_name,
             volume_ga,
             volume_fetal_presentation,
