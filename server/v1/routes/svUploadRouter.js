@@ -23,6 +23,9 @@ const upload = multer({
 });
 
 const svUploadRouter = express.Router();
+const directUpload = require('../controller/directVolumeUpload');
+svUploadRouter.post('/sv-upload/prepare', directUpload.prepare);
+svUploadRouter.post('/sv-upload/complete', directUpload.complete);
 svUploadRouter.post('/sv-upload', upload.single('file'), VolumeController);
 svUploadRouter.put('/update-volume', updateVolumeC);
 

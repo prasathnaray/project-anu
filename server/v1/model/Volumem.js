@@ -284,6 +284,7 @@ const getVolumeInstructorViewModel = (requester) => {
                 v.added_by,
                 v.approver_id,
                 vcl.started_at,
+                v.created_at,
                 vcl.conversion_completion,
                 vcl.converted_by,
                 vcl.completed_at,

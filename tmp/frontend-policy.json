@@ -1,0 +1,18 @@
+{
+    "Version":  "2012-10-17",
+    "Statement":  [
+                      {
+                          "Effect":  "Allow",
+                          "Principal":  {
+                                            "Service":  "cloudfront.amazonaws.com"
+                                        },
+                          "Resource":  "arn:aws:s3:::project-anu-frontend-299822065337-ap-south-1/*",
+                          "Condition":  {
+                                            "StringEquals":  {
+                                                                 "AWS:SourceArn":  "arn:aws:cloudfront::299822065337:distribution/E36IJUJQIKJQ36"
+                                                             }
+                                        },
+                          "Action":  "s3:GetObject"
+                      }
+                  ]
+}

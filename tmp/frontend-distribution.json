@@ -1,0 +1,58 @@
+{
+    "Comment":  "Project ANU React frontend",
+    "ViewerCertificate":  {
+                              "CloudFrontDefaultCertificate":  true
+                          },
+    "Enabled":  true,
+    "DefaultCacheBehavior":  {
+                                 "ForwardedValues":  {
+                                                         "Cookies":  {
+                                                                         "Forward":  "none"
+                                                                     },
+                                                         "QueryString":  false
+                                                     },
+                                 "MinTTL":  0,
+                                 "TrustedSigners":  {
+                                                        "Quantity":  0,
+                                                        "Enabled":  false
+                                                    },
+                                 "MaxTTL":  31536000,
+                                 "Compress":  true,
+                                 "ViewerProtocolPolicy":  "redirect-to-https",
+                                 "TargetOriginId":  "frontend-s3",
+                                 "DefaultTTL":  300
+                             },
+    "PriceClass":  "PriceClass_100",
+    "CallerReference":  "anu-frontend-1793603895",
+    "DefaultRootObject":  "index.html",
+    "CustomErrorResponses":  {
+                                 "Quantity":  2,
+                                 "Items":  [
+                                               {
+                                                   "ResponsePagePath":  "/index.html",
+                                                   "ErrorCode":  403,
+                                                   "ErrorCachingMinTTL":  0,
+                                                   "ResponseCode":  "200"
+                                               },
+                                               {
+                                                   "ResponsePagePath":  "/index.html",
+                                                   "ErrorCode":  404,
+                                                   "ErrorCachingMinTTL":  0,
+                                                   "ResponseCode":  "200"
+                                               }
+                                           ]
+                             },
+    "Origins":  {
+                    "Quantity":  1,
+                    "Items":  [
+                                  {
+                                      "S3OriginConfig":  {
+                                                             "OriginAccessIdentity":  ""
+                                                         },
+                                      "OriginAccessControlId":  "ELPZFCIFCY63Z",
+                                      "Id":  "frontend-s3",
+                                      "DomainName":  "project-anu-frontend-299822065337-ap-south-1.s3.ap-south-1.amazonaws.com"
+                                  }
+                              ]
+                }
+}

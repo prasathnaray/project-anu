@@ -8,19 +8,9 @@ const AWS_REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || '
 const DEFAULT_JOB_QUEUE = 'vol-conversion-queue';
 const DEFAULT_JOB_DEFINITION = 'vol-conversion-job';
 
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID || process.env.AWS_IVS_ACCESS_KEY;
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_IVS_SECRET_KEY;
-
+// The default provider includes Lambda's session token and refreshes role credentials.
 const batchClient = new BatchClient({
   region: AWS_REGION,
-  ...(accessKeyId && secretAccessKey
-    ? {
-        credentials: {
-          accessKeyId,
-          secretAccessKey,
-        },
-      }
-    : {}),
 });
 
 const getBatchConfig = () => {

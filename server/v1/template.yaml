@@ -8,7 +8,7 @@ Parameters:
     Default: project-anu/server-v1
   AllowedOrigins:
     Type: CommaDelimitedList
-    Default: https://project-anu.hticlab.org,https://project-anu.vercel.app,http://localhost:3000
+    Default: https://dashboard-lms.anuxr.com,https://project-anu.hticlab.org,https://project-anu.vercel.app,http://localhost:3000
 
 Globals:
   Function:
@@ -89,10 +89,18 @@ Resources:
       CorsConfiguration:
         AllowOrigins: !Ref AllowedOrigins
         AllowHeaders:
-          - '*'
+          - Content-Type
+          - Authorization
+          - X-Requested-With
         AllowMethods:
-          - '*'
-        AllowCredentials: false
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+          - HEAD
+        AllowCredentials: true
 
 Outputs:
   ApiUrl:

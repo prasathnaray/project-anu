@@ -134,6 +134,7 @@ function VolumeList() {
   const [anatomyFilter, setAnatomyFilter] = useState('all');
   const [approvalFilter, setApprovalFilter] = useState('all');
   const [conversionFilter, setConversionFilter] = useState('all');
+  const [timeSort, setTimeSort] = useState('latest');
   const [formData, setFormData] = useState({
     volume_name: '',
     volume_type: '',
@@ -403,6 +404,12 @@ function VolumeList() {
       conversionFilter === conversionStatus;
 
     return matchesSearch && matchesAnatomy && matchesApproval && matchesConversion;
+  }).sort((a, b) => {
+    const first = Date.parse(a.created_at);
+    const second = Date.parse(b.created_at);
+    if (!Number.isFinite(first)) return Number.isFinite(second) ? 1 : 0;
+    if (!Number.isFinite(second)) return -1;
+    return timeSort === 'latest' ? second - first : first - second;
   });
 
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
@@ -686,7 +693,7 @@ function VolumeList() {
           </div>
           <div className="m-5 bg-white border-b">
             <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:flex-1 md:max-w-5xl">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5 md:flex-1">
                 <TextField
                   fullWidth
                   size="small"
@@ -695,6 +702,17 @@ function VolumeList() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Upload time"
+                  value={timeSort}
+                  onChange={(e) => setTimeSort(e.target.value)}
+                >
+                  <MenuItem value="latest">Latest first</MenuItem>
+                  <MenuItem value="oldest">Oldest first</MenuItem>
+                </TextField>
                 <TextField
                   select
                   fullWidth

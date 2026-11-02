@@ -1,0 +1,7 @@
+{
+    "Description":  "Private frontend origin",
+    "Name":  "project-anu-frontend",
+    "OriginAccessControlOriginType":  "s3",
+    "SigningBehavior":  "always",
+    "SigningProtocol":  "sigv4"
+}
