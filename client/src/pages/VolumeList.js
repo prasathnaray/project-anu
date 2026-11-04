@@ -140,6 +140,7 @@ function VolumeList() {
     volume_type: '',
     measurements: [],
     plane: [],
+    maternal_age: '',
     volume_fetal_presentation: '',
     trimester: '',
     volume_ga: '',
@@ -421,6 +422,7 @@ function VolumeList() {
       volume_type: '',
       measurements: [],
       plane: [],
+      maternal_age: '',
       volume_fetal_presentation: '',
       trimester: '',
       volume_ga: '',
@@ -501,6 +503,7 @@ function VolumeList() {
         data.append('volume_fetal_presentation', resolvedFetalPresentation);
         data.append('trimester', resolvedTrimester);
         data.append('volume_ga', volume_ga);
+        data.append('maternal_age', formData.maternal_age);
         data.append('description', description);
         data.append('file', file);
 
@@ -529,6 +532,7 @@ function VolumeList() {
           volume_type: '',
           measurements: [],
           plane: [],
+          maternal_age: '',
           volume_fetal_presentation: '',
           trimester: '',
           volume_ga: '',
@@ -1126,6 +1130,17 @@ function VolumeList() {
                 name="volume_ga"
                 type="number"
                 value={formData.volume_ga}
+                onChange={handleChange}
+              />
+              <TextField
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Maternal Age (years)"
+                name="maternal_age"
+                type="number"
+                inputProps={{ min: 1, max: 120, step: 1 }}
+                value={formData.maternal_age}
                 onChange={handleChange}
               />
               <TextField
