@@ -554,10 +554,74 @@ function InsideCertifications() {
 
   // Handle resource click for popup
   const handleResourceClick = (item) => {
-    if (item.completed_by_names && item.trainee_completed > 0) {
+    if (item.attempted_by_names && item.trainee_attempted > 0) {
       setSelectedResourceForPopup(item);
       setShowCompletionPopup(true);
     }
+  };
+
+  // Each resource row contains a distinct trainee count, but summing those
+  // counts over a resource type counts the same trainee once per resource.
+  // Use the IDs returned by the API to count each trainee only once.
+  const countUniqueTrainees = (items, idField = "attempted_by_ids", countField = "trainee_attempted") => {
+    const traineeIds = new Set();
+
+    items.forEach((item) => {
+      String(item[idField] || '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+        .forEach((id) => traineeIds.add(id));
+    });
+
+    if (traineeIds.size > 0) return traineeIds.size;
+
+    // Keep the UI backwards-compatible with older API responses that do not
+    // include trainee IDs.
+    return items.reduce(
+      (sum, item) => sum + parseInt(item[countField] || 0, 10),
+      0
+    );
+  };
+
+  const splitAggregatedValues = (value) =>
+    String(value || '')
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+  const handleTraineeGroupClick = (items, label) => {
+    const uniqueTrainees = (field) => {
+      const trainees = items.flatMap((item) =>
+        Array.isArray(item[field]) ? item[field] : []
+      );
+      const seen = new Set();
+      return trainees.filter((trainee) => {
+        const key = trainee.people_id || trainee.name;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    };
+    const uniqueValues = (field) => [
+      ...new Set(items.flatMap((item) => splitAggregatedValues(item[field])))
+    ];
+    const attemptedNames = uniqueValues('attempted_by_names');
+    const attemptedIds = uniqueValues('attempted_by_ids');
+
+    if (attemptedNames.length === 0) return;
+
+    setSelectedResourceForPopup({
+      resource_name: label,
+      resource_type: 'Resource group',
+      attempted_by_names: attemptedNames.join(', '),
+      attempted_by_ids: attemptedIds.join(', '),
+      completed_by_names: uniqueValues('completed_by_names').join(', '),
+      completed_by_ids: uniqueValues('completed_by_ids').join(', '),
+      attempted_trainees: uniqueTrainees('attempted_trainees'),
+      completed_trainees: uniqueTrainees('completed_trainees'),
+    });
+    setShowCompletionPopup(true);
   };
 
   // Close completion popup
@@ -725,19 +789,20 @@ function InsideCertifications() {
                                           <tr className="border-b bg-gray-50">
                                             <th className="py-3 px-4 text-left text-[#8DC63F]">Resource Type</th>
                                             <th className="py-3 px-4 text-left text-[#8DC63F]">Trainees Attempted</th>
+                                            <th className="py-3 px-4 text-left text-[#8DC63F]">Trainees Completed</th>
                                             <th className="py-3 px-4 text-left text-[#8DC63F]">Actions</th>
                                           </tr>
                                         </thead>
                                         <tbody>
                                           {entry.loading ? (
                                             <tr>
-                                              <td colSpan={3} className="py-4 text-center">
+                                              <td colSpan={4} className="py-4 text-center">
                                                 <ClipLoader size={30} />
                                               </td>
                                             </tr>
                                           ) : entry.error ? (
                                             <tr>
-                                              <td colSpan={3} className="py-4 text-center text-red-500">
+                                              <td colSpan={4} className="py-4 text-center text-red-500">
                                                 Failed to Load
                                               </td>
                                             </tr>
@@ -766,7 +831,7 @@ function InsideCertifications() {
                                             if (filteredData.length === 0) {
                                               return (
                                                 <tr>
-                                                  <td colSpan={3} className="py-4 text-center text-gray-500">
+                                                  <td colSpan={4} className="py-4 text-center text-gray-500">
                                                     No Resources Found
                                                   </td>
                                                 </tr>
@@ -782,14 +847,22 @@ function InsideCertifications() {
                                               }, {});
 
                                               return Object.entries(groupedByType).map(([type, items]) => {
-                                                const totalCompleted = items.reduce((sum, item) => 
-                                                  sum + parseInt(item.trainee_completed || 0), 0
-                                                );
+                                                const totalAttempted = countUniqueTrainees(items);
+                                                const totalCompleted = countUniqueTrainees(items, "completed_by_ids", "trainee_completed");
 
                                                 return (
                                                   <React.Fragment key={type}>
                                                     <tr className="border-b hover:bg-gray-50 cursor-pointer">
                                                       <td className="py-3 px-4 font-medium text-gray-800">{type}</td>
+                                                      <td className="py-3 px-4 text-gray-700 font-semibold">
+                                                        <button
+                                                          type="button"
+                                                          className={totalAttempted > 0 ? 'text-[#5d8f20] underline' : ''}
+                                                          onClick={() => handleTraineeGroupClick(items, type)}
+                                                        >
+                                                          {totalAttempted}
+                                                        </button>
+                                                      </td>
                                                       <td className="py-3 px-4 text-gray-700 font-semibold">{totalCompleted}</td>
                                                       <td className="py-3 px-4">
                                                         <button
@@ -810,7 +883,7 @@ function InsideCertifications() {
                                                     </tr>
                                                     {expandedResource === `${moduleId}-${type}` && (
                                                       <tr>
-                                                        <td colSpan={3} className="p-0">
+                                                        <td colSpan={4} className="p-0">
                                                           <div className="bg-gray-50 p-4">
                                                             {(() => {
                                                               const hasTopics = items.some(item => item.resource_topic && item.resource_topic.trim() !== "");
@@ -821,6 +894,7 @@ function InsideCertifications() {
                                                                     <thead>
                                                                       <tr className="border-b bg-gray-100">
                                                                         <th className="py-2 px-4 text-left text-gray-600">Resource Name</th>
+                                                                        <th className="py-2 px-4 text-left text-gray-600">Trainees Attempted</th>
                                                                         <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
                                                                         {decoded.role == 99 && (
                                                                          <th className="py-2 px-4 text-left text-gray-600">Actions</th>
@@ -832,7 +906,7 @@ function InsideCertifications() {
                                                                         <tr 
                                                                           key={item.resource_id} 
                                                                           className={`border-b last:border-0 hover:bg-gray-50 ${
-                                                                            item.completed_by_names ? 'cursor-pointer' : ''
+                                                                            item.attempted_by_names ? 'cursor-pointer' : ''
                                                                           }`}
                                                                           onClick={() => handleResourceClick(item)}
                                                                         >
@@ -841,11 +915,12 @@ function InsideCertifications() {
                                                                           </td>
                                                                           <td className="py-2 px-4">
                                                                             <span className={`${
-                                                                              item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                              item.trainee_attempted > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
                                                                             }`}>
-                                                                              {item.trainee_completed}
+                                                                              {item.trainee_attempted || 0}
                                                                             </span>
                                                                           </td>
+                                                                          <td className="py-2 px-4">{item.trainee_completed || 0}</td>
                                                                           <td className="py-2 px-4">
                                                                             {decoded.role == 99 && (
                                                                               <div className="flex flex-wrap gap-2">
@@ -891,6 +966,7 @@ function InsideCertifications() {
                                                                   <thead>
                                                                     <tr className="border-b bg-gray-100">
                                                                       <th className="py-2 px-4 text-left text-gray-600">Resource Topic / Name</th>
+                                                                      <th className="py-2 px-4 text-left text-gray-600">Trainees Attempted</th>
                                                                       <th className="py-2 px-4 text-left text-gray-600">Trainees Completed</th>
                                                                       <th className="py-2 px-4 text-left text-gray-600">Actions</th>
                                                                     </tr>
@@ -927,7 +1003,7 @@ function InsideCertifications() {
                                                                                 <tr
                                                                                   key={item.resource_id}
                                                                                   className={`border-b last:border-0 hover:bg-gray-50 ${
-                                                                                    item.completed_by_names ? 'cursor-pointer' : ''
+                                                                                    item.attempted_by_names ? 'cursor-pointer' : ''
                                                                                   }`}
                                                                                   onClick={() => handleResourceClick(item)}
                                                                                 >
@@ -936,11 +1012,12 @@ function InsideCertifications() {
                                                                                   </td>
                                                                                   <td className="py-2 px-4">
                                                                                     <span className={`${
-                                                                                      item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                                      item.trainee_attempted > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
                                                                                     }`}>
-                                                                                      {item.trainee_completed}
+                                                                                      {item.trainee_attempted || 0}
                                                                                     </span>
                                                                                   </td>
+                                                                                  <td className="py-2 px-4">{item.trainee_completed || 0}</td>
                                                                                   <td className="py-2 px-4">
                                                                                     {decoded.role == 99 && (
                                                                                       <div className="flex flex-wrap gap-2">
@@ -978,9 +1055,8 @@ function InsideCertifications() {
                                                                               );
                                                                             }
 
-                                                                            const topicCompleted = row.items.reduce((sum, item) =>
-                                                                              sum + parseInt(item.trainee_completed || 0), 0
-                                                                            );
+                                                                            const topicAttempted = countUniqueTrainees(row.items);
+                                                                            const topicCompleted = countUniqueTrainees(row.items, "completed_by_ids", "trainee_completed");
                                                                             const topicKey = `${moduleId}-${type}-${row.topic}`;
 
                                                                             return (
@@ -990,8 +1066,18 @@ function InsideCertifications() {
                                                                                     {row.topic}
                                                                                   </td>
                                                                                   <td className="py-2 px-4 text-gray-700">
-                                                                                    {topicCompleted}
+                                                                                    <button
+                                                                                      type="button"
+                                                                                      className={topicAttempted > 0 ? 'text-[#5d8f20] underline' : ''}
+                                                                                      onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleTraineeGroupClick(row.items, row.topic);
+                                                                                      }}
+                                                                                    >
+                                                                                      {topicAttempted}
+                                                                                    </button>
                                                                                   </td>
+                                                                                  <td className="py-2 px-4 text-gray-700">{topicCompleted}</td>
                                                                                   <td className="py-2 px-4">
                                                                                     <button
                                                                                       onClick={(e) => {
@@ -1019,6 +1105,7 @@ function InsideCertifications() {
                                                                                           <thead>
                                                                                             <tr className="border-b bg-gray-50">
                                                                                               <th className="py-2 px-4 text-left text-gray-600 text-sm">Resource Name</th>
+                                                                                              <th className="py-2 px-4 text-left text-gray-600 text-sm">Trainees Attempted</th>
                                                                                               <th className="py-2 px-4 text-left text-gray-600 text-sm">Trainees Completed</th>
                                                                                               {decoded.role == 99 && (
                                                                                                 <th className="py-2 px-4 text-left text-gray-600 text-sm">Actions</th>
@@ -1030,7 +1117,7 @@ function InsideCertifications() {
                                                                                               <tr
                                                                                                 key={item.resource_id}
                                                                                                 className={`border-b last:border-0 hover:bg-gray-50 ${
-                                                                                                  item.completed_by_names ? 'cursor-pointer' : ''
+                                                                                                  item.attempted_by_names ? 'cursor-pointer' : ''
                                                                                                 }`}
                                                                                                 onClick={() => handleResourceClick(item)}
                                                                                               >
@@ -1039,11 +1126,12 @@ function InsideCertifications() {
                                                                                                 </td>
                                                                                                 <td className="py-2 px-4 text-sm">
                                                                                                   <span className={`${
-                                                                                                    item.trainee_completed > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
+                                                                                                    item.trainee_attempted > 0 ? 'font-semibold text-[#8DC63F]' : 'text-gray-700'
                                                                                                   }`}>
-                                                                                                    {item.trainee_completed}
+                                                                                                    {item.trainee_attempted || 0}
                                                                                                   </span>
                                                                                                 </td>
+                                                                                                <td className="py-2 px-4 text-sm">{item.trainee_completed || 0}</td>
                                                                                                 {decoded.role == 99 && (
                                                                                                   <td className="py-2 px-4">
                                                                                                     <button
@@ -1399,13 +1487,33 @@ function InsideCertifications() {
                   </thead>
                   <tbody className="max-h-80 overflow-y-auto">
                     {(() => {
-                      const names = selectedResourceForPopup.completed_by_names.split(', ');
-                      const peopleIds = selectedResourceForPopup.completed_by_ids 
-                        ? selectedResourceForPopup.completed_by_ids.split(', ') 
+                      const attemptedTrainees = Array.isArray(selectedResourceForPopup.attempted_trainees)
+                        ? selectedResourceForPopup.attempted_trainees
                         : [];
+                      const completedTraineeKeys = new Set(
+                        (Array.isArray(selectedResourceForPopup.completed_trainees)
+                          ? selectedResourceForPopup.completed_trainees
+                          : []
+                        ).map((trainee) => trainee.people_id || trainee.name)
+                      );
+                      const names = splitAggregatedValues(selectedResourceForPopup.attempted_by_names);
+                      const peopleIds = splitAggregatedValues(selectedResourceForPopup.attempted_by_ids);
+                      const completedNames = new Set(
+                        splitAggregatedValues(selectedResourceForPopup.completed_by_names)
+                      );
+                      const completedPeopleIds = new Set(
+                        splitAggregatedValues(selectedResourceForPopup.completed_by_ids)
+                      );
                       
-                      return names.map((name, index) => {
-                        const peopleId = peopleIds[index] || 'N/A';
+                      const rows = attemptedTrainees.length > 0
+                        ? attemptedTrainees
+                        : names.map((name, index) => ({ name, people_id: peopleIds[index] || 'N/A' }));
+
+                      return rows.map((trainee, index) => {
+                        const name = trainee.name || 'Unknown trainee';
+                        const peopleId = trainee.people_id || 'N/A';
+                        const isCompleted = completedTraineeKeys.has(peopleId) ||
+                          completedPeopleIds.has(peopleId) || completedNames.has(name);
                         
                         return (
                           <tr 
@@ -1421,8 +1529,10 @@ function InsideCertifications() {
                               </div>
                             </td>
                             <td className="py-2 px-4 text-center">
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                ✓ Completed
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                isCompleted ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {isCompleted ? '✓ Completed' : 'Started'}
                               </span>
                             </td>
                             <td className="py-2 px-4 text-center">

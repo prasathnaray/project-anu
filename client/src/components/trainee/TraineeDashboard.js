@@ -4503,7 +4503,7 @@ import {
   BookOpen, Dumbbell, Eye, ClipboardCheck, MessageSquare,
   CheckCircle, AlertCircle, Award, ArrowRight, Flame,
   TrendingUp, Activity, Zap, Brain, ChevronUp, ChevronDown,
-  Minus, Clock, Lock, RefreshCw, Target,
+  Minus, Clock, Lock, RefreshCw, Target, Download,
 } from 'lucide-react';
 import { IdentificationIcon } from 'hugeicons-react';
 import TraineeProfileAPI from '../../API/TraineeProfileAPI';
@@ -5308,7 +5308,12 @@ function TraineeDashboard() {
   }, []);
 
   // ── Derived Data ──────────────────────────────────────────
-  const allResources = useMemo(() => (individualTraineeProfile?.data ?? []).filter(r => r.resource_id !== null), [individualTraineeProfile.data]);
+  const allResources = useMemo(
+    () => (individualTraineeProfile?.data ?? []).filter(
+      r => r.resource_id !== null && r.is_hidden !== true
+    ),
+    [individualTraineeProfile.data]
+  );
 
   const normalizeCertificateLabel = (value, certificateId = '') => {
     const id = String(certificateId || '').trim();
@@ -5325,6 +5330,7 @@ function TraineeDashboard() {
     ) {
       return 'UFC';
     }
+    if (/\bsvt\b/i.test(label) || /third trimester/i.test(label)) return 'SVT';
     return label;
   };
 
@@ -5367,6 +5373,64 @@ function TraineeDashboard() {
       label: certificateNameMap.get(id) || normalizeCertificateLabel(id) || id,
     }));
   }, [batchCertificateIds, certificateNameMap, individualTraineeProfile.data]);
+
+  const certificateCompletion = useMemo(() => certificates
+    .filter(cert => ['BTC', 'UFC', 'SVT'].includes(cert.label))
+    .map(cert => {
+      const resources = allResources.filter(resource => resource.certificate_id === cert.id);
+      const completed = resources.filter(resource => resource.is_completed === true).length;
+      const completionPercent = resources.length > 0 ? (completed / resources.length) * 100 : 0;
+      return {
+        ...cert,
+        total: resources.length,
+        completed,
+        completionPercent,
+        canGenerate: resources.length > 0 && completionPercent > 80,
+      };
+    }), [allResources, certificates]);
+
+  const escapeCertificateText = (value) => String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+  const [certificatePreview, setCertificatePreview] = useState(null);
+  const generateCertificate = (certificate) => {
+    if (!certificate?.canGenerate) return;
+
+    const traineeName = individualTraineeProfile?.data?.[0]?.user_name || 'Trainee';
+    const completionDate = new Date().toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'long', year: 'numeric',
+    });
+    setCertificatePreview({ label: certificate.label, html: `<!doctype html>
+      <html><head><title>${escapeCertificateText(certificate.label)} Certificate</title>
+      <style>
+        @page { size: landscape; margin: 0; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f3f7ed; font-family: Georgia, serif; color: #24311b; }
+        .certificate { width: 100vw; min-height: 100vh; padding: 7vh 8vw; display: flex; align-items: center; justify-content: center; }
+        .card { width: 100%; min-height: 80vh; padding: 9vh 8vw; text-align: center; background: #fff; border: 12px solid #8dc63f; outline: 2px solid #c9dfa9; outline-offset: -28px; box-shadow: 0 10px 35px rgba(54, 84, 27, .15); }
+        .brand { color: #6a982b; letter-spacing: .28em; font-size: 13px; font-weight: bold; text-transform: uppercase; }
+        h1 { margin: 28px 0 8px; font-size: 46px; color: #395a1c; letter-spacing: .08em; text-transform: uppercase; }
+        .subtitle { font-size: 20px; color: #66715b; }
+        .name { margin: 28px 0 14px; font-size: 38px; font-weight: bold; color: #233616; border-bottom: 1px solid #c9dfa9; display: inline-block; padding: 0 35px 10px; }
+        .course { font-size: 24px; color: #6a982b; font-weight: bold; }
+        .date { margin-top: 38px; font-size: 15px; color: #78816f; }
+        .print { margin-top: 28px; padding: 10px 20px; border: 0; border-radius: 6px; color: #fff; background: #6a982b; cursor: pointer; }
+        @media print { .print { display: none; } }
+      </style></head><body><main class="certificate"><section class="card">
+        <div class="brand">Antenatal Ultrasound · ANU</div>
+        <h1>Certificate of Completion</h1>
+        <div class="subtitle">This certificate is proudly presented to</div>
+        <div class="name">${escapeCertificateText(traineeName)}</div>
+        <div class="subtitle">for successfully completing</div>
+        <div class="course">${escapeCertificateText(certificate.label)} Certification</div>
+        <div class="date">Completed on ${escapeCertificateText(completionDate)}</div>
+        <button class="print" onclick="window.print()">Print / Save as PDF</button>
+      </section></main></body></html>` });
+  };
 
   const scopedResources = useMemo(() =>
     batchCertificateIds.length
@@ -6792,6 +6856,39 @@ function TraineeDashboard() {
   // ═══════════════════════════════════════════════════════════
   // SIDEBAR 9a: Overall Progress
   // ═══════════════════════════════════════════════════════════
+  const CertificateCard = () => (
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm px-4 py-4">
+      <SectionLabel icon={Award} color="#8DC63F" label="Certificates" />
+      <div className="flex flex-col gap-2">
+        {certificateCompletion.length === 0 ? (
+          <div className="text-xs text-gray-400">BTC, UFC or SVT certificates will appear here.</div>
+        ) : certificateCompletion.map(cert => (
+          <div key={cert.id} className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-bold text-gray-800">{cert.label}</div>
+                <div className="text-[10px] text-gray-500">
+                  {cert.completed}/{cert.total} resources completed ({Math.floor(cert.completionPercent)}%)
+                </div>
+              </div>
+              {cert.canGenerate ? (
+                <button
+                  type="button"
+                  onClick={() => generateCertificate(cert)}
+                  className="inline-flex items-center gap-1 rounded-lg bg-[#8DC63F] px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-[#72a52e]"
+                >
+                  <Download size={13} /> Generate
+                </button>
+              ) : (
+                <span className="rounded-full bg-yellow-50 px-2 py-1 text-[10px] font-semibold text-yellow-700">In progress</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   const OverallProgressCard = () => (
     <div className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm">
       <div className="px-4 pt-4 pb-3" >
@@ -6957,6 +7054,23 @@ function TraineeDashboard() {
   // ═══════════════════════════════════════════════════════════
   return (
     <div className="flex flex-col min-h-screen">
+      {certificatePreview && (
+        <dialog open aria-modal="true" aria-label="Certificate preview" className="fixed inset-0 z-50 m-auto w-[95vw] max-w-5xl rounded-xl p-0 shadow-2xl" style={{ boxShadow: '0 0 0 100vmax rgba(0,0,0,.55)' }} onKeyDown={event => { if (event.key === 'Escape') setCertificatePreview(null); }}>
+          <div className="flex items-center justify-between gap-3 border-b p-4">
+            <h2 className="font-bold">{certificatePreview.label} Certificate</h2>
+            <div className="flex gap-3">
+              <button autoFocus type="button" className="rounded-lg bg-[#8DC63F] px-4 py-2 text-white" onClick={() => {
+                const preview = document.getElementById('certificate-preview-frame');
+                preview?.contentWindow?.focus();
+                preview?.contentWindow?.print();
+              }}>Download / Save as PDF</button>
+              <button type="button" className="rounded-lg border px-4 py-2" onClick={() => setCertificatePreview(null)}>Close</button>
+            </div>
+          </div>
+          <p className="px-4 py-2 text-sm text-gray-600">To download, select “Save as PDF” in the print window.</p>
+          <iframe id="certificate-preview-frame" title="Certificate preview" srcDoc={certificatePreview.html} className="h-[65vh] w-full border-0" />
+        </dialog>
+      )}
       <div className="fixed top-0 left-0 w-full z-10 h-12 shadow bg-white">
         <NavBar />
       </div>
@@ -7024,6 +7138,7 @@ function TraineeDashboard() {
               {/* ── SIDEBAR (9a, 9b, 9c) ── */}
               <div className="col-span-1 flex flex-col gap-3">
                 <OverallProgressCard />   {/* 9a */}
+                <CertificateCard />
                 <NextModuleCard />        {/* 9b */}
                 <PracticeStreakCard />     {/* 9c */}
               </div>

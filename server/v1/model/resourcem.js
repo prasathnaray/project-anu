@@ -84,6 +84,9 @@ const getResourcesModel = (requester, module_id) => {
       params = [module_id, requester.user_mail];
     } else {
       // Admin view: aggregate for all users
+      const institutionId = [101, 102].includes(Number(requester.role))
+        ? requester.centre_id || null
+        : null;
       // query = `
       //   SELECT 
       //       rd.resource_id,
@@ -116,16 +119,28 @@ const getResourcesModel = (requester, module_id) => {
     rd.resource_type,
     rd.learning_module_id,
     rd.display_order,
-    COUNT(DISTINCT pd.user_id) AS trainee_completed,
+    COUNT(DISTINCT pd.user_id) AS trainee_attempted,
+    COUNT(DISTINCT CASE WHEN pd.is_completed = TRUE THEN pd.user_id END) AS trainee_completed,
     COUNT(*) OVER (PARTITION BY rd.learning_module_id) AS total_resource,
-    STRING_AGG(ud.user_name, ', ') AS completed_by_names,
-    STRING_AGG(ud.people_id::text, ', ') AS completed_by_ids
+    STRING_AGG(DISTINCT ud.user_name, ', ') AS attempted_by_names,
+    STRING_AGG(DISTINCT ud.people_id::text, ', ') AS attempted_by_ids,
+    STRING_AGG(DISTINCT CASE WHEN pd.is_completed = TRUE THEN ud.user_name END, ', ') AS completed_by_names,
+    STRING_AGG(DISTINCT CASE WHEN pd.is_completed = TRUE THEN ud.people_id::text END, ', ') AS completed_by_ids,
+    COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+      'name', ud.user_name,
+      'people_id', ud.people_id::text
+    )) FILTER (WHERE pd.user_id IS NOT NULL AND ud.user_name IS NOT NULL), '[]'::jsonb) AS attempted_trainees,
+    COALESCE(jsonb_agg(DISTINCT jsonb_build_object(
+      'name', ud.user_name,
+      'people_id', ud.people_id::text
+    )) FILTER (WHERE pd.is_completed = TRUE AND ud.user_name IS NOT NULL), '[]'::jsonb) AS completed_trainees
 FROM resource_data rd
 LEFT JOIN progress_data pd 
     ON rd.resource_id = pd.resourse_id
 LEFT JOIN user_data ud 
     ON pd.user_id = ud.user_email
 WHERE rd.learning_module_id = $1
+  AND ($2::text IS NULL OR ud.centre_id::text = $2::text)
   AND COALESCE((to_jsonb(rd)->>'is_hidden')::boolean, false) IS NOT TRUE
 GROUP BY 
     rd.resource_id,
@@ -136,7 +151,7 @@ GROUP BY
     rd.created_at,
     rd.display_order
 ORDER BY rd.display_order ASC NULLS LAST, rd.created_at ASC`;
-      params = [module_id];
+      params = [module_id, institutionId];
     }
     client.query(query, params, (err, result) => {
       if (err) return reject(err);
