@@ -1,5 +1,6 @@
 const {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, getVolumeDownloadModel, getVolumeRecordingDownloadListModel, getVolumeRecordingDownloadModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel} = require("../model/Volumem");
 const path = require('path');
+const { parseMaternalAge } = require('../utils/maternalAge');
 const { randomUUID } = require('crypto');
 const { uploadAsset, signAsset, signAssets, parseReference } = require('../utils/storageAdapter');
 const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
@@ -100,6 +101,9 @@ const isValidVolBuffer = (buffer) => {
 
 const VolumeController = async(req, res) => {
     const requester = req.user;
+    let maternalAge;
+    try { maternalAge = parseMaternalAge(req.body.maternal_age); }
+    catch (error) { return res.status(400).json({ message: error.message }); }
     try
     {
         if(!req.file)
@@ -156,7 +160,8 @@ const VolumeController = async(req, res) => {
             volume_fetal_presentation,
             trimester,
             description,
-            uploaded.reference
+            uploaded.reference,
+            maternalAge
         )
         if (result.code) return res.status(result.code).json(result);
         if(result.rowCount == 1)

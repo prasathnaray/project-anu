@@ -3,6 +3,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const jwt = require('jsonwebtoken');
 const { randomUUID } = require('crypto');
 const { svUploadModel } = require('../model/Volumem');
+const { parseMaternalAge } = require('../utils/maternalAge');
 const { isValidVolBuffer } = require('./volumeController');
 const s3 = new S3Client({ region: process.env.AWS_REGION || 'ap-south-1', requestChecksumCalculation: 'WHEN_REQUIRED' });
 const fields = ['volume_type', 'measurements', 'plane', 'volume_name', 'volume_ga', 'volume_fetal_presentation', 'trimester', 'description'];
@@ -14,6 +15,8 @@ exports.prepare = async (req, res) => {
     return res.status(400).json({ message: 'Choose a .vol file up to 100 MB.' });
   }
   const metadata = {};
+  try { metadata.maternal_age = parseMaternalAge(req.body.maternal_age); }
+  catch (error) { return res.status(400).json({ message: error.message }); }
   for (const field of fields) {
     if (typeof req.body[field] !== 'string' || !req.body[field].trim() || req.body[field].length > 10000) return res.status(400).json({ message: `Invalid ${field}.` });
     metadata[field] = req.body[field].trim();
@@ -39,7 +42,7 @@ exports.complete = async (req, res) => {
     if (head.ContentLength !== upload.size) return res.status(400).json({ message: 'Uploaded file size mismatch.' });
     const sample = await s3.send(new GetObjectCommand({ ...object, Range: 'bytes=0-511' }));
     if (!isValidVolBuffer(Buffer.from(await sample.Body.transformToByteArray()))) return res.status(400).json({ message: 'Invalid volume file.' });
-    const result = await svUploadModel(req.user, ...fields.map((field) => upload.metadata[field]), upload.key);
+    const result = await svUploadModel(req.user, ...fields.map((field) => upload.metadata[field]), upload.key, upload.metadata.maternal_age ?? null);
     if (result.code) return res.status(result.code).json(result);
     return res.status(200).json({ message: 'Volume Uploaded' });
   } catch (error) { console.error('Complete volume upload:', error.name); return res.status(500).json({ message: 'Unable to finalize volume upload.' }); }

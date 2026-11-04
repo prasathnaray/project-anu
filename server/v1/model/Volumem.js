@@ -29,7 +29,8 @@ const svUploadModel = (
     volume_fetal_presentation,
     trimester,
     description,
-    volume_file
+    volume_file,
+    maternal_age = null
 ) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = COURSE_EDITOR_ROLES.includes(Number(requester.role));
@@ -66,9 +67,10 @@ const svUploadModel = (
                 owner_scope,
                 owner_centre_id,
                 status${approverColumn},
-                ownership_review_required
+                ownership_review_required,
+                maternal_age
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14${approverValue}, false)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14${approverValue}, false, $15)
             RETURNING *;
         `;
 
@@ -88,7 +90,8 @@ const svUploadModel = (
                 requesterRole,
                 ownerScope,
                 ownerScope === 'institution' ? requester.centre_id : null,
-                isAutoApproved
+                isAutoApproved,
+                maternal_age
             ],
             (err, result) => {
             if (err) {
@@ -285,6 +288,7 @@ const getVolumeInstructorViewModel = (requester) => {
                 v.approver_id,
                 vcl.started_at,
                 v.created_at,
+                v.maternal_age,
                 vcl.conversion_completion,
                 vcl.converted_by,
                 vcl.completed_at,
