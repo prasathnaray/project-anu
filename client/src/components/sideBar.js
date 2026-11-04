@@ -554,7 +554,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
               </li>
             </>
           }
-          {[99, 101].includes(Number(tokdata.role)) && (
+          {[99, 101, 102].includes(Number(tokdata.role)) && (
             <li className="mb-1 mt-2">
               <button
                 onMouseDown={(e) => ripple.create(e, "dark", "circle")}

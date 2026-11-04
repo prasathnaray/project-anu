@@ -50,6 +50,33 @@ const getLearningByidm = async (certificate_id, requester) => {
             result = await client.query('SELECT * FROM learning_module ORDER BY created_at ASC LIMIT 100');
         }
     }
+    if (result.rows.length > 0) {
+        const moduleIds = result.rows.map(r => r.learning_module_id).filter(Boolean);
+        if (moduleIds.length > 0) {
+            try {
+                const resResult = await client.query(
+                    'SELECT resource_id, learning_module_id, resource_name, resource_topic, resource_type, display_order ' +
+                    'FROM resource_data ' +
+                    'WHERE learning_module_id = ANY($1::uuid[]) ' +
+                    '  AND COALESCE((to_jsonb(resource_data)->>\'is_hidden\')::boolean, false) IS NOT TRUE ' +
+                    'ORDER BY display_order ASC NULLS LAST, created_at ASC',
+                    [moduleIds]
+                );
+                const resourcesByModule = {};
+                for (const res of resResult.rows) {
+                    if (!resourcesByModule[res.learning_module_id]) {
+                        resourcesByModule[res.learning_module_id] = [];
+                    }
+                    resourcesByModule[res.learning_module_id].push(res);
+                }
+                for (const row of result.rows) {
+                    row.resources = resourcesByModule[row.learning_module_id] || [];
+                }
+            } catch (err) {
+                console.error('Error fetching module resources in getLearningByidm:', err);
+            }
+        }
+    }
     return result.rows;
 };
 const getResourceBylmandrt = async (requester, r_type, learning_module_id) => {

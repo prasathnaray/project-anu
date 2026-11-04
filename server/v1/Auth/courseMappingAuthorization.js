@@ -13,7 +13,7 @@ const courseMappingOwnership = (requester) => {
         };
     }
 
-    if (role === ROLES.INSTITUTION_ADMIN && requester.centre_id) {
+    if ([ROLES.INSTITUTION_ADMIN, ROLES.TUTOR].includes(role) && requester.centre_id) {
         return {
             ownerScope: 'institution',
             ownerCentreId: requester.centre_id

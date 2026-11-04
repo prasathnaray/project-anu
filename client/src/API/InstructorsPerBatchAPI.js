@@ -3,7 +3,8 @@ import APP_URL from './config';
 
 export const getInstructorsPerBatch = async (peopleId, token) => {
   try {
-    const response = await axios.get(`${APP_URL}/api/v1/instructor-as-per-batch?people_id=${peopleId}`, {
+    const query = peopleId ? `?people_id=${encodeURIComponent(peopleId)}` : '';
+    const response = await axios.get(`${APP_URL}/api/v1/instructor-as-per-batch${query}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

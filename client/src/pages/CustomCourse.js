@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { MenuItem, TextField } from '@mui/material';
 import { ArrowLeft, BookOpenCheck, Plus, X } from 'lucide-react';
@@ -38,7 +38,10 @@ function CustomCourse() {
   const [recordings, setRecordings] = useState([]);
   const [courses, setCourses] = useState([]);
   const [formData, setFormData] = useState(emptyForm);
-  const [openCreateCourse, setOpenCreateCourse] = useState(false);
+  const location = useLocation();
+  const [openCreateCourse, setOpenCreateCourse] = useState(
+    Boolean(location.state?.openCreateCourse)
+  );
   const [volumeLoading, setVolumeLoading] = useState(false);
   const [recordingLoading, setRecordingLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
@@ -127,7 +130,7 @@ function CustomCourse() {
     fetchRecordings(selectedVolume.volume_id);
   }, [selectedVolume]);
 
-  if (![99, 101].includes(userRole)) {
+  if (![99, 101, 102].includes(userRole)) {
     return <Navigate to="/dashboard" replace />;
   }
 

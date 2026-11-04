@@ -30,7 +30,7 @@ const ALLOWED_COURSE_TYPES = [
     'Single Plane'
 ];
 
-const isPrivilegedUser = (requester) => [99, 101].includes(Number(requester.role));
+const isPrivilegedUser = (requester) => [99, 101, 102].includes(Number(requester.role));
 
 const ensureCourseMappingTable = async () => {
     const query = `

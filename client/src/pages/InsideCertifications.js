@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useCallback} from "react";
+import React, {useEffect, useState, useCallback, useMemo} from "react";
 import NavBar from "../components/navBar";
 import {jwtDecode} from "jwt-decode";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
@@ -33,6 +33,67 @@ import GetShadowRecordingsAPI from "../API/GetShadowRecordingsAPI";
 import AssoVolumeAPI from "../API/AssoVolumeAPI";
 import MindSparkQuestionModal from "../components/MindSparkQuestionModal";
 import { getQuestionConfigMode, QUESTION_CONFIG_MODE } from "../utils/mindSparkQuestionForm";
+
+const UFC_MODULE_MAP = {
+  "Probe Movements": {
+    "Anatomy planes": [
+      "Anatomy Plane",
+      "Mind Sparks - Anatomical Plane - Quiz"
+    ],
+    "Types of probe": [
+      "Types of probe",
+      "Interaction - Probe Selection",
+      "Mind Sparks - Quiz"
+    ],
+    "Probe orientation": [
+      "Probe Orientation",
+      "Mind Sparks - Picture Pick"
+    ],
+    "Probe movements": [
+      "Probe Movements",
+      "Mindsparks - probe movements"
+    ],
+    "Echo Dose": [
+      "Drag & drop",
+      "True/False",
+      "Probe movements"
+    ],
+    "Challenges": [
+      "Probe Selection and Orientations",
+      "Probe Movements"
+    ]
+  },
+  "Principles of ultrasound": {
+    "Ultrasound wave physics": ["Ultrasound wave physics"],
+    "Generation of ultrasound waves": ["Generation of ultrasound waves"],
+    "Ultrasound wave properties": ["Ultrasound wave properties"],
+    "Image Formation": ["Image Formation"],
+    "Imaging modes": ["Imaging modes"],
+    "Interaction of ultrasound waves": ["Interaction of ultrasound waves", "Interaction Activity"],
+    "Echogenicity": ["Echogenicity"],
+    "Image Optimization": ["Image Optimization", "Image Optimization Activity"],
+    "Artifacts": ["Artifacts"]
+  },
+  "Knobology": {
+    "Overview of Ultrasound Machine": ["Overview of Ultrasound Machine"],
+    "Function of the Knobs": [
+      "Functions of Knobs",
+      "Interaction - Ultrasound Machine Interaction",
+      "Interaction - Knobology Optimization Activity",
+      "Mind Sparks - Quiz"
+    ],
+    "Imaging Modes": ["Imaging Modes", "MindSparks - True / False"],
+    "Echo Dose": ["Match", "Crossword"],
+    "Challenges": ["Find the Optimal Image", "Image Optimization"]
+  },
+  "Morphology": {
+    "Image Formation & Sector Orientation": ["Image Formation & Sector Orientation", "Mind Sparks - MCQs"],
+    "3D to 2D Imaging": ["3D to 2D Imaging", "Mind Sparks - Scanning"],
+    "2D to 3D Imaging": ["2D to 3D Imaging", "Interaction - Spin Wheel", "Mind Sparks - Picture Pick"],
+    "Echo Dose": ["Chatbot", "3D to 2D Prediction"],
+    "Challenges": ["Sector Orientation and Directional Terms", "Ultrasound Spatial Visualization"]
+  }
+};
 
 function InsideCertifications() {
   const navigate = useNavigate();
@@ -249,6 +310,23 @@ function InsideCertifications() {
                 ? res.data.result
                 : []));
       setLearningModules(modules);
+      if (Array.isArray(modules)) {
+        setResourceMap((prev) => {
+          const updated = { ...prev };
+          modules.forEach((m) => {
+            if (m.learning_module_id && Array.isArray(m.resources) && m.resources.length > 0) {
+              if (!updated[m.learning_module_id] || !updated[m.learning_module_id].data?.length) {
+                updated[m.learning_module_id] = {
+                  loading: false,
+                  error: null,
+                  data: m.resources,
+                };
+              }
+            }
+          });
+          return updated;
+        });
+      }
     } catch (err) {
       console.error("Error loading modules:", err);
       setLearningModules([]);
@@ -290,41 +368,149 @@ function InsideCertifications() {
     fetchLearningModules();
   }, [fetchCertificates, fetchLearningModules]);
   
-  const courseList = [...new Set(learningModules.map((m) => m.course_name).filter(Boolean))];
-  const moduleList = learningModules
-    .filter((m) => !courseName || m.course_name === courseName)
-    .map((m) => m.module_name)
-    .filter(Boolean)
-    .filter((v, i, arr) => arr.indexOf(v) === i);
-  const unitList = learningModules
-    .filter((m) => (!courseName || m.course_name === courseName) && (!moduleName || m.module_name === moduleName))
-    .map((m) => m.unit_name)
-    .filter(Boolean)
-    .filter((v, i, arr) => arr.indexOf(v) === i);
+  const courseList = useMemo(
+    () => [...new Set(learningModules.map((m) => m.course_name).filter(Boolean))],
+    [learningModules]
+  );
+
+  const moduleList = useMemo(() => {
+    if (!courseName) return [];
+
+    const explicit = learningModules
+      .filter((m) => m.course_name === courseName)
+      .map((m) => m.module_name)
+      .filter(Boolean);
+    if (explicit.length > 0) {
+      return [...new Set(explicit)];
+    }
+
+    const matching = learningModules.filter(
+      (m) => m.course_name === courseName
+    );
+    const topics = [];
+    matching.forEach((m) => {
+      const resList =
+        Array.isArray(m.resources) && m.resources.length > 0
+          ? m.resources
+          : resourceMap[m.learning_module_id]?.data || [];
+      resList.forEach((r) => {
+        const topic = r.resource_topic?.trim();
+        if (topic && !topics.includes(topic)) {
+          topics.push(topic);
+        }
+      });
+    });
+    if (topics.length > 0) {
+      return topics;
+    }
+
+    if (UFC_MODULE_MAP[courseName]) {
+      return Object.keys(UFC_MODULE_MAP[courseName]);
+    }
+
+    return [];
+  }, [learningModules, courseName, resourceMap]);
+
+  const unitList = useMemo(() => {
+    if (!courseName || !moduleName) return [];
+
+    const explicit = learningModules
+      .filter(
+        (m) =>
+          m.course_name === courseName &&
+          m.module_name === moduleName
+      )
+      .map((m) => m.unit_name)
+      .filter(Boolean);
+    if (explicit.length > 0) {
+      return [...new Set(explicit)];
+    }
+
+    const matching = learningModules.filter(
+      (m) => m.course_name === courseName
+    );
+    const units = [];
+    matching.forEach((m) => {
+      const resList =
+        Array.isArray(m.resources) && m.resources.length > 0
+          ? m.resources
+          : resourceMap[m.learning_module_id]?.data || [];
+      resList.forEach((r) => {
+        const topic = r.resource_topic?.trim();
+        if (topic === moduleName) {
+          const name = r.resource_name?.trim();
+          if (name && !units.includes(name)) {
+            units.push(name);
+          }
+        }
+      });
+    });
+    if (units.length > 0) {
+      return units;
+    }
+
+    if (UFC_MODULE_MAP[courseName] && UFC_MODULE_MAP[courseName][moduleName]) {
+      return UFC_MODULE_MAP[courseName][moduleName];
+    }
+
+    return [];
+  }, [learningModules, courseName, moduleName, resourceMap]);
 
   useEffect(() => {
-    if (courseName) {
-      const firstModule =
-        learningModules.find(m => m.course_name === courseName)?.module_name || "";
-      setModuleName(prev => prev || firstModule);
-      setUnitName("");
-    } else {
-      setModuleName("");
-      setUnitName("");
-    }
+    setModuleName("");
+    setUnitName("");
     setExpandedRow(null);
-  }, [courseName, learningModules]);
+  }, [courseName]);
   
   useEffect(() => {
+    setUnitName("");
     setExpandedRow(null);
   }, [moduleName]);
   
-  const filteredRows = learningModules.filter(row => {
-    return (
-      (!courseName || row.course_name === courseName) &&
-      (!moduleName || row.module_name === moduleName) &&
-      (!unitName || row.unit_name === unitName)
-    );
+  const filteredRows = learningModules.filter((row) => {
+    if (courseName && row.course_name !== courseName) {
+      return false;
+    }
+
+    if (moduleName) {
+      if (row.module_name) {
+        if (row.module_name !== moduleName) return false;
+      } else {
+        const resList =
+          Array.isArray(row.resources) && row.resources.length > 0
+            ? row.resources
+            : resourceMap[row.learning_module_id]?.data || [];
+        const hasTopic =
+          resList.some((r) => r.resource_topic?.trim() === moduleName) ||
+          Boolean(UFC_MODULE_MAP[row.course_name] && UFC_MODULE_MAP[row.course_name][moduleName]);
+        if (!hasTopic) return false;
+      }
+    }
+
+    if (unitName) {
+      if (row.unit_name) {
+        if (row.unit_name !== unitName) return false;
+      } else {
+        const resList =
+          Array.isArray(row.resources) && row.resources.length > 0
+            ? row.resources
+            : resourceMap[row.learning_module_id]?.data || [];
+        const hasUnit =
+          resList.some((r) => {
+            const matchTopic = !moduleName || r.resource_topic?.trim() === moduleName;
+            return matchTopic && r.resource_name?.trim() === unitName;
+          }) ||
+          Boolean(
+            UFC_MODULE_MAP[row.course_name] &&
+              ((moduleName && UFC_MODULE_MAP[row.course_name][moduleName]?.includes(unitName)) ||
+                (!moduleName &&
+                  Object.values(UFC_MODULE_MAP[row.course_name]).some((arr) => arr.includes(unitName))))
+          );
+        if (!hasUnit) return false;
+      }
+    }
+
+    return true;
   });
 
   const handleCreateLearning = async () => {
@@ -443,7 +629,7 @@ function InsideCertifications() {
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth size="small" disabled={!courseName}>
                   <InputLabel>Select Module</InputLabel>
                   <Select
                     label="Select Module"
@@ -461,7 +647,7 @@ function InsideCertifications() {
                   </Select>
                 </FormControl>
 
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth size="small" disabled={!courseName || !moduleName}>
                   <InputLabel>Select Unit</InputLabel>
                   <Select label="Select Unit" value={unitName} onChange={(e) => setUnitName(e.target.value)}>
                     {unitList.map((u, i) => (
@@ -555,15 +741,39 @@ function InsideCertifications() {
                                                 Failed to Load
                                               </td>
                                             </tr>
-                                          ) : entry.data.length === 0 ? (
-                                            <tr>
-                                              <td colSpan={3} className="py-4 text-center text-gray-500">
-                                                No Resources Found
-                                              </td>
-                                            </tr>
-                                          ) : (
-                                            (() => {
-                                              const groupedByType = entry.data.reduce((acc, res) => {
+                                          ) : (() => {
+                                            const rawItems = entry.data.length > 0
+                                              ? entry.data
+                                              : ((Array.isArray(row.resources) && row.resources.length > 0)
+                                                  ? row.resources
+                                                  : (UFC_MODULE_MAP[row.course_name]
+                                                      ? Object.entries(UFC_MODULE_MAP[row.course_name]).flatMap(([topic, uList]) =>
+                                                          uList.map((uName) => ({
+                                                            resource_id: `${row.learning_module_id}-${topic}-${uName}`,
+                                                            resource_name: uName,
+                                                            resource_topic: topic,
+                                                            resource_type: "Learning Resource",
+                                                            trainee_completed: 0,
+                                                          }))
+                                                        )
+                                                      : []));
+                                            const filteredData = rawItems.filter((item) => {
+                                              if (moduleName && item.resource_topic?.trim() !== moduleName) return false;
+                                              if (unitName && item.resource_name?.trim() !== unitName) return false;
+                                              return true;
+                                            });
+
+                                            if (filteredData.length === 0) {
+                                              return (
+                                                <tr>
+                                                  <td colSpan={3} className="py-4 text-center text-gray-500">
+                                                    No Resources Found
+                                                  </td>
+                                                </tr>
+                                              );
+                                            }
+
+                                            const groupedByType = filteredData.reduce((acc, res) => {
                                                 if (!acc[res.resource_type]) {
                                                   acc[res.resource_type] = [];
                                                 }
@@ -874,7 +1084,7 @@ function InsideCertifications() {
                                                 );
                                               });
                                             })()
-                                          )}
+                                          }
                                         </tbody>
                                       </table>
                                     </div>

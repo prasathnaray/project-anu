@@ -213,21 +213,17 @@ const updateBatchC = async(req, res) => {
 }
 const InstructorBatchC  = async(req, res) => {
         const requester = req.user;
-        const people_id = req.query.people_id;
+        const people_id = req.query.people_id || requester?.people_id || requester?.user_mail;
         try
         {
-                if(!people_id)
-                {
-                        return res.status(400).json({
-                                code: 400,
-                                status: 'people_id query parameter is required'
-                        })
-                }
                 const result = await InstructorBatch(requester, people_id);
+                if (result.code && result.code !== 200) {
+                        return res.status(result.code).json(result);
+                }
                 res.status(200).json({
                         code: 200,
                         status: 'Data retrieved successfully',
-                        result: result.rows
+                        result: result.rows || result
                 });
         }
         catch(err)

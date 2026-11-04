@@ -424,13 +424,20 @@ function Batch() {
                         }
                 }
                 catch (err) {
-                        if (err.response.data.code) {
+                        if (err.response?.status === 409 || err.response?.data?.code === 409) {
                                 toast.error("Batch already exist", {
                                         autoClose: 3000,
                                         toastId: 'already-batch-created',
                                         icon: false,
                                         closeButton: CustomCloseButton,
-                                })
+                                });
+                        } else {
+                                toast.error(err.response?.data?.message || "Failed to create batch", {
+                                        autoClose: 3000,
+                                        toastId: 'batch-creation-error',
+                                        icon: false,
+                                        closeButton: CustomCloseButton,
+                                });
                         }
                 }
         }
@@ -489,9 +496,18 @@ function Batch() {
                                         ? allRes.data
                                         : [];
                         }
-                        setCorList((courses || []).filter((course) =>
-                                course?.certificate_id != null || course?.course_id != null
-                        ));
+                        const seen = new Set();
+                        const uniqueFiltered = (courses || [])
+                                .filter((course) => course?.certificate_id != null || course?.course_id != null)
+                                .filter((course) => {
+                                        const id = String(course?.certificate_id ?? course?.course_id);
+                                        const name = String(course?.certificate_name ?? course?.course_name ?? '').trim().toLowerCase();
+                                        if (seen.has(id) || (name && seen.has('name:' + name))) return false;
+                                        seen.add(id);
+                                        if (name) seen.add('name:' + name);
+                                        return true;
+                                });
+                        setCorList(uniqueFiltered);
                 }
                 catch (err) {
                         console.log(err);

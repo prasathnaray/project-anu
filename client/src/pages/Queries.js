@@ -132,38 +132,52 @@ function Queries() {
         }
     };
 
+    // Fetch instructors from API
+    const fetchInstructors = async () => {
+        try {
+            const peopleId = localStorage.getItem('people_id') || decoded?.people_id || decoded?.id || decoded?.userId || decoded?.user_mail || '';
+            if (token) {
+                const response = await getInstructorsPerBatch(peopleId, token);
+                if (response?.result && Array.isArray(response.result)) {
+                    const instructorMap = new Map();
+                    response.result.forEach(batch => {
+                        if (batch.instructors && batch.instructor_emails && Array.isArray(batch.instructor_emails)) {
+                            batch.instructor_emails.forEach((email, idx) => {
+                                if (email && !instructorMap.has(email)) {
+                                    instructorMap.set(email, {
+                                        instructor_id: email,
+                                        instructor_name: batch.instructors[idx] || email
+                                    });
+                                }
+                            });
+                        }
+                        const directEmail = batch.instructor_id || batch.user_email || batch.email;
+                        const directName = batch.instructor_name || batch.user_name || batch.name;
+                        if (directEmail && !instructorMap.has(directEmail)) {
+                            instructorMap.set(directEmail, {
+                                instructor_id: directEmail,
+                                instructor_name: directName || directEmail
+                            });
+                        }
+                    });
+                    setInstructorList(Array.from(instructorMap.values()));
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching instructors:', err);
+        }
+    };
+
     // Load initial data
     useEffect(() => {
-
-        // Fetch instructors from API
-        const fetchInstructors = async () => {
-            try {
-                const peopleId = localStorage.getItem('people_id');
-                if (peopleId && token) {
-                    const response = await getInstructorsPerBatch(peopleId, token);
-                    if (response?.result) {
-                        const instructorMap = new Map();
-                        response.result.forEach(batch => {
-                            if (batch.instructors && batch.instructor_emails) {
-                                batch.instructor_emails.forEach((email, idx) => {
-                                    if (!instructorMap.has(email)) {
-                                        instructorMap.set(email, {
-                                            instructor_id: email,
-                                            instructor_name: batch.instructors[idx] || email
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                        setInstructorList(Array.from(instructorMap.values()));
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching instructors:', err);
-            }
-        };
         fetchInstructors();
     }, []);
+
+    useEffect(() => {
+        if (openCreateQuery && token && instructorList.length === 0) {
+            fetchInstructors();
+        }
+    }, [openCreateQuery]);
 
     // Fetch queries from API
     useEffect(() => {

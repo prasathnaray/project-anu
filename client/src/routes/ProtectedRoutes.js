@@ -140,7 +140,7 @@ const PrivateRoute = ({ allowedRoles }) => {
       { prefixes: ['/instructors'], roles: [99, 101] },
       { prefixes: ['/trainees'], roles: [99, 101, 102] },
       { prefixes: ['/volume-management', '/cluster'], roles: [99, 101, 102] },
-      { prefixes: ['/custom-course'], roles: [99, 101] },
+      { prefixes: ['/custom-course'], roles: [99, 101, 102] },
       { prefixes: ['/vrspace'], roles: [101, 103] },
       { prefixes: ['/my-learning', '/my-progress'], roles: [103] }
     ];

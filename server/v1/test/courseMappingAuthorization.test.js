@@ -19,17 +19,19 @@ test('Super Admin course mappings are global but remain creator-scoped', () => {
     });
 });
 
-test('Institution Admin creates mappings owned by the authenticated center', () => {
-    const requester = {
-        user_mail: 'admin@example.test',
-        role: 101,
-        centre_id: '11111111-1111-1111-1111-111111111111'
-    };
+test('Institution Admin and Instructor create mappings owned by the authenticated center', () => {
+    for (const role of [101, 102]) {
+        const requester = {
+            user_mail: 'user_' + role + '@example.test',
+            role,
+            centre_id: '11111111-1111-1111-1111-111111111111'
+        };
 
-    assert.deepEqual(courseMappingOwnership(requester), {
-        ownerScope: 'institution',
-        ownerCentreId: requester.centre_id
-    });
+        assert.deepEqual(courseMappingOwnership(requester), {
+            ownerScope: 'institution',
+            ownerCentreId: requester.centre_id
+        });
+    }
 });
 
 test('all institution roles read mappings from their authenticated center', () => {

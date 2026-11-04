@@ -87,7 +87,7 @@ function TutorDashboard() {
                                         <span className="text-lg font-semibold text-gray-700">Instructor Dashboard</span>
                                         <button
                                             className="ml-auto bg-[#8DC63F] text-white rounded px-4 py-2 text-sm font-semibold"
-                                            onClick={() => navigate('/custom-course')}
+                                            onClick={() => navigate('/custom-course', { state: { openCreateCourse: true } })}
                                         >
                                             Add Course
                                         </button>

@@ -3,7 +3,7 @@ const hasCenterScope = (requester) => Boolean(requester?.centre_id);
 
 const createBatchm = (batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name, requester) => {
     return new Promise((resolve, reject) => {
-        const isPrivileged = [101].includes(Number(requester.role));
+        const isPrivileged = [99, 101, 102].includes(Number(requester.role));
         if (!isPrivileged) {
             return resolve({
                 status: 'Unauthorized',
@@ -11,23 +11,45 @@ const createBatchm = (batch_name, batch_start_date, batch_end_date, certificatio
                 message: 'You do not have permission to access this course data.'
             });
         }
-        if (!hasCenterScope(requester)) {
+        const isSuperAdmin = Number(requester.role) === 99;
+        if (!isSuperAdmin && !hasCenterScope(requester)) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
                 message: 'Your account is not linked to a scan center.'
             });
         }
-        client.query('INSERT INTO batch_data(batch_name, batch_start_date, batch_end_date, certification_data, curiculum_id, centre_id) VALUES($1, $2, $3, $4, $5, $6)', [batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name, requester.centre_id], (err, result) => {
-            if (err) {
-                return reject(err)
+
+        const checkQuery = requester.centre_id
+            ? 'SELECT batch_id FROM batch_data WHERE LOWER(TRIM(batch_name)) = LOWER(TRIM($1)) AND centre_id = $2 LIMIT 1'
+            : 'SELECT batch_id FROM batch_data WHERE LOWER(TRIM(batch_name)) = LOWER(TRIM($1)) LIMIT 1';
+        const checkParams = requester.centre_id ? [batch_name, requester.centre_id] : [batch_name];
+
+        client.query(checkQuery, checkParams, (checkErr, checkResult) => {
+            if (checkErr) {
+                return reject(checkErr);
             }
-            else {
-                return resolve(result)
+            if (checkResult && checkResult.rows && checkResult.rows.length > 0) {
+                return resolve({
+                    status: 'Conflict',
+                    code: 409,
+                    message: 'Batch already exists.'
+                });
             }
-        })
-    })
-}
+
+            client.query(
+                'INSERT INTO batch_data(batch_name, batch_start_date, batch_end_date, certification_data, curiculum_id, centre_id) VALUES($1, $2, $3, $4, $5, $6)',
+                [batch_name, batch_start_date, batch_end_date, certification_data, curiculum_name, requester.centre_id || null],
+                (err, result) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(result);
+                }
+            );
+        });
+    });
+};
 // const getBatchm = (requester, page, limit) => {
 //     const isPrivileged = [101, 102].includes(Number(requester.role));
 //     if(!isPrivileged) {
@@ -197,7 +219,8 @@ const getBatchm = (requester, page, limit) => {
         let params;
 
         if (isAdmin) {
-            if (!hasCenterScope(requester)) {
+            const isSuperAdmin = Number(requester.role) === 99;
+        if (!isSuperAdmin && !hasCenterScope(requester)) {
                 return resolve({
                     status: 'Unauthorized',
                     code: 401,
@@ -333,7 +356,8 @@ const associateBatchm = (requester, batch_id, user_id) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        if (!hasCenterScope(requester)) {
+        const isSuperAdmin = Number(requester.role) === 99;
+        if (!isSuperAdmin && !hasCenterScope(requester)) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -373,7 +397,8 @@ const deleteBatchm = (requester, batch_id) => {
                 message: 'You do not have permission to view trainee profiles'
             })
         }
-        if (!hasCenterScope(requester)) {
+        const isSuperAdmin = Number(requester.role) === 99;
+        if (!isSuperAdmin && !hasCenterScope(requester)) {
             return resolve({
                 status: 'Unauthorized',
                 code: 401,
@@ -1090,7 +1115,7 @@ const updateBatchm = (requester, batch_id, new_batch_name, new_start_date, new_e
 }
 
 const InstructorBatch = (requester, people_id) => {
-    const isPrivileged = [103].includes(Number(requester.role));
+    const isPrivileged = [99, 101, 102, 103].includes(Number(requester?.role));
     if (!isPrivileged) {
         return Promise.resolve({
             status: 'Unauthorized',
@@ -1098,38 +1123,131 @@ const InstructorBatch = (requester, people_id) => {
             message: 'You do not have permission to view this batch'
         });
     }
+
+    const targetId = people_id || requester?.people_id || requester?.user_mail || '';
+    const targetEmail = requester?.user_mail || '';
+    const isSuperAdmin = Number(requester?.role) === 99;
+    let centreId = requester?.centre_id;
+
     return new Promise((resolve, reject) => {
-        client.query(`
-        SELECT 
-            bd.batch_id,
-            bd.batch_name,
-            bd.batch_end_date,
-            CASE 
-                WHEN bd.batch_end_date::DATE >= CURRENT_DATE THEN 'current'
-                ELSE 'completed'
-            END AS batch_status,
-            COUNT(DISTINCT CASE WHEN ud.user_role = '102' THEN ud.user_email END) AS instructor_count,
-            ARRAY_AGG(DISTINCT ud.user_name) FILTER (WHERE ud.user_role = '102' AND ud.user_name IS NOT NULL) AS instructors,
-            ARRAY_AGG(DISTINCT ud.user_email) FILTER (WHERE ud.user_role = '102' AND ud.user_email IS NOT NULL) AS instructor_emails
-        FROM batch_data bd
-        JOIN batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
-        JOIN user_data ud ON ud.user_email = bpd.user_id
-        WHERE bd.batch_id IN (
-            SELECT UNNEST(bpd.batch_id)
-            FROM user_data ud
-            JOIN batch_people_data bpd ON bpd.user_id = ud.user_email
-            WHERE ud.people_id = $1
-        )
-        GROUP BY bd.batch_id, bd.batch_name, bd.batch_end_date
-        ORDER BY bd.batch_end_date::DATE DESC;
-    `, [people_id], (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
-    })
+        const resolveCenterPromise = (!centreId && !isSuperAdmin && targetId)
+            ? new Promise((res) => {
+                client.query(
+                    `SELECT centre_id FROM public.user_data WHERE people_id::text = $1::text OR LOWER(TRIM(user_email)) = LOWER(TRIM($1)) LIMIT 1`,
+                    [String(targetId)],
+                    (err, r) => {
+                        if (!err && r?.rows?.[0]?.centre_id) {
+                            centreId = r.rows[0].centre_id;
+                        }
+                        res(centreId);
+                    }
+                );
+            })
+            : Promise.resolve(centreId);
+
+        resolveCenterPromise.then(() => {
+            const batchQuery = `
+                SELECT 
+                    bd.batch_id,
+                    bd.batch_name,
+                    bd.batch_end_date,
+                    CASE 
+                        WHEN bd.batch_end_date::DATE >= CURRENT_DATE THEN 'current'
+                        ELSE 'completed'
+                    END AS batch_status,
+                    COUNT(DISTINCT CASE WHEN ud.user_role = '102' THEN ud.user_email END) AS instructor_count,
+                    ARRAY_AGG(DISTINCT COALESCE(NULLIF(TRIM(ud.user_name), ''), ud.user_email)) FILTER (WHERE ud.user_role = '102' AND ud.user_name IS NOT NULL) AS instructors,
+                    ARRAY_AGG(DISTINCT ud.user_email) FILTER (WHERE ud.user_role = '102' AND ud.user_name IS NOT NULL) AS instructor_emails
+                FROM public.batch_data bd
+                LEFT JOIN public.batch_people_data bpd ON bd.batch_id = ANY(bpd.batch_id)
+                LEFT JOIN public.user_data ud ON LOWER(TRIM(ud.user_email)) = LOWER(TRIM(bpd.user_id))
+                WHERE bd.batch_id IN (
+                    SELECT UNNEST(bpd2.batch_id)
+                    FROM public.user_data ud2
+                    JOIN public.batch_people_data bpd2 ON LOWER(TRIM(bpd2.user_id)) = LOWER(TRIM(ud2.user_email))
+                    WHERE (ud2.people_id::text = $1::text OR LOWER(TRIM(ud2.user_email)) = LOWER(TRIM($2)))
+                )
+                GROUP BY bd.batch_id, bd.batch_name, bd.batch_end_date
+                ORDER BY bd.batch_end_date::DATE DESC;
+            `;
+
+            const centerQuery = isSuperAdmin
+                ? `SELECT COALESCE(NULLIF(TRIM(user_name), ''), user_email) AS instructor_name, user_email AS instructor_email
+                   FROM public.user_data
+                   WHERE user_role = '102' AND (status IS NULL OR LOWER(status) = 'active')
+                   ORDER BY user_name ASC`
+                : `SELECT COALESCE(NULLIF(TRIM(user_name), ''), user_email) AS instructor_name, user_email AS instructor_email
+                   FROM public.user_data
+                   WHERE user_role = '102' 
+                     AND ($1::text IS NULL OR centre_id = $1::text)
+                     AND (status IS NULL OR LOWER(status) = 'active')
+                   ORDER BY user_name ASC`;
+
+            const centerParams = isSuperAdmin ? [] : [centreId ? String(centreId) : null];
+
+            client.query(batchQuery, [String(targetId), String(targetEmail)], (batchErr, batchRes) => {
+                client.query(centerQuery, centerParams, (centerErr, centerRes) => {
+                    let centerInstructors = (!centerErr && centerRes?.rows) ? centerRes.rows : [];
+
+                    const finalize = (instructorsList) => {
+                        const centerNames = instructorsList.map(i => i.instructor_name).filter(Boolean);
+                        const centerEmails = instructorsList.map(i => i.instructor_email).filter(Boolean);
+
+                        let batches = (!batchErr && batchRes?.rows) ? batchRes.rows : [];
+
+                        if (batches.length > 0) {
+                            const hasAnyBatchInstructor = batches.some(b => Array.isArray(b.instructors) && b.instructors.length > 0);
+                            if (!hasAnyBatchInstructor && centerNames.length > 0) {
+                                batches = batches.map(b => ({
+                                    ...b,
+                                    instructor_count: centerNames.length,
+                                    instructors: centerNames,
+                                    instructor_emails: centerEmails
+                                }));
+                            } else if (centerNames.length > 0) {
+                                batches.push({
+                                    batch_id: 'center_instructors',
+                                    batch_name: 'Center Instructors',
+                                    batch_end_date: null,
+                                    batch_status: 'current',
+                                    instructor_count: centerNames.length,
+                                    instructors: centerNames,
+                                    instructor_emails: centerEmails
+                                });
+                            }
+                        } else if (centerNames.length > 0) {
+                            batches = [{
+                                batch_id: 'center_instructors',
+                                batch_name: 'Center Instructors',
+                                batch_end_date: null,
+                                batch_status: 'current',
+                                instructor_count: centerNames.length,
+                                instructors: centerNames,
+                                instructor_emails: centerEmails
+                            }];
+                        }
+
+                        resolve({ rows: batches });
+                    };
+
+                    if (centerInstructors.length === 0 && !isSuperAdmin) {
+                        client.query(
+                            `SELECT COALESCE(NULLIF(TRIM(user_name), ''), user_email) AS instructor_name, user_email AS instructor_email
+                             FROM public.user_data
+                             WHERE user_role = '102' AND (status IS NULL OR LOWER(status) = 'active')
+                             ORDER BY user_name ASC`,
+                            [],
+                            (allErr, allRes) => {
+                                finalize((!allErr && allRes?.rows) ? allRes.rows : []);
+                            }
+                        );
+                    } else {
+                        finalize(centerInstructors);
+                    }
+                });
+            });
+        }).catch(reject);
+    });
 }
 const getBatchDetailsByIdm = (batch_id) => {
     return new Promise((resolve, reject) => {

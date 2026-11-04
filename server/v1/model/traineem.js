@@ -185,8 +185,8 @@ const getTraineesm = (requester, page, limit) => {
             params = [limit, offset];
         }
 
-        // ADMIN (role 101)
-        else if (Number(requester.role) === 101) {
+        // ADMIN (role 101) & INSTRUCTOR (role 102)
+        else if ([101, 102].includes(Number(requester.role))) {
             query = `
                 SELECT COUNT(*) OVER() AS total_count,
                        ud.user_profile_photo,
@@ -213,41 +213,6 @@ const getTraineesm = (requester, page, limit) => {
                 LIMIT $1 OFFSET $2
             `;
             params = [limit, offset, requester.centre_id];
-        }
-
-        // INSTRUCTOR (role 102)
-        else if (Number(requester.role) === 102) {
-            query = `
-                SELECT COUNT(*) OVER() AS total_count,
-                       ud.user_profile_photo,
-                       ud.people_id,
-                       ud.user_name,
-                       ud.user_email,
-                       ud.user_contact_num,
-                       ud.user_dob,
-                       ud.user_gender,
-                       ud.status,
-                       bpd.batch_id,
-                       bpd.user_id,
-                       bd.batch_name,
-                       bd.batch_start_date,
-                       bd.batch_end_date
-                FROM public.user_data ud
-                JOIN public.batch_people_data bpd 
-                    ON ud.user_email = bpd.user_id
-                LEFT JOIN public.batch_data bd 
-                    ON bd.batch_id = ANY(bpd.batch_id)
-                WHERE bpd.batch_id && (
-                        SELECT batch_id 
-                        FROM public.batch_people_data 
-                        WHERE user_id = $3
-                )
-                AND ud.user_role = '103'
-                AND ud.centre_id = $4
-                ORDER BY ud.user_name
-                LIMIT $1 OFFSET $2
-            `;
-            params = [limit, offset, requester.user_mail, requester.centre_id];
         }
 
         client.query(query, params, (err, result) => {
@@ -4131,7 +4096,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
 
 const updateTraineem = (requester, user_id, batch_id) => {
     return new Promise((resolve, reject) => {
-          const isPrivileged = [101, 99].includes(Number(requester.role));
+          const isPrivileged = [99, 101, 102].includes(Number(requester.role));
           if(!isPrivileged)
           {
               return resolve({
