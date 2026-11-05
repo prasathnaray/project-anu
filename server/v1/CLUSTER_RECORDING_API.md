@@ -21,9 +21,14 @@ Use `recording_type` with one of these values:
 
 Both types use the same upload format. A step recording can contain multiple JSON, WAV, and image files. A shadow recording normally contains one set of each file type.
 
-Each uploaded recording, audio, image, or manifest file may be up to 100 MB by default. Deployments can override this with the `MAX_RECORDING_UPLOAD_SIZE_MB` environment variable.
+The application does not impose a per-file size limit on recording, audio, image, or manifest files. The deployed Lambda/API Gateway path remains subject to its approximately 10 MB request-payload limit; container deployments remain subject to their ingress and memory limits.
 
 ## Cluster-based APIs
+
+For large recordings, use the [direct S3 upload flow](DIRECT_RECORDING_UPLOAD.md):
+`POST /clusters/:cluster_id/recordings/prepare`, PUT raw files to the returned S3 URLs,
+then `POST /clusters/:cluster_id/recordings/complete`. Unity must adopt this flow to
+avoid API Gateway/Lambda payload limits. A 19 MiB signed S3 upload has been verified.
 
 Cluster endpoints scope recordings through `cluster_id`. The linked volume is resolved internally when uploading through a cluster.
 

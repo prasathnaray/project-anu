@@ -35,7 +35,14 @@ const getS3Client = () => {
         s3Client = new S3Client({
             region: process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'ap-south-1',
             maxAttempts: 1,
-            ...(accessKeyId && secretAccessKey ? { credentials: { accessKeyId, secretAccessKey } } : {})
+            ...(accessKeyId && secretAccessKey ? {
+                credentials: {
+                    accessKeyId,
+                    secretAccessKey,
+                    ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SESSION_TOKEN
+                        ? { sessionToken: process.env.AWS_SESSION_TOKEN } : {})
+                }
+            } : {})
         });
     }
     return s3Client;
@@ -195,10 +202,7 @@ const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, e
 
             try {
                 if (fallbackEnabled()) {
-                    await Promise.race([
-                        getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key })),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('S3 Head timeout')), 1000))
-                    ]);
+                    await getS3Client().send(new HeadObjectCommand({ Bucket: targetBucket(), Key: parsed.s3Key }));
                 }
                 const url = await getSignedUrl(
                     getS3Client(),
@@ -217,7 +221,7 @@ const signAsset = async (value, { defaultSourceBucket = DEFAULT_SOURCE_BUCKET, e
                         return setCache(fallbackUrl);
                     } catch (fallbackErr) {
                         console.warn(`Fallback to Supabase also failed for ${parsed.s3Key}:`, fallbackErr.message);
-                        return value;
+                        return null;
                     }
                 }
                 if (!isNotFound(error)) throw error;

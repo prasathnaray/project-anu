@@ -213,7 +213,7 @@ POST /uploadvolumerecording
 Content-Type: multipart/form-data
 ```
 
-Uploads one `shadow` or `step` package. Both recording types require at least one recording JSON, one WAV file, one image, and exactly one manifest. Each uploaded file may be up to 100 MB by default; deployments can override this with `MAX_RECORDING_UPLOAD_SIZE_MB`.
+Uploads one `shadow` or `step` package. Both recording types require at least one recording JSON, one WAV file, one image, and exactly one manifest. The application does not impose a per-file size limit; the deployment ingress may still impose a request-size limit.
 
 ### Form fields
 

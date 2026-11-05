@@ -31,7 +31,6 @@ Globals:
         VOL_CONVERSION_JOB_DEFINITION: vol-conversion-job
         REQUEST_BODY_LIMIT: 10mb
         MAX_VOLUME_UPLOAD_SIZE_MB: 8
-        MAX_RECORDING_UPLOAD_SIZE_MB: 10
 
 Resources:
   ServerV1Function:

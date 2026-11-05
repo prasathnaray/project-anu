@@ -14,15 +14,13 @@ const {
 } = require('../controller/clusterController');
 
 const clusterRouter = express.Router();
-
-const MAX_RECORDING_UPLOAD_SIZE_MB = Number(
-    process.env.MAX_RECORDING_UPLOAD_SIZE_MB || process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100
-);
+const directRecordingUpload = require('../controller/directRecordingUpload');
+clusterRouter.post('/clusters/:cluster_id/recordings/prepare', directRecordingUpload.prepare);
+clusterRouter.post('/clusters/:cluster_id/recordings/complete', directRecordingUpload.complete);
 
 const upload = multer({ 
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: MAX_RECORDING_UPLOAD_SIZE_MB * 1024 * 1024,
         files: 61 // Allow up to 20 JSON, 20 audio, 20 image, and 1 manifest file
     }
 });

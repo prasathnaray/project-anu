@@ -15,7 +15,6 @@ services:
       NODE_ENV: production
       REQUEST_BODY_LIMIT: 100mb
       MAX_VOLUME_UPLOAD_SIZE_MB: 100
-      MAX_RECORDING_UPLOAD_SIZE_MB: 100
     ports:
       - 4004:4004
 
