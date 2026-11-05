@@ -293,7 +293,9 @@ app.use((err, req, res, next) => {
     }
 
     if (err instanceof multer.MulterError) {
-        const maxUploadSizeMb = Number(process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100);
+        const maxUploadSizeMb = Number(
+            process.env.MAX_RECORDING_UPLOAD_SIZE_MB || process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100
+        );
 
         if (err.code === 'LIMIT_FILE_SIZE') {
             return res.status(413).json({

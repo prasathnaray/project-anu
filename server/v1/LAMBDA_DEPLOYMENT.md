@@ -30,4 +30,6 @@ https://84z54to5vl.execute-api.ap-south-1.amazonaws.com/health
 
 Volume uploads from the frontend use POST /api/v1/sv-upload/prepare to obtain a short-lived S3 PUT URL, upload the file directly with Content-Type: application/octet-stream and If-None-Match: *, then call POST /api/v1/sv-upload/complete with the uploadToken. The direct flow supports files up to 100 MB; the legacy multipart /sv-upload endpoint remains subject to Lambda/API Gateway limits. Completion checks the authenticated owner, stored size and volume header before saving metadata. The S3 bucket must allow PUT from the frontend origin with content-type and if-none-match headers (see tmp/volume-storage-cors.json at the repository root).
 
+Recording multipart uploads use a 10 MB per-file limit in the Lambda deployment because API Gateway HTTP APIs limit request payloads to approximately 10 MB. Container deployments can raise `MAX_RECORDING_UPLOAD_SIZE_MB` up to the size supported by their ingress path.
+
 Keep conversion jobs on AWS Batch. Socket.IO remains local-only in this Lambda deployment; deploy it separately on a long-running service if realtime connections are required in production.

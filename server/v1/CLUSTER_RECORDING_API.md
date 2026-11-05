@@ -21,6 +21,8 @@ Use `recording_type` with one of these values:
 
 Both types use the same upload format. A step recording can contain multiple JSON, WAV, and image files. A shadow recording normally contains one set of each file type.
 
+Each uploaded recording, audio, image, or manifest file may be up to 100 MB by default. Deployments can override this with the `MAX_RECORDING_UPLOAD_SIZE_MB` environment variable.
+
 ## Cluster-based APIs
 
 Cluster endpoints scope recordings through `cluster_id`. The linked volume is resolved internally when uploading through a cluster.

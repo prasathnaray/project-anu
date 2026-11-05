@@ -3,11 +3,15 @@ const volumeRecordingRouter = express.Router();
 const { volRecordingC, getRecordingsController } = require('../controller/volumeController');
 const multer = require('multer');
 
+const MAX_RECORDING_UPLOAD_SIZE_MB = Number(
+    process.env.MAX_RECORDING_UPLOAD_SIZE_MB || process.env.MAX_VOLUME_UPLOAD_SIZE_MB || 100
+);
+
 // Configure multer for memory storage
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 50 * 1024 * 1024, // 50MB per file
+        fileSize: MAX_RECORDING_UPLOAD_SIZE_MB * 1024 * 1024,
         files: 61 // Allow up to 20 JSON, 20 audio, 20 image, and 1 manifest file
     }
 });
