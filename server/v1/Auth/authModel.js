@@ -10,11 +10,13 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
   const normalizedEmail = normalizeEmail(user_mail);
   const result = await client.query(
-    `SELECT user_email_enc, user_name_enc, user_password, user_role, people_id,
+    `SELECT user_email, user_name, user_email_enc, user_name_enc, user_password, user_role, people_id,
             centre_id, center_name
      FROM public.user_data
-     WHERE user_email_lookup = $1 AND status = $2`,
-    [emailLookup(normalizedEmail), 'active']
+     WHERE (user_email_lookup = $1
+            OR (user_email_lookup IS NULL AND LOWER(user_email) = $2))
+       AND status = $3`,
+    [emailLookup(normalizedEmail), normalizedEmail, 'active']
   );
   if (!result.rows.length) {
     return { status: 'User Not Found or Account Disabled', code: 404 };
@@ -25,13 +27,17 @@ const LoginModel = async (user_mail, user_password, deviceInfo, ipAddress) => {
     return { status: 'Invalid_Password', code: 401 };
   }
 
-  // The lookup identifies the row; authenticated decryption recovers the
-  // email needed by the current session and token schemas.
-  user.user_email = decryptPii(user.user_email_enc, 'user_email');
+  // Existing accounts may predate the encrypted lookup fields. Keep their
+  // plaintext columns readable until those rows have been backfilled.
+  user.user_email = user.user_email_enc
+    ? decryptPii(user.user_email_enc, 'user_email')
+    : user.user_email;
   if (normalizeEmail(user.user_email) !== normalizedEmail) {
-    throw new Error('Encrypted email does not match its lookup value');
+    throw new Error('Account email does not match the login email');
   }
-  user.user_name = decryptPii(user.user_name_enc, 'user_name');
+  user.user_name = user.user_name_enc
+    ? decryptPii(user.user_name_enc, 'user_name')
+    : user.user_name;
 
   const session = await createSession(user, deviceInfo, ipAddress);
   try {
