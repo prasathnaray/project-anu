@@ -10089,6 +10089,7 @@ function MyLearning() {
   const [certs, setCerts] = React.useState([]);
   const [modules, setModules] = React.useState({});
   const [resources, setResources] = React.useState({});
+  const [taggedCustomCourses, setTaggedCustomCourses] = React.useState([]);
   const [activeCert, setActiveCert] = React.useState('');
   const [activeModule, setActiveModule] = React.useState('');
   const [activeFilter, setActiveFilter] = React.useState('all');
@@ -10113,10 +10114,15 @@ function MyLearning() {
 
     (async () => {
       try {
-        const [traineeJson, activityLastScores] = await Promise.all([
+        const [traineeJson, activityLastScores, customCourses] = await Promise.all([
           fetchTraineeData(traineeId, token),
           fetchActivityLastScores(token).catch(() => []),
+          fetch(`${BASE_URL}/api/v1/course-mappings?module_name=Custom%20Course`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then(res => res.ok ? res.json() : null).catch(() => null),
         ]);
+        setTaggedCustomCourses((Array.isArray(customCourses?.data) ? customCourses.data : [])
+          .filter(course => course.tagged_unit_name));
         const currentBatch = traineeJson?.currentBatches?.[0];
         const batchId = currentBatch?.batch_id || null;
         const batchCertificateIds = Array.isArray(currentBatch?.certification_data)
@@ -10193,6 +10199,13 @@ function MyLearning() {
     return matchType && matchSearch;
   });
 
+  const activeUnit = normalizeModuleSortLabel(activeModMeta?.label);
+  const visibleCustomCourses = taggedCustomCourses
+    .filter(course => activeCertMeta?.label === course.tagged_certificate_name &&
+      activeUnit === course.tagged_unit_name &&
+      activeFilter === 'all' &&
+      course.course_name?.toLowerCase().includes(search.toLowerCase()));
+
   const byType = filtered.reduce((acc, r) => {
     if (!acc[r.type]) acc[r.type] = [];
     acc[r.type].push(r);
@@ -10205,8 +10218,8 @@ function MyLearning() {
       const isFlat = typeKey === 'interpret' || typeKey === 'challenge';
       //down variable is working fine
       //const isFlat = typeKey === 'interpret' || typeKey === 'test';
-      if (isFlat) return { typeKey, flatList: true, accordions: [], directRows: byType[typeKey] };
-      const { accordions, directRows } = buildTopicGroups(byType[typeKey], activeModMeta?.label || '');
+      if (isFlat) return { typeKey, flatList: true, accordions: [], directRows: byType[typeKey] || [] };
+      const { accordions, directRows } = buildTopicGroups(byType[typeKey] || [], activeModMeta?.label || '');
       return { typeKey, flatList: false, accordions, directRows };
     });
 
@@ -10374,7 +10387,21 @@ function MyLearning() {
                       </div>
                     </div>
 
-                    {filtered.length === 0 && (
+                    {visibleCustomCourses.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Custom Courses</h3>
+                        <div className="flex flex-col gap-2">
+                          {visibleCustomCourses.map(course => (
+                            <div key={course.mapping_id} className="px-4 py-3 rounded-xl border border-[#8DC63F]/30 bg-white">
+                              <div className="text-sm font-semibold text-gray-700">{course.course_name}</div>
+                              <div className="text-xs text-gray-500 mt-1">{course.cluster_name || 'Cluster'}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {filtered.length === 0 && visibleCustomCourses.length === 0 && (
                       <div className="flex flex-col items-center justify-center py-16 text-gray-400 border rounded-xl bg-white">
                         <BookOpen size={36} className="mb-3 text-gray-300" />
                         <p className="text-sm font-medium">No resources found</p>

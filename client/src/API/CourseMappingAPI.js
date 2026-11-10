@@ -29,4 +29,9 @@ function CreateCourseMappingAPI(mappingData) {
   });
 }
 
-export { GetCourseMappingsAPI, CreateCourseMappingAPI };
+function TagCustomCourseAPI(mappingId, placement) {
+  return axios.post(`${APP_URL}/api/v1/course-mappings/${encodeURIComponent(mappingId)}/tags`,
+    placement, { headers: authHeaders() });
+}
+
+export { GetCourseMappingsAPI, CreateCourseMappingAPI, TagCustomCourseAPI };

@@ -6,6 +6,19 @@ const mockClient = {
     query: async (sql, params = []) => {
         queries.push({ sql, params });
 
+        if (/SELECT cluster_id FROM public\.clusters/.test(sql)) {
+            return { rows: params[0] === 'other-cluster' ? [] : [{ cluster_id: params[0] }] };
+        }
+        if (/SELECT mapping_id FROM public\.course_mapping/.test(sql) && /mapping_id = \$1::uuid/.test(sql)) {
+            return { rows: [{ mapping_id: params[0] }] };
+        }
+        if (/INSERT INTO public\.course_mapping_placements/.test(sql)) {
+            return { rows: [{ mapping_id: params[0], centre_id: params[1], certificate_name: params[2], unit_name: params[3] }] };
+        }
+        if (/FROM public\.cluster_recordings cr/.test(sql) && /SELECT vr\.recording_id/.test(sql)) {
+            return { rows: params[1] === 'missing-recording' ? [] : [{ recording_id: params[1] }] };
+        }
+
         if (/SELECT volume_id, volume_name, volume_type, trimester/.test(sql)) {
             return {
                 rows: [{
@@ -45,7 +58,8 @@ require.cache[connectionPath] = {
 const {
     createCourseMappingModel,
     getCourseMappingsModel,
-    getCourseMappingsWithRecordingsModel
+    getCourseMappingsWithRecordingsModel,
+    tagCustomCourseModel
 } = require('../model/CourseMappingm');
 
 test('course creation persists ownership from the authenticated Institution Admin', async () => {
@@ -76,6 +90,69 @@ test('course creation persists ownership from the authenticated Institution Admi
     assert.deepEqual(insert.params.slice(-2), ['institution', requester.centre_id]);
 });
 
+test('custom course stores its cluster and validates selected recordings in that cluster', async () => {
+    queries.length = 0;
+    const requester = {
+        user_mail: 'admin@example.test',
+        role: 101,
+        centre_id: '11111111-1111-1111-1111-111111111111'
+    };
+    const result = await createCourseMappingModel(
+        requester, null, null, null, 'Custom Course', 'Free Scan',
+        '22222222-2222-2222-2222-222222222222', null,
+        'Custom course', 'Description', 'Doctor', 'cluster-a'
+    );
+    const insert = queries.find(({ sql }) => /INSERT INTO public\.course_mapping/.test(sql));
+    assert.equal(result.code, 201);
+    assert.match(insert.sql, /cluster_id/);
+    assert.doesNotMatch(insert.sql, /volume_id/);
+    assert.equal(insert.params[1], 'cluster-a');
+    assert.ok(queries.some(({ sql }) => /FROM public\.cluster_recordings cr/.test(sql)));
+
+    queries.length = 0;
+    const missing = await createCourseMappingModel(
+        requester, null, null, null, 'Custom Course', 'Free Scan',
+        'missing-recording', null, 'Custom course', 'Description', 'Doctor', 'cluster-a'
+    );
+    assert.equal(missing.code, 404);
+    assert.equal(queries.some(({ sql }) => /INSERT INTO public\.course_mapping/.test(sql)), false);
+});
+
+test('tagging a custom course places it in a scan center unit', async () => {
+    queries.length = 0;
+    const requester = {
+        user_mail: 'admin@example.test', role: 101,
+        centre_id: '11111111-1111-1111-1111-111111111111'
+    };
+    const result = await tagCustomCourseModel(
+        requester, '22222222-2222-2222-2222-222222222222',
+        { certificate_name: 'BTC', unit_name: 'BPD & HC' }
+    );
+    assert.equal(result.code, 200);
+    const mapping = queries.find(({ sql }) => /SELECT mapping_id FROM public\.course_mapping/.test(sql));
+    assert.deepEqual(mapping.params.slice(1), [requester.centre_id]);
+    const insert = queries.find(({ sql }) => /INSERT INTO public\.course_mapping_placements/.test(sql));
+    assert.deepEqual(insert.params.slice(1, 4), [requester.centre_id, 'BTC', 'BPD & HC']);
+    assert.doesNotMatch(insert.sql, /section_name/);
+
+    queries.length = 0;
+    const invalid = await tagCustomCourseModel(
+        requester, '22222222-2222-2222-2222-222222222222',
+        { certificate_name: 'BTC', unit_name: 'Other' }
+    );
+    assert.equal(invalid.code, 400);
+    assert.equal(queries.some(({ sql }) => /INSERT INTO public\.course_mapping_placements/.test(sql)), false);
+
+    queries.length = 0;
+    const globalTag = await tagCustomCourseModel(
+        { user_mail: 'super@example.test', role: 99 },
+        '22222222-2222-2222-2222-222222222222',
+        { certificate_name: 'BTC', unit_name: 'BPD & HC' }
+    );
+    assert.equal(globalTag.code, 403);
+    assert.equal(queries.length, 0);
+});
+
 test('trainee course reads are scoped to the authenticated center', async () => {
     queries.length = 0;
     const requester = {
@@ -91,6 +168,7 @@ test('trainee course reads are scoped to the authenticated center', async () => 
     assert.match(select.sql, /cm\.owner_scope = 'institution'/);
     assert.match(select.sql, /cm\.owner_centre_id = \$1/);
     assert.doesNotMatch(select.sql, /shadow_vr/);
+    assert.match(select.sql, /course_mapping_placements/);
     assert.deepEqual(select.params, [requester.centre_id]);
 });
 

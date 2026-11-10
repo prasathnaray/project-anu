@@ -566,7 +566,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                   }`}
               >
                 <BookOpen size={20} />
-                <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>SVT Course</div>
+                <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Customization</div>
               </button>
             </li>
           )}

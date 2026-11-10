@@ -4,7 +4,8 @@ const {
     ALLOWED_COURSE_TYPES,
     createCourseMappingModel,
     getCourseMappingsModel,
-    getCourseMappingsWithRecordingsModel
+    getCourseMappingsWithRecordingsModel,
+    tagCustomCourseModel
 } = require('../model/CourseMappingm');
 const { hydrateStorageFields } = require('../utils/hydrateStorageFields');
 
@@ -28,18 +29,23 @@ const createCourseMappingController = async (req, res) => {
         step_recording_id,
         course_name,
         description,
-        doctor_name
+        doctor_name,
+        cluster_id
     } = req.body;
 
-    if (!trimester || !anatomy_type || !volume_name || !module_name || !course_type) {
+    if (!module_name || !course_type || (module_name === 'Custom Course'
+        ? !cluster_id
+        : (!trimester || !anatomy_type || !volume_name))) {
         return res.status(400).json({
             code: 400,
             status: 'Validation Error',
-            message: 'trimester, anatomy_type, volume_name, module_name, and course_type are required.'
+            message: module_name === 'Custom Course'
+                ? 'cluster_id, module_name, and course_type are required.'
+                : 'trimester, anatomy_type, volume_name, module_name, and course_type are required.'
         });
     }
 
-    if (!ALLOWED_TRIMESTERS.includes(trimester)) {
+    if (module_name !== 'Custom Course' && !ALLOWED_TRIMESTERS.includes(trimester)) {
         return res.status(400).json({
             code: 400,
             status: 'Validation Error',
@@ -75,7 +81,8 @@ const createCourseMappingController = async (req, res) => {
             step_recording_id,
             course_name,
             description,
-            doctor_name
+            doctor_name,
+            cluster_id
         );
 
         if (result.code && result.code !== 201) {
@@ -148,8 +155,23 @@ const getCourseMappingsWithRecordingsController = async (req, res) => {
     }
 };
 
+const tagCustomCourseController = async (req, res) => {
+    const { mapping_id } = req.params;
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(mapping_id)) {
+        return res.status(400).json({ code: 400, message: 'Valid mapping_id is required.' });
+    }
+    try {
+        const result = await tagCustomCourseModel(req.user, mapping_id, req.body || {});
+        return res.status(result.code).json(result);
+    } catch (err) {
+        console.error('tagCustomCourseController error:', err);
+        return res.status(500).json({ code: 500, message: 'Failed to tag course.' });
+    }
+};
+
 module.exports = {
     createCourseMappingController,
     getCourseMappingsController,
-    getCourseMappingsWithRecordingsController
+    getCourseMappingsWithRecordingsController,
+    tagCustomCourseController
 };

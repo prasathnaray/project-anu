@@ -976,7 +976,7 @@ function NavBar() {
     if (path === "/settings") return "Settings";
     if (path === "/sessions") return "Sessions";
     if (path === "/profile") return "Profile";
-    if (path === "/custom-course") return "SVT Course";
+    if (path === "/custom-course") return "Customization";
     if (path === "/course-access") return "Assigned Courses";
 
     const cleanPath = path.replace(/^\//, '').split('/')[0];

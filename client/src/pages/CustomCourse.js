@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { MenuItem, TextField } from '@mui/material';
@@ -6,23 +6,20 @@ import { ArrowLeft, BookOpenCheck, Plus, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import NavBar from '../components/navBar';
 import SideBar from '../components/sideBar';
-import GetVolInsAPI from '../API/GetVolInsAPI';
-import GetShadowRecordingsAPI from '../API/GetShadowRecordingsAPI';
-import { CreateCourseMappingAPI, GetCourseMappingsAPI } from '../API/CourseMappingAPI';
+import { GetClustersAPI, GetClusterRecordingsAPI } from '../API/ClusterAPI';
+import { CreateCourseMappingAPI, GetCourseMappingsAPI, TagCustomCourseAPI } from '../API/CourseMappingAPI';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import AddCourse from '../components/admin/AddCourse';
 
-const CUSTOM_COURSE_MODULE = 'SVT Course';
+const CUSTOM_COURSE_MODULE = 'Custom Course';
 const COURSE_TYPES = ['Free Scan', 'Single Plane'];
+const UNITS = ['BPD & HC', 'AC', 'FL'];
 
 const emptyForm = {
   course_name: '',
   description: '',
   doctor_name: '',
-  volume_id: '',
-  trimester: '',
-  anatomy_type: '',
-  volume_name: '',
+  cluster_id: '',
   course_type: '',
   shadow_recording_id: '',
   step_recording_id: '',
@@ -34,23 +31,22 @@ function CustomCourse() {
   const userRole = Number(decoded.role);
   const navigate = useNavigate();
   const [buttonOpen, setButtonOpen] = useState(true);
-  const [volumes, setVolumes] = useState([]);
+  const [clusters, setClusters] = useState([]);
   const [recordings, setRecordings] = useState([]);
+  const recordingRequest = useRef(0);
   const [courses, setCourses] = useState([]);
+  const [tagCourse, setTagCourse] = useState(null);
+  const [placement, setPlacement] = useState({ certificate_name: 'BTC', unit_name: '' });
+  const [tagLoading, setTagLoading] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
   const location = useLocation();
   const [openCreateCourse, setOpenCreateCourse] = useState(
     Boolean(location.state?.openCreateCourse)
   );
-  const [volumeLoading, setVolumeLoading] = useState(false);
+  const [clusterLoading, setClusterLoading] = useState(false);
   const [recordingLoading, setRecordingLoading] = useState(false);
   const [listLoading, setListLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-
-  const selectedVolume = useMemo(
-    () => volumes.find((volume) => volume.volume_id === formData.volume_id),
-    [formData.volume_id, volumes]
-  );
 
   const shadowRecordings = useMemo(
     () => recordings.filter((recording) => recording.recording_type?.toLowerCase().includes('shadow')),
@@ -62,24 +58,26 @@ function CustomCourse() {
     [recordings]
   );
 
-  const fetchVolumes = async () => {
-    setVolumeLoading(true);
+  const taggedCourses = useMemo(() => courses.filter((course) => course.tagged_unit_name), [courses]);
+
+  const fetchClusters = async () => {
+    setClusterLoading(true);
     try {
-      const result = await GetVolInsAPI();
-      setVolumes(Array.isArray(result?.data) ? result.data : []);
+      const result = await GetClustersAPI();
+      setClusters(Array.isArray(result?.data?.data) ? result.data.data : (Array.isArray(result?.data) ? result.data : []));
     } catch (err) {
       console.log(err);
-      toast.error(err.response?.data?.message || 'Failed to load volumes.');
-      setVolumes([]);
+      toast.error(err.response?.data?.message || 'Failed to load clusters.');
+      setClusters([]);
     } finally {
-      setVolumeLoading(false);
+      setClusterLoading(false);
     }
   };
 
   const fetchCustomCourses = async () => {
     setListLoading(true);
     try {
-      const result = await GetCourseMappingsAPI();
+      const result = await GetCourseMappingsAPI({ module_name: CUSTOM_COURSE_MODULE });
       setCourses(Array.isArray(result?.data?.data) ? result.data.data : []);
     } catch (err) {
       console.log(err);
@@ -90,45 +88,44 @@ function CustomCourse() {
     }
   };
 
-  const fetchRecordings = async (volumeId) => {
-    if (!volumeId) {
+  const fetchRecordings = async (clusterId) => {
+    const requestId = ++recordingRequest.current;
+    if (!clusterId) {
       setRecordings([]);
+      setRecordingLoading(false);
       return;
     }
 
+    setRecordings([]);
     setRecordingLoading(true);
     try {
-      const result = await GetShadowRecordingsAPI(volumeId);
-      setRecordings(Array.isArray(result?.data) ? result.data : []);
+      const result = await GetClusterRecordingsAPI(clusterId);
+      if (requestId === recordingRequest.current) {
+        setRecordings(Array.isArray(result?.data?.data) ? result.data.data : (Array.isArray(result?.data) ? result.data : []));
+      }
     } catch (err) {
+      if (requestId !== recordingRequest.current) return;
       console.log(err);
-      toast.error(err.response?.data?.message || 'Failed to load volume recordings.');
+      toast.error(err.response?.data?.message || 'Failed to load cluster recordings.');
       setRecordings([]);
     } finally {
-      setRecordingLoading(false);
+      if (requestId === recordingRequest.current) setRecordingLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchVolumes();
+    fetchClusters();
     fetchCustomCourses();
   }, []);
 
   useEffect(() => {
-    if (!selectedVolume) {
-      return;
-    }
-
     setFormData((prev) => ({
       ...prev,
-      trimester: selectedVolume.trimester || prev.trimester,
-      anatomy_type: selectedVolume.volume_type || '',
-      volume_name: selectedVolume.volume_name || '',
       shadow_recording_id: '',
       step_recording_id: '',
     }));
-    fetchRecordings(selectedVolume.volume_id);
-  }, [selectedVolume]);
+    fetchRecordings(formData.cluster_id);
+  }, [formData.cluster_id]);
 
   if (![99, 101, 102].includes(userRole)) {
     return <Navigate to="/dashboard" replace />;
@@ -145,8 +142,10 @@ function CustomCourse() {
   };
 
   const handleClear = () => {
+    recordingRequest.current += 1;
     setFormData(emptyForm);
     setRecordings([]);
+    setRecordingLoading(false);
   };
 
   const handleClosePopup = () => {
@@ -154,16 +153,32 @@ function CustomCourse() {
     handleClear();
   };
 
+  const openTagCourse = (course) => {
+    setTagCourse(course);
+    setPlacement({ certificate_name: 'BTC', unit_name: course.tagged_unit_name || '' });
+  };
+
+  const handleTagCourse = async (e) => {
+    e.preventDefault();
+    if (!placement.unit_name || !tagCourse?.mapping_id) return;
+    setTagLoading(true);
+    try {
+      await TagCustomCourseAPI(tagCourse.mapping_id, placement);
+      toast.success('Course tagged successfully.');
+      setTagCourse(null);
+      fetchCustomCourses();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to tag course.');
+    } finally {
+      setTagLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.volume_id || !formData.anatomy_type || !formData.volume_name || !formData.course_type) {
-      toast.error('Please fill course name, description, doctor name, volume, and course type.');
-      return;
-    }
-
-    if (!formData.trimester) {
-      toast.error('The selected volume does not have trimester information.');
+    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.cluster_id || !formData.course_type) {
+      toast.error('Please fill course name, description, doctor name, cluster, and course type.');
       return;
     }
 
@@ -171,9 +186,7 @@ function CustomCourse() {
       course_name: formData.course_name,
       description: formData.description,
       doctor_name: formData.doctor_name,
-      trimester: formData.trimester,
-      anatomy_type: formData.anatomy_type,
-      volume_name: formData.volume_name,
+      cluster_id: formData.cluster_id,
       module_name: CUSTOM_COURSE_MODULE,
       course_type: formData.course_type,
       shadow_recording_id: formData.shadow_recording_id || null,
@@ -182,7 +195,7 @@ function CustomCourse() {
 
     setSubmitLoading(true);
     try {
-      await CreateCourseMappingAPI(payload);
+      const result = await CreateCourseMappingAPI(payload);
       toast.success('Course created successfully.', {
         autoClose: 3000,
         toastId: 'custom-course-created',
@@ -192,6 +205,9 @@ function CustomCourse() {
       handleClear();
       setOpenCreateCourse(false);
       fetchCustomCourses();
+      if (userRole !== 99 && result?.data?.data?.mapping_id) {
+        openTagCourse(result.data.data);
+      }
     } catch (err) {
       console.log(err);
       toast.error(err.response?.data?.message || 'Failed to create course.', {
@@ -218,11 +234,11 @@ function CustomCourse() {
           } flex-grow overflow-y-auto bg-gray-100 h-[calc(100vh-3rem)]`}
         >
           <div className="p-2 flex justify-between items-center border-b bg-white">
-            <div>SVT Course</div>
+            <div>Customization</div>
             <div className="flex gap-2 text-sm">
               <div className="text-[#8DC63F]">Dashboard</div>
               <div>/</div>
-              <div>SVT Course</div>
+              <div>Customization</div>
             </div>
           </div>
 
@@ -230,7 +246,7 @@ function CustomCourse() {
             <div className="p-5 border-b flex items-center justify-between">
               <div>
                 <div className="font-semibold text-gray-800 text-lg">Courses</div>
-                <div className="text-xs text-gray-500 mt-1">View and create custom courses from your mapped volumes.</div>
+                <div className="text-xs text-gray-500 mt-1">View and create custom courses from your clusters.</div>
               </div>
               <div className="flex items-center gap-3">
                 <button
@@ -257,24 +273,23 @@ function CustomCourse() {
                   <tr>
                     <th className="py-2 px-4 font-semibold">Course Name</th>
                     <th className="py-2 px-4 font-semibold">Doctor</th>
-                    <th className="py-2 px-4 font-semibold">Volume</th>
-                    <th className="py-2 px-4 font-semibold">Trimester</th>
-                    <th className="py-2 px-4 font-semibold">Anatomy</th>
-                    <th className="py-2 px-4 font-semibold">Module</th>
+                    <th className="py-2 px-4 font-semibold">Cluster</th>
                     <th className="py-2 px-4 font-semibold">Course Type</th>
                     <th className="py-2 px-4 font-semibold">Description</th>
+                    <th className="py-2 px-4 font-semibold">Tagged As</th>
+                    <th className="py-2 px-4 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {listLoading ? (
                     <tr>
-                      <td colSpan={8} className="py-5 text-center text-gray-500">
+                      <td colSpan={7} className="py-5 text-center text-gray-500">
                         Loading custom courses...
                       </td>
                     </tr>
                   ) : courses.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-5 text-center text-gray-500">
+                      <td colSpan={7} className="py-5 text-center text-gray-500">
                         No custom courses found
                       </td>
                     </tr>
@@ -283,18 +298,37 @@ function CustomCourse() {
                       <tr key={course.mapping_id} className="text-sm text-gray-700 border-b hover:bg-gray-50">
                         <td className="py-2 px-4 font-medium text-[#8DC63F]">{course.course_name || '-'}</td>
                         <td className="py-2 px-4">{course.doctor_name || '-'}</td>
-                        <td className="py-2 px-4">{course.volume_name}</td>
-                        <td className="py-2 px-4">{course.trimester}</td>
-                        <td className="py-2 px-4">{course.anatomy_type}</td>
-                        <td className="py-2 px-4">{course.module_name}</td>
+                        <td className="py-2 px-4">{course.cluster_name || course.cluster_id}</td>
                         <td className="py-2 px-4">{course.course_type}</td>
                         <td className="py-2 px-4 max-w-xs truncate">{course.description || '-'}</td>
+                        <td className="py-2 px-4">{course.tagged_unit_name ? `${course.tagged_certificate_name} / ${course.tagged_unit_name}` : '-'}</td>
+                        <td className="py-2 px-4">
+                          {userRole !== 99 && <button className="text-[#8DC63F] font-medium hover:underline" onClick={() => openTagCourse(course)}>
+                            {course.tagged_unit_name ? 'Edit Tag' : 'Tag'}
+                          </button>}
+                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
+            {taggedCourses.length > 0 && (
+              <div className="p-5 border-t">
+                <h2 className="font-semibold text-gray-800 mb-4">BTC tagged courses</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {UNITS.map((unit) => (
+                    <div key={unit} className="border rounded p-4">
+                      <h3 className="font-semibold text-gray-700 mb-3">{unit}</h3>
+                      <div className="space-y-2 text-sm">
+                        {taggedCourses.filter((course) => course.tagged_unit_name === unit)
+                          .map((course) => <div key={course.mapping_id} className="text-[#8DC63F]">{course.course_name}</div>)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <AddCourse isVisible={openCreateCourse} onClose={handleClosePopup}>
@@ -344,27 +378,19 @@ function CustomCourse() {
                 select
                 fullWidth
                 size="small"
-                label="Volume"
-                name="volume_id"
-                value={formData.volume_id}
+                label="Cluster"
+                name="cluster_id"
+                value={formData.cluster_id}
                 onChange={handleChange}
-                disabled={volumeLoading}
+                disabled={clusterLoading}
               >
-                <MenuItem value="">Select Volume</MenuItem>
-                {volumes.map((volume) => (
-                  <MenuItem key={volume.volume_id} value={volume.volume_id}>
-                    {volume.volume_name} - {volume.volume_type || 'Anatomy not set'}
+                <MenuItem value="">Select Cluster</MenuItem>
+                {clusters.map((cluster) => (
+                  <MenuItem key={cluster.cluster_id} value={cluster.cluster_id}>
+                    {cluster.cluster_name}
                   </MenuItem>
                 ))}
               </TextField>
-
-              <TextField
-                fullWidth
-                size="small"
-                label="Anatomy Type"
-                value={formData.anatomy_type}
-                InputProps={{ readOnly: true }}
-              />
 
               <TextField
                 select
@@ -391,7 +417,7 @@ function CustomCourse() {
                 name="shadow_recording_id"
                 value={formData.shadow_recording_id}
                 onChange={handleChange}
-                disabled={!formData.volume_id || recordingLoading}
+                disabled={!formData.cluster_id || recordingLoading}
               >
                 <MenuItem value="">No Shadow Recording</MenuItem>
                 {shadowRecordings.map((recording) => (
@@ -409,7 +435,7 @@ function CustomCourse() {
                 name="step_recording_id"
                 value={formData.step_recording_id}
                 onChange={handleChange}
-                disabled={!formData.volume_id || recordingLoading}
+                disabled={!formData.cluster_id || recordingLoading}
               >
                 <MenuItem value="">No Step Recording</MenuItem>
                 {stepRecordings.map((recording) => (
@@ -419,9 +445,9 @@ function CustomCourse() {
                 ))}
               </TextField>
 
-              {formData.volume_id && !recordingLoading && recordings.length === 0 && (
+              {formData.cluster_id && !recordingLoading && recordings.length === 0 && (
                 <div className="md:col-span-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
-                  No recordings found for this volume. You can still create a volume-only course.
+                  No recordings found for this cluster. You can still create the course.
                 </div>
               )}
 
@@ -443,6 +469,30 @@ function CustomCourse() {
               </div>
             </form>
             </>
+          </AddCourse>
+          <AddCourse isVisible={Boolean(tagCourse)} onClose={() => setTagCourse(null)}>
+            <form onSubmit={handleTagCourse} className="space-y-5">
+              <div className="flex justify-between items-center">
+                <div className="font-semibold text-gray-800">Tag {tagCourse?.course_name || 'Course'}</div>
+                <button type="button" onClick={() => setTagCourse(null)} className="text-red-500 p-1"><X size={24} /></button>
+              </div>
+              <TextField fullWidth size="small" label="Course" value="BTC" InputProps={{ readOnly: true }} />
+              <TextField select fullWidth size="small" label="Unit" value={placement.unit_name}
+                onChange={(e) => setPlacement((prev) => ({ ...prev, unit_name: e.target.value }))}>
+                <MenuItem value="">Select Unit</MenuItem>
+                {UNITS.map((unit) => (
+                  <MenuItem key={unit} value={unit}>
+                    {unit}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <div className="flex justify-end">
+                <button type="submit" disabled={!placement.unit_name || tagLoading}
+                  className="px-4 py-2 text-sm bg-[#8DC63F] text-white rounded disabled:opacity-60">
+                  {tagLoading ? 'Tagging...' : 'Tag Course'}
+                </button>
+              </div>
+            </form>
           </AddCourse>
         </div>
       </div>

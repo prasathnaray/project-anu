@@ -75,7 +75,7 @@ const clusterReadScope = (requester, alias = 'c', parameterNumber = 1) => {
             params: []
         };
     }
-    if (role !== ROLES.INSTITUTION_ADMIN || !requester.centre_id) return null;
+    if (![ROLES.INSTITUTION_ADMIN, ROLES.TUTOR].includes(role) || !requester.centre_id) return null;
     return {
         clause: `(${alias}.owner_scope = 'institution' AND ${alias}.owner_centre_id = $${parameterNumber}) OR ${alias}.owner_scope = 'super_admin'`,
         params: [requester.centre_id]

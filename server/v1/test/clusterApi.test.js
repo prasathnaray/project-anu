@@ -121,14 +121,25 @@ test('role 101 can read institution-scoped clusters', async () => {
     assert.deepEqual(select.params, ['11111111-1111-1111-1111-111111111111']);
 });
 
-test('non-admin users cannot read cluster data', async () => {
+test('instructors can read their institution clusters, while trainees cannot', async () => {
+    queries.length = 0;
     const result = await getClustersModel({
         role: 102,
         user_mail: 'tutor@example.test',
         centre_id: '11111111-1111-1111-1111-111111111111'
     });
 
-    assert.equal(result.code, 403);
+    assert.equal(result.code, 200);
+    const select = queries.find(({ sql }) => /GROUP BY c\.cluster_id/.test(sql));
+    assert.deepEqual(select.params, ['11111111-1111-1111-1111-111111111111']);
+
+    const trainee = await getClustersModel({
+        role: 103,
+        user_mail: 'trainee@example.test',
+        centre_id: '11111111-1111-1111-1111-111111111111'
+    });
+
+    assert.equal(trainee.code, 403);
 });
 
 test('role 101 cluster detail is scoped by id and centre', async () => {
