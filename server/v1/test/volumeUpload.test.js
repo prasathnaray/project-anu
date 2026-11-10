@@ -31,37 +31,53 @@ const {
     getUploadedVolume,
     getVolumeInstructorViewModel,
     placedVolumeConversionModel,
-    getRecordingsModel
+    getRecordingsModel,
+    updateVolumeModel
 } = require('../model/Volumem');
 
 const upload = (requester) => svUploadModel(
     requester,
     'Fetal Anatomy',
+    null,
+    null,
     'Sample volume',
     '22',
     'Cephalic',
     'Second Trimester',
-    'Sample description',
-    'global/volume/source/sample.vol'
+    '',
+    'global/volume/source/sample.vol',
+    28
 );
 
 test('Super Admin volume uploads are approved automatically', async () => {
     await upload({ user_mail: 'super@example.test', role: 99, centre_id: null });
 
     assert.match(capturedQuery.sql, /status, approver_id,\s+ownership_review_required/);
-    assert.match(capturedQuery.sql, /\$12, NULL, false/);
-    assert.equal(capturedQuery.params[11], true);
+    assert.match(capturedQuery.sql, /\$14, NULL, false/);
+    assert.equal(capturedQuery.params[13], true);
+    assert.equal(capturedQuery.params[1], null);
+    assert.equal(capturedQuery.params[2], null);
 });
 
 test('institution admin volume uploads are approved automatically', async () => {
     await upload({ user_mail: 'admin@example.test', role: 101, centre_id: 'centre-a' });
     assert.doesNotMatch(capturedQuery.sql, /status, approver_id/);
-    assert.equal(capturedQuery.params[11], true);
+    assert.equal(capturedQuery.params[13], true);
 });
 
 test('instructor volume uploads still require approval', async () => {
     await upload({ user_mail: 'tutor@example.test', role: 102, centre_id: 'centre-a' });
-    assert.equal(capturedQuery.params[11], false);
+    assert.equal(capturedQuery.params[13], false);
+});
+
+test('volume edit updates maternal age with the core volume metadata', async () => {
+    const result = await updateVolumeModel(
+        { user_mail: 'admin@example.test', role: 101, centre_id: 'centre-a' },
+        'volume-a', 'Fetal Anatomy', 'Sample volume', '22', 'Cephalic', 'Second Trimester', 28
+    );
+    assert.equal(result.code, 200);
+    assert.match(capturedQuery.sql, /maternal_age = COALESCE\(\$6, maternal_age\)/);
+    assert.equal(capturedQuery.params[5], 28);
 });
 
 test('Super Admin volume responses omit approver_id', async () => {

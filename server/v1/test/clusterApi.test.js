@@ -79,7 +79,7 @@ test('create rejects generated ID conflicts and never attaches volumes to an exi
         release: () => { released = true; }
     });
     const result = await createClusterModel({ role: 101, centre_id: 'institution-a' }, {
-        cluster_name: 'New cluster', volume_ids: ['11111111-1111-1111-1111-111111111111']
+        cluster_name: 'New cluster', planes: ['Transthalamic plane'], measurements: ['BPD'], volume_ids: ['11111111-1111-1111-1111-111111111111']
     });
     assert.equal(result.code, 409);
     assert.ok(calls.some(sql => /ON CONFLICT \(cluster_id\) DO NOTHING/.test(sql)));
@@ -98,11 +98,13 @@ test('create generates its own ID and commits on one dedicated connection', asyn
         },
         release: () => { released = true; }
     });
-    const result = await createClusterModel({ role: 101, centre_id: 'institution-a' }, { cluster_name: 'New cluster' });
+    const result = await createClusterModel({ role: 101, centre_id: 'institution-a' }, { cluster_name: 'New cluster', planes: ['Transthalamic plane'], measurements: ['BPD'] });
     assert.equal(result.code, 200);
     const insert = calls.find(({ sql }) => /INSERT INTO public.clusters/.test(sql));
     assert.match(insert.params[0], /^CLU-[0-9A-F-]{36}$/);
-    assert.equal(insert.params[4], 'institution-a');
+    assert.equal(insert.params[6], 'institution-a');
+    assert.equal(insert.params[3], '["Transthalamic plane"]');
+    assert.equal(insert.params[4], '["BPD"]');
     assert.equal(calls.at(-1).sql, 'COMMIT');
     assert.ok(released);
 });

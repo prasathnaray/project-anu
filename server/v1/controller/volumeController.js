@@ -131,7 +131,7 @@ const VolumeController = async(req, res) => {
             trimester,
             description
         } = req.body;
-        if(!volume_type || !measurements || !plane || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester || !description)
+        if(!volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester)
         {
           
             return res.status(406).json({
@@ -159,7 +159,7 @@ const VolumeController = async(req, res) => {
             volume_ga,
             volume_fetal_presentation,
             trimester,
-            description,
+            description || '',
             uploaded.reference,
             maternalAge
         )
@@ -1135,12 +1135,15 @@ const getAssociatedVolumeController = async(req, res) => {
 }
 const updateVolumeC = async(req, res) => {
     const requester = req.user;
-    const { volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description } = req.body;
+    const { volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age } = req.body;
+    let maternalAge;
+    try { maternalAge = parseMaternalAge(maternal_age); }
+    catch (error) { return res.status(400).json({ message: error.message }); }
     try {
-        if (!volume_id || !volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester || !description) {
+        if (!volume_id || !volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester) {
             return res.status(406).json({ message: "Fields should not be empty" });
         }
-        const result = await updateVolumeModel(requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description);
+        const result = await updateVolumeModel(requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternalAge);
         if (result.code && result.code !== 200) return res.status(result.code).json(result);
         res.status(200).json({ message: 'Volume Updated Successfully' });
     } catch(err) {

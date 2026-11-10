@@ -32,42 +32,6 @@ const ANATOMY_TYPE_OPTIONS = [
   'Face',
   '6 - Step Approach',
 ];
-const MEASUREMENT_OPTIONS = [
-  'LV',
-  'BPD',
-  'OFD',
-  'HC',
-  'TCD',
-  'NFT',
-  'AC',
-  'TAD',
-  'APAD',
-  'APD RP1 & 2',
-  'FL',
-];
-const PLANE_OPTIONS = [
-  'Sagittal complete spine with skin covering',
-  'Coronal complete spine',
-  'Coronal section of the body',
-  'Transthalamic plane',
-  'Transcerebellar plane',
-  'Lungs',
-  '4-chamber view of heart',
-  'Left ventricular outflow tract (LVOT)',
-  'Right ventricular outflow tract (RVOT) & crossover of LVOT',
-  '3-vessel trachea (3VT) view of heart',
-  'Transverse section of abdomen with stomach & umbilical vein',
-  'Transverse section of abdomen at cord insertion',
-  'Transverse section(s) of left kidney & pelvis, right kidney & pelvis',
-  'Transverse section of pelvis, bladder, and both umbilical arteries',
-  'Femur diaphysis length',
-  '3 bones of both legs, both feet & normal relationships to both legs',
-  '3 bones of both arms, both hands & normal relationships to both arms',
-  'Coronal view of upper lip, nose & nostrils',
-  'Both orbits, both lenses',
-  'Median facial profile',
-];
-
 function VolumeList() {
   const navigate = useNavigate();
   const token = localStorage.getItem('user_token');
@@ -138,19 +102,14 @@ function VolumeList() {
   const [formData, setFormData] = useState({
     volume_name: '',
     volume_type: '',
-    measurements: [],
-    plane: [],
     maternal_age: '',
     volume_fetal_presentation: '',
     trimester: '',
     volume_ga: '',
-    description: '',
     file: null,
   });
   const [otherValues, setOtherValues] = useState({
     volume_type: '',
-    measurements: '',
-    plane: '',
     volume_fetal_presentation: '',
     trimester: '',
   });
@@ -168,7 +127,7 @@ function VolumeList() {
     volume_fetal_presentation: '',
     trimester: '',
     volume_ga: '',
-    description: '',
+    maternal_age: '',
   });
   const [editLoading, setEditLoading] = useState(false);
 
@@ -182,7 +141,7 @@ function VolumeList() {
       volume_fetal_presentation: volume.volume_fetal_presentation || '',
       trimester: volume.trimester || '',
       volume_ga: volume.volume_ga || '',
-      description: volume.description || '',
+      maternal_age: volume.maternal_age || '',
     });
     setOpenEditVol(true);
     setAnchorEl(null);
@@ -200,8 +159,8 @@ function VolumeList() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    const { volume_id, volume_name, volume_type, volume_fetal_presentation, trimester, volume_ga, description } = editFormData;
-    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !description) {
+    const { volume_name, volume_type, volume_fetal_presentation, trimester, volume_ga, maternal_age } = editFormData;
+    if (!volume_name || !volume_type || !volume_fetal_presentation || !trimester || !volume_ga || !maternal_age) {
       toast.error('Please fill all fields.');
       return;
     }
@@ -376,7 +335,6 @@ function VolumeList() {
     )].sort((a, b) => a.localeCompare(b))
   ), [volumesDatumm]);
 
-  const uploaderName = sessionStorage.getItem('user_name') || decoded.user_mail || '';
   if (![99, 101, 102].includes(userRole)) {
     return <Navigate to="/" replace />;
   }
@@ -420,19 +378,14 @@ function VolumeList() {
     setFormData({
       volume_name: '',
       volume_type: '',
-      measurements: [],
-      plane: [],
       maternal_age: '',
       volume_fetal_presentation: '',
       trimester: '',
       volume_ga: '',
-      description: '',
       file: null,
     });
     setOtherValues({
       volume_type: '',
-      measurements: '',
-      plane: '',
       volume_fetal_presentation: '',
       trimester: '',
     });
@@ -444,20 +397,13 @@ function VolumeList() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const renderMultiSelectValue = (field, values) => {
-    const selectedValues = Array.isArray(values) ? values : [];
-    return selectedValues
-      .map((value) => value === OTHER_OPTION ? (otherValues[field] || 'Others') : value)
-      .join(', ');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const {
       volume_name,
       volume_ga,
-      description,
+      maternal_age,
     } = formData;
 
     const validFiles = volumeFiles.filter(Boolean);
@@ -471,12 +417,10 @@ function VolumeList() {
       return formData[field] === OTHER_OPTION ? otherValues[field].trim() : formData[field];
     };
     const resolvedVolumeType = resolvedValue('volume_type');
-    const resolvedMeasurements = resolvedValue('measurements');
-    const resolvedPlane = resolvedValue('plane');
     const resolvedFetalPresentation = resolvedValue('volume_fetal_presentation');
     const resolvedTrimester = resolvedValue('trimester');
 
-    if (!volume_name || !resolvedVolumeType || !resolvedMeasurements || !resolvedPlane || !resolvedFetalPresentation || !resolvedTrimester || !volume_ga || !description) {
+    if (!volume_name || !resolvedVolumeType || !resolvedFetalPresentation || !resolvedTrimester || !volume_ga || !maternal_age) {
       toast.error('Please fill all required fields.');
       return;
     }
@@ -498,13 +442,10 @@ function VolumeList() {
         const currentName = validFiles.length === 1 ? volume_name : `${volume_name} (${i + 1})`;
         data.append('volume_name', currentName);
         data.append('volume_type', resolvedVolumeType);
-        data.append('measurements', resolvedMeasurements);
-        data.append('plane', resolvedPlane);
         data.append('volume_fetal_presentation', resolvedFetalPresentation);
         data.append('trimester', resolvedTrimester);
         data.append('volume_ga', volume_ga);
         data.append('maternal_age', formData.maternal_age);
-        data.append('description', description);
         data.append('file', file);
 
         try {
@@ -530,19 +471,14 @@ function VolumeList() {
         setFormData({
           volume_name: '',
           volume_type: '',
-          measurements: [],
-          plane: [],
           maternal_age: '',
           volume_fetal_presentation: '',
           trimester: '',
           volume_ga: '',
-          description: '',
           file: null,
         });
         setOtherValues({
           volume_type: '',
-          measurements: '',
-          plane: '',
           volume_fetal_presentation: '',
           trimester: '',
         });
@@ -1010,70 +946,6 @@ function VolumeList() {
                 fullWidth
                 variant="outlined"
                 size="small"
-                label="Measurements"
-                name="measurements"
-                value={formData.measurements}
-                onChange={handleChange}
-                SelectProps={{
-                  multiple: true,
-                  renderValue: (selected) => renderMultiSelectValue('measurements', selected),
-                }}
-              >
-                <MenuItem value="" disabled>Select Measurements</MenuItem>
-                {MEASUREMENT_OPTIONS.map((measurement) => (
-                  <MenuItem key={measurement} value={measurement}>{measurement}</MenuItem>
-                ))}
-                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
-              </TextField>
-              {formData.measurements.includes(OTHER_OPTION) && (
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  label="Other Measurement"
-                  helperText="Enter the custom measurement"
-                  autoFocus
-                  value={otherValues.measurements}
-                  onChange={(e) => setOtherValues((prev) => ({ ...prev, measurements: e.target.value }))}
-                />
-              )}
-              <TextField
-                select
-                fullWidth
-                variant="outlined"
-                size="small"
-                label="Plane"
-                name="plane"
-                value={formData.plane}
-                onChange={handleChange}
-                SelectProps={{
-                  multiple: true,
-                  renderValue: (selected) => renderMultiSelectValue('plane', selected),
-                }}
-              >
-                <MenuItem value="" disabled>Select Plane</MenuItem>
-                {PLANE_OPTIONS.map((planeOption) => (
-                  <MenuItem key={planeOption} value={planeOption}>{planeOption}</MenuItem>
-                ))}
-                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
-              </TextField>
-              {formData.plane.includes(OTHER_OPTION) && (
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  label="Other Plane"
-                  helperText="Enter the custom plane"
-                  autoFocus
-                  value={otherValues.plane}
-                  onChange={(e) => setOtherValues((prev) => ({ ...prev, plane: e.target.value }))}
-                />
-              )}
-              <TextField
-                select
-                fullWidth
-                variant="outlined"
-                size="small"
                 label="Fetal Presentation"
                 name="volume_fetal_presentation"
                 value={formData.volume_fetal_presentation}
@@ -1142,26 +1014,6 @@ function VolumeList() {
                 inputProps={{ min: 1, max: 120, step: 1 }}
                 value={formData.maternal_age}
                 onChange={handleChange}
-              />
-              <TextField
-                fullWidth
-                variant="outlined"
-                size="small"
-                label="Uploader Name"
-                value={uploaderName}
-                InputProps={{ readOnly: true }}
-              />
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                variant="outlined"
-                size="small"
-                label="Case Details"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="col-span-2"
               />
             </div>
 
@@ -1305,21 +1157,12 @@ function VolumeList() {
                 fullWidth
                 variant="outlined"
                 size="small"
-                label="Uploader Name"
-                value={uploaderName}
-                InputProps={{ readOnly: true }}
-              />
-              <TextField
-                fullWidth
-                multiline
-                minRows={3}
-                variant="outlined"
-                size="small"
-                label="Case Details"
-                name="description"
-                value={editFormData.description}
+                label="Maternal Age (years)"
+                name="maternal_age"
+                type="number"
+                inputProps={{ min: 1, max: 120, step: 1 }}
+                value={editFormData.maternal_age}
                 onChange={handleEditChange}
-                className="col-span-2"
               />
             </div>
 

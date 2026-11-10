@@ -18,9 +18,18 @@ import {
   UploadRecordingAPI,
   ReplaceClusterRecordingAPI,
 } from '../API/ClusterAPI';
+import { MEASUREMENT_OPTIONS, PLANE_OPTIONS } from '../constants/clusterMetadataOptions';
 
 const STORAGE_KEY = 'project_anu_cluster_list';
 const COUNTS_STORAGE_KEY = 'project_anu_cluster_rec_counts';
+const splitMetadata = (value) => {
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed;
+  } catch (_) { /* Older clusters may not have array metadata. */ }
+  return value ? [String(value)] : [];
+};
 
 const extractFileName = (ref, fallback = 'file') => {
   if (!ref || typeof ref !== 'string') return fallback;
@@ -48,6 +57,36 @@ const safeParseFileList = (files) => {
   return [];
 };
 
+function ClusterMetadataFields({ form, setForm, volumes }) {
+  const selectedVolumes = volumes.filter((volume) => form.selected_volume_ids?.includes(volume.volume_id));
+  return (
+    <>
+      <div className="rounded border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
+        <div className="font-semibold mb-2">Selected volume metadata</div>
+        {selectedVolumes.length === 0 ? <div>Select a volume to view its metadata.</div> : selectedVolumes.map((volume) => (
+          <div key={volume.volume_id} className="py-1 border-t first:border-t-0">
+            <span className="font-medium">{volume.volume_name || 'Unnamed volume'}</span>
+            {' · '}{volume.volume_type || 'Anatomy not set'}
+            {' · '}{volume.volume_fetal_presentation || 'Presentation not set'}
+            {' · '}{volume.trimester || 'Trimester not set'}
+            {' · GA '}{volume.volume_ga || 'Not set'}
+          </div>
+        ))}
+      </div>
+      <TextField select fullWidth size="small" label="Planes" value={form.planes || []}
+        onChange={(event) => setForm((previous) => ({ ...previous, planes: event.target.value }))}
+        SelectProps={{ multiple: true, renderValue: (selected) => selected.join(', ') }} required>
+        {PLANE_OPTIONS.map((plane) => <MenuItem key={plane} value={plane}><Checkbox checked={(form.planes || []).includes(plane)} size="small" />{plane}</MenuItem>)}
+      </TextField>
+      <TextField select fullWidth size="small" label="Measurements" value={form.measurements || []}
+        onChange={(event) => setForm((previous) => ({ ...previous, measurements: event.target.value }))}
+        SelectProps={{ multiple: true, renderValue: (selected) => selected.join(', ') }} required>
+        {MEASUREMENT_OPTIONS.map((measurement) => <MenuItem key={measurement} value={measurement}><Checkbox checked={(form.measurements || []).includes(measurement)} size="small" />{measurement}</MenuItem>)}
+      </TextField>
+    </>
+  );
+}
+
 function Cluster() {
   const navigate = useNavigate();
   const [buttonOpen, setButtonOpen] = useState(true);
@@ -68,6 +107,8 @@ function Cluster() {
     cluster_name: '',
     selected_volume_ids: [],
     fetal_presentation: '',
+    planes: [],
+    measurements: [],
   });
 
   // Form state for Edit Cluster modal
@@ -75,6 +116,8 @@ function Cluster() {
     cluster_name: '',
     selected_volume_ids: [],
     fetal_presentation: '',
+    planes: [],
+    measurements: [],
   });
 
   // Recording counts per cluster: { [cluster_id]: { step: number, shadow: number } }
@@ -165,6 +208,9 @@ function Cluster() {
       if (volumeResult.status === 'rejected') {
         throw volumeResult.reason;
       }
+      if (clusterResult.status === 'rejected') {
+        throw clusterResult.reason;
+      }
 
       const allVolumes = Array.isArray(volumeResult.value?.data) ? volumeResult.value.data : [];
       setVolumes(allVolumes);
@@ -180,6 +226,8 @@ function Cluster() {
           cluster_id: c.cluster_id,
           cluster_name: c.cluster_name,
           fetal_presentation: c.fetal_presentation || '',
+          planes: splitMetadata(c.planes),
+          measurements: splitMetadata(c.measurements),
           volume_ids: Array.isArray(c.volumes) ? c.volumes.map((v) => v.volume_id) : (c.volume_ids || []),
           volume_id: Array.isArray(c.volumes) && c.volumes[0] ? c.volumes[0].volume_id : (c.volume_id || ''),
           volume_name: Array.isArray(c.volumes) && c.volumes.length > 0
@@ -191,32 +239,11 @@ function Cluster() {
         setClusters(mapped);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
       } else {
-        // Load clusters from localStorage or initialize from converted volumes
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          try {
-            setClusters(JSON.parse(saved));
-          } catch {
-            setClusters([]);
-          }
-        } else {
-          const converted = allVolumes.filter((v) => Boolean(v.conversion_completion));
-          const initial = converted.slice(0, 3).map((v, idx) => ({
-            cluster_id: `CLU-${v.volume_id?.substring(0, 8).toUpperCase() || (idx + 1)}`,
-            cluster_name: `${v.volume_name || 'Volume'} Cluster`,
-            volume_ids: [v.volume_id],
-            volume_id: v.volume_id,
-            volume_name: v.volume_name,
-            fetal_presentation: v.volume_fetal_presentation || v.fetal_presentation || '',
-            is_initial: true,
-          }));
-          setClusters(initial);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-        }
+        setClusters([]);
       }
     } catch (err) {
       console.error('Failed to load cluster data:', err);
-      toast.error('Failed to load volumes.');
+      toast.error(err.response?.data?.message || 'Failed to load cluster data.');
     } finally {
       isFetchingRef.current = false;
       setLoading(false);
@@ -265,7 +292,9 @@ function Cluster() {
     setClusterForm({
       cluster_name: '',
       selected_volume_ids: convertedVolumes.length > 0 ? [convertedVolumes[0].volume_id] : [],
-      fetal_presentation: '',
+      fetal_presentation: convertedVolumes[0]?.volume_fetal_presentation || '',
+      planes: [],
+      measurements: [],
     });
     setOpenAddModal(true);
   };
@@ -284,6 +313,10 @@ function Cluster() {
       toast.error('Please select at least one volume.');
       return;
     }
+    if (!clusterForm.planes.length || !clusterForm.measurements.length) {
+      toast.error('Please select planes and measurements.');
+      return;
+    }
 
     const matchedVolumes = volumes.filter((v) => clusterForm.selected_volume_ids.includes(v.volume_id));
     const matchedNames = matchedVolumes.map((v) => v.volume_name || 'Volume');
@@ -291,12 +324,15 @@ function Cluster() {
     try {
       const res = await CreateClusterAPI({
         cluster_name: clusterForm.cluster_name.trim(),
-        fetal_presentation: clusterForm.fetal_presentation || '',
+        fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
+        planes: clusterForm.planes,
+        measurements: clusterForm.measurements,
         volume_ids: clusterForm.selected_volume_ids,
       });
 
       const serverData = res?.data?.data || res?.data;
-      const createdId = serverData?.cluster_id || `CLU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+      const createdId = serverData?.cluster_id;
+      if (!createdId) throw new Error('Cluster API did not return an ID.');
 
       const newCluster = {
         cluster_id: createdId,
@@ -304,7 +340,9 @@ function Cluster() {
         volume_ids: clusterForm.selected_volume_ids,
         volume_id: clusterForm.selected_volume_ids[0] || '',
         volume_name: matchedNames.join(', '),
-        fetal_presentation: clusterForm.fetal_presentation || '',
+        fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
+        planes: clusterForm.planes,
+        measurements: clusterForm.measurements,
         is_new: true,
       };
 
@@ -322,30 +360,8 @@ function Cluster() {
       setOpenAddModal(false);
       toast.success('Cluster added successfully!');
     } catch (apiErr) {
-      console.error('API create cluster failed, saving locally:', apiErr);
-      const newCluster = {
-        cluster_id: `CLU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        cluster_name: clusterForm.cluster_name.trim(),
-        volume_ids: clusterForm.selected_volume_ids,
-        volume_id: clusterForm.selected_volume_ids[0] || '',
-        volume_name: matchedNames.join(', '),
-        fetal_presentation: clusterForm.fetal_presentation || '',
-        is_new: true,
-      };
-
-      const updated = [newCluster, ...clusters];
-      setClusters(updated);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      setRecordingCounts((prev) => {
-        const updatedCounts = {
-          ...prev,
-          [newCluster.cluster_id]: { step: 0, shadow: 0 },
-        };
-        localStorage.setItem(COUNTS_STORAGE_KEY, JSON.stringify(updatedCounts));
-        return updatedCounts;
-      });
-      setOpenAddModal(false);
-      toast.success('Cluster added successfully!');
+      console.error('API create cluster failed:', apiErr);
+      toast.error(apiErr.response?.data?.message || 'Failed to create cluster.');
     }
   };
 
@@ -354,6 +370,8 @@ function Cluster() {
       await DeleteClusterAPI(clusterId);
     } catch (err) {
       console.warn('API delete cluster:', err.message);
+      toast.error(err.response?.data?.message || 'Failed to delete cluster.');
+      return;
     }
     const updated = clusters.filter((c) => c.cluster_id !== clusterId);
     setClusters(updated);
@@ -376,6 +394,8 @@ function Cluster() {
       cluster_name: cluster.cluster_name,
       selected_volume_ids: initialIds,
       fetal_presentation: cluster.fetal_presentation || '',
+      planes: splitMetadata(cluster.planes),
+      measurements: splitMetadata(cluster.measurements),
     });
     setOpenEditModal(true);
   };
@@ -395,18 +415,26 @@ function Cluster() {
       toast.error('Please select at least one volume.');
       return;
     }
+    if (!editClusterForm.planes.length || !editClusterForm.measurements.length) {
+      toast.error('Please select planes and measurements.');
+      return;
+    }
 
+    const matchedVolumes = volumes.filter((v) => editClusterForm.selected_volume_ids.includes(v.volume_id));
     try {
       await UpdateClusterAPI(editingCluster.cluster_id, {
         cluster_name: editClusterForm.cluster_name.trim(),
-        fetal_presentation: editClusterForm.fetal_presentation || '',
+        fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
+        planes: editClusterForm.planes,
+        measurements: editClusterForm.measurements,
         volume_ids: editClusterForm.selected_volume_ids,
       });
     } catch (err) {
       console.warn('API update cluster:', err.message);
+      toast.error(err.response?.data?.message || 'Failed to update cluster.');
+      return;
     }
 
-    const matchedVolumes = volumes.filter((v) => editClusterForm.selected_volume_ids.includes(v.volume_id));
     const matchedNames = matchedVolumes.map((v) => v.volume_name || 'Volume');
     const updated = clusters.map((c) => {
       if (c.cluster_id === editingCluster.cluster_id) {
@@ -416,7 +444,9 @@ function Cluster() {
           volume_ids: editClusterForm.selected_volume_ids,
           volume_id: editClusterForm.selected_volume_ids[0] || '',
           volume_name: matchedNames.join(', '),
-          fetal_presentation: editClusterForm.fetal_presentation || '',
+          fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
+          planes: editClusterForm.planes,
+          measurements: editClusterForm.measurements,
           is_new: true,
         };
       }
@@ -820,7 +850,12 @@ function Cluster() {
                   <tr>
                     <th className="py-3 px-4">Cluster ID</th>
                     <th className="py-3 px-4">Cluster Name</th>
+                    <th className="py-3 px-4">Anatomy Type</th>
                     <th className="py-3 px-4">Fetal Presentation</th>
+                    <th className="py-3 px-4">Trimester</th>
+                    <th className="py-3 px-4">GA</th>
+                    <th className="py-3 px-4">Planes</th>
+                    <th className="py-3 px-4">Measurements</th>
                     <th className="py-3 px-4">Volumes</th>
                     <th className="py-3 px-4">Step Recording</th>
                     <th className="py-3 px-4">Shadow Recording</th>
@@ -830,14 +865,14 @@ function Cluster() {
                 <tbody className="divide-y divide-gray-100 text-gray-700">
                   {loading ? (
                     <tr>
-                        <td colSpan={7} className="py-10 text-center text-gray-500">
+                        <td colSpan={12} className="py-10 text-center text-gray-500">
                         <ClipLoader color="#8DC63F" size={24} />
                         <p className="mt-2 text-xs text-gray-400">Loading clusters…</p>
                       </td>
                     </tr>
                   ) : filteredClusters.length === 0 ? (
                     <tr>
-                        <td colSpan={7} className="py-10 text-center text-gray-400">
+                        <td colSpan={12} className="py-10 text-center text-gray-400">
                         No clusters found. Click &quot;Add Cluster&quot; to create one.
                       </td>
                     </tr>
@@ -846,11 +881,9 @@ function Cluster() {
                       const volumeIds = Array.isArray(cluster.volume_ids)
                         ? cluster.volume_ids
                         : (cluster.volume_id ? [cluster.volume_id] : []);
-                      const matchedVol = volumes.find((v) => volumeIds.includes(v.volume_id));
-                      const displayFetalPresentation = cluster.fetal_presentation
-                        || matchedVol?.volume_fetal_presentation
-                        || matchedVol?.fetal_presentation
-                        || '';
+                      const selectedVolumes = volumes.filter((v) => volumeIds.includes(v.volume_id));
+                      const metadataValues = (field) => [...new Set(selectedVolumes.map((v) => v[field]).filter(Boolean))].join(', ') || '—';
+                      const displayFetalPresentation = metadataValues('volume_fetal_presentation');
 
                       return (
                         <tr key={cluster.cluster_id} className="hover:bg-gray-50 transition-colors">
@@ -866,9 +899,11 @@ function Cluster() {
                             {cluster.cluster_name}
                           </td>
 
+                          <td className="py-3 px-4">{metadataValues('volume_type')}</td>
+
                           {/* 3. Fetal Presentation */}
                           <td className="py-3 px-4">
-                            {displayFetalPresentation ? (
+                            {displayFetalPresentation !== '—' ? (
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                                 {displayFetalPresentation}
                               </span>
@@ -876,6 +911,12 @@ function Cluster() {
                               <span className="text-gray-400 text-xs">—</span>
                             )}
                           </td>
+
+                          <td className="py-3 px-4">{metadataValues('trimester')}</td>
+                          <td className="py-3 px-4">{metadataValues('volume_ga')}</td>
+
+                          <td className="py-3 px-4 max-w-xs">{splitMetadata(cluster.planes).join(', ') || '—'}</td>
+                          <td className="py-3 px-4 max-w-xs">{splitMetadata(cluster.measurements).join(', ') || '—'}</td>
 
                           {/* 4. Volumes */}
                           <td className="py-3 px-4">
@@ -1033,23 +1074,6 @@ function Cluster() {
                 select
                 fullWidth
                 size="small"
-                label="Fetal Presentation"
-                value={clusterForm.fetal_presentation || ''}
-                onChange={(e) => setClusterForm({ ...clusterForm, fetal_presentation: e.target.value })}
-              >
-                <MenuItem value="">Select Fetal Presentation</MenuItem>
-                <MenuItem value="Cephalic_left">Cephalic_left</MenuItem>
-                <MenuItem value="Cephalic_right">Cephalic_right</MenuItem>
-                <MenuItem value="Breech_left">Breech_left</MenuItem>
-                <MenuItem value="Breech_right">Breech_right</MenuItem>
-              </TextField>
-            </div>
-
-            <div>
-              <TextField
-                select
-                fullWidth
-                size="small"
                 label="Volumes"
                 SelectProps={{
                   multiple: true,
@@ -1089,6 +1113,7 @@ function Cluster() {
               </TextField>
             </div>
 
+            <ClusterMetadataFields form={clusterForm} setForm={setClusterForm} volumes={volumes} />
           </DialogContent>
           <DialogActions className="border-t p-3 px-5">
             <button
@@ -1138,23 +1163,6 @@ function Cluster() {
                 select
                 fullWidth
                 size="small"
-                label="Fetal Presentation"
-                value={editClusterForm.fetal_presentation || ''}
-                onChange={(e) => setEditClusterForm({ ...editClusterForm, fetal_presentation: e.target.value })}
-              >
-                <MenuItem value="">Select Fetal Presentation</MenuItem>
-                <MenuItem value="Cephalic_left">Cephalic_left</MenuItem>
-                <MenuItem value="Cephalic_right">Cephalic_right</MenuItem>
-                <MenuItem value="Breech_left">Breech_left</MenuItem>
-                <MenuItem value="Breech_right">Breech_right</MenuItem>
-              </TextField>
-            </div>
-
-            <div>
-              <TextField
-                select
-                fullWidth
-                size="small"
                 label="Volumes"
                 SelectProps={{
                   multiple: true,
@@ -1194,6 +1202,7 @@ function Cluster() {
               </TextField>
             </div>
 
+            <ClusterMetadataFields form={editClusterForm} setForm={setEditClusterForm} volumes={volumes} />
           </DialogContent>
           <DialogActions className="border-t p-3 px-5">
             <button

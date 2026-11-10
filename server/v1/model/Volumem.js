@@ -78,8 +78,8 @@ const svUploadModel = (
             query,
             [
                 volume_type,
-                measurements,
-                plane,
+                measurements || null,
+                plane || null,
                 volume_name,
                 volume_ga,
                 volume_fetal_presentation,
@@ -887,15 +887,15 @@ const getAssociatedVolumeModel = (requester, r_id) => {
         })
     })
 }
-const updateVolumeModel = (requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description) => {
+const updateVolumeModel = (requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age) => {
     return new Promise((resolve, reject) => {
         const scope = volumeAccessScope(requester, 'volumes', 8);
         if (!scope) return resolve(denied('You do not have permission to update volumes.'));
         client.query(
             `UPDATE volumes
-             SET volume_type = $1, volume_name = $2, volume_ga = $3, volume_fetal_presentation = $4, trimester = $5, description = $6
+             SET volume_type = $1, volume_name = $2, volume_ga = $3, volume_fetal_presentation = $4, trimester = $5, maternal_age = COALESCE($6, maternal_age)
              WHERE volume_id = $7 AND ${scope.clause} AND ownership_review_required = false`,
-            [volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, description, volume_id, ...scope.params],
+            [volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age, volume_id, ...scope.params],
             (err, result) => {
                 if (err) return reject(err);
                 return resolve({ status: 'Success', code: 200, rowCount: result.rowCount, message: 'Volume updated successfully' });

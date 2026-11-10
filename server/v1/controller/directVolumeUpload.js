@@ -6,7 +6,7 @@ const { svUploadModel } = require('../model/Volumem');
 const { parseMaternalAge } = require('../utils/maternalAge');
 const { isValidVolBuffer } = require('./volumeController');
 const s3 = new S3Client({ region: process.env.AWS_REGION || 'ap-south-1', requestChecksumCalculation: 'WHEN_REQUIRED' });
-const fields = ['volume_type', 'measurements', 'plane', 'volume_name', 'volume_ga', 'volume_fetal_presentation', 'trimester', 'description'];
+const fields = ['volume_type', 'volume_name', 'volume_ga', 'volume_fetal_presentation', 'trimester'];
 const permitted = (u) => [99, 101, 102].includes(Number(u.role)) && (Number(u.role) === 99 || u.centre_id);
 exports.prepare = async (req, res) => {
   if (!permitted(req.user)) return res.status(403).json({ message: 'Upload not permitted.' });
@@ -42,7 +42,8 @@ exports.complete = async (req, res) => {
     if (head.ContentLength !== upload.size) return res.status(400).json({ message: 'Uploaded file size mismatch.' });
     const sample = await s3.send(new GetObjectCommand({ ...object, Range: 'bytes=0-511' }));
     if (!isValidVolBuffer(Buffer.from(await sample.Body.transformToByteArray()))) return res.status(400).json({ message: 'Invalid volume file.' });
-    const result = await svUploadModel(req.user, ...fields.map((field) => upload.metadata[field]), upload.key, upload.metadata.maternal_age ?? null);
+    const { volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age } = upload.metadata;
+    const result = await svUploadModel(req.user, volume_type, null, null, volume_name, volume_ga, volume_fetal_presentation, trimester, '', upload.key, maternal_age);
     if (result.code) return res.status(result.code).json(result);
     return res.status(200).json({ message: 'Volume Uploaded' });
   } catch (error) { console.error('Complete volume upload:', error.name); return res.status(500).json({ message: 'Unable to finalize volume upload.' }); }

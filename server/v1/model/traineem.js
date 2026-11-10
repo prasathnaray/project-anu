@@ -1,5 +1,6 @@
 const client = require('../utils/conn.js');
 const { encryptedUserFields } = require('../utils/userEmailCrypto');
+const { appendCustomCourseAddOns } = require('./customCourseAddOns');
 // const {HashedPassword} = require('../utils/hash.js');
 const hasCenterScope = (requester) => Boolean(requester?.centre_id);
 
@@ -3808,6 +3809,46 @@ const indDatauuid = (requester, people_id, isVr = true) => {
         LIMIT 1;
       `;
 
+      const addOnCoursesQuery = `
+        SELECT cm.mapping_id, cm.course_name, cm.course_type, cm.description,
+               cm.doctor_name, cm.cluster_id, c.cluster_name,
+               cmp.unit_name AS tagged_unit_name,
+               CASE WHEN shadow_vr.recording_id IS NULL THEN NULL ELSE jsonb_build_object(
+                 'recording_id', shadow_vr.recording_id,
+                 'recording_name', shadow_vr.recording_name,
+                 'recording_type', shadow_vr.recording_type,
+                 'rec_files', shadow_vr.rec_files,
+                 'audio_files', shadow_vr.audio_files,
+                 'image_files', shadow_vr.image_files,
+                 'manifest_file', shadow_vr.manifest_file
+               ) END AS shadow_recording,
+               CASE WHEN step_vr.recording_id IS NULL THEN NULL ELSE jsonb_build_object(
+                 'recording_id', step_vr.recording_id,
+                 'recording_name', step_vr.recording_name,
+                 'recording_type', step_vr.recording_type,
+                 'rec_files', step_vr.rec_files,
+                 'audio_files', step_vr.audio_files,
+                 'image_files', step_vr.image_files,
+                 'manifest_file', step_vr.manifest_file
+               ) END AS step_recording
+        FROM public.user_data ud
+        JOIN public.course_mapping_placements cmp ON cmp.centre_id = ud.centre_id
+        JOIN public.course_mapping cm ON cm.mapping_id = cmp.mapping_id
+          AND cm.owner_scope = 'institution'
+          AND cm.owner_centre_id = ud.centre_id
+          AND cm.module_name = 'Custom Course'
+        LEFT JOIN public.clusters c ON c.cluster_id = cm.cluster_id
+        LEFT JOIN public.vol_recordings shadow_vr ON shadow_vr.recording_id = cm.shadow_recording_id
+          AND EXISTS (SELECT 1 FROM public.cluster_recordings cr
+                      WHERE cr.cluster_id = cm.cluster_id AND cr.recording_id = shadow_vr.recording_id)
+        LEFT JOIN public.vol_recordings step_vr ON step_vr.recording_id = cm.step_recording_id
+          AND EXISTS (SELECT 1 FROM public.cluster_recordings cr
+                      WHERE cr.cluster_id = cm.cluster_id AND cr.recording_id = step_vr.recording_id)
+        WHERE ud.people_id = $1 AND ud.user_role = '103'
+          AND cmp.certificate_name = 'BTC'
+        ORDER BY cm.created_at, cm.mapping_id;
+      `;
+
       Promise.all([
         new Promise((res, rej) =>
           client.query(vrBatchQuery, [people_id], (err, result) =>
@@ -3824,11 +3865,16 @@ const indDatauuid = (requester, people_id, isVr = true) => {
             err ? rej(err) : res(result.rows)
           )
         ),
+        new Promise((res, rej) =>
+          client.query(addOnCoursesQuery, [people_id], (err, result) =>
+            err ? (err.code === '42P01' ? res([]) : rej(err)) : res(result.rows)
+          )
+        ),
       ])
-        .then(([batchData, rawCertData, vrProgressData]) => {
+        .then(([batchData, rawCertData, vrProgressData, addOnCourses]) => {
           const visibleResourceIds = new Set(rawCertData.map(row => row.resource_id).filter(Boolean));
           const visibleLatestProgress = vrProgressData.find(row => visibleResourceIds.has(row.resourse_id)) || null;
-          const certificates = buildCertificateTree(rawCertData);
+          const certificates = appendCustomCourseAddOns(buildCertificateTree(rawCertData), addOnCourses);
           resolve({
             status: 'Success',
             code: 200,
