@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://{{base_url_prod}}/api/v1/login
+  url: http://{{local_base_url}}/api/v1/login
   body:
     type: json
     data: |-

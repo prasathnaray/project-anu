@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://{{base_url_prod}}/api/v1/resource-completion?r_id=43805277-5412-4094-add9-c7e705600617&is_completed=true
+  url: http://{{local_base_url}}/api/v1/resource-completion?r_id=43805277-5412-4094-add9-c7e705600617&is_completed=true
   params:
     - name: r_id
       value: 43805277-5412-4094-add9-c7e705600617
@@ -15,10 +15,11 @@ http:
       type: query
   auth:
     type: bearer
-    token: "{{user_token}}"
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX21haWwiOiJyb2hpbnRoQGh0aWMuaWl0bS5hYy5pbiIsInJvbGUiOiIxMDMiLCJjZW50cmVfaWQiOiIwMWM2OWJkMS1kNjJlLTQ4M2UtYjA5Zi1mMTRhMmYwZjQzZWQiLCJjZW50ZXJfbmFtZSI6IkhUSUMgSW50ZXJuYWwgVGVhbSIsInNpZCI6IjNiMzNjZTE2LTBlMTMtNDIyMy04MDdiLThjNjUzZDAxNDg3MiIsImlzVlIiOmZhbHNlLCJsb2dpblNvdXJjZSI6Ik5vcm1hbCBCcm93c2VyIiwiZGV2aWNlIjoiYnJvd3NlciIsImlhdCI6MTc5NDMwMzkwOH0.EFA5oyC3rGoQgIGEEKsYA0Itldvo_exzDAdDFWmVKPc
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
