@@ -75,8 +75,17 @@ for (const issue of ['missing', 'malformed', 'sizeMismatch', 'wrongOwner', 'wron
     });
 }
 
+test('preparation accepts a 500 MiB recording asset', async () => {
+    const { api, req, response } = fixture();
+    req.body.files[1].size = 500 * 1024 * 1024;
+    const res = response();
+    await api.prepare(req, res);
+    assert.equal(res.code, 200);
+    assert.equal(res.body.uploads.length, 4);
+});
+
 test('preparation rejects missing groups, oversized files and unsupported extensions', async () => {
-    for (const mutate of [r => r.body.files.pop(), r => r.body.files[0].size = 101 * 1024 * 1024, r => r.body.files[0].filename = 'bad.exe']) {
+    for (const mutate of [r => r.body.files.pop(), r => r.body.files[0].size = 501 * 1024 * 1024, r => r.body.files[0].filename = 'bad.exe']) {
         const { api, req, response } = fixture();
         mutate(req);
         const res = response();

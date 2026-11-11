@@ -43,6 +43,6 @@ Use the API bearer token and JSON body:
 
 Success returns HTTP 200 with `recording_id`. Retrying with the same unexpired token does not duplicate the recording. Fetch existing cluster recording GET APIs for signed download URLs; completion's stored references are not browser URLs.
 
-Limits: 100 MiB per file, 250 MiB per package, 1–20 JSON recordings, 1–20 WAV files, 1–20 images and exactly one JSON or `.manifest` file. These are storage workflow limits, not Lambda request-body limits. The API receives metadata only; S3 receives the bytes. Missing objects, incorrect sizes/types or malformed JSON prevent completion. Uncompleted uploads remain private in S3 and require a future retention/cleanup policy.
+Limits: 500 MiB per file, 2 GiB per package, 1–20 JSON recordings, 1–20 WAV files, 1–20 images and exactly one JSON or `.manifest` file. These are storage workflow limits, not Lambda request-body limits. The API receives metadata only; S3 receives the bytes. Missing objects, incorrect sizes/types or malformed JSON prevent completion. Uncompleted uploads remain private in S3 and require a future retention/cleanup policy.
 
 Native Unity does not require browser CORS. Unity WebGL requires the existing bucket CORS policy to permit its origin, PUT, content-type and if-none-match.

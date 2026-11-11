@@ -32,3 +32,6 @@
 **/dist
 LICENSE
 README.md
+**/.aws-sam
+**/tmp
+**/*.log

@@ -9,6 +9,8 @@ const { canEditOwnedEntity, requireRole, COURSE_EDITOR_ROLES } = require('../Aut
 
 const s3 = new S3Client({ region: process.env.AWS_REGION || 'ap-south-1', requestChecksumCalculation: 'WHEN_REQUIRED' });
 const MB = 1024 * 1024;
+const MAX_FILE_SIZE = 500 * MB;
+const MAX_PACKAGE_SIZE = 2 * 1024 * MB;
 const types = {
     recording_file: { '.json': 'application/json' },
     audio_file: { '.wav': 'audio/wav' },
@@ -25,12 +27,12 @@ function validateFiles(files) {
     const validated = files.map((file) => {
         if (!file || typeof file.filename !== 'string' || file.filename.length > 255) fail(400, 'Invalid filename.');
         const contentType = types[file.field]?.[path.extname(file.filename).toLowerCase()];
-        if (!contentType || !Number.isSafeInteger(file.size) || file.size <= 0 || file.size > 100 * MB) fail(400, 'Invalid field, extension or size (maximum 100 MiB per file).');
+        if (!contentType || !Number.isSafeInteger(file.size) || file.size <= 0 || file.size > MAX_FILE_SIZE) fail(400, 'Invalid field, extension or size (maximum 500 MiB per file).');
         counts[file.field] = (counts[file.field] || 0) + 1;
         total += file.size;
         return { field: file.field, filename: file.filename, size: file.size, contentType };
     });
-    if (total > 250 * MB) fail(400, 'Recording package exceeds 250 MiB.');
+    if (total > MAX_PACKAGE_SIZE) fail(400, 'Recording package exceeds 2 GiB.');
     for (const field of Object.keys(types)) {
         if (!counts[field] || counts[field] > (field === 'manifest_file' ? 1 : 20)) fail(400, `Invalid file count for ${field}.`);
     }
@@ -114,3 +116,4 @@ exports.complete = async (req, res) => {
 };
 
 exports.validateFiles = validateFiles;
+exports.authorize = authorize;

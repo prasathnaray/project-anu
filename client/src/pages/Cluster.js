@@ -14,8 +14,7 @@ import {
   DeleteClusterAPI,
   GetClusterRecordingCountsAPI,
   GetClusterRecordingsAPI,
-  UploadClusterRecordingAPI,
-  UploadRecordingAPI,
+  UploadClusterRecordingDirectAPI,
   ReplaceClusterRecordingAPI,
 } from '../API/ClusterAPI';
 import { MEASUREMENT_OPTIONS, PLANE_OPTIONS } from '../constants/clusterMetadataOptions';
@@ -733,29 +732,11 @@ function Cluster() {
 
     setUploading(true);
     try {
-      const data = new FormData();
-      data.append('volume_id', uploadForm.volume_id);
-      data.append('cluster_id', selectedUploadCluster.cluster_id);
-      data.append('recording_name', uploadForm.recording_name.trim());
-      data.append('recording_type', uploadType);
-
-      uploadForm.recording_files.forEach((file) => {
-        data.append('recording_file', file);
+      await UploadClusterRecordingDirectAPI(selectedUploadCluster.cluster_id, {
+        ...uploadForm,
+        recording_name: uploadForm.recording_name.trim(),
+        recording_type: uploadType,
       });
-      uploadForm.audio_files.forEach((file) => {
-        data.append('audio_file', file);
-      });
-      uploadForm.image_files.forEach((file) => {
-        data.append('images', file);
-      });
-      data.append('manifest_file', uploadForm.manifest_file);
-
-      try {
-        await UploadClusterRecordingAPI(selectedUploadCluster.cluster_id, data);
-      } catch (clusterApiErr) {
-        // Fallback to uploadvolumerecording endpoint
-        await UploadRecordingAPI(data);
-      }
 
       toast.success(`${uploadType === 'step' ? 'Step' : 'Shadow'} recording uploaded successfully!`);
 
@@ -779,6 +760,7 @@ function Cluster() {
       console.error('Failed to upload recording:', err);
       const errMsg = err.response?.data?.error
         || err.response?.data?.message
+        || err.message
         || 'Failed to upload recording files. Please check file formats and try again.';
       toast.error(errMsg);
     } finally {
