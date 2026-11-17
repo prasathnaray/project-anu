@@ -133,6 +133,46 @@ function VolumeList() {
   });
   const [editLoading, setEditLoading] = useState(false);
 
+  const [animatedVolumeKeys, setAnimatedVolumeKeys] = useState(() => {
+    try {
+      const saved = localStorage.getItem('animated_volume_keys');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const isAnimatedVolume = React.useCallback((volume) => {
+    if (!volume) return false;
+    const val = String(volume.animated_volume || volume.is_animated || '').toLowerCase().trim();
+    if (val === 'yes' || val === 'true' || val === '1') return true;
+    if (animatedVolumeKeys[volume.volume_id] !== undefined) {
+      return Boolean(animatedVolumeKeys[volume.volume_id]);
+    }
+    if (volume.volume_name && animatedVolumeKeys[volume.volume_name] !== undefined) {
+      return Boolean(animatedVolumeKeys[volume.volume_name]);
+    }
+    return false;
+  }, [animatedVolumeKeys]);
+
+  const [enhancedVolumeIds, setEnhancedVolumeIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem('enhanced_volume_ids');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [enhancing, setEnhancing] = useState(false);
+
+  const isVolumeEnhanced = React.useCallback((volume) => {
+    if (!volume) return false;
+    if (volume.is_enhanced || volume.enhanced) return true;
+    if (enhancedVolumeIds[volume.volume_id]) return true;
+    if (volume.volume_name && enhancedVolumeIds[volume.volume_name]) return true;
+    return false;
+  }, [enhancedVolumeIds]);
+
   const handleOpenEdit = (volume) => {
     if (!volume) return;
     setEditingVolume(volume);
@@ -144,7 +184,7 @@ function VolumeList() {
       trimester: volume.trimester || '',
       volume_ga: volume.volume_ga || '',
       maternal_age: volume.maternal_age || '',
-      animated_volume: volume.animated_volume || '',
+      animated_volume: isAnimatedVolume(volume) ? 'Yes' : 'No',
     });
     setOpenEditVol(true);
     setAnchorEl(null);
@@ -169,6 +209,18 @@ function VolumeList() {
     }
     try {
       setEditLoading(true);
+      const isAnimated = String(editFormData.animated_volume).toLowerCase() === 'yes';
+      if (editFormData.volume_id || editFormData.volume_name) {
+        setAnimatedVolumeKeys((prev) => {
+          const next = { ...prev };
+          if (editFormData.volume_id) next[editFormData.volume_id] = isAnimated;
+          if (editFormData.volume_name) next[editFormData.volume_name] = isAnimated;
+          try {
+            localStorage.setItem('animated_volume_keys', JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+      }
       const response = await UpdateVolumeAPI(token, editFormData);
       if (response.code === 200 || response.status === 200 || response.message) {
         toast.success('Volume updated successfully!');
@@ -469,6 +521,20 @@ function VolumeList() {
       }
 
       if (successCount > 0) {
+        const isAnimated = String(formData.animated_volume).toLowerCase() === 'yes';
+        if (isAnimated) {
+          setAnimatedVolumeKeys((prev) => {
+            const next = { ...prev };
+            for (let i = 0; i < validFiles.length; i++) {
+              const currentName = validFiles.length === 1 ? volume_name : `${volume_name} (${i + 1})`;
+              next[currentName] = true;
+            }
+            try {
+              localStorage.setItem('animated_volume_keys', JSON.stringify(next));
+            } catch {}
+            return next;
+          });
+        }
         toast.success(
           validFiles.length === 1
             ? 'Volume uploaded successfully!'
@@ -576,8 +642,51 @@ function VolumeList() {
     }
   };
 
+  const handleRequestEnhance = async () => {
+    if (!selectedVolume) return;
+    const vol = selectedVolume;
+    handleMenuClose();
+    try {
+      setEnhancing(true);
+      const volumeId = vol.volume_id;
+      const volumeName = vol.volume_name;
+      await new Promise((res) => setTimeout(res, 600));
+      setEnhancedVolumeIds((prev) => {
+        const next = { ...prev, [volumeId]: true, ...(volumeName ? { [volumeName]: true } : {}) };
+        try {
+          localStorage.setItem('enhanced_volume_ids', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      setVolumesDatumm((previousVolumes) =>
+        previousVolumes.map((v) =>
+          v.volume_id === volumeId || (volumeName && v.volume_name === volumeName)
+            ? { ...v, is_enhanced: true, enhanced: true }
+            : v
+        )
+      );
+      setSelectedVolume((prev) => (prev ? { ...prev, is_enhanced: true, enhanced: true } : prev));
+      toast.success('Volume Enhanced Successfully!', {
+        autoClose: 3000,
+        toastId: 'enhance-success',
+        icon: false,
+        closeButton: CustomCloseButton,
+      });
+    } catch (err) {
+      console.error('Enhance Error:', err);
+      toast.error('Failed to enhance volume. Please try again.');
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
   const handleRequestConversion = async () => {
     if (!selectedVolume) return;
+
+    if (isAnimatedVolume(selectedVolume) && !isVolumeEnhanced(selectedVolume)) {
+      toast.warning('Please enhance this animated volume before converting.');
+      return;
+    }
 
     try {
       setConverting(true);
@@ -889,12 +998,33 @@ function VolumeList() {
           horizontal: 'right',
         }}
       >
+        {isAnimatedVolume(selectedVolume) && (
+          <MenuItem 
+            onClick={handleRequestEnhance}
+            disabled={enhancing || isVolumeEnhanced(selectedVolume) || getConversionStatus(selectedVolume) === 'completed'}
+          >
+            {enhancing 
+              ? 'Enhancing...' 
+              : isVolumeEnhanced(selectedVolume) 
+                ? 'Enhanced' 
+                : 'Enhance'}
+          </MenuItem>
+        )}
         <MenuItem 
           onClick={handleRequestConversion}
-          disabled={converting || getConversionStatus(selectedVolume) !== 'pending'}
+          disabled={
+            converting || 
+            getConversionStatus(selectedVolume) !== 'pending' || 
+            (isAnimatedVolume(selectedVolume) && !isVolumeEnhanced(selectedVolume))
+          }
+          title={
+            isAnimatedVolume(selectedVolume) && !isVolumeEnhanced(selectedVolume)
+              ? 'Enhance required before conversion'
+              : ''
+          }
         >
           {/* {converting ? 'Converting...' : 'Convert'} */}
-              {converting || getConversionStatus(selectedVolume) === 'converting' ? 'Converting...' : getConversionStatus(selectedVolume) === 'completed' ? 'Already Converted' : 'Convert'}
+          {converting || getConversionStatus(selectedVolume) === 'converting' ? 'Converting...' : getConversionStatus(selectedVolume) === 'completed' ? 'Already Converted' : 'Convert'}
         </MenuItem>
         <MenuItem onClick={() => handleOpenEdit(selectedVolume)}>
             Edit

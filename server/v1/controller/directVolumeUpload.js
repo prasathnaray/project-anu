@@ -5,7 +5,23 @@ const { randomUUID } = require('crypto');
 const { svUploadModel } = require('../model/Volumem');
 const { parseMaternalAge } = require('../utils/maternalAge');
 const { isValidVolBuffer } = require('./volumeController');
-const s3 = new S3Client({ region: process.env.AWS_REGION || 'ap-south-1', requestChecksumCalculation: 'WHEN_REQUIRED' });
+
+let _s3;
+const getS3 = () => {
+  if (!_s3) {
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID || process.env.AWS_IVS_ACCESS_KEY;
+    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || process.env.AWS_IVS_SECRET_KEY;
+    _s3 = new S3Client({
+      region: process.env.AWS_REGION || 'ap-south-1',
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      ...(accessKeyId && secretAccessKey ? {
+        credentials: { accessKeyId, secretAccessKey }
+      } : {})
+    });
+  }
+  return _s3;
+};
+
 const fields = ['volume_type', 'volume_name', 'volume_ga', 'volume_fetal_presentation', 'trimester'];
 const permitted = (u) => [99, 101, 102].includes(Number(u.role)) && (Number(u.role) === 99 || u.centre_id);
 exports.prepare = async (req, res) => {
@@ -25,10 +41,10 @@ exports.prepare = async (req, res) => {
     const prefix = Number(req.user.role) === 99 ? 'global' : `institutions/${req.user.centre_id}`;
     const key = `${process.env.PRIVATE_CONTENT_BUCKET || process.env.BUCKET_NAME || 'projectanu'}/${prefix}/${randomUUID()}/source/${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const bucket = process.env.AWS_S3_BUCKET;
-    const uploadUrl = await getSignedUrl(s3, new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: 'application/octet-stream', ContentLength: size, IfNoneMatch: '*' }), { expiresIn: 900 });
+    const uploadUrl = await getSignedUrl(getS3(), new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: 'application/octet-stream', ContentLength: size, IfNoneMatch: '*' }), { expiresIn: 900 });
     const uploadToken = jwt.sign({ key, bucket, size, metadata, user: req.user.user_mail, centre: req.user.centre_id || null, role: Number(req.user.role) }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h', audience: 'volume-upload' });
     res.set('Cache-Control', 'no-store').json({ uploadUrl, uploadToken });
-  } catch (error) { console.error('Prepare volume upload:', error.name); res.status(500).json({ message: 'Unable to prepare upload.' }); }
+  } catch (error) { console.error('Prepare volume upload:', error); res.status(500).json({ message: 'Unable to prepare upload.' }); }
 };
 exports.complete = async (req, res) => {
   if (!permitted(req.user)) return res.status(403).json({ message: 'Upload not permitted.' });
@@ -38,13 +54,13 @@ exports.complete = async (req, res) => {
   if (upload.user !== req.user.user_mail || upload.centre !== (req.user.centre_id || null) || upload.role !== Number(req.user.role)) return res.status(403).json({ message: 'Upload owner mismatch.' });
   try {
     const object = { Bucket: upload.bucket, Key: upload.key };
-    const head = await s3.send(new HeadObjectCommand(object));
+    const head = await getS3().send(new HeadObjectCommand(object));
     if (head.ContentLength !== upload.size) return res.status(400).json({ message: 'Uploaded file size mismatch.' });
-    const sample = await s3.send(new GetObjectCommand({ ...object, Range: 'bytes=0-511' }));
+    const sample = await getS3().send(new GetObjectCommand({ ...object, Range: 'bytes=0-511' }));
     if (!isValidVolBuffer(Buffer.from(await sample.Body.transformToByteArray()))) return res.status(400).json({ message: 'Invalid volume file.' });
     const { volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age } = upload.metadata;
     const result = await svUploadModel(req.user, volume_type, null, null, volume_name, volume_ga, volume_fetal_presentation, trimester, '', upload.key, maternal_age);
     if (result.code) return res.status(result.code).json(result);
     return res.status(200).json({ message: 'Volume Uploaded' });
-  } catch (error) { console.error('Complete volume upload:', error.name); return res.status(500).json({ message: 'Unable to finalize volume upload.' }); }
+  } catch (error) { console.error('Complete volume upload:', error); return res.status(500).json({ message: 'Unable to finalize volume upload.' }); }
 };
