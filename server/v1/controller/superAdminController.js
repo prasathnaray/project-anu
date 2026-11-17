@@ -1,4 +1,5 @@
 const model = require('../model/superAdminm');
+const client = require('../utils/conn');
 const { sendError } = require('./contentAccessController');
 const { issueAccountVerificationOtp } = require('../utils/accountVerification');
 const {
@@ -36,7 +37,7 @@ const getStats = async (req, res) => {
     try {
         const [statsData, activityStats] = await Promise.all([
             model.getSuperAdminStats(req.user),
-            getActivityStatistics().catch((err) => {
+            getActivityStatistics(req.query).catch((err) => {
                 console.error('Error fetching activity stats for dashboard:', err.message);
                 return null;
             })
@@ -60,7 +61,7 @@ const getStats = async (req, res) => {
 
 const getGlobalStatistics = async (req, res) => {
     try {
-        const stats = await getActivityStatistics();
+        const stats = await getActivityStatistics(req.query);
         return res.status(200).json({
             code: 200,
             status: 'Success',
@@ -74,7 +75,7 @@ const getGlobalStatistics = async (req, res) => {
 
 const getActivitySummary = async (req, res) => {
     try {
-        const stats = await getActivityStatistics();
+        const stats = await getActivityStatistics(req.query);
         const summary = {
             totalActions: stats.totalActions,
             todayActions: stats.todayActions,
@@ -112,11 +113,57 @@ const getRecentActivitiesController = async (req, res) => {
     }
 };
 
+const getSystemHealth = async (req, res) => {
+    try {
+        const startTime = Date.now();
+        let dbLatency = 0;
+        let dbStatus = 'Operational';
+        try {
+            const dbStart = Date.now();
+            await client.query('SELECT 1');
+            dbLatency = Date.now() - dbStart;
+        } catch (dbErr) {
+            dbLatency = -1;
+            dbStatus = 'Degraded';
+        }
+
+        const totalTime = Date.now() - startTime;
+        const uptime = Math.floor(process.uptime());
+
+        return res.status(200).json({
+            code: 200,
+            status: 'Success',
+            data: {
+                api: {
+                    status: 'Operational',
+                    latency: totalTime,
+                    uptime,
+                    nodeVersion: process.version
+                },
+                database: {
+                    status: dbStatus,
+                    latency: dbLatency,
+                    pool: 'Healthy'
+                },
+                backgroundProcessing: {
+                    status: 'Operational',
+                    sockets: 'Active',
+                    realtime: 'Broadcasting'
+                },
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
 module.exports = {
     list,
     create,
     getStats,
     getGlobalStatistics,
     getActivitySummary,
-    getRecentActivities: getRecentActivitiesController
+    getRecentActivities: getRecentActivitiesController,
+    getSystemHealth
 };

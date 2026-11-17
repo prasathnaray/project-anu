@@ -106,6 +106,7 @@ function VolumeList() {
     volume_fetal_presentation: '',
     trimester: '',
     volume_ga: '',
+    animated_volume: '',
     file: null,
   });
   const [otherValues, setOtherValues] = useState({
@@ -128,6 +129,7 @@ function VolumeList() {
     trimester: '',
     volume_ga: '',
     maternal_age: '',
+    animated_volume: '',
   });
   const [editLoading, setEditLoading] = useState(false);
 
@@ -142,6 +144,7 @@ function VolumeList() {
       trimester: volume.trimester || '',
       volume_ga: volume.volume_ga || '',
       maternal_age: volume.maternal_age || '',
+      animated_volume: volume.animated_volume || '',
     });
     setOpenEditVol(true);
     setAnchorEl(null);
@@ -382,6 +385,7 @@ function VolumeList() {
       volume_fetal_presentation: '',
       trimester: '',
       volume_ga: '',
+      animated_volume: '',
       file: null,
     });
     setOtherValues({
@@ -446,6 +450,9 @@ function VolumeList() {
         data.append('trimester', resolvedTrimester);
         data.append('volume_ga', volume_ga);
         data.append('maternal_age', formData.maternal_age);
+        if (formData.animated_volume) {
+          data.append('animated_volume', formData.animated_volume);
+        }
         data.append('file', file);
 
         try {
@@ -475,6 +482,7 @@ function VolumeList() {
           volume_fetal_presentation: '',
           trimester: '',
           volume_ga: '',
+          animated_volume: '',
           file: null,
         });
         setOtherValues({
@@ -1015,6 +1023,20 @@ function VolumeList() {
                 value={formData.maternal_age}
                 onChange={handleChange}
               />
+              <TextField
+                select
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Animated Volume"
+                name="animated_volume"
+                value={formData.animated_volume}
+                onChange={handleChange}
+              >
+                <MenuItem value="">Select Animated Volume</MenuItem>
+                <MenuItem value="Yes">Yes</MenuItem>
+                <MenuItem value="No">No</MenuItem>
+              </TextField>
             </div>
 
             <div className="mt-4">
@@ -1164,6 +1186,20 @@ function VolumeList() {
                 value={editFormData.maternal_age}
                 onChange={handleEditChange}
               />
+              <TextField
+                select
+                fullWidth
+                variant="outlined"
+                size="small"
+                label="Animated Volume"
+                name="animated_volume"
+                value={editFormData.animated_volume}
+                onChange={handleEditChange}
+              >
+                <MenuItem value="">Select Animated Volume</MenuItem>
+                <MenuItem value="Yes">Yes</MenuItem>
+                <MenuItem value="No">No</MenuItem>
+              </TextField>
             </div>
 
             <div className="mt-4 flex justify-end items-center gap-2">

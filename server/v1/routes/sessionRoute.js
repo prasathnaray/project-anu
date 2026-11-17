@@ -1,8 +1,9 @@
 const express = require('express');
 const client = require('../utils/conn');
 const { canManageSessions } = require('../Auth/sessionAuthorization');
-const { revokeSession, revokeAllSessions } = require('../Auth/sessionStore');
+const { revokeSession, revokeAllSessions, revokeVrSessions } = require('../Auth/sessionStore');
 const { broadcastSessionRevoked } = require('../services/socketService');
+const { trackActivity } = require('../services/activityTrackingService');
 
 const router = express.Router();
 const isUuid = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -114,9 +115,40 @@ router.post('/users/:email/logout-all', handler(async (req, res) => {
 
 router.post('/logout', handler(async (req, res) => {
   await revokeSession(req.user.sid, req.user.user_mail);
+  const revokedVrIds = await revokeVrSessions(req.user.user_mail);
   clearRefreshCookie(res);
-  broadcastSessionRevoked({ sessionId: req.user.sid, userEmail: req.user.user_mail });
-  res.json({ ended: true, currentSessionEnded: true });
+
+  // Broadcast revocation for current dashboard session
+  broadcastSessionRevoked({
+    sessionId: req.user.sid,
+    userEmail: req.user.user_mail,
+    revokedSessionIds: [req.user.sid, ...revokedVrIds]
+  });
+
+  // Broadcast VR-specific revocation so any connected VR headset/client terminates immediately
+  broadcastSessionRevoked({
+    userEmail: req.user.user_mail,
+    isVR: true,
+    allVr: true,
+    revokedSessionIds: revokedVrIds
+  });
+
+  if (revokedVrIds.length > 0) {
+    trackActivity({
+      userId: req.user.user_mail,
+      role: req.user.role,
+      action: 'VR_LOGOUT',
+      module: 'VR Modules',
+      status: 'SUCCESS',
+      metadata: {
+        isVR: true,
+        reason: 'Dashboard logout terminated VR session',
+        vrSessionsRevoked: revokedVrIds.length
+      }
+    }).catch(() => {});
+  }
+
+  res.json({ ended: true, currentSessionEnded: true, vrSessionsEnded: revokedVrIds.length });
 }));
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Award, BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, RotateCcw, Scan, School, UsersRound, Video } from 'lucide-react';
+import { Award, BarChart, BookCheck, BookOpen, Calendar, ChevronLeft, ClipboardPenLine, GraduationCap, RotateCcw, Scan, School, SlidersHorizontal, UsersRound, Video } from 'lucide-react';
 import logo from '../assets/image (3).png';
 import MaterialRipple from "material-ripple-effects";
 import {
@@ -565,7 +565,7 @@ function SideBar({ handleButtonOpen, buttonOpen }) {
                     : "text-gray-500 hover:bg-[#8DC63F] hover:text-white"
                   }`}
               >
-                <BookOpen size={20} />
+                <SlidersHorizontal size={20} className="shrink-0" />
                 <div className={`${buttonOpen === false ? "hidden" : "text-md"}`}>Customization</div>
               </button>
             </li>

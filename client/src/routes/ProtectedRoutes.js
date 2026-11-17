@@ -36,9 +36,18 @@ const PrivateRoute = ({ allowedRoles }) => {
             const currentToken = localStorage.getItem('user_token');
             if (!currentToken) return;
             const decoded = jwtDecode(currentToken);
+            const isUserMatch = decoded.user_mail?.toLowerCase() === data?.userEmail?.toLowerCase();
+            const isVrClient = Boolean(
+              decoded.isVR ||
+              localStorage.getItem('isVr') === 'true' ||
+              localStorage.getItem('loginSource') === 'VR Device' ||
+              /quest|oculus|pico|vive|vr/i.test(navigator.userAgent || '')
+            );
             const isMatch =
               (data?.sessionId && decoded.sid === data.sessionId) ||
-              (data?.all && decoded.user_mail?.toLowerCase() === data.userEmail?.toLowerCase());
+              (data?.all && isUserMatch) ||
+              (data?.revokedSessionIds && Array.isArray(data.revokedSessionIds) && data.revokedSessionIds.includes(decoded.sid)) ||
+              (data?.isVR && isUserMatch && isVrClient);
 
             if (isMatch) {
               clearLocalSession();

@@ -17,7 +17,6 @@ const refreshToken = async (req, res) => {
   if (!decoded.sid || !decoded.user_mail) {
     return res.status(401).json({ error: 'Please sign in again' });
   }
-
   try {
     const session = await getActiveSession(decoded.sid, decoded.user_mail);
     if (!session) return res.status(401).json({ error: 'Session ended' });
@@ -30,7 +29,7 @@ const refreshToken = async (req, res) => {
     if (!user || String(user.status).toLowerCase() !== 'active') {
       return res.status(401).json({ error: 'Account is not active' });
     }
-
+    
     await touchSession(decoded.sid);
     const isVR = Boolean(
       decoded.isVR ||

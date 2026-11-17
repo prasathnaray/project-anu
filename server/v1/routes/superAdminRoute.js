@@ -17,4 +17,7 @@ router.get('/superadmin/activity-summary', controller.getActivitySummary);
 router.get('/super-admin/recent-activities', controller.getRecentActivities);
 router.get('/superadmin/recent-activities', controller.getRecentActivities);
 
+router.get('/super-admin/system-health', controller.getSystemHealth);
+router.get('/superadmin/system-health', controller.getSystemHealth);
+
 module.exports = router;

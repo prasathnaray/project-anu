@@ -56,4 +56,16 @@ const revokeAllSessions = async (userEmail) => {
   return result.rowCount;
 };
 
-module.exports = { createSession, getActiveSession, touchSession, revokeSession, revokeAllSessions };
+const revokeVrSessions = async (userEmail) => {
+  const result = await client.query(
+    `UPDATE public.user_sessions SET revoked_at = now()
+     WHERE LOWER(user_email) = LOWER($1)
+       AND (login_source = 'VR Device' OR device ILIKE '%vr%' OR device ILIKE '%quest%' OR device ILIKE '%oculus%' OR device ILIKE '%pico%' OR device ILIKE '%vive%' OR os ILIKE '%quest%')
+       AND revoked_at IS NULL AND expires_at > now()
+     RETURNING id`,
+    [userEmail]
+  );
+  return result.rows.map((row) => row.id);
+};
+
+module.exports = { createSession, getActiveSession, touchSession, revokeSession, revokeAllSessions, revokeVrSessions };

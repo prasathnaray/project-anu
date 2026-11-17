@@ -236,9 +236,23 @@ const trackActivity = async ({
 /**
  * Calculates global activity statistics
  */
-const getActivityStatistics = async () => {
+const getActivityStatistics = async ({ dateFilter, startDate, endDate } = {}) => {
   if (!tableInitialized) {
     await initActivityTable();
+  }
+
+  let dateFilterClause = '';
+  const filterParams = [];
+
+  if (dateFilter === 'today') {
+    dateFilterClause = "WHERE created_at >= NOW() - INTERVAL '24 hours'";
+  } else if (dateFilter === '7days') {
+    dateFilterClause = "WHERE created_at >= NOW() - INTERVAL '7 days'";
+  } else if (dateFilter === '30days') {
+    dateFilterClause = "WHERE created_at >= NOW() - INTERVAL '30 days'";
+  } else if (dateFilter === 'custom' && startDate && endDate) {
+    dateFilterClause = "WHERE created_at >= $1::timestamp AND created_at <= ($2::timestamp + INTERVAL '1 day')";
+    filterParams.push(startDate, endDate);
   }
 
   const overviewQuery = client.query(`
@@ -259,38 +273,44 @@ const getActivityStatistics = async () => {
       COUNT(*) FILTER (WHERE action IN ('CERTIFICATE_GENERATED', 'CREATE_CERTIFICATE', 'GENERATE_CERTIFICATE'))::int AS certificates_generated,
       COUNT(*) FILTER (WHERE module = 'VR Modules' OR action LIKE '%VR%' OR (metadata->>'isVR') = 'true' OR (metadata->>'isvr') = 'true' OR (metadata->>'device') ILIKE '%vr%' OR action IN ('START_VR_TEST', 'END_VR_TEST', 'VR_ATTEMPT', 'VR_ATTEMPT_STARTED', 'PRACTICE_ATTEMPT', 'VR_SESSION', 'SUBMIT_VR_MEASUREMENT', 'SAVE_VR_RECORDING', 'START_VR_STREAM', 'END_VR_STREAM', 'VR_LOGIN', 'VR_DATA_ACCESS', 'COMPLETE_VR_RESOURCE'))::int AS vr_attempts
     FROM public.activity_logs
-  `);
+    ${dateFilterClause}
+  `, filterParams);
 
   const roleQuery = client.query(`
     SELECT COALESCE(role, 'Other') AS role, COUNT(*)::int AS count
     FROM public.activity_logs
+    ${dateFilterClause}
     GROUP BY role
     ORDER BY count DESC
-  `);
+  `, filterParams);
 
   const moduleQuery = client.query(`
     SELECT COALESCE(module, 'General') AS module, COUNT(*)::int AS count
     FROM public.activity_logs
+    ${dateFilterClause}
     GROUP BY module
     ORDER BY count DESC
     LIMIT 10
-  `);
+  `, filterParams);
 
   const actionQuery = client.query(`
     SELECT action, module, COUNT(*)::int AS count
     FROM public.activity_logs
+    ${dateFilterClause}
     GROUP BY action, module
     ORDER BY count DESC
     LIMIT 15
-  `);
+  `, filterParams);
 
+  const daysBack = dateFilter === '30days' ? 29 : (dateFilter === 'today' ? 1 : 6);
+  const trendInterval = `${daysBack} days`;
   const trendQuery = client.query(`
     SELECT 
       TO_CHAR(d.day, 'YYYY-MM-DD') AS date,
       TO_CHAR(d.day, 'Mon DD') AS label,
       COUNT(al.id)::int AS count
     FROM generate_series(
-      CURRENT_DATE - INTERVAL '6 days',
+      CURRENT_DATE - INTERVAL '${trendInterval}',
       CURRENT_DATE,
       INTERVAL '1 day'
     ) d(day)
@@ -303,9 +323,10 @@ const getActivityStatistics = async () => {
   const recentQuery = client.query(`
     SELECT id, user_id, role, action, module, target_type, target_id, status, metadata, created_at
     FROM public.activity_logs
+    ${dateFilterClause}
     ORDER BY created_at DESC
     LIMIT 50
-  `);
+  `, filterParams);
 
   const [
     overviewRes,

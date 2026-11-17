@@ -1,8 +1,8 @@
 import api from './api';
 
-export const getActivityStatistics = () => api.get('/api/v1/super-admin/statistics');
+export const getActivityStatistics = (params = {}) => api.get('/api/v1/super-admin/statistics', { params });
 
-export const getActivitySummary = () => api.get('/api/v1/super-admin/activity-summary');
+export const getActivitySummary = (params = {}) => api.get('/api/v1/super-admin/activity-summary', { params });
 
 export const getRecentActivities = (params = {}) => api.get('/api/v1/super-admin/recent-activities', { params });
 
