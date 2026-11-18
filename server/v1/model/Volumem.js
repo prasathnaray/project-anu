@@ -30,7 +30,8 @@ const svUploadModel = (
     trimester,
     description,
     volume_file,
-    maternal_age = null
+    maternal_age = null,
+    animated_volume = false
 ) => {
     return new Promise((resolve, reject) => {
         const isPrivileged = COURSE_EDITOR_ROLES.includes(Number(requester.role));
@@ -51,7 +52,7 @@ const svUploadModel = (
         if (ownerScope === 'institution' && !requester.centre_id) {
             return resolve(denied('Your account is not linked to an institution.'));
         }
-        const query = `
+        const insertQuery = (includeAnimated) => `
             INSERT INTO volumes (
                 volume_type,
                 measurements,
@@ -68,15 +69,12 @@ const svUploadModel = (
                 owner_centre_id,
                 status${approverColumn},
                 ownership_review_required,
-                maternal_age
+                maternal_age${includeAnimated ? ', animated_volume' : ''}
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14${approverValue}, false, $15)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14${approverValue}, false, $15${includeAnimated ? ', $16' : ''})
             RETURNING *;
         `;
-
-        client.query(
-            query,
-            [
+        const params = [
                 volume_type,
                 measurements || null,
                 plane || null,
@@ -91,14 +89,22 @@ const svUploadModel = (
                 ownerScope,
                 ownerScope === 'institution' ? requester.centre_id : null,
                 isAutoApproved,
-                maternal_age
-            ],
+                maternal_age,
+                animated_volume
+            ];
+        client.query(
+            insertQuery(true),
+            params,
             (err, result) => {
-            if (err) {
-                return reject(err);
-            } else {
-                resolve(result);
-            }
+                if (err?.code === '42703' && (/animated_volume/.test(err.message || '') || err.routine === 'checkInsertTargets')) {
+                    console.warn('animated_volume column is missing; uploading without that field until the enhancement migration is applied.');
+                    return client.query(insertQuery(false), params.slice(0, -1), (fallbackError, fallbackResult) => {
+                        if (fallbackError) return reject(fallbackError);
+                        return resolve(fallbackResult);
+                    });
+                }
+                if (err) return reject(err);
+                return resolve(result);
         });
     });
 };
@@ -283,6 +289,10 @@ const getVolumeInstructorViewModel = (requester) => {
                 v.volume_fetal_presentation,
                 v.status,
                 v.conversion_process_status,
+                v.enhancement_status,
+                v.enhancement_manifest,
+                v.enhancement_error,
+                v.animated_volume,
                 v.volume_file,
                 v.added_by,
                 v.approver_id,
@@ -302,18 +312,23 @@ const getVolumeInstructorViewModel = (requester) => {
 
         const queryParams = scope.params;
 
-        client.query(query, queryParams, (err, result) => {
+        const legacyQuery = query.replace(
+            /^\s*v\.(?:enhancement_status|enhancement_manifest|enhancement_error|animated_volume),\s*$/gm,
+            ''
+        );
+        const finish = (err, result) => {
             if (err) {
-                return reject({
-                    status: 'Error',
-                    code: 500,
-                    message: 'Database query failed',
-                    error: err
-                });
+                return reject({ status: 'Error', code: 500, message: 'Database query failed', error: err });
             }
-            
             result.rows = visibleVolumeRows(requester, result.rows);
             return resolve(result);
+        };
+        client.query(query, queryParams, (err, result) => {
+            if (err?.code === '42703' && /enhancement_status|enhancement_manifest|enhancement_error|animated_volume/.test(err.message || '')) {
+                console.warn('Volume enhancement migration is not applied; loading volumes without enhancement fields.');
+                return client.query(legacyQuery, queryParams, finish);
+            }
+            return finish(err, result);
         });
     });
 };
@@ -887,20 +902,28 @@ const getAssociatedVolumeModel = (requester, r_id) => {
         })
     })
 }
-const updateVolumeModel = (requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age) => {
+const updateVolumeModel = (requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age, animated_volume) => {
     return new Promise((resolve, reject) => {
-        const scope = volumeAccessScope(requester, 'volumes', 8);
+        const scope = volumeAccessScope(requester, 'volumes', 9);
         if (!scope) return resolve(denied('You do not have permission to update volumes.'));
-        client.query(
-            `UPDATE volumes
-             SET volume_type = $1, volume_name = $2, volume_ga = $3, volume_fetal_presentation = $4, trimester = $5, maternal_age = COALESCE($6, maternal_age)
-             WHERE volume_id = $7 AND ${scope.clause} AND ownership_review_required = false`,
-            [volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age, volume_id, ...scope.params],
-            (err, result) => {
+        const baseParams = [volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age];
+        const runUpdate = (includeAnimated) => {
+            const selectedScope = includeAnimated ? scope : volumeAccessScope(requester, 'volumes', 8);
+            const query = `UPDATE volumes
+             SET volume_type = $1, volume_name = $2, volume_ga = $3, volume_fetal_presentation = $4,
+                 trimester = $5, maternal_age = COALESCE($6, maternal_age)${includeAnimated ? ', animated_volume = $7' : ''}
+             WHERE volume_id = $${includeAnimated ? 8 : 7} AND ${selectedScope.clause} AND ownership_review_required = false`;
+            const params = [...baseParams, ...(includeAnimated ? [animated_volume] : []), volume_id, ...selectedScope.params];
+            client.query(query, params, (err, result) => {
+                if (err?.code === '42703' && includeAnimated && /animated_volume/.test(err.message || '')) {
+                    console.warn('animated_volume column is missing; updating legacy volume fields only.');
+                    return runUpdate(false);
+                }
                 if (err) return reject(err);
                 return resolve({ status: 'Success', code: 200, rowCount: result.rowCount, message: 'Volume updated successfully' });
-            }
-        );
+            });
+        };
+        runUpdate(true);
     });
 };
 module.exports = {svUploadModel, getUploadedVolume, VolumeApprovalModel, getVolumeInstructorViewModel, getVolumeDownloadModel, getVolumeRecordingDownloadListModel, getVolumeRecordingDownloadModel, volumeConversionModel, getConvertedVolumeList, placedVolumeConversionModel, getVolumePlacementsModel, volumeRecordingsModel, getRecordingsModel, associateVolumeModel, shadowRecoringDataModel, getVolumeRecordingCountsModel, getAssociatedVolumeModel, assertVolumeEditableModel, updateVolumeModel};

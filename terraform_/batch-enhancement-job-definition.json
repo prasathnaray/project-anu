@@ -1,0 +1,37 @@
+{
+  "jobDefinitionName": "vol-enhancement-job",
+  "type": "container",
+  "containerProperties": {
+    "image": "299822065337.dkr.ecr.ap-south-1.amazonaws.com/vol-conversion@sha256:2234c08854ea2497b21f63d086efcda7b37273231338514a38e1508687e2b7d3",
+    "jobRoleArn": "arn:aws:iam::299822065337:role/vol-conversion-batch-job-role",
+    "executionRoleArn": "arn:aws:iam::299822065337:role/vol-conversion-batch-execution-role",
+    "resourceRequirements": [
+      { "type": "VCPU", "value": "4" },
+      { "type": "MEMORY", "value": "16384" }
+    ],
+    "environment": [
+      { "name": "AWS_REGION", "value": "ap-south-1" },
+      { "name": "AWS_S3_BUCKET", "value": "project-anu-content-299822065337-ap-south-1" }
+    ],
+    "secrets": [
+      {
+        "name": "DATABASE_URL",
+        "valueFrom": "arn:aws:secretsmanager:ap-south-1:299822065337:secret:vol-conversion/database-url-X15QsE"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/aws/batch/vol-conversion",
+        "awslogs-region": "ap-south-1",
+        "awslogs-stream-prefix": "vol-enhancement"
+      }
+    },
+    "networkConfiguration": { "assignPublicIp": "ENABLED" },
+    "fargatePlatformConfiguration": { "platformVersion": "LATEST" },
+    "ephemeralStorage": { "sizeInGiB": 50 }
+  },
+  "platformCapabilities": ["FARGATE"],
+  "retryStrategy": { "attempts": 1 },
+  "timeout": { "attemptDurationSeconds": 7200 }
+}

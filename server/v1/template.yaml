@@ -29,6 +29,8 @@ Globals:
         MINDSPARK_ASSET_BUCKET: question-images
         VOL_CONVERSION_JOB_QUEUE: vol-conversion-queue
         VOL_CONVERSION_JOB_DEFINITION: vol-conversion-job
+        VOL_ENHANCEMENT_JOB_QUEUE: vol-conversion-queue
+        VOL_ENHANCEMENT_JOB_DEFINITION: vol-enhancement-job
         REQUEST_BODY_LIMIT: 10mb
         MAX_VOLUME_UPLOAD_SIZE_MB: 8
 

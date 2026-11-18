@@ -1,0 +1,6 @@
+FROM python:3.11-slim
+WORKDIR /app
+RUN pip install --no-cache-dir numpy scipy lz4 boto3 psycopg2-binary
+COPY reconstruct.py /app/reconstruct.py
+COPY Vol-enhancement/run_enhancement.py /app/run_enhancement.py
+CMD ["python", "/app/run_enhancement.py"]

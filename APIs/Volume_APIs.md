@@ -42,6 +42,8 @@ List endpoints return only accessible records. An inaccessible volume identifier
 | Source | `GET` | `/get-volumes-by-instructor` | List volumes with conversion status |
 | Conversion | `PUT` | `/convert-vol/:volume_id` | Start an asynchronous conversion |
 | Conversion | `GET` | `/converted-volumes` | List completed conversions |
+| Enhancement | `POST` | `/volumes/:volume_id/enhance` | Start reconstruction for an animated volume |
+| Enhancement | `GET` | `/volumes/:volume_id/enhancement/files` | List saved NRRD frames with temporary download URLs |
 | Placement | `POST` | `/volume-placement` | Create or replace placement JSON |
 | Placement | `GET` | `/volume-placements` | List placements, optionally filtered by `volume_id` |
 | Placement | `GET` | `/volume-placements/:volume_id` | List placements for one volume |
@@ -65,6 +67,19 @@ List endpoints return only accessible records. An inaccessible volume identifier
 6. Upload and verify placement JSON.
 7. Upload the `shadow` and `step` recording packages, each with one manifest.
 8. Select the required recordings and associate them with a resource.
+
+For animated volumes, use `POST /volumes/:volume_id/enhance` instead of the conversion action. Once enhancement is complete, `GET /volumes/:volume_id/enhancement/files` returns the generated NRRD frames for the volume-management file viewer.
+
+## Enhanced NRRD files
+
+```http
+GET /volumes/:volume_id/enhancement/files
+Authorization: Bearer <token>
+```
+
+The response contains `volume_id`, `frame_count`, and `files`. Each file has a `name` such as `frame_00.nrrd`, its byte `size`, and a signed S3 `url` for downloading. The URLs expire after 15 minutes; request the list again to refresh them. Preview images and the manifest are excluded from this list.
+
+The endpoint applies the same volume ownership rules as the volume list. It returns `403` for a role without volume-management access, `404` for an inaccessible volume, `409` while the enhanced files are not ready, and `502` if storage cannot provide the file list.
 
 ## Source volumes
 

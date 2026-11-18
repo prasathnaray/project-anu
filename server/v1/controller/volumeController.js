@@ -161,7 +161,8 @@ const VolumeController = async(req, res) => {
             trimester,
             description || '',
             uploaded.reference,
-            maternalAge
+            maternalAge,
+            String(req.body.animated_volume).toLowerCase() === 'yes'
         )
         if (result.code) return res.status(result.code).json(result);
         if(result.rowCount == 1)
@@ -1135,7 +1136,7 @@ const getAssociatedVolumeController = async(req, res) => {
 }
 const updateVolumeC = async(req, res) => {
     const requester = req.user;
-    const { volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age } = req.body;
+    const { volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age, animated_volume } = req.body;
     let maternalAge;
     try { maternalAge = parseMaternalAge(maternal_age); }
     catch (error) { return res.status(400).json({ message: error.message }); }
@@ -1143,7 +1144,7 @@ const updateVolumeC = async(req, res) => {
         if (!volume_id || !volume_type || !volume_name || !volume_ga || !volume_fetal_presentation || !trimester) {
             return res.status(406).json({ message: "Fields should not be empty" });
         }
-        const result = await updateVolumeModel(requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternalAge);
+        const result = await updateVolumeModel(requester, volume_id, volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternalAge, String(animated_volume).toLowerCase() === 'yes');
         if (result.code && result.code !== 200) return res.status(result.code).json(result);
         res.status(200).json({ message: 'Volume Updated Successfully' });
     } catch(err) {

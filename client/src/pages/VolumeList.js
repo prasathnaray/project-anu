@@ -5,13 +5,15 @@ import { jwtDecode } from 'jwt-decode';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { MoreVertical, Upload, X } from 'lucide-react';
 import UploadVol from '../components/Instructors/UploadVol';
-import { TextField, Menu, MenuItem } from '@mui/material';
+import { TextField, Menu, MenuItem, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import VolumeUploadAPI from '../API/volumeUpload';
 import ClipLoader from 'react-spinners/ClipLoader';
 import GetVolInsAPI from '../API/GetVolInsAPI';
 import volumeConvAPI from '../API/volumeConvAPI';
+import volumeEnhanceAPI from '../API/volumeEnhanceAPI';
+import getEnhancedFilesAPI from '../API/getEnhancedFilesAPI';
 import GetShadowRecordingCountsAPI from '../API/GetShadowRecordingCountsAPI';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import UpdateVolumeAPI from '../API/UpdateVolumeAPI';
@@ -22,6 +24,7 @@ import { uploadVolumePlacementAPI, getVolumePlacementsAPI } from '../API/VolumeP
 const MAX_VOLUME_UPLOAD_SIZE_MB = 100;
 const MAX_VOLUME_UPLOAD_SIZE_BYTES = MAX_VOLUME_UPLOAD_SIZE_MB * 1024 * 1024;
 const OTHER_OPTION = '__other__';
+const DEFAULT_ROWS_PER_PAGE = 10;
 const ANATOMY_TYPE_OPTIONS = [
   'Spine',
   'Head',
@@ -44,6 +47,10 @@ function VolumeList() {
   const [converting, setConverting] = useState(false);
   const [downloadingKey, setDownloadingKey] = useState(null);
   const [recordingsVolume, setRecordingsVolume] = useState(null);
+  const [enhancedFilesVolume, setEnhancedFilesVolume] = useState(null);
+  const [enhancedFiles, setEnhancedFiles] = useState([]);
+  const [enhancedFilesLoading, setEnhancedFilesLoading] = useState(false);
+  const [enhancedFilesError, setEnhancedFilesError] = useState('');
 
   const isVolFile = (file) => {
     if (!file || !file.name) return false;
@@ -99,6 +106,8 @@ function VolumeList() {
   const [approvalFilter, setApprovalFilter] = useState('all');
   const [conversionFilter, setConversionFilter] = useState('all');
   const [timeSort, setTimeSort] = useState('latest');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
   const [formData, setFormData] = useState({
     volume_name: '',
     volume_type: '',
@@ -144,6 +153,7 @@ function VolumeList() {
 
   const isAnimatedVolume = React.useCallback((volume) => {
     if (!volume) return false;
+    if (volume.animated_volume === true) return true;
     const val = String(volume.animated_volume || volume.is_animated || '').toLowerCase().trim();
     if (val === 'yes' || val === 'true' || val === '1') return true;
     if (animatedVolumeKeys[volume.volume_id] !== undefined) {
@@ -152,26 +162,15 @@ function VolumeList() {
     if (volume.volume_name && animatedVolumeKeys[volume.volume_name] !== undefined) {
       return Boolean(animatedVolumeKeys[volume.volume_name]);
     }
+    if (volume.animated_volume === false) return false;
     return false;
   }, [animatedVolumeKeys]);
 
-  const [enhancedVolumeIds, setEnhancedVolumeIds] = useState(() => {
-    try {
-      const saved = localStorage.getItem('enhanced_volume_ids');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
   const [enhancing, setEnhancing] = useState(false);
 
   const isVolumeEnhanced = React.useCallback((volume) => {
-    if (!volume) return false;
-    if (volume.is_enhanced || volume.enhanced) return true;
-    if (enhancedVolumeIds[volume.volume_id]) return true;
-    if (volume.volume_name && enhancedVolumeIds[volume.volume_name]) return true;
-    return false;
-  }, [enhancedVolumeIds]);
+    return volume?.enhancement_status === 'completed';
+  }, []);
 
   const handleOpenEdit = (volume) => {
     if (!volume) return;
@@ -307,7 +306,7 @@ function VolumeList() {
   }, []);
 
   const hasActiveConversion = React.useMemo(
-    () => volumesDatumm.some((volume) => getConversionStatus(volume) === 'converting'),
+    () => volumesDatumm.some((volume) => getConversionStatus(volume) === 'converting' || volume.enhancement_status === 'running'),
     [getConversionStatus, volumesDatumm]
   );
 
@@ -412,7 +411,7 @@ function VolumeList() {
       anatomyFilter === 'all' ||
       volume.volume_type === anatomyFilter;
 
-    const conversionStatus = getConversionStatus(volume);
+    const conversionStatus = isAnimatedVolume(volume) ? 'not_applicable' : getConversionStatus(volume);
     const matchesConversion =
       conversionFilter === 'all' ||
       conversionFilter === conversionStatus;
@@ -425,6 +424,11 @@ function VolumeList() {
     if (!Number.isFinite(second)) return -1;
     return timeSort === 'latest' ? second - first : first - second;
   });
+  const currentPage = Math.min(page, Math.max(0, Math.ceil(filteredVolumes.length / rowsPerPage) - 1));
+  const visibleVolumes = filteredVolumes.slice(
+    currentPage * rowsPerPage,
+    (currentPage + 1) * rowsPerPage
+  );
 
   const handleButtonOpen = () => setButtonOpen(!buttonOpen);
 
@@ -476,7 +480,7 @@ function VolumeList() {
     const resolvedFetalPresentation = resolvedValue('volume_fetal_presentation');
     const resolvedTrimester = resolvedValue('trimester');
 
-    if (!volume_name || !resolvedVolumeType || !resolvedFetalPresentation || !resolvedTrimester || !volume_ga || !maternal_age) {
+    if (!volume_name || !resolvedVolumeType || !resolvedFetalPresentation || !resolvedTrimester || !volume_ga || !maternal_age || !formData.animated_volume) {
       toast.error('Please fill all required fields.');
       return;
     }
@@ -648,40 +652,48 @@ function VolumeList() {
     handleMenuClose();
     try {
       setEnhancing(true);
-      const volumeId = vol.volume_id;
-      const volumeName = vol.volume_name;
-      await new Promise((res) => setTimeout(res, 600));
-      setEnhancedVolumeIds((prev) => {
-        const next = { ...prev, [volumeId]: true, ...(volumeName ? { [volumeName]: true } : {}) };
-        try {
-          localStorage.setItem('enhanced_volume_ids', JSON.stringify(next));
-        } catch {}
-        return next;
-      });
+      await volumeEnhanceAPI(vol.volume_id);
       setVolumesDatumm((previousVolumes) =>
         previousVolumes.map((v) =>
-          v.volume_id === volumeId || (volumeName && v.volume_name === volumeName)
-            ? { ...v, is_enhanced: true, enhanced: true }
+          v.volume_id === vol.volume_id
+            ? { ...v, enhancement_status: 'running', enhancement_error: null }
             : v
         )
       );
-      setSelectedVolume((prev) => (prev ? { ...prev, is_enhanced: true, enhanced: true } : prev));
-      toast.success('Volume Enhanced Successfully!', {
+      toast.info('Volume enhancement started. Its status will update here.', {
         autoClose: 3000,
-        toastId: 'enhance-success',
+        toastId: 'enhance-started',
         icon: false,
         closeButton: CustomCloseButton,
       });
     } catch (err) {
       console.error('Enhance Error:', err);
-      toast.error('Failed to enhance volume. Please try again.');
+      toast.error(err.response?.data?.message || 'Failed to start volume enhancement.');
     } finally {
       setEnhancing(false);
     }
   };
 
+  const handleOpenEnhancedFiles = async (volume) => {
+    handleMenuClose();
+    setEnhancedFilesVolume(volume);
+    setEnhancedFiles([]);
+    setEnhancedFilesError('');
+    setEnhancedFilesLoading(true);
+    try {
+      const result = await getEnhancedFilesAPI(volume.volume_id);
+      setEnhancedFiles(result.files || []);
+    } catch (error) {
+      setEnhancedFilesError(error.response?.data?.message || 'Unable to load enhanced files.');
+    } finally {
+      setEnhancedFilesLoading(false);
+    }
+  };
+
   const handleRequestConversion = async () => {
     if (!selectedVolume) return;
+
+    if (isAnimatedVolume(selectedVolume)) return;
 
     if (isAnimatedVolume(selectedVolume) && !isVolumeEnhanced(selectedVolume)) {
       toast.warning('Please enhance this animated volume before converting.');
@@ -818,13 +830,15 @@ function VolumeList() {
                 Upload Volume
               </button>
             </div>
-            <div className="m-5 bg-white border rounded shadow-sm">
+            <div className="m-5 bg-white border rounded shadow-sm overflow-x-auto">
               <table className="min-w-full text-left">
                 <thead className="bg-gray-100 text-sm text-gray-600 border-b">
                   <tr>
                     <th className="py-2 px-4 font-semibold">Volume ID</th>
                     <th className="py-2 px-4 font-semibold">Volume Name</th>
                     <th className="py-2 px-4 font-semibold">Fetal Presentation</th>
+                    <th className="py-2 px-4 font-semibold">Animated</th>
+                    <th className="py-2 px-4 font-semibold">Enhancement</th>
                     {userRole !== 99 && (
                       <th className="py-2 px-4 font-semibold">Approval Status</th>
                     )}
@@ -837,7 +851,7 @@ function VolumeList() {
                 <tbody>
                   {listLoading ? (
                     <tr>
-                      <td colSpan={userRole === 99 ? 7 : 8} className="py-4 text-center text-gray-500">
+                      <td colSpan={userRole === 99 ? 9 : 10} className="py-4 text-center text-gray-500">
                         <ClipLoader
                           color="#8DC63F"
                           size={24}
@@ -847,13 +861,13 @@ function VolumeList() {
                     </tr>
                   ) : filteredVolumes.length === 0 ? (
                     <tr>
-                      <td colSpan={userRole === 99 ? 7 : 8} className="py-4 text-center text-gray-500">
+                      <td colSpan={userRole === 99 ? 9 : 10} className="py-4 text-center text-gray-500">
                         No volumes found
                       </td>
                     </tr>
                   ) : (
-                    filteredVolumes.map((volume) => {
-                      const conversionStatus = getConversionStatus(volume);
+                    visibleVolumes.map((volume) => {
+                      const conversionStatus = isAnimatedVolume(volume) ? 'not_applicable' : getConversionStatus(volume);
                       const volumeProcessing = conversionStatus === 'converting';
                       return (
                       <tr key={volume.volume_id} className={`text-sm text-gray-700 border-b hover:bg-gray-50 ${volumeProcessing ? 'bg-yellow-50' : ''}`}>
@@ -870,6 +884,32 @@ function VolumeList() {
                             <span className="text-gray-400 text-xs">—</span>
                           )}
                         </td>
+                        <td className="py-2 px-4">
+                          <span className={`px-2 py-1 rounded text-xs ${
+                            isAnimatedVolume(volume)
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}>
+                            {isAnimatedVolume(volume) ? 'Yes' : 'No'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4">
+                          {isAnimatedVolume(volume) ? (
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${
+                                volume.enhancement_status === 'completed' ? 'bg-green-100 text-green-700'
+                                  : volume.enhancement_status === 'running' ? 'bg-yellow-100 text-yellow-700'
+                                    : volume.enhancement_status === 'failed' ? 'bg-red-100 text-red-700'
+                                      : 'bg-gray-100 text-gray-700'
+                              }`}
+                              title={volume.enhancement_error || undefined}
+                            >
+                              {volume.enhancement_status === 'completed' ? 'Completed'
+                                : volume.enhancement_status === 'running' ? 'Enhancing...'
+                                  : volume.enhancement_status === 'failed' ? 'Failed' : 'Pending'}
+                            </span>
+                          ) : <span className="text-gray-400 text-xs">—</span>}
+                        </td>
                         {userRole !== 99 && (
                           <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
@@ -883,13 +923,17 @@ function VolumeList() {
                         )}
                         <td className="py-2 px-4">
                           <span className={`px-2 py-1 rounded text-xs ${
-                            conversionStatus === 'completed'
+                            conversionStatus === 'not_applicable'
+                              ? 'bg-gray-100 text-gray-500'
+                              : conversionStatus === 'completed'
                               ? 'bg-green-100 text-green-700' 
                               : conversionStatus === 'converting'
                                 ? 'bg-yellow-100 text-yellow-700 animate-pulse'
                                 : 'bg-red-100 text-red-700'
                           }`}>
-                            {conversionStatus === 'completed' ? (
+                            {conversionStatus === 'not_applicable' ? (
+                              '—'
+                            ) : conversionStatus === 'completed' ? (
                               'Completed'
                             ) : conversionStatus === 'converting' ? (
                               <span className="inline-flex items-center gap-2">
@@ -952,7 +996,7 @@ function VolumeList() {
                                 {downloadingKey === `${volume.volume_id}:source` ? 'Preparing…' : 'Source file'}
                               </button>
                             )}
-                            {volume.conversion_completion && volume.output_file && (
+                            {!isAnimatedVolume(volume) && volume.conversion_completion && volume.output_file && (
                               <button type="button" onClick={() => handleDownload(volume, 'converted')}
                                 disabled={Boolean(downloadingKey)}
                                 className="px-2 py-1 rounded text-xs bg-green-50 text-green-700 hover:bg-green-100 disabled:opacity-50">
@@ -979,6 +1023,20 @@ function VolumeList() {
                   )}
                 </tbody>
               </table>
+              {!listLoading && filteredVolumes.length > 0 && (
+                <TablePagination
+                  component="div"
+                  count={filteredVolumes.length}
+                  page={currentPage}
+                  onPageChange={(_, nextPage) => setPage(nextPage)}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={(event) => {
+                    setRowsPerPage(Number(event.target.value));
+                    setPage(0);
+                  }}
+                  rowsPerPageOptions={[10, 25, 50]}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -1001,35 +1059,64 @@ function VolumeList() {
         {isAnimatedVolume(selectedVolume) && (
           <MenuItem 
             onClick={handleRequestEnhance}
-            disabled={enhancing || isVolumeEnhanced(selectedVolume) || getConversionStatus(selectedVolume) === 'completed'}
+            disabled={enhancing || selectedVolume?.enhancement_status === 'running' || isVolumeEnhanced(selectedVolume) || getConversionStatus(selectedVolume) === 'completed'}
           >
             {enhancing 
               ? 'Enhancing...' 
-              : isVolumeEnhanced(selectedVolume) 
+              : selectedVolume?.enhancement_status === 'running'
+                ? 'Enhancing...'
+                : isVolumeEnhanced(selectedVolume)
                 ? 'Enhanced' 
                 : 'Enhance'}
           </MenuItem>
         )}
-        <MenuItem 
+        {isAnimatedVolume(selectedVolume) && isVolumeEnhanced(selectedVolume) && (
+          <MenuItem onClick={() => handleOpenEnhancedFiles(selectedVolume)}>
+            View enhanced files
+          </MenuItem>
+        )}
+        {!isAnimatedVolume(selectedVolume) && <MenuItem
           onClick={handleRequestConversion}
-          disabled={
-            converting || 
-            getConversionStatus(selectedVolume) !== 'pending' || 
-            (isAnimatedVolume(selectedVolume) && !isVolumeEnhanced(selectedVolume))
-          }
-          title={
-            isAnimatedVolume(selectedVolume) && !isVolumeEnhanced(selectedVolume)
-              ? 'Enhance required before conversion'
-              : ''
-          }
+          disabled={converting || getConversionStatus(selectedVolume) !== 'pending'}
         >
           {/* {converting ? 'Converting...' : 'Convert'} */}
           {converting || getConversionStatus(selectedVolume) === 'converting' ? 'Converting...' : getConversionStatus(selectedVolume) === 'completed' ? 'Already Converted' : 'Convert'}
-        </MenuItem>
+        </MenuItem>}
         <MenuItem onClick={() => handleOpenEdit(selectedVolume)}>
             Edit
         </MenuItem>
       </Menu>
+      <Dialog open={Boolean(enhancedFilesVolume)} onClose={() => setEnhancedFilesVolume(null)} fullWidth maxWidth="sm">
+        <DialogTitle>Enhanced files — {enhancedFilesVolume?.volume_name}</DialogTitle>
+        <DialogContent dividers>
+          {enhancedFilesLoading ? (
+            <div className="flex justify-center py-5"><ClipLoader color="#8DC63F" size={24} /></div>
+          ) : enhancedFilesError ? (
+            <p className="text-sm text-red-700">{enhancedFilesError}</p>
+          ) : enhancedFiles.length === 0 ? (
+            <p className="text-sm text-gray-600">No enhanced NRRD files found.</p>
+          ) : (
+            <>
+              <p className="mb-3 text-sm text-gray-600">{enhancedFiles.length} NRRD files</p>
+              <div className="max-h-80 overflow-y-auto divide-y">
+                {enhancedFiles.map((file) => (
+                  <div key={file.name} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span>{file.name}</span>
+                    <a href={file.url} className="text-[#568b16] hover:underline" target="_blank" rel="noopener noreferrer">
+                      Download
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <button type="button" className="px-3 py-1 text-sm text-gray-700" onClick={() => setEnhancedFilesVolume(null)}>
+            Close
+          </button>
+        </DialogActions>
+      </Dialog>
       <VolumeRecordingDownloads volume={recordingsVolume} onClose={() => setRecordingsVolume(null)} />
       <UploadVol isVisible={openUploadVol} onClose={handleClose}>
         <>

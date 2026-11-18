@@ -37,6 +37,10 @@ exports.prepare = async (req, res) => {
     if (typeof req.body[field] !== 'string' || !req.body[field].trim() || req.body[field].length > 10000) return res.status(400).json({ message: `Invalid ${field}.` });
     metadata[field] = req.body[field].trim();
   }
+  if (!['Yes', 'No'].includes(req.body.animated_volume)) {
+    return res.status(400).json({ message: 'Choose whether the volume is animated.' });
+  }
+  metadata.animated_volume = req.body.animated_volume === 'Yes';
   try {
     const prefix = Number(req.user.role) === 99 ? 'global' : `institutions/${req.user.centre_id}`;
     const key = `${process.env.PRIVATE_CONTENT_BUCKET || process.env.BUCKET_NAME || 'projectanu'}/${prefix}/${randomUUID()}/source/${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
@@ -58,8 +62,8 @@ exports.complete = async (req, res) => {
     if (head.ContentLength !== upload.size) return res.status(400).json({ message: 'Uploaded file size mismatch.' });
     const sample = await getS3().send(new GetObjectCommand({ ...object, Range: 'bytes=0-511' }));
     if (!isValidVolBuffer(Buffer.from(await sample.Body.transformToByteArray()))) return res.status(400).json({ message: 'Invalid volume file.' });
-    const { volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age } = upload.metadata;
-    const result = await svUploadModel(req.user, volume_type, null, null, volume_name, volume_ga, volume_fetal_presentation, trimester, '', upload.key, maternal_age);
+    const { volume_type, volume_name, volume_ga, volume_fetal_presentation, trimester, maternal_age, animated_volume } = upload.metadata;
+    const result = await svUploadModel(req.user, volume_type, null, null, volume_name, volume_ga, volume_fetal_presentation, trimester, '', upload.key, maternal_age, animated_volume);
     if (result.code) return res.status(result.code).json(result);
     return res.status(200).json({ message: 'Volume Uploaded' });
   } catch (error) { console.error('Complete volume upload:', error); return res.status(500).json({ message: 'Unable to finalize volume upload.' }); }

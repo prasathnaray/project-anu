@@ -24,6 +24,9 @@ const upload = multer({
 
 const svUploadRouter = express.Router();
 const directUpload = require('../controller/directVolumeUpload');
+const { startEnhancement, listEnhancedFiles } = require('../controller/volumeEnhancement');
+svUploadRouter.post('/volumes/:volume_id/enhance', startEnhancement);
+svUploadRouter.get('/volumes/:volume_id/enhancement/files', listEnhancedFiles);
 svUploadRouter.post('/sv-upload/prepare', directUpload.prepare);
 svUploadRouter.post('/sv-upload/complete', directUpload.complete);
 svUploadRouter.post('/sv-upload', upload.single('file'), VolumeController);
