@@ -1063,7 +1063,7 @@ import {
     ListFilter,
     ArrowUpWideNarrow
 } from "lucide-react";
-import { TextField, MenuItem, FormControl, InputLabel, Select } from "@mui/material";
+import { TextField, Menu, MenuItem, FormControl, InputLabel, Select } from "@mui/material";
 import TablePagination from '@mui/material/TablePagination';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -1071,6 +1071,7 @@ import CustomCloseButton from '../utils/CustomCloseButton';
 import { ClipLoader } from "react-spinners";
 import AddScanCenterAPI from "../API/AddScanCenterAPI";
 import GetScanCentersAPI from "../API/GetScanCentersAPI";
+import UpdateScanCenterAPI from "../API/UpdateScanCenterAPI";
 
 function Academics() {
     // Sidebar state
@@ -1085,13 +1086,35 @@ function Academics() {
     const [openCenterModal, setOpenCenterModal] = useState(false);
     const [openEditModal, setOpenEditModal] = useState(false);
     const [openFilterModal, setOpenFilterModal] = useState(false);
+    const [openViewModal, setOpenViewModal] = useState(false);
+    const [viewCenterData, setViewCenterData] = useState(null);
 
     // Loading state
     const [loading, setLoading] = useState(false);
 
-    // Dropdown state
-    const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
-    const dropdownRefs = useRef({});
+    // Menu state
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedCenter, setSelectedCenter] = useState(null);
+
+    const handleMenuOpen = (event, center) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedCenter(center);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+        setSelectedCenter(null);
+    };
+
+    const handleOpenViewModal = (center) => {
+        setViewCenterData(center);
+        setOpenViewModal(true);
+    };
+
+    const handleCloseViewModal = () => {
+        setOpenViewModal(false);
+        setViewCenterData(null);
+    };
 
     // Search state
     const [searchItem, setSearchItem] = useState('');
@@ -1235,9 +1258,7 @@ function Academics() {
         }
     };
 
-    const toggleDropdown = (index) => {
-        setOpenDropdownIndex(openDropdownIndex === index ? null : index);
-    };
+
 
     // API Calls
     const fetchScanCenters = async (token) => {
@@ -1328,22 +1349,33 @@ function Academics() {
 
         try {
             setLoading(true);
-            // Replace with your actual API call
-            // const response = await UpdateScanCenterAPI(token, editCenterData);
-
-            toast.success("Scan Center Updated Successfully", {
-                autoClose: 3000,
-                toastId: 'success-center-updated',
-                icon: false,
-                closeButton: CustomCloseButton,
-            });
-
-            handleCloseEditModal();
             const token = localStorage.getItem('user_token');
-            fetchScanCenters(token);
+            const response = await UpdateScanCenterAPI(token, editCenterData);
+
+            if (response.code === 200 || response.status === 'success' || response.status === 200) {
+                setScanCentersList((prev) =>
+                    prev.map((c) => (c.center_id === editCenterData.center_id ? { ...c, ...editCenterData } : c))
+                );
+                setFilteredCenters((prev) =>
+                    prev.map((c) => (c.center_id === editCenterData.center_id ? { ...c, ...editCenterData } : c))
+                );
+
+                toast.success("Scan Center Updated Successfully", {
+                    autoClose: 3000,
+                    toastId: 'success-center-updated',
+                    icon: false,
+                    closeButton: CustomCloseButton,
+                });
+
+                handleCloseEditModal();
+                fetchScanCenters(token);
+            } else {
+                toast.error(response.message || "Failed to update scan center");
+            }
         } catch (err) {
-            console.log(err);
-            toast.error("Failed to update scan center", {
+            console.error('Update scan center error:', err);
+            const errorMessage = err.response?.data?.message || err.message || "Failed to update scan center";
+            toast.error(errorMessage, {
                 autoClose: 3000,
                 toastId: 'update-error',
                 icon: false,
@@ -1439,21 +1471,7 @@ function Academics() {
         handleCloseFilterModal();
     };
 
-    // Click outside dropdown handler
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            const isClickInside = Object.values(dropdownRefs.current).some(ref =>
-                ref && ref.contains(event.target)
-            );
 
-            if (!isClickInside) {
-                setOpenDropdownIndex(null);
-            }
-        };
-
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
 
     // Fetch data on mount and when pagination changes
     useEffect(() => {
@@ -1654,53 +1672,14 @@ function Academics() {
                                                                 day: 'numeric'
                                                             })}
                                                         </td>
-                                                        <td className="py-3 px-4 relative">
+                                                        <td className="py-3 px-4">
                                                             <button
-                                                                onClick={() => toggleDropdown(index)}
-                                                                className="p-1 hover:bg-gray-100 rounded"
+                                                                onClick={(e) => handleMenuOpen(e, center)}
+                                                                className="p-1 hover:bg-gray-100 rounded text-gray-600 transition-colors"
+                                                                title="Actions"
                                                             >
-                                                                <MoreVertical size={20} className="text-gray-600" />
+                                                                <MoreVertical size={20} />
                                                             </button>
-                                                            {openDropdownIndex === index && (
-                                                                <div
-                                                                    ref={(el) => (dropdownRefs.current[index] = el)}
-                                                                    className={`absolute right-8 mt-1 w-40 bg-white border border-gray-200 rounded shadow-lg z-10
-                                                                    transition-all ease-in-out duration-500 origin-top-right
-                                                                    ${openDropdownIndex === index ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
-                                                                `}
-                                                                >
-                                                                    <button
-                                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
-                                                                        onClick={() => {
-                                                                            console.log("View details", center);
-                                                                            setOpenDropdownIndex(null);
-                                                                        }}
-                                                                    >
-                                                                        <Eye size={16} />
-                                                                        View Details
-                                                                    </button>
-                                                                    <button
-                                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
-                                                                        onClick={() => {
-                                                                            handleOpenEditModal(center);
-                                                                            setOpenDropdownIndex(null);
-                                                                        }}
-                                                                    >
-                                                                        <Edit size={16} />
-                                                                        Edit
-                                                                    </button>
-                                                                    <button
-                                                                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm text-red-600"
-                                                                        onClick={() => {
-                                                                            handleDelete(center.center_id);
-                                                                            setOpenDropdownIndex(null);
-                                                                        }}
-                                                                    >
-                                                                        <Trash2 size={16} />
-                                                                        Delete
-                                                                    </button>
-                                                                </div>
-                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))
@@ -1715,6 +1694,89 @@ function Academics() {
                                 </table>
                             </div>
 
+                            {/* Actions Dropdown Menu */}
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={Boolean(anchorEl)}
+                                onClose={handleMenuClose}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'right',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                                PaperProps={{
+                                    elevation: 3,
+                                    sx: {
+                                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '0.375rem',
+                                        minWidth: '10rem',
+                                        py: 0.5,
+                                    }
+                                }}
+                            >
+                                <MenuItem
+                                    onClick={() => {
+                                        if (selectedCenter) handleOpenViewModal(selectedCenter);
+                                        handleMenuClose();
+                                    }}
+                                    sx={{
+                                        fontSize: '0.875rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        px: 2,
+                                        py: 1,
+                                        color: '#374151',
+                                        '&:hover': { backgroundColor: '#f9fafb' }
+                                    }}
+                                >
+                                    <Eye size={16} className="text-gray-500" />
+                                    <span>View Details</span>
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        if (selectedCenter) handleOpenEditModal(selectedCenter);
+                                        handleMenuClose();
+                                    }}
+                                    sx={{
+                                        fontSize: '0.875rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        px: 2,
+                                        py: 1,
+                                        color: '#374151',
+                                        '&:hover': { backgroundColor: '#f9fafb' }
+                                    }}
+                                >
+                                    <Edit size={16} className="text-gray-500" />
+                                    <span>Edit</span>
+                                </MenuItem>
+                                <MenuItem
+                                    onClick={() => {
+                                        if (selectedCenter?.center_id) handleDelete(selectedCenter.center_id);
+                                        handleMenuClose();
+                                    }}
+                                    sx={{
+                                        fontSize: '0.875rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        px: 2,
+                                        py: 1,
+                                        color: '#dc2626',
+                                        '&:hover': { backgroundColor: '#fef2f2' }
+                                    }}
+                                >
+                                    <Trash2 size={16} className="text-red-600" />
+                                    <span>Delete</span>
+                                </MenuItem>
+                            </Menu>
+
                             {/* Pagination */}
                             <div className="flex justify-end items-center mt-6">
                                 <TablePagination
@@ -1728,6 +1790,155 @@ function Academics() {
                                 />
                             </div>
                         </div>
+
+                        {/* View Scan Center Details Modal */}
+                        {openViewModal && viewCenterData && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl">
+                                    {/* Header */}
+                                    <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-[#8DC63F]/10 rounded-lg text-[#8DC63F]">
+                                                <Building2 size={24} />
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-semibold text-gray-800">Scan Center Details</h2>
+                                                <p className="text-xs text-gray-500">ID: {viewCenterData.center_id}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={handleCloseViewModal}
+                                            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
+                                        >
+                                            <X size={22} />
+                                        </button>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="p-6 space-y-6">
+                                        {/* Center Information */}
+                                        <div>
+                                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                                                Center Information
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                                <div>
+                                                    <span className="text-xs text-gray-500 block">Center Name</span>
+                                                    <span className="font-medium text-gray-800 text-sm">{viewCenterData.center_name || 'N/A'}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-gray-500 block">Status</span>
+                                                    <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                                        viewCenterData.status === 'Active'
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : viewCenterData.status === 'Pending'
+                                                                ? 'bg-yellow-100 text-yellow-700'
+                                                                : 'bg-red-100 text-red-700'
+                                                    }`}>
+                                                        {viewCenterData.status || 'Active'}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-gray-500 block">Center Email</span>
+                                                    <span className="font-medium text-gray-800 text-sm flex items-center gap-1.5 mt-0.5">
+                                                        <Mail size={14} className="text-gray-400" />
+                                                        {viewCenterData.center_email || 'N/A'}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-gray-500 block">Phone</span>
+                                                    <span className="font-medium text-gray-800 text-sm flex items-center gap-1.5 mt-0.5">
+                                                        <Phone size={14} className="text-gray-400" />
+                                                        {viewCenterData.center_phone || 'N/A'}
+                                                    </span>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <span className="text-xs text-gray-500 block">Address</span>
+                                                    <span className="font-medium text-gray-800 text-sm flex items-start gap-1.5 mt-0.5">
+                                                        <MapPin size={14} className="text-gray-400 mt-0.5 shrink-0" />
+                                                        {viewCenterData.center_address || 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Administration & Onboarding */}
+                                        <div>
+                                            <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                                                Administration & Onboarding
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                                <div>
+                                                    <span className="text-xs text-gray-500 block">Admin Email</span>
+                                                    <span className="font-medium text-gray-800 text-sm flex items-center gap-1.5 mt-0.5">
+                                                        <Mail size={14} className="text-gray-400" />
+                                                        {viewCenterData.admin_user_email || viewCenterData.center_email || 'N/A'}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs text-gray-500 block">Onboarded Date</span>
+                                                    <span className="font-medium text-gray-800 text-sm mt-0.5 block">
+                                                        {viewCenterData.created_at
+                                                            ? new Date(viewCenterData.created_at).toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'long',
+                                                                day: 'numeric'
+                                                            })
+                                                            : 'N/A'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Associated Users Counts */}
+                                        {(viewCenterData.total_admins !== undefined || viewCenterData.total_instructors !== undefined || viewCenterData.total_trainees !== undefined) && (
+                                            <div>
+                                                <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">
+                                                    Associated Users
+                                                </h3>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    <div className="bg-[#8DC63F]/10 border border-[#8DC63F]/20 rounded-lg p-3 text-center">
+                                                        <span className="text-xs text-gray-600 block">Admins</span>
+                                                        <span className="text-lg font-bold text-[#689828]">{viewCenterData.total_admins || 0}</span>
+                                                    </div>
+                                                    <div className="bg-[#8DC63F]/10 border border-[#8DC63F]/20 rounded-lg p-3 text-center">
+                                                        <span className="text-xs text-gray-600 block">Instructors</span>
+                                                        <span className="text-lg font-bold text-[#689828]">{viewCenterData.total_instructors || 0}</span>
+                                                    </div>
+                                                    <div className="bg-[#8DC63F]/10 border border-[#8DC63F]/20 rounded-lg p-3 text-center">
+                                                        <span className="text-xs text-gray-600 block">Trainees</span>
+                                                        <span className="text-lg font-bold text-[#689828]">{viewCenterData.total_trainees || 0}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="flex justify-end items-center gap-3 px-6 py-4 border-t bg-gray-50">
+                                        <button
+                                            type="button"
+                                            onClick={handleCloseViewModal}
+                                            className="px-5 py-2 border border-gray-300 rounded text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                        >
+                                            Close
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const current = viewCenterData;
+                                                handleCloseViewModal();
+                                                handleOpenEditModal(current);
+                                            }}
+                                            className="px-5 py-2 bg-[#8DC63F] hover:bg-[#7AB52F] text-white rounded text-sm font-semibold flex items-center gap-2 transition-colors"
+                                        >
+                                            <Edit size={16} />
+                                            Edit Center
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Onboard Scan Center Modal */}
                         {openCenterModal && (

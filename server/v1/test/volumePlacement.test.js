@@ -84,7 +84,7 @@ test('placement POST overwrites the stable per-volume JSON object', async () => 
             originalname: 'placement.json'
         }
     }, res);
-
+    
     assert.equal(res.statusCode, 200);
     assert.equal(uploadedAsset.objectKey, `institutions/centre-a/${volumeId}/placements/placement.json`);
     assert.equal(uploadedAsset.upsert, true);

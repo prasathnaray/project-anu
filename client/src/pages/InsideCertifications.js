@@ -1441,17 +1441,17 @@ function InsideCertifications() {
       </AttachVolume>
 
       {/* COMPLETION POPUP */}
-        {showCompletionPopup && selectedResourceForPopup && (
+      {showCompletionPopup && selectedResourceForPopup && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={closeCompletionPopup}
         >
           <div 
-            className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full mx-4 transform transition-all"
+            className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden my-auto transform transition-all"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex justify-between items-start mb-4 pb-4 border-b">
+            <div className="flex justify-between items-start p-6 border-b flex-shrink-0 bg-white">
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">
                   {selectedResourceForPopup.resource_name}
@@ -1469,23 +1469,23 @@ function InsideCertifications() {
               </div>
               <button
                 onClick={closeCompletionPopup}
-                className="text-red-500 hover:text-red-500 transition-colors ml-4"
+                className="text-red-500 hover:text-red-700 transition-colors ml-4 p-1 rounded-lg hover:bg-red-50"
               >
                 <X size={24} />
               </button>
             </div>
             {/* Table */}
-            <div className="mb-4">
-              <div className="border rounded-lg overflow-hidden">
+            <div className="p-6 overflow-hidden flex-1 min-h-0 flex flex-col">
+              <div className="border rounded-lg overflow-y-auto flex-1 max-h-[55vh]">
                 <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-100 border-b">
+                  <thead className="sticky top-0 bg-gray-100 z-10 border-b">
+                    <tr>
                       <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Trainee Name</th>
                       <th className="py-3 px-4 text-center text-sm font-semibold text-gray-700">Status</th>
                       <th className="py-3 px-4 text-center text-sm font-semibold text-gray-700">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="max-h-80 overflow-y-auto">
+                  <tbody>
                     {(() => {
                       const attemptedTrainees = Array.isArray(selectedResourceForPopup.attempted_trainees)
                         ? selectedResourceForPopup.attempted_trainees

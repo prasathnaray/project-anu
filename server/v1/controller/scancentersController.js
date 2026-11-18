@@ -1,5 +1,5 @@
 // controllers/scanCenterController.js
-const { createScancentrem, getscancenterm, addInstitutionAdmin } = require("../model/scancentrem");
+const { createScancentrem, getscancenterm, addInstitutionAdmin, updateScancentrem } = require("../model/scancentrem");
 const { mindsparkm } = require('../model/resourcem');
 const { issueAccountVerificationOtp } = require('../utils/accountVerification');
 const createScanCenterC = async (req, res) => {
@@ -101,9 +101,30 @@ const addInstitutionAdminC = async (req, res) => {
         return res.status(500).json({ code: 500, status: 'Error', message: 'Internal server error' });
     }
 };
+const updateScanCenterC = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ status: 'error', message: 'Authentication required.' });
+        }
+        const result = await updateScancentrem(req.user, req.body);
+        if (result.code && result.code !== 200) {
+            return res.status(result.code).json(result);
+        }
+        return res.status(200).json(result);
+    } catch (err) {
+        console.error('Error updating scan center:', err);
+        return res.status(500).json({
+            status: 'error',
+            message: 'An error occurred while updating the scan center',
+            error: err.message
+        });
+    }
+};
+
 module.exports = {
     createScanCenterC,
     mindsparkController,
     getScanCentersC,
-    addInstitutionAdminC
+    addInstitutionAdminC,
+    updateScanCenterC
 };
