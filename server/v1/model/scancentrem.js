@@ -153,8 +153,66 @@ const addInstitutionAdmin = async (requester, centreId, data) => {
     }
 };
 
+const updateScancentrem = async (requester, data) => {
+    if (Number(requester.role) !== 99) {
+        return { status: 'Forbidden', code: 403, message: 'Only Super Admin can update institutions.' };
+    }
+    const { center_id, center_name, center_email, center_phone, center_address, admin_user_email, status } = data;
+    if (!center_id) {
+        return { status: 'Bad Request', code: 400, message: 'center_id is required.' };
+    }
+    const transactionClient = await client.connect();
+    try {
+        await transactionClient.query('BEGIN');
+        const updateResult = await transactionClient.query(
+            `UPDATE scan_centers
+             SET center_name = COALESCE($1, center_name),
+                 center_email = COALESCE($2, center_email),
+                 center_phone = COALESCE($3, center_phone),
+                 center_address = COALESCE($4, center_address),
+                 admin_user_email = COALESCE($5, admin_user_email),
+                 status = COALESCE($6, status),
+                 updated_at = NOW()
+             WHERE center_id = $7
+             RETURNING *`,
+            [
+                center_name ? center_name.trim() : null,
+                center_email ? center_email.trim() : null,
+                center_phone ? center_phone.trim() : null,
+                center_address ? center_address.trim() : null,
+                admin_user_email ? admin_user_email.trim() : null,
+                status ? status.trim() : null,
+                center_id
+            ]
+        );
+        if (updateResult.rows.length === 0) {
+            await transactionClient.query('ROLLBACK');
+            return { status: 'Not Found', code: 404, message: 'Scan center not found.' };
+        }
+        if (center_name && center_name.trim()) {
+            await transactionClient.query(
+                `UPDATE user_data SET center_name = $1 WHERE centre_id = $2`,
+                [center_name.trim(), center_id]
+            );
+        }
+        await transactionClient.query('COMMIT');
+        return {
+            status: 'success',
+            code: 200,
+            message: 'Scan center updated successfully',
+            data: updateResult.rows[0]
+        };
+    } catch (err) {
+        await transactionClient.query('ROLLBACK');
+        throw err;
+    } finally {
+        transactionClient.release();
+    }
+};
+
 module.exports = {
     createScancentrem,
     getscancenterm,
-    addInstitutionAdmin
+    addInstitutionAdmin,
+    updateScancentrem
 };
