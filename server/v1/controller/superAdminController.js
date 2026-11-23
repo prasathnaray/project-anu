@@ -158,6 +158,69 @@ const getSystemHealth = async (req, res) => {
     }
 };
 
+const getSystemHealthHistory = async (req, res) => {
+    try {
+        const { range } = req.query;
+        const data = await model.getSystemHealthHistory(req.user, range);
+        return res.status(200).json({ code: 200, status: 'Success', data });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
+const getSecurityAlerts = async (req, res) => {
+    try {
+        const data = await model.getSecurityAlerts(req.user, req.query);
+        return res.status(200).json({ code: 200, status: 'Success', data, ...data });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
+const handleSecurityAlertAction = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, notes } = req.body;
+        const data = await model.handleSecurityAlertAction(req.user, id, action, notes);
+        return res.status(200).json({ code: 200, status: 'Success', data });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
+const getInstitutionRankings = async (req, res) => {
+    try {
+        const data = await model.getInstitutionRankings(req.user, req.query);
+        return res.status(200).json({ code: 200, status: 'Success', data, ...data });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
+const getSystemMaintenance = async (req, res) => {
+    try {
+        const data = await model.getSystemMaintenance(req.user);
+        return res.status(200).json({ code: 200, status: 'Success', data });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
+const exportReport = async (req, res) => {
+    try {
+        const { format = 'csv' } = req.query;
+        const result = await model.exportReport(req.user, req.query);
+        if (format === 'csv') {
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename=project_anu_report_${Date.now()}.csv`);
+            return res.status(200).send(result);
+        }
+        return res.status(200).json({ code: 200, status: 'Success', data: result });
+    } catch (error) {
+        return sendError(res, error);
+    }
+};
+
 module.exports = {
     list,
     create,
@@ -165,5 +228,11 @@ module.exports = {
     getGlobalStatistics,
     getActivitySummary,
     getRecentActivities: getRecentActivitiesController,
-    getSystemHealth
+    getSystemHealth,
+    getSystemHealthHistory,
+    getSecurityAlerts,
+    handleSecurityAlertAction,
+    getInstitutionRankings,
+    getSystemMaintenance,
+    exportReport
 };

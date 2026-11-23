@@ -44,14 +44,29 @@ import {
   Gauge,
   CheckCircle,
   ChevronRight,
+  ChevronLeft,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  FileDown
 } from 'lucide-react';
-import SuperAdminStatsAPI, { getSystemHealthAPI } from '../../API/SuperAdminStatsAPI';
+import SuperAdminStatsAPI, { 
+  getSystemHealthAPI,
+  getSystemHealthHistoryAPI,
+  getSecurityAlertsAPI,
+  handleSecurityAlertActionAPI,
+  getInstitutionRankingsAPI,
+  getSystemMaintenanceAPI,
+  exportReportAPI
+} from '../../API/SuperAdminStatsAPI';
 import { getActivityStatistics } from '../../API/ActivityTrackingAPI';
 import getDashboardAPI from '../../API/dashboardAPI';
 import { getSocket } from '../../utils/socket';
 import { useNavigate } from 'react-router-dom';
+import HistoricalHealthChart from './HistoricalHealthChart';
+import SecurityAlertModal from './SecurityAlertModal';
+import InstitutionDetailModal from './InstitutionDetailModal';
+import ExportReportsModal from './ExportReportsModal';
+import SystemMaintenanceCard from './SystemMaintenanceCard';
 
 function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -107,6 +122,53 @@ function SuperAdminDashboard() {
   // System Alerts State
   const [systemAlerts, setSystemAlerts] = useState([]);
   const [alertFilter, setAlertFilter] = useState('ALL'); // 'ALL' | 'CRITICAL' | 'WARNING'
+
+  // Feature 1: Historical Health State
+  const [healthRange, setHealthRange] = useState('today');
+  const [healthHistoryData, setHealthHistoryData] = useState(null);
+  const [loadingHealthHistory, setLoadingHealthHistory] = useState(false);
+
+  // Feature 2: Security Monitoring State
+  const [securityAlertsList, setSecurityAlertsList] = useState([]);
+  const [securityAlertsSummary, setSecurityAlertsSummary] = useState({
+    critical: 0,
+    warning: 0,
+    informational: 0,
+    total: 0,
+    active: 0,
+    acknowledged: 0,
+    resolved: 0,
+    repeatedFailedUsersCount: 0
+  });
+  const [securitySeverityFilter, setSecuritySeverityFilter] = useState('ALL');
+  const [securitySearchTerm, setSecuritySearchTerm] = useState('');
+  const [selectedSecurityAlert, setSelectedSecurityAlert] = useState(null);
+  const [isActioningAlert, setIsActioningAlert] = useState(false);
+
+  // Feature 3: Institution Rankings State
+  const [institutionRankingsList, setInstitutionRankingsList] = useState([]);
+  const [institutionSearchTerm, setInstitutionSearchTerm] = useState('');
+  const [institutionFilterTier, setInstitutionFilterTier] = useState('ALL');
+  const [institutionSortBy, setInstitutionSortBy] = useState('rank');
+  const [institutionSortOrder, setInstitutionSortOrder] = useState('asc');
+  const [selectedInstitutionDetail, setSelectedInstitutionDetail] = useState(null);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(false);
+
+  // Feature 4: System Maintenance State
+  const [systemMaintenanceData, setSystemMaintenanceData] = useState(null);
+  const [loadingMaintenance, setLoadingMaintenance] = useState(false);
+
+  // Feature 5: Automated Reports State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
+  // UI Improvements: Central Event Feed filters & pagination
+  const [eventFeedDateFilter, setEventFeedDateFilter] = useState('all');
+  const [eventFeedPage, setEventFeedPage] = useState(1);
+  const eventFeedPerPage = 10;
+
+  // UI Improvements: Global Audit Stream tab pagination
+  const [auditStreamPage, setAuditStreamPage] = useState(1);
+  const auditStreamPerPage = 15;
 
   // Global Activity Tracking State
   const [activityStats, setActivityStats] = useState({
@@ -212,6 +274,112 @@ function SuperAdminDashboard() {
     }
   }, []);
 
+  // Feature 1: Historical Health Fetch
+  const fetchHealthHistory = useCallback(async (selectedRange = healthRange) => {
+    setLoadingHealthHistory(true);
+    try {
+      const res = await getSystemHealthHistoryAPI({ range: selectedRange });
+      const data = res?.data?.data || res?.data;
+      if (data) setHealthHistoryData(data);
+    } catch (err) {
+      console.debug('Failed to fetch health history:', err.message);
+    } finally {
+      setLoadingHealthHistory(false);
+    }
+  }, [healthRange]);
+
+  // Feature 2: Security Monitoring Fetch & Actions
+  const fetchSecurityAlerts = useCallback(async () => {
+    try {
+      const res = await getSecurityAlertsAPI({
+        severity: securitySeverityFilter,
+        search: securitySearchTerm,
+        limit: 50
+      });
+      const data = res?.data?.data || res?.data;
+      if (data) {
+        setSecurityAlertsList(data.alerts || []);
+        if (data.summary) setSecurityAlertsSummary(data.summary);
+      }
+    } catch (err) {
+      console.debug('Failed to fetch security alerts:', err.message);
+    }
+  }, [securitySeverityFilter, securitySearchTerm]);
+
+  const handleAcknowledgeAlert = async (alertId, notes) => {
+    setIsActioningAlert(true);
+    try {
+      await handleSecurityAlertActionAPI(alertId, { action: 'ACKNOWLEDGE', notes });
+      setSelectedSecurityAlert(null);
+      fetchSecurityAlerts();
+    } catch (err) {
+      console.error('Failed to acknowledge alert:', err);
+    } finally {
+      setIsActioningAlert(false);
+    }
+  };
+
+  const handleResolveAlert = async (alertId, notes) => {
+    setIsActioningAlert(true);
+    try {
+      await handleSecurityAlertActionAPI(alertId, { action: 'RESOLVE', notes });
+      setSelectedSecurityAlert(null);
+      fetchSecurityAlerts();
+    } catch (err) {
+      console.error('Failed to resolve alert:', err);
+    } finally {
+      setIsActioningAlert(false);
+    }
+  };
+
+  // Feature 3: Institution Rankings Fetch
+  const fetchInstitutionRankings = useCallback(async () => {
+    setLoadingInstitutions(true);
+    try {
+      const res = await getInstitutionRankingsAPI({
+        search: institutionSearchTerm,
+        filter: institutionFilterTier,
+        sortBy: institutionSortBy,
+        order: institutionSortOrder
+      });
+      const data = res?.data?.data || res?.data;
+      if (data) {
+        setInstitutionRankingsList(data.institutions || []);
+      }
+    } catch (err) {
+      console.debug('Failed to fetch institution rankings:', err.message);
+    } finally {
+      setLoadingInstitutions(false);
+    }
+  }, [institutionSearchTerm, institutionFilterTier, institutionSortBy, institutionSortOrder]);
+
+  // Feature 4: System Maintenance Fetch
+  const fetchSystemMaintenance = useCallback(async () => {
+    setLoadingMaintenance(true);
+    try {
+      const res = await getSystemMaintenanceAPI();
+      const data = res?.data?.data || res?.data;
+      if (data) setSystemMaintenanceData(data);
+    } catch (err) {
+      console.debug('Failed to fetch system maintenance:', err.message);
+    } finally {
+      setLoadingMaintenance(false);
+    }
+  }, []);
+
+  // Filter triggers
+  useEffect(() => {
+    fetchHealthHistory(healthRange);
+  }, [healthRange, fetchHealthHistory]);
+
+  useEffect(() => {
+    fetchSecurityAlerts();
+  }, [securitySeverityFilter, securitySearchTerm, fetchSecurityAlerts]);
+
+  useEffect(() => {
+    fetchInstitutionRankings();
+  }, [institutionSearchTerm, institutionFilterTier, institutionSortBy, institutionSortOrder, fetchInstitutionRankings]);
+
   // Fetch Dashboard Core Metrics
   const fetchDashboardStats = useCallback(async (showLoading = false) => {
     if (showLoading) setIsRefreshing(true);
@@ -274,6 +442,10 @@ function SuperAdminDashboard() {
     fetchDashboardStats();
     fetchActivityData();
     fetchHealth();
+    fetchHealthHistory();
+    fetchSecurityAlerts();
+    fetchInstitutionRankings();
+    fetchSystemMaintenance();
 
     // Socket.IO real-time stream
     let socket;
@@ -559,6 +731,40 @@ function SuperAdminDashboard() {
     });
   }, [recentActivitiesList, activityFilterRole, activityFilterModule, activityFilterStatus, activitySearchTerm]);
 
+  // Filtered Event Feed Activities (applying eventFeedDateFilter)
+  const filteredEventFeedActivities = useMemo(() => {
+    const now = Date.now();
+    return filteredActivities.filter((act) => {
+      if (eventFeedDateFilter === 'all') return true;
+      const actTime = new Date(act.created_at).getTime();
+      if (isNaN(actTime)) return true;
+      const diffMs = now - actTime;
+      if (eventFeedDateFilter === 'today') {
+        return diffMs <= 24 * 60 * 60 * 1000;
+      }
+      if (eventFeedDateFilter === '7days') {
+        return diffMs <= 7 * 24 * 60 * 60 * 1000;
+      }
+      if (eventFeedDateFilter === '30days') {
+        return diffMs <= 30 * 24 * 60 * 60 * 1000;
+      }
+      return true;
+    });
+  }, [filteredActivities, eventFeedDateFilter]);
+
+  const totalEventFeedPages = Math.max(1, Math.ceil(filteredEventFeedActivities.length / eventFeedPerPage));
+  const paginatedEventFeedActivities = useMemo(() => {
+    const start = (eventFeedPage - 1) * eventFeedPerPage;
+    return filteredEventFeedActivities.slice(start, start + eventFeedPerPage);
+  }, [filteredEventFeedActivities, eventFeedPage, eventFeedPerPage]);
+
+  // Paginated Global Audit Activities
+  const totalAuditStreamPages = Math.max(1, Math.ceil(filteredActivities.length / auditStreamPerPage));
+  const paginatedAuditActivities = useMemo(() => {
+    const start = (auditStreamPage - 1) * auditStreamPerPage;
+    return filteredActivities.slice(start, start + auditStreamPerPage);
+  }, [filteredActivities, auditStreamPage, auditStreamPerPage]);
+
   // Filtered System Alerts
   const filteredAlerts = useMemo(() => {
     return systemAlerts.filter((item) => {
@@ -685,11 +891,32 @@ function SuperAdminDashboard() {
                 <span>{isLive ? 'LIVE' : 'SYNCED'}</span>
               </div>
 
+              {/* Export Reports Button */}
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors shadow-xs"
+                title="Generate and Export Reports"
+              >
+                <FileDown size={14} className="text-[#8DC63F]" />
+                <span className="hidden sm:inline">Export Reports</span>
+              </button>
+
+              {/* Last Updated Timestamp */}
+              <div className="hidden lg:flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+                <Clock size={12} className="text-slate-400" />
+                <span>Updated {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+
               {/* Refresh Button */}
               <button
                 onClick={() => {
                   fetchDashboardStats(true);
                   fetchActivityData(true);
+                  fetchHealth();
+                  fetchHealthHistory();
+                  fetchSecurityAlerts();
+                  fetchInstitutionRankings();
+                  fetchSystemMaintenance();
                 }}
                 disabled={isRefreshing}
                 className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors shadow-xs"
@@ -998,6 +1225,18 @@ function SuperAdminDashboard() {
                         <span className="text-[10px] text-slate-400 mt-1 block">{volumeAnalytics.pendingConversions} pending</span>
                       </div>
                     </div>
+
+                    {/* Historical Health Performance Trends & Charts */}
+                    <HistoricalHealthChart
+                      healthHistory={healthHistoryData}
+                      range={healthRange}
+                      onRangeChange={(newRange) => {
+                        setHealthRange(newRange);
+                        fetchHealthHistory(newRange);
+                      }}
+                      onRefresh={() => fetchHealthHistory(healthRange)}
+                      loading={loadingHealthHistory}
+                    />
                   </div>
 
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 mt-3 text-[11px] text-slate-400">
@@ -1016,75 +1255,148 @@ function SuperAdminDashboard() {
                         </div>
                         <div>
                           <h3 className="font-bold text-sm text-slate-900">System Alerts & Security</h3>
-                          <p className="text-xs text-slate-400">Failure events and audit triggers</p>
+                          <p className="text-xs text-slate-400">Audit triggers, auth alerts & lockout tracking</p>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1 text-[11px]">
+                      <div className="flex items-center gap-1 text-[10px]">
                         <button
-                          onClick={() => setAlertFilter('ALL')}
-                          className={`px-2 py-0.5 rounded font-semibold ${
-                            alertFilter === 'ALL' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:text-slate-700'
+                          onClick={() => setSecuritySeverityFilter('ALL')}
+                          className={`px-1.5 py-0.5 rounded font-bold ${
+                            securitySeverityFilter === 'ALL' ? 'bg-slate-200 text-slate-800' : 'text-slate-400 hover:text-slate-700'
                           }`}
                         >
-                          All
+                          All ({securityAlertsSummary.total})
                         </button>
                         <button
-                          onClick={() => setAlertFilter('CRITICAL')}
-                          className={`px-2 py-0.5 rounded font-semibold ${
-                            alertFilter === 'CRITICAL' ? 'bg-rose-100 text-rose-800' : 'text-slate-400 hover:text-slate-700'
+                          onClick={() => setSecuritySeverityFilter('CRITICAL')}
+                          className={`px-1.5 py-0.5 rounded font-bold ${
+                            securitySeverityFilter === 'CRITICAL' ? 'bg-rose-100 text-rose-800' : 'text-slate-400 hover:text-slate-700'
                           }`}
                         >
-                          Critical
+                          Crit ({securityAlertsSummary.critical})
+                        </button>
+                        <button
+                          onClick={() => setSecuritySeverityFilter('WARNING')}
+                          className={`px-1.5 py-0.5 rounded font-bold ${
+                            securitySeverityFilter === 'WARNING' ? 'bg-amber-100 text-amber-800' : 'text-slate-400 hover:text-slate-700'
+                          }`}
+                        >
+                          Warn ({securityAlertsSummary.warning})
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-2 mt-3 overflow-y-auto max-h-[160px] pr-1">
-                      {filteredAlerts.length > 0 ? (
-                        filteredAlerts.slice(0, 5).map((alert, idx) => {
-                          const isFailed = alert.status === 'FAILED' || String(alert.action).includes('FAIL');
+                    {/* Quick Search */}
+                    <div className="relative mt-2.5">
+                      <Search size={12} className="absolute left-2.5 top-2.5 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Search security alert by user or action..."
+                        value={securitySearchTerm}
+                        onChange={(e) => setSecuritySearchTerm(e.target.value)}
+                        className="w-full pl-7 pr-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8DC63F]"
+                      />
+                    </div>
+
+                    {/* Repeated Failed Login Alert Banner */}
+                    {securityAlertsSummary.repeatedFailedUsersCount > 0 && (
+                      <div className="mt-2 p-2 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-800 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <AlertTriangle size={13} className="text-rose-600 shrink-0" />
+                          Repeated Login Failures Detected ({securityAlertsSummary.repeatedFailedUsersCount} account(s))
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Alerts List */}
+                    <div className="space-y-2 mt-2.5 overflow-y-auto max-h-[220px] pr-1">
+                      {securityAlertsList.length > 0 ? (
+                        securityAlertsList.slice(0, 6).map((alert, idx) => {
+                          const isFailed = alert.severity === 'CRITICAL';
+                          const isWarn = alert.severity === 'WARNING';
+                          const isResolved = alert.status === 'RESOLVED';
+                          const isAck = alert.status === 'ACKNOWLEDGED';
+
                           return (
                             <div
                               key={alert.id || idx}
-                              className={`p-2.5 rounded-xl border text-xs flex items-start justify-between gap-2 transition-colors ${
-                                isFailed ? 'bg-rose-50/60 border-rose-100' : 'bg-amber-50/60 border-amber-100'
+                              className={`p-2.5 rounded-xl border text-xs flex items-start justify-between gap-2 transition-all ${
+                                isFailed ? 'bg-rose-50/60 border-rose-100' : isWarn ? 'bg-amber-50/60 border-amber-100' : 'bg-slate-50 border-slate-100'
                               }`}
                             >
-                              <div className="flex items-start gap-2 overflow-hidden">
+                              <div className="flex items-start gap-2 overflow-hidden flex-1">
                                 <AlertTriangle
                                   size={15}
-                                  className={`shrink-0 mt-0.5 ${isFailed ? 'text-rose-600' : 'text-amber-600'}`}
+                                  className={`shrink-0 mt-0.5 ${isFailed ? 'text-rose-600' : isWarn ? 'text-amber-600' : 'text-blue-600'}`}
                                 />
-                                <div>
-                                  <span className="font-bold text-slate-800 block truncate font-mono text-[11px]">
-                                    {alert.action}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 block truncate">
-                                    {alert.user_id ? `By ${alert.user_id}` : 'System event'} in {alert.module}
+                                <div className="truncate">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="font-bold text-slate-800 truncate font-mono text-[11px]">
+                                      {alert.title || alert.action}
+                                    </span>
+                                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
+                                      isResolved ? 'bg-emerald-100 text-emerald-800' : isAck ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
+                                    }`}>
+                                      {alert.status}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-500 block truncate mt-0.5">
+                                    {alert.user_id ? `User: ${alert.user_id}` : 'System event'} in {alert.module}
                                   </span>
                                 </div>
                               </div>
-                              <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                                {formatRelativeTime(alert.created_at)}
-                              </span>
+
+                              {/* Action controls */}
+                              <div className="flex items-center gap-1 shrink-0">
+                                <button
+                                  onClick={() => setSelectedSecurityAlert(alert)}
+                                  className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-white"
+                                  title="View Full Audit Details"
+                                >
+                                  <Eye size={13} />
+                                </button>
+                                {!isResolved && (
+                                  <>
+                                    {!isAck && (
+                                      <button
+                                        onClick={() => handleAcknowledgeAlert(alert.id)}
+                                        className="p-1 rounded-md text-blue-600 hover:bg-blue-100"
+                                        title="Acknowledge Alert"
+                                      >
+                                        <Check size={13} />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleResolveAlert(alert.id)}
+                                      className="p-1 rounded-md text-emerald-600 hover:bg-emerald-100"
+                                      title="Mark Resolved"
+                                    >
+                                      <CheckCircle size={13} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           );
                         })
                       ) : (
                         <div className="text-center py-8 text-slate-400 text-xs">
                           <CheckCircle2 size={24} className="mx-auto mb-1.5 text-emerald-500" />
-                          <p className="font-semibold text-slate-700">All systems operational</p>
-                          <p className="text-[10px] mt-0.5">Zero critical security alerts recorded</p>
+                          <p className="font-semibold text-slate-700">All systems secure</p>
+                          <p className="text-[10px] mt-0.5">Zero security alerts matching current filters</p>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="pt-2.5 border-t border-slate-100 mt-2 text-right">
+                  <div className="pt-2.5 border-t border-slate-100 mt-2 flex items-center justify-between text-xs">
+                    <span className="text-slate-400 text-[10px]">
+                      {securityAlertsSummary.resolved} alert(s) resolved
+                    </span>
                     <button
                       onClick={() => setDashboardState('activities')}
-                      className="text-xs font-semibold text-[#8DC63F] hover:underline"
+                      className="font-bold text-[#8DC63F] hover:underline text-xs"
                     >
                       Audit Full Security Logs →
                     </button>
@@ -1403,6 +1715,15 @@ function SuperAdminDashboard() {
               </div>
 
               {/* ======================================================== */}
+              {/* FEATURE 4: SYSTEM MAINTENANCE & BACKUP MONITORING */}
+              {/* ======================================================== */}
+              <SystemMaintenanceCard
+                maintenanceData={systemMaintenanceData}
+                loading={loadingMaintenance}
+                onRefresh={fetchSystemMaintenance}
+              />
+
+              {/* ======================================================== */}
               {/* INSTITUTION, COURSE, STUDENT & INSTRUCTOR ANALYTICS */}
               {/* ======================================================== */}
               <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e5edd8] shadow-xs">
@@ -1453,49 +1774,209 @@ function SuperAdminDashboard() {
                 </div>
 
                 <div className="mt-4">
-                  {/* Sub-Tab 1: Institutions */}
+                  {/* Sub-Tab 1: Institution Performance Ranking (Feature 3) */}
                   {analyticsSubTab === 'institutions' && (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b">
-                            <th className="py-3 px-3">Institution / Scan Center</th>
-                            <th className="py-3 px-3">Enrolled Students</th>
-                            <th className="py-3 px-3">Status</th>
-                            <th className="py-3 px-3 text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {(dashboardData?.institutionActivity || []).map((item, idx) => (
-                            <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                              <td className="py-3 px-3 font-semibold text-slate-800 flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-lg bg-lime-50 text-[#8DC63F] flex items-center justify-center font-bold">
-                                  <Landmark size={14} />
-                                </div>
-                                <span>{item.institution}</span>
-                              </td>
-                              <td className="py-3 px-3 text-slate-600 font-mono font-bold">
-                                {Number(item.students).toLocaleString()}
-                              </td>
-                              <td className="py-3 px-3">
-                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                  item.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                                }`}>
-                                  {item.status}
-                                </span>
-                              </td>
-                              <td className="py-3 px-3 text-right">
-                                <button
-                                  onClick={() => navigate('/academics')}
-                                  className="text-xs font-semibold text-[#8DC63F] hover:underline"
-                                >
-                                  Manage Center →
-                                </button>
-                              </td>
+                    <div className="space-y-3">
+                      {/* Search, Filter Tier, and Sort Controls */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                        {/* Search Institution */}
+                        <div className="relative flex-1">
+                          <Search size={13} className="absolute left-3 top-2.5 text-slate-400" />
+                          <input
+                            type="text"
+                            placeholder="Search institution by name, email, code..."
+                            value={institutionSearchTerm}
+                            onChange={(e) => setInstitutionSearchTerm(e.target.value)}
+                            className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#8DC63F]"
+                          />
+                        </div>
+
+                        {/* Tier Filters */}
+                        <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 text-xs font-semibold">
+                          <button
+                            onClick={() => setInstitutionFilterTier('ALL')}
+                            className={`px-2.5 py-1 rounded-md transition-all ${
+                              institutionFilterTier === 'ALL' ? 'bg-[#8DC63F] text-white' : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            All ({institutionRankingsList.length})
+                          </button>
+                          <button
+                            onClick={() => setInstitutionFilterTier('TOP')}
+                            className={`px-2.5 py-1 rounded-md transition-all ${
+                              institutionFilterTier === 'TOP' ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            Top-Performing ({institutionRankingsList.filter(i => i.tier === 'Top Performing').length})
+                          </button>
+                          <button
+                            onClick={() => setInstitutionFilterTier('ATTENTION')}
+                            className={`px-2.5 py-1 rounded-md transition-all ${
+                              institutionFilterTier === 'ATTENTION' ? 'bg-rose-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            Requires Attention ({institutionRankingsList.filter(i => i.tier === 'Requires Attention').length})
+                          </button>
+                        </div>
+
+                        {/* Sorting Dropdown */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Sort:</span>
+                          <select
+                            value={institutionSortBy}
+                            onChange={(e) => setInstitutionSortBy(e.target.value)}
+                            className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#8DC63F]"
+                          >
+                            <option value="rank">Rank / Score</option>
+                            <option value="name">Name</option>
+                            <option value="total_trainees">Enrolled Trainees</option>
+                            <option value="active_trainees">Active Trainees</option>
+                            <option value="completion_rate">Completion Rate</option>
+                            <option value="status">Status</option>
+                          </select>
+                          <button
+                            onClick={() => setInstitutionSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                            className="px-2 py-1.5 border border-slate-200 bg-white rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50"
+                            title={`Order: ${institutionSortOrder.toUpperCase()}`}
+                          >
+                            {institutionSortOrder === 'asc' ? '↑' : '↓'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Ranked Institutions Table */}
+                      <div className="overflow-x-auto border border-slate-100 rounded-xl">
+                        <table className="w-full text-left text-xs">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider border-b">
+                              <th className="py-3 px-3">Rank</th>
+                              <th className="py-3 px-3">Institution / Scan Center</th>
+                              <th className="py-3 px-3">Trainees (Total / Active)</th>
+                              <th className="py-3 px-3">Course Completion</th>
+                              <th className="py-3 px-3">VR Training Performance</th>
+                              <th className="py-3 px-3">Status & Tier</th>
+                              <th className="py-3 px-3 text-right">Actions</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {institutionRankingsList.length > 0 ? (
+                              institutionRankingsList.map((item, idx) => {
+                                const rank = item.rank || (idx + 1);
+                                const isTop = item.tier === 'Top Performing';
+                                const isAttention = item.tier === 'Requires Attention';
+
+                                return (
+                                  <tr key={item.center_id || idx} className="hover:bg-slate-50/70 transition-colors">
+                                    {/* Rank badge */}
+                                    <td className="py-3 px-3">
+                                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-black ${
+                                        rank === 1 ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+                                        rank === 2 ? 'bg-slate-200 text-slate-800 border border-slate-300' :
+                                        rank === 3 ? 'bg-amber-50 text-amber-900 border border-amber-200' :
+                                        'bg-slate-100 text-slate-600'
+                                      }`}>
+                                        #{rank}
+                                      </span>
+                                    </td>
+
+                                    {/* Institution Name */}
+                                    <td className="py-3 px-3 font-semibold text-slate-800">
+                                      <div className="flex items-center gap-2.5">
+                                        <div className="w-7 h-7 rounded-lg bg-lime-50 text-[#8DC63F] flex items-center justify-center font-bold shrink-0">
+                                          <Landmark size={14} />
+                                        </div>
+                                        <div>
+                                          <span className="block font-bold text-slate-900">{item.name}</span>
+                                          <span className="text-[10px] text-slate-400 font-mono block">
+                                            {item.email || `ID: ${item.center_id}`}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </td>
+
+                                    {/* Trainees count */}
+                                    <td className="py-3 px-3 text-slate-700 font-mono">
+                                      <span className="font-bold text-slate-900">{Number(item.total_trainees || 0).toLocaleString()}</span>
+                                      <span className="text-slate-400 text-[10px] ml-1">enrolled</span>
+                                      <span className="text-emerald-600 text-[10px] font-bold block">
+                                        • {Number(item.active_trainees || 0).toLocaleString()} active (30d)
+                                      </span>
+                                    </td>
+
+                                    {/* Completion Rate */}
+                                    <td className="py-3 px-3">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-mono font-bold text-slate-800 text-xs">
+                                          {item.completion_rate || 0}%
+                                        </span>
+                                      </div>
+                                      <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                                        <div 
+                                          className={`h-1.5 rounded-full ${
+                                            (item.completion_rate || 0) >= 60 ? 'bg-[#8DC63F]' :
+                                            (item.completion_rate || 0) >= 40 ? 'bg-amber-500' : 'bg-rose-500'
+                                          }`}
+                                          style={{ width: `${Math.min(100, item.completion_rate || 0)}%` }}
+                                        />
+                                      </div>
+                                    </td>
+
+                                    {/* VR Training Performance */}
+                                    <td className="py-3 px-3 font-mono">
+                                      <span className="font-bold text-slate-800">
+                                        {Number(item.vr_attempts || 0).toLocaleString()}
+                                      </span>
+                                      <span className="text-[10px] text-purple-600 block font-sans">VR exercises</span>
+                                    </td>
+
+                                    {/* Status & Tier */}
+                                    <td className="py-3 px-3">
+                                      <div className="flex flex-col gap-1 items-start">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                          isTop ? 'bg-emerald-100 text-emerald-800' :
+                                          isAttention ? 'bg-rose-100 text-rose-800' :
+                                          'bg-slate-100 text-slate-700'
+                                        }`}>
+                                          {item.tier || 'Good Standing'}
+                                        </span>
+                                        <span className={`text-[10px] font-semibold ${
+                                          item.status === 'Active' ? 'text-emerald-600' : 'text-slate-400'
+                                        }`}>
+                                          ● {item.status}
+                                        </span>
+                                      </div>
+                                    </td>
+
+                                    {/* Action buttons */}
+                                    <td className="py-3 px-3 text-right">
+                                      <div className="flex items-center justify-end gap-2">
+                                        <button
+                                          onClick={() => setSelectedInstitutionDetail(item)}
+                                          className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors shadow-xs"
+                                        >
+                                          View Details
+                                        </button>
+                                        <button
+                                          onClick={() => navigate('/academics')}
+                                          className="text-xs font-semibold text-[#8DC63F] hover:underline whitespace-nowrap"
+                                        >
+                                          Manage →
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                                  {loadingInstitutions ? 'Loading institution rankings...' : 'No institutions found matching your search or filter criteria.'}
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
 
@@ -1688,20 +2169,38 @@ function SuperAdminDashboard() {
 
                       <select
                         value={activityFilterStatus}
-                        onChange={(e) => setActivityFilterStatus(e.target.value)}
+                        onChange={(e) => {
+                          setActivityFilterStatus(e.target.value);
+                          setEventFeedPage(1);
+                        }}
                         className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#8DC63F]"
                       >
                         <option value="ALL">All Status</option>
                         <option value="SUCCESS">Success Only</option>
                         <option value="FAILED">Failed Only</option>
                       </select>
+
+                      <select
+                        value={eventFeedDateFilter}
+                        onChange={(e) => {
+                          setEventFeedDateFilter(e.target.value);
+                          setEventFeedPage(1);
+                        }}
+                        className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#8DC63F]"
+                        title="Filter live feed by timeframe"
+                      >
+                        <option value="all">All Dates</option>
+                        <option value="today">Today</option>
+                        <option value="7days">Last 7 Days</option>
+                        <option value="30days">Last 30 Days</option>
+                      </select>
                     </div>
                   </div>
 
                   {/* Activity Items List */}
                   <div className="space-y-2 mt-4 overflow-y-auto max-h-[320px] pr-1">
-                    {filteredActivities.length > 0 ? (
-                      filteredActivities.slice(0, 10).map((act, idx) => {
+                    {paginatedEventFeedActivities.length > 0 ? (
+                      paginatedEventFeedActivities.map((act, idx) => {
                         const roleInfo = getRoleLabel(act.role, act.user_id);
                         const isFail = act.status === 'FAILED';
                         const timeStr = formatRelativeTime(act.created_at);
@@ -1746,6 +2245,34 @@ function SuperAdminDashboard() {
                       </div>
                     )}
                   </div>
+
+                  {/* Pagination Controls for Event Feed */}
+                  {filteredEventFeedActivities.length > eventFeedPerPage && (
+                    <div className="flex items-center justify-between pt-3 px-1 text-xs text-slate-500 border-t border-slate-100 mt-2">
+                      <span>
+                        Showing {Math.min((eventFeedPage - 1) * eventFeedPerPage + 1, filteredEventFeedActivities.length)} - {Math.min(eventFeedPage * eventFeedPerPage, filteredEventFeedActivities.length)} of {filteredEventFeedActivities.length}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setEventFeedPage((p) => Math.max(1, p - 1))}
+                          disabled={eventFeedPage <= 1}
+                          className="px-2 py-1 rounded-md border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 font-semibold"
+                        >
+                          Prev
+                        </button>
+                        <span className="font-semibold text-slate-700">
+                          {eventFeedPage} / {totalEventFeedPages}
+                        </span>
+                        <button
+                          onClick={() => setEventFeedPage((p) => Math.min(totalEventFeedPages, p + 1))}
+                          disabled={eventFeedPage >= totalEventFeedPages}
+                          className="px-2 py-1 rounded-md border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 font-semibold"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 mt-4 flex items-center justify-between text-xs">
@@ -1898,7 +2425,7 @@ function SuperAdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {filteredActivities.map((act, index) => {
+                      {paginatedAuditActivities.map((act, index) => {
                         const roleInfo = getRoleLabel(act.role, act.user_id);
                         const isSuccess = act.status === 'SUCCESS';
                         const time = new Date(act.created_at).toLocaleString();
@@ -1943,6 +2470,34 @@ function SuperAdminDashboard() {
                       })}
                     </tbody>
                   </table>
+
+                  {/* Tab 2 Audit Stream Pagination */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-50/70 border-t border-slate-200 text-xs text-slate-600">
+                    <div>
+                      Showing <span className="font-bold">{Math.min((auditStreamPage - 1) * auditStreamPerPage + 1, filteredActivities.length)}</span> to{' '}
+                      <span className="font-bold">{Math.min(auditStreamPage * auditStreamPerPage, filteredActivities.length)}</span> of{' '}
+                      <span className="font-bold">{filteredActivities.length}</span> audit events
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setAuditStreamPage((p) => Math.max(1, p - 1))}
+                        disabled={auditStreamPage <= 1}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white font-semibold text-xs transition-colors"
+                      >
+                        Previous
+                      </button>
+                      <span className="px-2 font-bold text-slate-800">
+                        Page {auditStreamPage} of {totalAuditStreamPages}
+                      </span>
+                      <button
+                        onClick={() => setAuditStreamPage((p) => Math.min(totalAuditStreamPages, p + 1))}
+                        disabled={auditStreamPage >= totalAuditStreamPages}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-white font-semibold text-xs transition-colors"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12 text-slate-500 bg-slate-50/50 rounded-xl border border-dashed">
@@ -2031,6 +2586,26 @@ function SuperAdminDashboard() {
               )}
             </div>
           )}
+
+          {/* Modals for Super Admin Dashboard Enhancements */}
+          <SecurityAlertModal
+            alert={selectedSecurityAlert}
+            onClose={() => setSelectedSecurityAlert(null)}
+            onAcknowledge={handleAcknowledgeAlert}
+            onResolve={handleResolveAlert}
+            isActioning={isActioningAlert}
+          />
+
+          <InstitutionDetailModal
+            institution={selectedInstitutionDetail}
+            onClose={() => setSelectedInstitutionDetail(null)}
+          />
+
+          <ExportReportsModal
+            isOpen={isReportModalOpen}
+            onClose={() => setIsReportModalOpen(false)}
+            currentDateFilter={dateFilter}
+          />
         </div>
       </div>
     </div>

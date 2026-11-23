@@ -1422,22 +1422,6 @@ function Course() {
                       </th>
                       <th className="py-2 px-4 text-[#8DC63F]">
                         <div className="flex items-center gap-2">
-                          <div>Batch Name</div>
-                          <button>
-                            <ArrowUpWideNarrow size={20} />
-                          </button>
-                        </div>
-                      </th>
-                      <th className="py-2 px-4 text-[#8DC63F]">
-                        <div className="flex items-center gap-2">
-                          <span>Certificate availability</span>
-                          <button>
-                            <ArrowUpWideNarrow size={20} />
-                          </button>
-                        </div>
-                      </th>
-                      <th className="py-2 px-4 text-[#8DC63F]">
-                        <div className="flex items-center gap-2">
                           <span>Action</span>
                           <button>
                             <ArrowUpWideNarrow size={20} />
@@ -1450,7 +1434,7 @@ function Course() {
                     {isCourseLoading ? (
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={3}
                           className="py-4 text-center text-gray-500"
                         >
                           <ClipLoader
@@ -1494,29 +1478,6 @@ function Course() {
                                 >
                                   {data?.certificate_name}
                                 </button>
-                              </td>
-                              <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                                {hasBatches ? (
-                                  <span
-                                    className="cursor-pointer text-[#8DC63F] underline underline-offset-2 text-xs"
-                                    onClick={() => toggleExpandRow(data.certificate_id)}
-                                  >
-                                    {data.batches.map((batch) => batch.batch_name).join(", ")}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400">Not Associated</span>
-                                )}
-                              </td>
-                              <td className="py-2 px-4 text-gray-600 font-medium border-b-2">
-                                {data?.access_status === true ? (
-                                  <span className="px-2 py-1 bg-green-100 text-sm">
-                                    Approved
-                                  </span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-red-100 text-sm">
-                                    Request
-                                  </span>
-                                )}
                               </td>
                               <td className="py-2 px-4 font-semibold border-b-2">
                                 <button onClick={() => toggleDropdown(index)}>
@@ -1577,20 +1538,20 @@ function Course() {
                                   className="text-xs text-gray-500 bg-gray-50"
                                 >
                                   <td className="py-1 px-4 border-b border-gray-100"></td>
-                                  <td className="py-1 px-4 border-b border-gray-100 pl-8 text-gray-400 italic">
-                                    — {data.certificate_name}
-                                  </td>
-                                  <td className="py-1 px-4 border-b border-gray-100 text-gray-600 font-medium">
+                                  <td className="py-1 px-4 border-b border-gray-100 pl-8 text-gray-600 font-medium">
+                                    <span className="text-gray-400 italic mr-2">— {data.certificate_name}:</span>
                                     {batch.batch_name}
-                                  </td>
-                                  <td className="py-1 px-4 border-b border-gray-100 text-gray-400">
-                                    {batch.batch_start_date
-                                      ? new Date(batch.batch_start_date).toLocaleDateString()
-                                      : "—"}{" "}
-                                    →{" "}
-                                    {batch.batch_end_date
-                                      ? new Date(batch.batch_end_date).toLocaleDateString()
-                                      : "—"}
+                                    {(batch.batch_start_date || batch.batch_end_date) && (
+                                      <span className="text-gray-400 ml-2">
+                                        ({batch.batch_start_date
+                                          ? new Date(batch.batch_start_date).toLocaleDateString()
+                                          : "—"}{" "}
+                                        →{" "}
+                                        {batch.batch_end_date
+                                          ? new Date(batch.batch_end_date).toLocaleDateString()
+                                          : "—"})
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="py-1 px-4 border-b border-gray-100"></td>
                                 </tr>
@@ -1601,7 +1562,7 @@ function Course() {
                     ) : (
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={3}
                           className="py-4 text-center text-gray-500"
                         >
                           No certifications available.

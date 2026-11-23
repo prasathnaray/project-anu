@@ -22,4 +22,31 @@ export function getSystemHealthAPI() {
     return api.get('/api/v1/superadmin/system-health');
 }
 
+export function getSystemHealthHistoryAPI(params = {}) {
+    return api.get('/api/v1/superadmin/system-health-history', { params });
+}
+
+export function getSecurityAlertsAPI(params = {}) {
+    return api.get('/api/v1/superadmin/security-alerts', { params });
+}
+
+export function handleSecurityAlertActionAPI(id, data) {
+    return api.post(`/api/v1/superadmin/security-alerts/${id}/action`, data);
+}
+
+export function getInstitutionRankingsAPI(params = {}) {
+    return api.get('/api/v1/superadmin/institution-rankings', { params });
+}
+
+export function getSystemMaintenanceAPI() {
+    return api.get('/api/v1/superadmin/system-maintenance');
+}
+
+export function exportReportAPI(params = {}) {
+    return api.get('/api/v1/superadmin/export-report', {
+        params,
+        responseType: params.format === 'csv' ? 'blob' : 'json'
+    });
+}
+
 export default SuperAdminStatsAPI;
