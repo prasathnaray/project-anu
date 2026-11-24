@@ -9,6 +9,12 @@ const mockClient = {
         if (/SELECT cluster_id FROM public\.clusters/.test(sql)) {
             return { rows: params[0] === 'other-cluster' ? [] : [{ cluster_id: params[0] }] };
         }
+        if (/SELECT batch_id FROM public\.batch_data/.test(sql)) {
+            return { rows: params[0] === 'other-batch' ? [] : [{ batch_id: params[0] }] };
+        }
+        if (/SELECT DISTINCT ud\.user_email FROM public\.user_data/.test(sql)) {
+            return { rows: params[0].filter(id => id !== 'outsider@example.test').map(user_email => ({ user_email })) };
+        }
         if (/SELECT mapping_id FROM public\.course_mapping/.test(sql) && /mapping_id = \$1::uuid/.test(sql)) {
             return { rows: [{ mapping_id: params[0] }] };
         }
@@ -115,6 +121,30 @@ test('custom course stores its cluster and validates selected recordings in that
         'missing-recording', null, 'Custom course', 'Description', 'Doctor', 'cluster-a'
     );
     assert.equal(missing.code, 404);
+    assert.equal(queries.some(({ sql }) => /INSERT INTO public\.course_mapping/.test(sql)), false);
+});
+
+test('custom course stores batch, students, and selected practice and test options', async () => {
+    queries.length = 0;
+    const requester = { user_mail: 'admin@example.test', role: 101,
+        centre_id: '11111111-1111-1111-1111-111111111111' };
+    const result = await createCourseMappingModel(
+        requester, null, null, null, 'Custom Course', 'p1', null, null,
+        'Custom course', 'Description', 'Doctor', 'cluster-a', 'batch-a',
+        ['student@example.test'], ['p1', 't1']
+    );
+    const insert = queries.find(({ sql }) => /INSERT INTO public\.course_mapping/.test(sql));
+    assert.equal(result.code, 201);
+    assert.match(insert.sql, /student_ids, course_options/);
+    assert.deepEqual(insert.params.slice(-3), ['batch-a', '["student@example.test"]', '["p1","t1"]']);
+
+    queries.length = 0;
+    const invalid = await createCourseMappingModel(
+        requester, null, null, null, 'Custom Course', 'p1', null, null,
+        'Custom course', 'Description', 'Doctor', 'cluster-a', 'batch-a',
+        ['outsider@example.test'], ['p1']
+    );
+    assert.equal(invalid.code, 400);
     assert.equal(queries.some(({ sql }) => /INSERT INTO public\.course_mapping/.test(sql)), false);
 });
 

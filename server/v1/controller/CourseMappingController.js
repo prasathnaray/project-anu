@@ -30,17 +30,20 @@ const createCourseMappingController = async (req, res) => {
         course_name,
         description,
         doctor_name,
-        cluster_id
+        cluster_id,
+        batch_id,
+        student_ids,
+        course_options
     } = req.body;
 
     if (!module_name || !course_type || (module_name === 'Custom Course'
-        ? !cluster_id
+        ? !cluster_id || !batch_id || !Array.isArray(student_ids) || student_ids.length === 0 || !Array.isArray(course_options) || course_options.length === 0
         : (!trimester || !anatomy_type || !volume_name))) {
         return res.status(400).json({
             code: 400,
             status: 'Validation Error',
             message: module_name === 'Custom Course'
-                ? 'cluster_id, module_name, and course_type are required.'
+                ? 'cluster_id, batch_id, at least one student, module_name, and at least one course option are required.'
                 : 'trimester, anatomy_type, volume_name, module_name, and course_type are required.'
         });
     }
@@ -69,6 +72,15 @@ const createCourseMappingController = async (req, res) => {
         });
     }
 
+    if (module_name === 'Custom Course' &&
+        (!Array.isArray(student_ids) || !Array.isArray(course_options) ||
+         course_options.some(option => !['p1', 'p2', 'p3', 'p4', 't1', 't2'].includes(option)) ||
+         course_options[0] !== course_type ||
+         new Set(course_options).size !== course_options.length ||
+         new Set(student_ids).size !== student_ids.length)) {
+        return res.status(400).json({ code: 400, message: 'Choose valid, unique students and course options.' });
+    }
+
     try {
         const result = await createCourseMappingModel(
             requester,
@@ -82,7 +94,10 @@ const createCourseMappingController = async (req, res) => {
             course_name,
             description,
             doctor_name,
-            cluster_id
+            cluster_id,
+            batch_id,
+            student_ids,
+            course_options
         );
 
         if (result.code && result.code !== 201) {

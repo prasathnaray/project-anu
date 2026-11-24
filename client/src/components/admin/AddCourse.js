@@ -26,7 +26,7 @@ function AddCourse({isVisible,  onClose, children}) {
       <div
         onClick={(e) => e.stopPropagation()}
         className={twMerge(
-          "w-[1000px] transition-all",
+          "w-[min(1000px,calc(100vw-2rem))] transition-all",
           shake ? "animate-shake" : ""
         )}
       >

@@ -84,6 +84,15 @@ const ensureCourseMappingTable = async () => {
             ADD COLUMN IF NOT EXISTS cluster_id varchar(100);
 
         ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS batch_id varchar(100);
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS student_ids jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+        ALTER TABLE public.course_mapping
+            ADD COLUMN IF NOT EXISTS course_options jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+        ALTER TABLE public.course_mapping
             ALTER COLUMN volume_id DROP NOT NULL,
             ALTER COLUMN volume_name DROP NOT NULL,
             ALTER COLUMN trimester DROP NOT NULL,
@@ -256,7 +265,10 @@ const createCourseMappingModel = async (
     course_name,
     description,
     doctor_name,
-    cluster_id = null
+    cluster_id = null,
+    batch_id = null,
+    student_ids = [],
+    course_options = []
 ) => {
     if (!isPrivilegedUser(requester)) {
         return {
@@ -292,6 +304,28 @@ const createCourseMappingModel = async (
         `, [cluster_id, ownership.ownerScope, ownership.ownerCentreId]);
         if (!clusterResult.rows.length) return { code: 404, message: 'Cluster not found.' };
 
+        if (batch_id) {
+            const batch = await client.query(`
+                SELECT batch_id FROM public.batch_data
+                WHERE batch_id = $1 AND ($2 = 'super_admin' OR centre_id = $3::uuid)
+                LIMIT 1;
+            `, [batch_id, ownership.ownerScope, ownership.ownerCentreId]);
+            if (!batch.rows.length) return { code: 404, message: 'Batch not found.' };
+
+            if (student_ids.length) {
+                const members = await client.query(`
+                    SELECT DISTINCT ud.user_email FROM public.user_data ud
+                    JOIN public.batch_people_data bpd ON bpd.user_id = ud.user_email
+                    WHERE ud.user_email = ANY($1::varchar[])
+                      AND ud.user_role = '103' AND $2 = ANY(bpd.batch_id)
+                      AND ($3 = 'super_admin' OR ud.centre_id = $4::uuid);
+                `, [student_ids, batch_id, ownership.ownerScope, ownership.ownerCentreId]);
+                if (members.rows.length !== student_ids.length) {
+                    return { code: 400, message: 'All selected students must belong to the chosen batch.' };
+                }
+            }
+        }
+
         for (const [recordingId, type] of [[shadow_recording_id, 'shadow'], [step_recording_id, 'step']]) {
             if (!recordingId) continue;
             const recording = await client.query(`
@@ -310,20 +344,24 @@ const createCourseMappingModel = async (
               AND shadow_recording_id IS NOT DISTINCT FROM $3::uuid
               AND step_recording_id IS NOT DISTINCT FROM $4::uuid
               AND owner_scope = $5 AND owner_centre_id IS NOT DISTINCT FROM $6::uuid
+              AND batch_id IS NOT DISTINCT FROM $7
+              AND course_options = $8::jsonb
             LIMIT 1;
-        `, [cluster_id, course_type, shadow_recording_id || null, step_recording_id || null, ownership.ownerScope, ownership.ownerCentreId]);
+        `, [cluster_id, course_type, shadow_recording_id || null, step_recording_id || null, ownership.ownerScope, ownership.ownerCentreId,
+            batch_id, JSON.stringify(course_options)]);
         if (duplicate.rows.length) return { code: 409, message: 'A course already exists for this cluster, course type, and recording combination.' };
 
         const result = await client.query(`
             INSERT INTO public.course_mapping (
                 mapping_id, cluster_id, course_name, description, doctor_name,
                 module_name, course_type, shadow_recording_id, step_recording_id,
-                created_by, owner_scope, owner_centre_id
-            ) VALUES ($1, $2, $3, $4, $5, 'Custom Course', $6, $7, $8, $9, $10, $11)
+                created_by, owner_scope, owner_centre_id, batch_id, student_ids, course_options
+            ) VALUES ($1, $2, $3, $4, $5, 'Custom Course', $6, $7, $8, $9, $10, $11, $12, $13::jsonb, $14::jsonb)
             RETURNING *;
         `, [randomUUID(), cluster_id, course_name || null, description || null, doctor_name || null,
             course_type, shadow_recording_id || null, step_recording_id || null,
-            requester.user_mail, ownership.ownerScope, ownership.ownerCentreId]);
+            requester.user_mail, ownership.ownerScope, ownership.ownerCentreId,
+            batch_id, JSON.stringify(student_ids), JSON.stringify(course_options)]);
         return { status: 'Success', code: 201, data: result.rows[0] };
     }
 

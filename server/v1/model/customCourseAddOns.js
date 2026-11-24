@@ -16,6 +16,7 @@ const appendCustomCourseAddOns = (certificates, mappings) => {
             course_name: mapping.course_name,
             is_add_on: true,
             course_type: mapping.course_type,
+            course_options: mapping.course_options,
             description: mapping.description,
             doctor_name: mapping.doctor_name,
             cluster_id: mapping.cluster_id,

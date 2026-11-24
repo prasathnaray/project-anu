@@ -10,9 +10,15 @@ import { GetClustersAPI, GetClusterRecordingsAPI } from '../API/ClusterAPI';
 import { CreateCourseMappingAPI, GetCourseMappingsAPI, TagCustomCourseAPI } from '../API/CourseMappingAPI';
 import CustomCloseButton from '../utils/CustomCloseButton';
 import AddCourse from '../components/admin/AddCourse';
+import { getBatchesForAssignments } from '../API/ContentAccessAPI';
+import BatchProfileAPI from '../API/BatchProfileAPI';
 
 const CUSTOM_COURSE_MODULE = 'Custom Course';
-const COURSE_TYPES = ['Free Scan', 'Single Plane'];
+const COURSE_OPTIONS = [
+  { label: 'Practice 1', value: 'p1' }, { label: 'Practice 2', value: 'p2' },
+  { label: 'Practice 3', value: 'p3' }, { label: 'Practice 4', value: 'p4' },
+  { label: 'Test 1', value: 't1' }, { label: 'Test 2', value: 't2' },
+];
 const UNITS = ['BPD & HC', 'AC', 'FL'];
 
 const emptyForm = {
@@ -20,7 +26,9 @@ const emptyForm = {
   description: '',
   doctor_name: '',
   cluster_id: '',
-  course_type: '',
+  batch_id: '',
+  student_ids: [],
+  course_options: [],
   shadow_recording_id: '',
   step_recording_id: '',
 };
@@ -32,6 +40,10 @@ function CustomCourse() {
   const navigate = useNavigate();
   const [buttonOpen, setButtonOpen] = useState(true);
   const [clusters, setClusters] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const studentRequest = useRef(0);
   const [recordings, setRecordings] = useState([]);
   const recordingRequest = useRef(0);
   const [courses, setCourses] = useState([]);
@@ -101,7 +113,13 @@ function CustomCourse() {
     try {
       const result = await GetClusterRecordingsAPI(clusterId);
       if (requestId === recordingRequest.current) {
-        setRecordings(Array.isArray(result?.data?.data) ? result.data.data : (Array.isArray(result?.data) ? result.data : []));
+        const loaded = Array.isArray(result?.data?.data) ? result.data.data : (Array.isArray(result?.data) ? result.data : []);
+        setRecordings(loaded);
+        const latest = (type) => loaded.find((recording) => recording.recording_type?.toLowerCase().includes(type));
+        setFormData((prev) => ({ ...prev,
+          shadow_recording_id: latest('shadow')?.recording_id || '',
+          step_recording_id: latest('step')?.recording_id || '',
+        }));
       }
     } catch (err) {
       if (requestId !== recordingRequest.current) return;
@@ -116,7 +134,24 @@ function CustomCourse() {
   useEffect(() => {
     fetchClusters();
     fetchCustomCourses();
+    getBatchesForAssignments().then((result) => setBatches(result.data?.rows || []))
+      .catch(() => toast.error('Failed to load student batches.'));
   }, []);
+
+  useEffect(() => {
+    const requestId = ++studentRequest.current;
+    setStudents([]);
+    setFormData((prev) => ({ ...prev, student_ids: [] }));
+    if (!formData.batch_id) return;
+    setStudentsLoading(true);
+    BatchProfileAPI(token, formData.batch_id).then((result) => {
+      if (requestId === studentRequest.current) setStudents(result.data?.trainees || []);
+    }).catch(() => {
+      if (requestId === studentRequest.current) toast.error('Failed to load students for this batch.');
+    }).finally(() => {
+      if (requestId === studentRequest.current) setStudentsLoading(false);
+    });
+  }, [formData.batch_id]);
 
   useEffect(() => {
     setFormData((prev) => ({
@@ -143,9 +178,12 @@ function CustomCourse() {
 
   const handleClear = () => {
     recordingRequest.current += 1;
+    studentRequest.current += 1;
     setFormData(emptyForm);
     setRecordings([]);
+    setStudents([]);
     setRecordingLoading(false);
+    setStudentsLoading(false);
   };
 
   const handleClosePopup = () => {
@@ -177,8 +215,8 @@ function CustomCourse() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.cluster_id || !formData.course_type) {
-      toast.error('Please fill course name, description, doctor name, cluster, and course type.');
+    if (!formData.course_name || !formData.description || !formData.doctor_name || !formData.batch_id || !formData.student_ids.length || !formData.cluster_id || !formData.course_options.length) {
+      toast.error('Please fill all course details, choose a batch, student, and cluster, and select at least one course.');
       return;
     }
 
@@ -188,7 +226,10 @@ function CustomCourse() {
       doctor_name: formData.doctor_name,
       cluster_id: formData.cluster_id,
       module_name: CUSTOM_COURSE_MODULE,
-      course_type: formData.course_type,
+      batch_id: formData.batch_id,
+      student_ids: formData.student_ids,
+      course_options: formData.course_options,
+      course_type: formData.course_options[0],
       shadow_recording_id: formData.shadow_recording_id || null,
       step_recording_id: formData.step_recording_id || null,
     };
@@ -274,7 +315,7 @@ function CustomCourse() {
                     <th className="py-2 px-4 font-semibold">Course Name</th>
                     <th className="py-2 px-4 font-semibold">Doctor</th>
                     <th className="py-2 px-4 font-semibold">Cluster</th>
-                    <th className="py-2 px-4 font-semibold">Course Type</th>
+                    <th className="py-2 px-4 font-semibold">Courses</th>
                     <th className="py-2 px-4 font-semibold">Description</th>
                     <th className="py-2 px-4 font-semibold">Tagged As</th>
                     <th className="py-2 px-4 font-semibold">Actions</th>
@@ -299,7 +340,7 @@ function CustomCourse() {
                         <td className="py-2 px-4 font-medium text-[#8DC63F]">{course.course_name || '-'}</td>
                         <td className="py-2 px-4">{course.doctor_name || '-'}</td>
                         <td className="py-2 px-4">{course.cluster_name || course.cluster_id}</td>
-                        <td className="py-2 px-4">{course.course_type}</td>
+                        <td className="py-2 px-4">{(course.course_options?.length ? course.course_options : [course.course_type]).map((value) => COURSE_OPTIONS.find((option) => option.value === value)?.label || value).join(', ')}</td>
                         <td className="py-2 px-4 max-w-xs truncate">{course.description || '-'}</td>
                         <td className="py-2 px-4">{course.tagged_unit_name ? `${course.tagged_certificate_name} / ${course.tagged_unit_name}` : '-'}</td>
                         <td className="py-2 px-4">
@@ -343,7 +384,7 @@ function CustomCourse() {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+              <form onSubmit={handleSubmit} className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5 max-h-[75vh] overflow-y-auto pr-1">
               <TextField
                 fullWidth
                 size="small"
@@ -374,40 +415,54 @@ function CustomCourse() {
                 className="md:col-span-2"
               />
 
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Cluster"
-                name="cluster_id"
-                value={formData.cluster_id}
-                onChange={handleChange}
-                disabled={clusterLoading}
-              >
-                <MenuItem value="">Select Cluster</MenuItem>
-                {clusters.map((cluster) => (
-                  <MenuItem key={cluster.cluster_id} value={cluster.cluster_id}>
-                    {cluster.cluster_name}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[minmax(200px,1fr)_2fr] gap-5 items-start">
+                <TextField select fullWidth size="small" label="Student batch" name="batch_id"
+                  value={formData.batch_id} onChange={handleChange}>
+                  <MenuItem value="">Select Batch</MenuItem>
+                  {batches.map((batch) => <MenuItem key={batch.batch_id} value={batch.batch_id}>{batch.batch_name}</MenuItem>)}
+                </TextField>
+                <div>
+                  <div className="text-xs text-gray-500 mb-2">More than one student can be included</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {students.map((student) => <label key={student.user_email} className="flex items-center gap-2 text-sm text-gray-700">
+                      <input type="checkbox" className="accent-emerald-600" checked={formData.student_ids.includes(student.user_email)}
+                        onChange={() => setFormData((prev) => ({ ...prev, student_ids: prev.student_ids.includes(student.user_email)
+                          ? prev.student_ids.filter((id) => id !== student.user_email) : [...prev.student_ids, student.user_email] }))} />
+                      {student.full_name || student.user_email}
+                    </label>)}
+                    {formData.batch_id && !studentsLoading && students.length === 0 && <span className="text-xs text-gray-500">No students in this batch.</span>}
+                    {studentsLoading && <span className="text-xs text-gray-500">Loading students...</span>}
+                  </div>
+                </div>
+              </div>
 
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Course Type"
-                name="course_type"
-                value={formData.course_type}
-                onChange={handleChange}
-              >
-                <MenuItem value="">Select Course Type</MenuItem>
-                {COURSE_TYPES.map((courseType) => (
-                  <MenuItem key={courseType} value={courseType}>
-                    {courseType}
-                  </MenuItem>
-                ))}
-              </TextField>
+              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-[minmax(200px,1fr)_2fr] gap-5 items-center">
+                <TextField select fullWidth size="small" label="Cluster" name="cluster_id" value={formData.cluster_id}
+                  onChange={handleChange} disabled={clusterLoading}>
+                  <MenuItem value="">Select Cluster</MenuItem>
+                  {clusters.map((cluster) => <MenuItem key={cluster.cluster_id} value={cluster.cluster_id}>{cluster.cluster_name}</MenuItem>)}
+                </TextField>
+                <span className="text-xs text-teal-700">Choosing the cluster fills in the latest recordings.</span>
+              </div>
+
+              <div className="md:col-span-2">
+                <div className="flex flex-wrap items-center gap-6 mb-2 text-xs">
+                  <span className="font-semibold text-gray-700">Courses</span>
+                  <span className="text-gray-500">Practice 1, 2, 3, 4 and Test 1, 2. Choose one or several.</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {COURSE_OPTIONS.map((option) => <label key={option.value} className="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="checkbox" className="accent-emerald-600" checked={formData.course_options.includes(option.value)}
+                      onChange={() => setFormData((prev) => ({ ...prev, course_options: prev.course_options.includes(option.value)
+                        ? prev.course_options.filter((value) => value !== option.value) : [...prev.course_options, option.value] }))} />
+                    {option.label}
+                  </label>)}
+                </div>
+              </div>
+
+              <div className="md:col-span-2 border-2 border-green-500 bg-green-50 rounded p-4 grid grid-cols-1 md:grid-cols-[140px_1fr] gap-3">
+                <div className="text-sm font-semibold text-teal-700">Recordings</div>
+                <div className="text-xs text-teal-700">Latest upload. Filled in automatically for the chosen cluster.</div>
 
               <TextField
                 select
@@ -444,6 +499,8 @@ function CustomCourse() {
                   </MenuItem>
                 ))}
               </TextField>
+
+              </div>
 
               {formData.cluster_id && !recordingLoading && recordings.length === 0 && (
                 <div className="md:col-span-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">

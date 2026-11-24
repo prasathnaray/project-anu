@@ -3810,7 +3810,7 @@ const indDatauuid = (requester, people_id, isVr = true) => {
       `;
 
       const addOnCoursesQuery = `
-        SELECT cm.mapping_id, cm.course_name, cm.course_type, cm.description,
+        SELECT cm.mapping_id, cm.course_name, cm.course_type, cm.course_options, cm.description,
                cm.doctor_name, cm.cluster_id, c.cluster_name,
                cmp.unit_name AS tagged_unit_name,
                CASE WHEN shadow_vr.recording_id IS NULL THEN NULL ELSE jsonb_build_object(
@@ -3846,6 +3846,11 @@ const indDatauuid = (requester, people_id, isVr = true) => {
                       WHERE cr.cluster_id = cm.cluster_id AND cr.recording_id = step_vr.recording_id)
         WHERE ud.people_id = $1 AND ud.user_role = '103'
           AND cmp.certificate_name = 'BTC'
+          AND (cm.batch_id IS NULL OR (
+            cm.student_ids ? ud.user_email
+            AND EXISTS (SELECT 1 FROM public.batch_people_data bpd
+                        WHERE bpd.user_id = ud.user_email AND cm.batch_id = ANY(bpd.batch_id))
+          ))
         ORDER BY cm.created_at, cm.mapping_id;
       `;
 
