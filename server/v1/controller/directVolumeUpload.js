@@ -15,7 +15,12 @@ const getS3 = () => {
       region: process.env.AWS_REGION || 'ap-south-1',
       requestChecksumCalculation: 'WHEN_REQUIRED',
       ...(accessKeyId && secretAccessKey ? {
-        credentials: { accessKeyId, secretAccessKey }
+        credentials: {
+          accessKeyId,
+          secretAccessKey,
+          ...(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SESSION_TOKEN
+            ? { sessionToken: process.env.AWS_SESSION_TOKEN } : {})
+        }
       } : {})
     });
   }
@@ -45,7 +50,9 @@ exports.prepare = async (req, res) => {
     const prefix = Number(req.user.role) === 99 ? 'global' : `institutions/${req.user.centre_id}`;
     const key = `${process.env.PRIVATE_CONTENT_BUCKET || process.env.BUCKET_NAME || 'projectanu'}/${prefix}/${randomUUID()}/source/${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
     const bucket = process.env.AWS_S3_BUCKET;
-    const uploadUrl = await getSignedUrl(getS3(), new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: 'application/octet-stream', ContentLength: size, IfNoneMatch: '*' }), { expiresIn: 900 });
+    // Browsers control Content-Length themselves; signing it makes the URL fail
+    // whenever the browser omits that header. Completion verifies the actual size.
+    const uploadUrl = await getSignedUrl(getS3(), new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: 'application/octet-stream', IfNoneMatch: '*' }), { expiresIn: 900 });
     const uploadToken = jwt.sign({ key, bucket, size, metadata, user: req.user.user_mail, centre: req.user.centre_id || null, role: Number(req.user.role) }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h', audience: 'volume-upload' });
     res.set('Cache-Control', 'no-store').json({ uploadUrl, uploadToken });
   } catch (error) { console.error('Prepare volume upload:', error); res.status(500).json({ message: 'Unable to prepare upload.' }); }

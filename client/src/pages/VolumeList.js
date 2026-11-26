@@ -495,6 +495,7 @@ function VolumeList() {
 
       let successCount = 0;
       let failureCount = 0;
+      const uploadFailures = [];
 
       for (let i = 0; i < validFiles.length; i++) {
         const file = validFiles[i];
@@ -521,7 +522,12 @@ function VolumeList() {
         } catch (uploadErr) {
           console.error(`Error uploading volume ${i + 1}:`, uploadErr);
           failureCount++;
+          uploadFailures.push(`${file.name}: ${uploadErr.message}`);
         }
+      }
+
+      if (uploadFailures.length) {
+        toast.error(`${uploadFailures[0]}${uploadFailures.length > 1 ? ` (${uploadFailures.length - 1} more failed)` : ''}`);
       }
 
       if (successCount > 0) {
@@ -562,8 +568,6 @@ function VolumeList() {
         });
         setVolumeFiles([]);
         handleAPICall();
-      } else {
-        toast.error('Failed to upload volume(s). Please try again.');
       }
     } catch (err) {
       console.error('Upload Error:', err);
