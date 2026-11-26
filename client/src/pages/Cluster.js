@@ -290,8 +290,8 @@ function Cluster() {
   const handleOpenAddModal = () => {
     setClusterForm({
       cluster_name: '',
-      selected_volume_ids: convertedVolumes.length > 0 ? [convertedVolumes[0].volume_id] : [],
-      fetal_presentation: convertedVolumes[0]?.volume_fetal_presentation || '',
+      selected_volume_ids: [],
+      fetal_presentation: '',
       planes: [],
       measurements: [],
     });
@@ -312,6 +312,10 @@ function Cluster() {
       toast.error('Please select at least one volume.');
       return;
     }
+    if (!clusterForm.fetal_presentation) {
+      toast.error('Please select fetal presentation.');
+      return;
+    }
     if (!clusterForm.planes.length || !clusterForm.measurements.length) {
       toast.error('Please select planes and measurements.');
       return;
@@ -323,7 +327,7 @@ function Cluster() {
     try {
       const res = await CreateClusterAPI({
         cluster_name: clusterForm.cluster_name.trim(),
-        fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
+        fetal_presentation: clusterForm.fetal_presentation,
         planes: clusterForm.planes,
         measurements: clusterForm.measurements,
         volume_ids: clusterForm.selected_volume_ids,
@@ -339,7 +343,7 @@ function Cluster() {
         volume_ids: clusterForm.selected_volume_ids,
         volume_id: clusterForm.selected_volume_ids[0] || '',
         volume_name: matchedNames.join(', '),
-        fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
+        fetal_presentation: clusterForm.fetal_presentation,
         planes: clusterForm.planes,
         measurements: clusterForm.measurements,
         is_new: true,
@@ -1056,6 +1060,29 @@ function Cluster() {
                 select
                 fullWidth
                 size="small"
+                label="Fetal Presentation"
+                value={clusterForm.fetal_presentation || ''}
+                onChange={(e) => setClusterForm({
+                  ...clusterForm,
+                  fetal_presentation: e.target.value,
+                  selected_volume_ids: [],
+                })}
+                required
+              >
+                <MenuItem value="">Select Fetal Presentation</MenuItem>
+                <MenuItem value="Cephalic_left">Cephalic_left</MenuItem>
+                <MenuItem value="Cephalic_right">Cephalic_right</MenuItem>
+                <MenuItem value="Breech_left">Breech_left</MenuItem>
+                <MenuItem value="Breech_right">Breech_right</MenuItem>
+                <MenuItem value="Others">Others</MenuItem>
+              </TextField>
+            </div>
+
+            <div>
+              <TextField
+                select
+                fullWidth
+                size="small"
                 label="Volumes"
                 SelectProps={{
                   multiple: true,
@@ -1076,21 +1103,27 @@ function Cluster() {
                 }}
                 required
               >
-                {convertedVolumes.length === 0 ? (
+                {!clusterForm.fetal_presentation ? (
                   <MenuItem disabled value="">
-                    No converted volumes available
+                    Select fetal presentation first
+                  </MenuItem>
+                ) : convertedVolumes.filter((vol) => vol.volume_fetal_presentation === clusterForm.fetal_presentation).length === 0 ? (
+                  <MenuItem disabled value="">
+                    No volumes available for this fetal presentation
                   </MenuItem>
                 ) : (
-                  convertedVolumes.map((vol) => (
-                    <MenuItem key={vol.volume_id} value={vol.volume_id}>
-                      <Checkbox
-                        size="small"
-                        checked={(clusterForm.selected_volume_ids || []).includes(vol.volume_id)}
-                      />
-                      <span className="font-medium text-gray-800 ml-1">{vol.volume_name}</span>
-                      <span className="text-xs text-gray-400 ml-2">({vol.volume_type || 'Converted'})</span>
-                    </MenuItem>
-                  ))
+                  convertedVolumes
+                    .filter((vol) => vol.volume_fetal_presentation === clusterForm.fetal_presentation)
+                    .map((vol) => (
+                      <MenuItem key={vol.volume_id} value={vol.volume_id}>
+                        <Checkbox
+                          size="small"
+                          checked={(clusterForm.selected_volume_ids || []).includes(vol.volume_id)}
+                        />
+                        <span className="font-medium text-gray-800 ml-1">{vol.volume_name}</span>
+                        <span className="text-xs text-gray-400 ml-2">({vol.volume_type || 'Converted'})</span>
+                      </MenuItem>
+                    ))
                 )}
               </TextField>
             </div>
