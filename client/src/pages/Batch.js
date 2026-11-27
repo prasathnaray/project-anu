@@ -150,6 +150,9 @@ function Batch() {
                 if (location?.state?.tab === 'targeted' || location?.search?.includes('tab=targeted')) {
                         setBatchCus(false);
                 }
+                if (location?.state?.openCreateBatch) {
+                        setOpenBatch(true);
+                }
         }, [location]);
         console.log(batchCus);
         const handleClose = () => {

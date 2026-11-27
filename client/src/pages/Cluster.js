@@ -58,6 +58,9 @@ const safeParseFileList = (files) => {
 
 function ClusterMetadataFields({ form, setForm, volumes }) {
   const selectedVolumes = volumes.filter((volume) => form.selected_volume_ids?.includes(volume.volume_id));
+  const isOtherPlaneSelected = (form.planes || []).includes('Others');
+  const isOtherMeasurementSelected = (form.measurements || []).includes('Others');
+
   return (
     <>
       <div className="rounded border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700">
@@ -72,16 +75,62 @@ function ClusterMetadataFields({ form, setForm, volumes }) {
           </div>
         ))}
       </div>
-      <TextField select fullWidth size="small" label="Planes" value={form.planes || []}
-        onChange={(event) => setForm((previous) => ({ ...previous, planes: event.target.value }))}
-        SelectProps={{ multiple: true, renderValue: (selected) => selected.join(', ') }} required>
-        {PLANE_OPTIONS.map((plane) => <MenuItem key={plane} value={plane}><Checkbox checked={(form.planes || []).includes(plane)} size="small" />{plane}</MenuItem>)}
-      </TextField>
-      <TextField select fullWidth size="small" label="Measurements" value={form.measurements || []}
-        onChange={(event) => setForm((previous) => ({ ...previous, measurements: event.target.value }))}
-        SelectProps={{ multiple: true, renderValue: (selected) => selected.join(', ') }} required>
-        {MEASUREMENT_OPTIONS.map((measurement) => <MenuItem key={measurement} value={measurement}><Checkbox checked={(form.measurements || []).includes(measurement)} size="small" />{measurement}</MenuItem>)}
-      </TextField>
+      <div>
+        <TextField select fullWidth size="small" label="Planes" value={form.planes || []}
+          onChange={(event) => {
+            const val = event.target.value;
+            const hasOthers = Array.isArray(val) && val.includes('Others');
+            setForm((previous) => ({
+              ...previous,
+              planes: val,
+              other_plane: hasOthers ? previous.other_plane : '',
+            }));
+          }}
+          SelectProps={{ multiple: true, renderValue: (selected) => selected.join(', ') }} required>
+          {PLANE_OPTIONS.map((plane) => <MenuItem key={plane} value={plane}><Checkbox checked={(form.planes || []).includes(plane)} size="small" />{plane}</MenuItem>)}
+        </TextField>
+      </div>
+      {isOtherPlaneSelected && (
+        <div>
+          <TextField
+            fullWidth
+            size="small"
+            label="Other Plane"
+            placeholder="Type plane name manually"
+            value={form.other_plane || ''}
+            onChange={(e) => setForm((previous) => ({ ...previous, other_plane: e.target.value }))}
+            required
+          />
+        </div>
+      )}
+      <div>
+        <TextField select fullWidth size="small" label="Measurements" value={form.measurements || []}
+          onChange={(event) => {
+            const val = event.target.value;
+            const hasOthers = Array.isArray(val) && val.includes('Others');
+            setForm((previous) => ({
+              ...previous,
+              measurements: val,
+              other_measurement: hasOthers ? previous.other_measurement : '',
+            }));
+          }}
+          SelectProps={{ multiple: true, renderValue: (selected) => selected.join(', ') }}>
+          {MEASUREMENT_OPTIONS.map((measurement) => <MenuItem key={measurement} value={measurement}><Checkbox checked={(form.measurements || []).includes(measurement)} size="small" />{measurement}</MenuItem>)}
+        </TextField>
+      </div>
+      {isOtherMeasurementSelected && (
+        <div>
+          <TextField
+            fullWidth
+            size="small"
+            label="Other Measurement"
+            placeholder="Type measurement name manually"
+            value={form.other_measurement || ''}
+            onChange={(e) => setForm((previous) => ({ ...previous, other_measurement: e.target.value }))}
+            required
+          />
+        </div>
+      )}
     </>
   );
 }
@@ -108,6 +157,8 @@ function Cluster() {
     fetal_presentation: '',
     planes: [],
     measurements: [],
+    other_plane: '',
+    other_measurement: '',
   });
 
   // Form state for Edit Cluster modal
@@ -117,6 +168,8 @@ function Cluster() {
     fetal_presentation: '',
     planes: [],
     measurements: [],
+    other_plane: '',
+    other_measurement: '',
   });
 
   // Recording counts per cluster: { [cluster_id]: { step: number, shadow: number } }
@@ -294,6 +347,8 @@ function Cluster() {
       fetal_presentation: '',
       planes: [],
       measurements: [],
+      other_plane: '',
+      other_measurement: '',
     });
     setOpenAddModal(true);
   };
@@ -316,10 +371,25 @@ function Cluster() {
       toast.error('Please select fetal presentation.');
       return;
     }
-    if (!clusterForm.planes.length || !clusterForm.measurements.length) {
-      toast.error('Please select planes and measurements.');
+    if (!clusterForm.planes.length) {
+      toast.error('Please select planes.');
       return;
     }
+    if (clusterForm.planes.includes('Others') && !clusterForm.other_plane?.trim()) {
+      toast.error('Please specify other plane.');
+      return;
+    }
+    if (clusterForm.measurements.includes('Others') && !clusterForm.other_measurement?.trim()) {
+      toast.error('Please specify other measurement.');
+      return;
+    }
+
+    const finalPlanes = clusterForm.planes.map((p) =>
+      p === 'Others' ? (clusterForm.other_plane?.trim() || 'Others') : p
+    );
+    const finalMeasurements = clusterForm.measurements.map((m) =>
+      m === 'Others' ? (clusterForm.other_measurement?.trim() || 'Others') : m
+    );
 
     const matchedVolumes = volumes.filter((v) => clusterForm.selected_volume_ids.includes(v.volume_id));
     const matchedNames = matchedVolumes.map((v) => v.volume_name || 'Volume');
@@ -328,8 +398,8 @@ function Cluster() {
       const res = await CreateClusterAPI({
         cluster_name: clusterForm.cluster_name.trim(),
         fetal_presentation: clusterForm.fetal_presentation,
-        planes: clusterForm.planes,
-        measurements: clusterForm.measurements,
+        planes: finalPlanes,
+        measurements: finalMeasurements,
         volume_ids: clusterForm.selected_volume_ids,
       });
 
@@ -344,8 +414,8 @@ function Cluster() {
         volume_id: clusterForm.selected_volume_ids[0] || '',
         volume_name: matchedNames.join(', '),
         fetal_presentation: clusterForm.fetal_presentation,
-        planes: clusterForm.planes,
-        measurements: clusterForm.measurements,
+        planes: finalPlanes,
+        measurements: finalMeasurements,
         is_new: true,
       };
 
@@ -392,13 +462,44 @@ function Cluster() {
     const initialIds = Array.isArray(cluster.volume_ids)
       ? cluster.volume_ids
       : (cluster.volume_id ? [cluster.volume_id] : []);
+
+    const rawPlanes = splitMetadata(cluster.planes);
+    const rawMeasurements = splitMetadata(cluster.measurements);
+
+    const standardPlanes = PLANE_OPTIONS.filter((p) => p !== 'Others');
+    const selectedPlanes = [];
+    const customPlanes = [];
+    rawPlanes.forEach((p) => {
+      const match = standardPlanes.find((sp) => sp === p || sp.toLowerCase().endsWith(p.toLowerCase()) || sp.toLowerCase().includes(p.toLowerCase()));
+      if (match) {
+        if (!selectedPlanes.includes(match)) selectedPlanes.push(match);
+      } else {
+        if (!selectedPlanes.includes('Others')) selectedPlanes.push('Others');
+        if (p !== 'Others') customPlanes.push(p);
+      }
+    });
+
+    const standardMeasurements = MEASUREMENT_OPTIONS.filter((m) => m !== 'Others');
+    const selectedMeasurements = [];
+    const customMeasurements = [];
+    rawMeasurements.forEach((m) => {
+      if (standardMeasurements.includes(m)) {
+        selectedMeasurements.push(m);
+      } else {
+        if (!selectedMeasurements.includes('Others')) selectedMeasurements.push('Others');
+        if (m !== 'Others') customMeasurements.push(m);
+      }
+    });
+
     setEditingCluster(cluster);
     setEditClusterForm({
       cluster_name: cluster.cluster_name,
       selected_volume_ids: initialIds,
       fetal_presentation: cluster.fetal_presentation || '',
-      planes: splitMetadata(cluster.planes),
-      measurements: splitMetadata(cluster.measurements),
+      planes: selectedPlanes,
+      measurements: selectedMeasurements,
+      other_plane: customPlanes.join(', '),
+      other_measurement: customMeasurements.join(', '),
     });
     setOpenEditModal(true);
   };
@@ -418,18 +519,33 @@ function Cluster() {
       toast.error('Please select at least one volume.');
       return;
     }
-    if (!editClusterForm.planes.length || !editClusterForm.measurements.length) {
-      toast.error('Please select planes and measurements.');
+    if (!editClusterForm.planes.length) {
+      toast.error('Please select planes.');
       return;
     }
+    if (editClusterForm.planes.includes('Others') && !editClusterForm.other_plane?.trim()) {
+      toast.error('Please specify other plane.');
+      return;
+    }
+    if (editClusterForm.measurements.includes('Others') && !editClusterForm.other_measurement?.trim()) {
+      toast.error('Please specify other measurement.');
+      return;
+    }
+
+    const finalPlanes = editClusterForm.planes.map((p) =>
+      p === 'Others' ? (editClusterForm.other_plane?.trim() || 'Others') : p
+    );
+    const finalMeasurements = editClusterForm.measurements.map((m) =>
+      m === 'Others' ? (editClusterForm.other_measurement?.trim() || 'Others') : m
+    );
 
     const matchedVolumes = volumes.filter((v) => editClusterForm.selected_volume_ids.includes(v.volume_id));
     try {
       await UpdateClusterAPI(editingCluster.cluster_id, {
         cluster_name: editClusterForm.cluster_name.trim(),
         fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
-        planes: editClusterForm.planes,
-        measurements: editClusterForm.measurements,
+        planes: finalPlanes,
+        measurements: finalMeasurements,
         volume_ids: editClusterForm.selected_volume_ids,
       });
     } catch (err) {
@@ -448,8 +564,8 @@ function Cluster() {
           volume_id: editClusterForm.selected_volume_ids[0] || '',
           volume_name: matchedNames.join(', '),
           fetal_presentation: matchedVolumes[0]?.volume_fetal_presentation || '',
-          planes: editClusterForm.planes,
-          measurements: editClusterForm.measurements,
+          planes: finalPlanes,
+          measurements: finalMeasurements,
           is_new: true,
         };
       }
@@ -831,34 +947,34 @@ function Cluster() {
 
             {/* Clusters Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8faf6] border-b border-gray-200 text-gray-700 font-semibold uppercase tracking-wider">
+              <table className="w-full text-left text-xs min-w-[1500px]">
+                <thead className="bg-[#f8faf6] border-b border-gray-200 text-gray-700 font-semibold uppercase tracking-wider text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">Cluster ID</th>
-                    <th className="py-3 px-4">Cluster Name</th>
-                    <th className="py-3 px-4">Anatomy Type</th>
-                    <th className="py-3 px-4">Fetal Presentation</th>
-                    <th className="py-3 px-4">Trimester</th>
-                    <th className="py-3 px-4">GA</th>
-                    <th className="py-3 px-4">Planes</th>
-                    <th className="py-3 px-4">Measurements</th>
-                    <th className="py-3 px-4">Volumes</th>
-                    <th className="py-3 px-4">Step Recording</th>
-                    <th className="py-3 px-4">Shadow Recording</th>
-                    <th className="py-3 px-4 text-center">Action</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[170px]">Cluster ID</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">Cluster Name</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[150px]">Anatomy Type</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">Fetal Presentation</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Trimester</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap text-center min-w-[70px]">GA</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[220px]">Planes</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Measurements</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Volumes</th>
+                    <th className="py-3.5 px-3 whitespace-nowrap text-center min-w-[110px]">Step Recording</th>
+                    <th className="py-3.5 px-3 whitespace-nowrap text-center min-w-[125px]">Shadow Recording</th>
+                    <th className="py-3.5 px-3 whitespace-nowrap text-center min-w-[90px]">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-gray-700">
                   {loading ? (
                     <tr>
-                        <td colSpan={12} className="py-10 text-center text-gray-500">
+                      <td colSpan={12} className="py-10 text-center text-gray-500">
                         <ClipLoader color="#8DC63F" size={24} />
                         <p className="mt-2 text-xs text-gray-400">Loading clusters…</p>
                       </td>
                     </tr>
                   ) : filteredClusters.length === 0 ? (
                     <tr>
-                        <td colSpan={12} className="py-10 text-center text-gray-400">
+                      <td colSpan={12} className="py-10 text-center text-gray-400">
                         No clusters found. Click &quot;Add Cluster&quot; to create one.
                       </td>
                     </tr>
@@ -869,44 +985,107 @@ function Cluster() {
                         : (cluster.volume_id ? [cluster.volume_id] : []);
                       const selectedVolumes = volumes.filter((v) => volumeIds.includes(v.volume_id));
                       const metadataValues = (field) => [...new Set(selectedVolumes.map((v) => v[field]).filter(Boolean))].join(', ') || '—';
-                      const displayFetalPresentation = metadataValues('volume_fetal_presentation');
+                      const metadataList = (field) => [...new Set(selectedVolumes.map((v) => v[field]).filter(Boolean))];
 
                       return (
-                        <tr key={cluster.cluster_id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={cluster.cluster_id} className="hover:bg-gray-50/80 transition-colors">
                           {/* 1. Cluster ID */}
-                          <td className="py-3 px-4 font-mono font-medium text-gray-800">
-                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700">
+                          <td className="py-3.5 px-4 font-mono font-medium text-gray-800 align-top whitespace-nowrap min-w-[170px]">
+                            <span className="bg-gray-100 border border-gray-200 px-2 py-1 rounded text-[11px] text-gray-700 tracking-tight font-semibold inline-block">
                               {cluster.cluster_id}
                             </span>
                           </td>
 
                           {/* 2. Cluster Name */}
-                          <td className="py-3 px-4 font-semibold text-gray-800">
+                          <td className="py-3.5 px-4 font-semibold text-gray-900 align-top min-w-[160px]">
                             {cluster.cluster_name}
                           </td>
 
-                          <td className="py-3 px-4">{metadataValues('volume_type')}</td>
-
-                          {/* 3. Fetal Presentation */}
-                          <td className="py-3 px-4">
-                            {displayFetalPresentation !== '—' ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                                {displayFetalPresentation}
-                              </span>
-                            ) : (
-                              <span className="text-gray-400 text-xs">—</span>
-                            )}
+                          {/* 3. Anatomy Type */}
+                          <td className="py-3.5 px-4 align-top min-w-[150px]">
+                            <div className="flex flex-wrap gap-1">
+                              {metadataList('volume_type').length > 0 ? (
+                                metadataList('volume_type').map((type, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap"
+                                  >
+                                    {type}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-gray-400 text-xs">—</span>
+                              )}
+                            </div>
                           </td>
 
-                          <td className="py-3 px-4">{metadataValues('trimester')}</td>
-                          <td className="py-3 px-4">{metadataValues('volume_ga')}</td>
+                          {/* 4. Fetal Presentation */}
+                          <td className="py-3.5 px-4 align-top min-w-[160px]">
+                            <div className="flex flex-wrap gap-1">
+                              {metadataList('volume_fetal_presentation').length > 0 ? (
+                                metadataList('volume_fetal_presentation').map((fp, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap"
+                                  >
+                                    {fp}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-gray-400 text-xs">—</span>
+                              )}
+                            </div>
+                          </td>
 
-                          <td className="py-3 px-4 max-w-xs">{splitMetadata(cluster.planes).join(', ') || '—'}</td>
-                          <td className="py-3 px-4 max-w-xs">{splitMetadata(cluster.measurements).join(', ') || '—'}</td>
+                          {/* 5. Trimester */}
+                          <td className="py-3.5 px-4 align-top whitespace-nowrap text-gray-700 font-medium min-w-[120px]">
+                            {metadataValues('trimester')}
+                          </td>
 
-                          {/* 4. Volumes */}
-                          <td className="py-3 px-4">
-                            <div className="flex flex-wrap items-center gap-1.5">
+                          {/* 6. GA */}
+                          <td className="py-3.5 px-4 align-top text-center whitespace-nowrap text-gray-700 font-medium min-w-[70px]">
+                            {metadataValues('volume_ga')}
+                          </td>
+
+                          {/* 7. Planes */}
+                          <td className="py-3.5 px-4 align-top min-w-[220px] max-w-[280px]">
+                            <div className="flex flex-col gap-1">
+                              {splitMetadata(cluster.planes).length > 0 ? (
+                                splitMetadata(cluster.planes).map((plane, pIdx) => (
+                                  <span
+                                    key={pIdx}
+                                    className="inline-block px-2 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-700 text-[11px] leading-tight"
+                                  >
+                                    {plane}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-gray-400 text-xs">—</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 8. Measurements */}
+                          <td className="py-3.5 px-4 align-top min-w-[120px]">
+                            <div className="flex flex-wrap gap-1">
+                              {splitMetadata(cluster.measurements).length > 0 ? (
+                                splitMetadata(cluster.measurements).map((m, mIdx) => (
+                                  <span
+                                    key={mIdx}
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap"
+                                  >
+                                    {m}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-gray-400 text-xs">—</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* 9. Volumes */}
+                          <td className="py-3.5 px-4 align-top min-w-[180px] max-w-[240px]">
+                            <div className="flex flex-col gap-1">
                               {volumeIds.length > 0 ? (
                                 volumeIds.map((vId) => {
                                   const vol = volumes.find((v) => v.volume_id === vId);
@@ -914,57 +1093,54 @@ function Cluster() {
                                   return (
                                     <span
                                       key={vId}
-                                      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-50 border border-gray-200 text-gray-800"
+                                      className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-white border border-gray-200 text-gray-800 shadow-2xs whitespace-nowrap"
+                                      title={name}
                                     >
                                       {name}
                                     </span>
                                   );
                                 })
                               ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-50 border border-gray-200 text-gray-800">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-white border border-gray-200 text-gray-800 shadow-2xs whitespace-nowrap">
                                   {cluster.volume_name || 'Volume'}
                                 </span>
                               )}
                             </div>
                           </td>
 
-                          {/* Step Recording */}
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                                  (recordingCounts[cluster.cluster_id]?.step || 0) > 0
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : 'bg-gray-50 text-gray-500 border-gray-200'
-                                }`}
-                              >
-                                {recordingCounts[cluster.cluster_id]?.step || 0}
-                              </span>
-                            </div>
+                          {/* 10. Step Recording */}
+                          <td className="py-3.5 px-3 align-top text-center min-w-[110px]">
+                            <span
+                              className={`inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                                (recordingCounts[cluster.cluster_id]?.step || 0) > 0
+                                  ? 'bg-green-50 text-green-700 border-green-200'
+                                  : 'bg-gray-50 text-gray-500 border-gray-200'
+                              }`}
+                            >
+                              {recordingCounts[cluster.cluster_id]?.step || 0}
+                            </span>
                           </td>
 
-                          {/* Shadow Recording */}
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                                  (recordingCounts[cluster.cluster_id]?.shadow || 0) > 0
-                                    ? 'bg-green-50 text-green-700 border-green-200'
-                                    : 'bg-gray-50 text-gray-500 border-gray-200'
-                                }`}
-                              >
-                                {recordingCounts[cluster.cluster_id]?.shadow || 0}
-                              </span>
-                            </div>
+                          {/* 11. Shadow Recording */}
+                          <td className="py-3.5 px-3 align-top text-center min-w-[125px]">
+                            <span
+                              className={`inline-flex items-center justify-center min-w-[24px] px-2 py-0.5 rounded-full text-xs font-semibold border ${
+                                (recordingCounts[cluster.cluster_id]?.shadow || 0) > 0
+                                  ? 'bg-green-50 text-green-700 border-green-200'
+                                  : 'bg-gray-50 text-gray-500 border-gray-200'
+                              }`}
+                            >
+                              {recordingCounts[cluster.cluster_id]?.shadow || 0}
+                            </span>
                           </td>
 
-                          {/* Action (Edit & Delete) */}
-                          <td className="py-3 px-4 text-center">
+                          {/* 12. Action (Edit & Delete) */}
+                          <td className="py-3.5 px-3 align-top text-center min-w-[90px]">
                             <div className="inline-flex items-center justify-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => handleOpenEditModal(cluster)}
-                                className="text-gray-400 hover:text-blue-600 p-1 rounded transition-colors cursor-pointer"
+                                className="text-gray-400 hover:text-blue-600 p-1.5 rounded hover:bg-blue-50 transition-colors cursor-pointer"
                                 title="Edit Cluster"
                               >
                                 <Pencil size={15} />
@@ -972,7 +1148,7 @@ function Cluster() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteCluster(cluster.cluster_id)}
-                                className="text-gray-400 hover:text-red-600 p-1 rounded transition-colors cursor-pointer"
+                                className="text-gray-400 hover:text-red-600 p-1.5 rounded hover:bg-red-50 transition-colors cursor-pointer"
                                 title="Delete Cluster"
                               >
                                 <Trash2 size={15} />

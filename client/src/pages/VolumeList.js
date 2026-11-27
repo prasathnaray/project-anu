@@ -1211,18 +1211,7 @@ function VolumeList() {
                 <MenuItem value="First Trimester">First Trimester</MenuItem>
                 <MenuItem value="Second Trimester">Second Trimester</MenuItem>
                 <MenuItem value="Third Trimester">Third Trimester</MenuItem>
-                <MenuItem value={OTHER_OPTION}>Others</MenuItem>
               </TextField>
-              {formData.trimester === OTHER_OPTION && (
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  size="small"
-                  label="Enter Trimester"
-                  value={otherValues.trimester}
-                  onChange={(e) => setOtherValues((prev) => ({ ...prev, trimester: e.target.value }))}
-                />
-              )}
               <TextField
                 fullWidth
                 variant="outlined"

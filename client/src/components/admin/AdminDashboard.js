@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import NavBar from "../navBar";
 import SideBar from "../sideBar";
-import { ClipboardPenLine, EllipsisIcon, EllipsisVerticalIcon, GraduationCap, LayoutDashboard, NotepadText, SlidersHorizontal } from "lucide-react";
+import { ClipboardPenLine, EllipsisIcon, EllipsisVerticalIcon, GraduationCap, LayoutDashboard, NotepadText, SlidersHorizontal, UserPlus, CalendarPlus, FolderKanban } from "lucide-react";
 import getDashboardAPI from "../../API/dashboardAPI";
 import { Book01Icon, Calendar01Icon } from "hugeicons-react";
 import BasicPie from "../../charts/PieChart";
@@ -127,11 +127,47 @@ function AdminDashboard() {
                 scrollbarWidth: "none",
                 msOverflowStyle: "none"
               }}>
-                <div className="flex items-center gap-3 border-b border-[#edf2e9] px-5 py-4 sm:px-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef8e5] text-[#719f2c]">
-                    <LayoutDashboard size={21} />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#edf2e9] px-5 py-4 sm:px-6">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef8e5] text-[#719f2c]">
+                      <LayoutDashboard size={21} />
+                    </div>
+                    <div>
+                      <span className="block text-lg font-bold text-slate-800">General dashboard</span>
+                      <span className="text-xs text-slate-400">A quick view of your learning operations</span>
+                    </div>
                   </div>
-                  <div><span className="block text-lg font-bold text-slate-800">General dashboard</span><span className="text-xs text-slate-400">A quick view of your learning operations</span></div>
+
+                  {/* Quick Action Shortcuts Header */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/trainee/add')}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#8DC63F] hover:bg-[#7cb336] text-white text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+                      title="Onboard a new trainee"
+                    >
+                      <UserPlus size={14} />
+                      <span>+ Add Trainee</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/batch', { state: { openCreateBatch: true } })}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-[#8DC63F] text-[#5f9222] text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+                      title="Schedule and create a new batch"
+                    >
+                      <CalendarPlus size={14} />
+                      <span>+ Create Batch</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/volume-management')}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#eef8e5] hover:bg-[#e4f4d8] text-[#5f9222] border border-[#cfe3bb] text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer"
+                      title="Manage and assign volumes"
+                    >
+                      <FolderKanban size={14} />
+                      <span>Assign Content / Volumes</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="border-b border-[#edf2e9] p-4 sm:p-5">
